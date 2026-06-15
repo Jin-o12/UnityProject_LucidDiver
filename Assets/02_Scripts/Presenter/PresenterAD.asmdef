@@ -2,6 +2,7 @@
     "name": "PresenterAD",
     "rootNamespace": "",
     "references": [
+        "GUID:1ffdba9446bd0284faa7cc2ce9f683da",
         "GUID:7535be9703bf08544a6161f4c3f68fbe",
         "GUID:79d9013a8cfa71d4495f33d1fa80f976",
         "GUID:4116d224785ded84a8c9a38930c03cb7",

@@ -29,27 +29,18 @@ public class PlayerMovement : MonoBehaviour
         
         /// 이벤트 구독 ///
         GlobalEventBus.OnPlayerMove += PlayerMove;
-        GlobalEventBus.OnAttackInput += PlayerAttack;
     }
 
     private void OnDisable()
     {
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnPlayerMove -= PlayerMove;
-        GlobalEventBus.OnAttackInput -= PlayerAttack;
     }
 
     /* 플레이어 이동 처리 */
     private void PlayerMove(Vector2 input)
     {
         movementInput = input;
-    }
-
-    /* 플레이어 공격 처리 */
-    private void PlayerAttack()
-    {
-        // 공격 입력이 들어왔을 때의 처리 (예: 총알 발사)
-        Debug.Log("Player Attack!");
     }
     
     private void FixedUpdate()

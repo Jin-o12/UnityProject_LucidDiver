@@ -10,4 +10,9 @@ public class GlobalEventBus
     /// 플레이어 행동에 의한 이벤트 ///
     public static Action<Vector2> OnPlayerMove;
     public static Action OnAttackInput;
+    public static Action OnInteractionInput;
+
+    /// 아이템 관련 이벤트 ///
+    public static Action<int> OnItemPickedUp;
+    public static Action<int> OnWeaponEquipped;
 }

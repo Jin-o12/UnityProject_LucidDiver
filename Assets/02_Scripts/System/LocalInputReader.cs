@@ -24,4 +24,13 @@ public class LocalInputReader : MonoBehaviour
             GlobalEventBus.OnAttackInput?.Invoke();
         }
     }
+
+    /* 플레이어 상호작용 입력 처리 */
+    public void OnInteract(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            GlobalEventBus.OnInteractionInput?.Invoke();
+        }
+    }
 }
