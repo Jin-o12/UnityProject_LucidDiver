@@ -1,0 +1,17 @@
+{
+    "name": "UIAD",
+    "rootNamespace": "",
+    "references": [
+        "GUID:4116d224785ded84a8c9a38930c03cb7",
+        "GUID:8f15eda85deabaa45b425bd5de0fdb12"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
