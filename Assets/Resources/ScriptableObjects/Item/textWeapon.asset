@@ -15,10 +15,10 @@ MonoBehaviour:
   TID: 101
   itemName: "\uAD8C\uCD1D?"
   icon: 
+  slotSize: 0
   desc: "\uC774\uAC74 \uAD8C\uCD1D..\uC778\uAC00\uC694?"
   fireRate: 0.5
   fireRange: 10
-  magazine: 10
-  totalBullet: 50
-  reloadTime: 1
-  bulletTID: 201
+  AtkValue: 10
+  dreamBarrierBreakValue: 10
+  fireEffect: 

@@ -24,7 +24,7 @@ public class PlayerInventory : MonoBehaviour
         if(100 < itemTID && itemTID < 200)
         {
             Debug.Log("Weapon item added to inventory.");
-            GlobalEventBus.OnWeaponEquipped?.Invoke(itemTID);   // 무기 장착 이벤트 발생
+            //GlobalEventBus.OnWeaponEquipped?.Invoke(itemTID);   // 무기 장착 이벤트 발생
         }
         // TID 200대는 총알
         else if(200 < itemTID && itemTID < 300)

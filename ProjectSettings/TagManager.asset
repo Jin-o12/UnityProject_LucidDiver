@@ -5,18 +5,19 @@ TagManager:
   serializedVersion: 2
   tags:
   - DropItem
+  - Enemy
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Player
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Enemy
+  - PlayerBullet
+  - EnemyBullet
+  - Sensor
+  - Wall
   - 
   - 
   - 

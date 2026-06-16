@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerInteraction : MonoBehaviour
 {
-    private List<IInteractable> nearbyInteractables = new List<IInteractable>();
+    private List<IInteractable> nearbyInteractables = new List<IInteractable>();        // 플레이어 근처의 상호작용 가능한 (IInteractable) 오브젝트 리스트
 
     private void OnEnable()
     {
@@ -24,6 +24,7 @@ public class PlayerInteraction : MonoBehaviour
         IInteractable interactable = other.GetComponent<IInteractable>();
         if (interactable != null)
         {
+            // 상호작용 가능한 오브젝트일 경우 리스트에 추가
             Debug.Log("Interactable detected: " + other.gameObject.name);
             nearbyInteractables.Add(interactable);
         }
@@ -35,14 +36,15 @@ public class PlayerInteraction : MonoBehaviour
         IInteractable interactable = other.GetComponent<IInteractable>();
         if (interactable != null)
         {
+            // 상호작용 가능 객체가 영역을 벗어나면 리스트에서 제거
             nearbyInteractables.Remove(interactable);
         }
     }
 
-    /* 상호작용 시 */
+    /* 무언가와 상호작용 시 */
     private void GetInteraction()
     {
-        Debug.Log("Interaction input received. Nearby interactables count: " + nearbyInteractables.Count);
+        Debug.Log("인터렉션 입력이 실행됩니다. 근처의 상호작용 가능한 요소: " + nearbyInteractables.Count);
         // 상호작용 상대에 따른 처리
         if(nearbyInteractables.Count > 0)
         {

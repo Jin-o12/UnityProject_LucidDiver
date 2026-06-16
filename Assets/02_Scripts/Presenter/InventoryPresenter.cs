@@ -1,3 +1,8 @@
+/// <summary>
+/// 아이템과 인벤토리에 관한 모든 상호작용의 중재자 역할을 수행합니다.
+/// 아이템 습득 시 상황에 따라 즉시 장착하거나 인벤토리에 수납합니다.
+/// [26.06.15_강다영] 인벤토리 UI 및 기능 구현 이후 인벤토리에 아이템이 들어가는 기능도 추가할 것
+/// </summary>
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -6,7 +11,7 @@ using UnityEngine;
 public class InventoryPresenter : MonoBehaviour
 {
     [Header("플레이어 컴포넌트 (이후 삭제 예정)")]
-    [SerializeField] private EquipWaepon EquipWaepon;
+    [SerializeField] private PlayerWaepon playerWaepon;
 
     private void OnEnable()
     {
@@ -40,9 +45,9 @@ public class InventoryPresenter : MonoBehaviour
         // 주운 아이템이 무기 카테고리라면
         if(data is WeaponItemData weaponData)
         {
-            if(!EquipWaepon.isEquipped)
+            if(!playerWaepon.isEquipped)
             {
-                EquipWaepon.EquipWeapon(weaponData);
+                playerWaepon.EquipWeapon(weaponData);
             }
         }
     }
