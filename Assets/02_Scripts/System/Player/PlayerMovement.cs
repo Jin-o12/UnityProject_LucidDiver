@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Camera mainCamera;
     private Vector2 movementInput;                      // 플레이어의 움직임 입력
     private readonly float isometricYAngle = -45.0f;    // 카메라가 보는 각도에 맞춰 플레이어 이동 방향 보정 (45도)
-    public float moveSpeed = 5f;                        // 움직임 속도
+    public float moveSpeed = 7f;                        // 움직임 속도
     public float rotationSpeed = 10f;                   // 회전 속도
 
     [Header("Player Attack Movement Controll")]
