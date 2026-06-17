@@ -36,12 +36,21 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
     private void OnEnable()
     {
-        /// 이벤트 구독 ///
+        // 플레이어 첫 생성시 전체 플레이어 명단에 본인 등록
+        if (!GlobalRuntimeData.ActivePlayers.Contains(this.transform))
+        {
+            GlobalRuntimeData.ActivePlayers.Add(this.transform);
+        }
     }
 
     private void OnDisable()
     {
-        /// 이벤트 구독 해제 ///
+        // 플레이어 디스폰시 현재 플레이어 목록에서 본인 제거
+        if (GlobalRuntimeData.ActivePlayers.Contains(this.transform))
+        {
+            GlobalRuntimeData.ActivePlayers.Remove(this.transform);
+        }
+
     }
 
     void Start()
