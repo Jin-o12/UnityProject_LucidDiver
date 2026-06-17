@@ -18,6 +18,11 @@ public class EnemyMovement : MonoBehaviour
     private float sightLengthSqr;                                   // 시야 거리의 제곱 값
     private WaitForSeconds checkingTime = new WaitForSeconds(0.2f); // 상태 확인 주기 시간
 
+    [Header("Enemy Attack")]
+    private float attackLength;                                     // 공격 사거리
+    private float attackLengthSqr;                                  // 공격 사거리의 제곱 값
+    private float attackCooldown;                                   // 공격 쿨타임
+
     [Header("Enemy Animation Controll")]
     private Animator animator;
 
@@ -39,9 +44,13 @@ public class EnemyMovement : MonoBehaviour
             return;
         }
 
+        // 플레이어 추적 및 거리계산 관련 값 지정
         targetPlayer = null;
-        sightLength = 10;
+        sightLength = 7;
         sightLengthSqr = sightLength * sightLength;
+        attackLength = 3;
+        attackLengthSqr = attackLength * attackLength;
+        attackCooldown = 2.0f;
         
         moveSpeed = 3;
     }
@@ -59,21 +68,15 @@ public class EnemyMovement : MonoBehaviour
         myStatus.OnLocalDeath -= Die;
     }
 
+    /* 현재 상태 확인 */
     private IEnumerator CheckRoutine()
     {
-        while(myStatus.nowState != EnemyStatus.EnemyState.dead)
+        while(myStatus.nowState != EnemyStatus.EnemyState.Dead)
         {
             UpdateTarget();
 
             if(targetPlayer != null)
-            {
-                animator.SetBool("isWalk", true);
                 ChaseTarget();
-            }
-            else
-            {
-                animator.SetBool("isWalk", false);
-            }
 
             yield return checkingTime;
         }
@@ -105,21 +108,71 @@ public class EnemyMovement : MonoBehaviour
         targetPlayer = bestTarget;
     }
 
+    /* 거리 계산을 통한 추적 및 공격 상태 지정 */
     private void ChaseTarget()
     {
-        navAgent.SetDestination(targetPlayer.position);
-
         float sqrDistToTarget = (transform.position - targetPlayer.position).sqrMagnitude;
-        if (sqrDistToTarget > sightLengthSqr)
+        
+        // 공격 사거리 안에 있을 경우 공격
+        if(attackLengthSqr >= sqrDistToTarget)
         {
+            StartCoroutine(Attack());
+        }
+        // 공격 사거리 밖이지만 시야 안에 있을 경우 추적
+        else if(sqrDistToTarget <= sightLengthSqr)
+        {
+            navAgent.SetDestination(targetPlayer.position);
+            myStatus.SetNowState(EnemyStatus.EnemyState.Chase);
+            animator.SetBool("isWalk", true);
+        }
+        // 시야 밖으로 나갔을 경우 대기
+        else
+        {
+            myStatus.SetNowState(EnemyStatus.EnemyState.Idle);
+            animator.SetBool("isWalk", false);
             targetPlayer = null;
-            navAgent.ResetPath(); 
+            navAgent.ResetPath();
         }
     }
 
     public void Die()
     {
+        StopAllCoroutines();
         animator.SetTrigger("isDead");
         Destroy(gameObject, 3.0f);
+    }
+
+    private IEnumerator Attack()
+    {
+        // 공격 상태 돌입 및 이동 정지
+        myStatus.SetNowState(EnemyStatus.EnemyState.Attack);
+        myStatus.SetIsAttacking(true);
+
+        navAgent.isStopped = true;          // 적 이동 정지
+        navAgent.velocity = Vector3.zero;   // 관성에 의한 이동 방지
+
+        // 플레이어 방향으로 몸체 회전
+        transform.LookAt(new Vector3(targetPlayer.position.x, transform.position.y, targetPlayer.position.z));
+        
+        // 애니메이션 실행
+        animator.SetTrigger("isAttack");
+        
+        // 공격 수행 및 공격 쿨타임만큼 대기
+        yield return new WaitForSeconds(attackCooldown);
+
+        // 공격 수행 후 다음 행동 실행
+        myStatus.SetIsAttacking(false);
+        navAgent.isStopped = false;
+    }
+
+    public void isPlayerTakeDamage()
+    {
+        float sqrDistToTarget = (transform.position - targetPlayer.position).sqrMagnitude;
+        
+        // 공격 성공 여부 판정 시 타겟이 범위 내에 있을 경우
+        if(attackLengthSqr >= sqrDistToTarget)
+        {
+            targetPlayer.GetComponentInParent<IDamageable>().TakeDamage(myStatus.atkValue);
+        }
     }
 }
