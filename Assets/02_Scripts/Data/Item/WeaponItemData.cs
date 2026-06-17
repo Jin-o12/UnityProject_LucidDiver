@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 [CreateAssetMenu(fileName = "New Weapon", menuName = "GameData/Item/Weapon")]
 public class WeaponItemData : ItemData
@@ -12,5 +13,5 @@ public class WeaponItemData : ItemData
     // areaType: 공격 범위 타입
     // areaWidth: 공격 범위
     public float dreamBarrierBreakValue;        // 몽막 공격력
-    public string fireEffect;                   // 공격 시 이펙트 (파일명)
+    public AssetReferenceGameObject fireEffect; // 공격 시 이펙트 주소
 }

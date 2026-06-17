@@ -4,7 +4,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GlobalRuntimeData : MonoBehaviour
-{
+public class GlobalRuntimeData
+{   
+    // 게임 상에 있는 모든 플레이어의 Transform 값
     public static List<Transform> ActivePlayers = new List<Transform>();
 }

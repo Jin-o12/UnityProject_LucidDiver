@@ -56,7 +56,7 @@ public class EnemyStatus : MonoBehaviour, IDamageable
     }
 
     /* 피격 시 자신의 타입을 반환 */
-    public Faction EntityFaction => Faction.Enemy;
+    public Faction EntityFaction => Faction.enemy;
 
     /* 피해를 받는 메소드 */
     public void TakeDamage(float dmg)
