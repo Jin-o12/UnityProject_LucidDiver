@@ -8,10 +8,29 @@ using UnityEngine;
 public class PlayerInventory : MonoBehaviour
 {
     public List<InventorySlotData> slots = new List<InventorySlotData>();
+    public int slotNum { get; private set; }
 
-    public void AddItem(int itemTID, int count)
+    void Awake()
     {
-        slots.Add(new InventorySlotData(itemTID, count));
-        GlobalEventBus.OnInventoryUpdate?.Invoke();
+        slotNum = 10;
+
+        for (int i = 0; i < slotNum; i++)
+        {
+            slots.Add(new InventorySlotData(0, i, 0));
+        }
+    }
+
+    public void AddItem(int _itemTID, int _count)
+    {
+        for (int i = 0; i < slotNum; i++)
+        {
+            // 해당 인벤토리 칸이 비어있다면
+            if(slots[i].TID==0)
+            {
+                slots[i].TID = _itemTID;
+                slots[i].amount = _count;
+                return;
+            }
+        }
     }
 }
