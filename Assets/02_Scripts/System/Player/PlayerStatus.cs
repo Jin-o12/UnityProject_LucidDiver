@@ -63,7 +63,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     }
 
     /* 피격 시 자신의 타입을 반환 */
-    public Faction EntityFaction => Faction.Player;
+    public Faction EntityFaction => Faction.player;
 
     /* 피해 입을 시 체력 감소 처리 */
     public void TakeDamage(float dmg)

@@ -16,8 +16,7 @@ public class GlobalEventBus
     public static Action<Transform> OnPlayerDespawned;              // 플레이어 제거 시 위치 정보 전달: Action<플레이어의 Transform>
 
     /// 아이템 관련 이벤트 ///
-    public static Action<int> OnItemPickedUp;                       // 아아템을 주웠을 시: Action<아이템 코드>
-    public static Action<int> OnWeaponEquipped;                     // 장비가 장착될 시: Action<무기 코드>
+    public static Action<int, int, int> OnItemPickedUp;             // 아아템을 주웠을 시: Action<플레이어 식별자 코드, 아이템 코드, 아이템 갯수>
 
     /// 전투 관련 이벤트 ///
     public static Action<float, float> OnPlayerHealthChanged;       // 플레이어 체력 변동: Action<현재 체력, 전체 체력>

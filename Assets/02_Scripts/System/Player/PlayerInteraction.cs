@@ -5,6 +5,22 @@ using UnityEngine;
 public class PlayerInteraction : MonoBehaviour
 {
     private List<IInteractable> nearbyInteractables = new List<IInteractable>();        // 플레이어 근처의 상호작용 가능한 (IInteractable) 오브젝트 리스트
+    
+    // 참조 컴포넌트
+    private EntityIdentity identity;
+
+    private void Awake()
+    {
+        identity = GetComponentInParent<EntityIdentity>();
+
+        // 필수 컴포넌트가 존재하지 않을 시 스크립트 비활성화
+        if(identity==null)
+        {
+            this.enabled = false;
+            Debug.LogError("PlayerInteraction: 필요한 컴포넌트가 없습니다.");
+            return;
+        }
+    }
 
     private void OnEnable()
     {
@@ -51,7 +67,7 @@ public class PlayerInteraction : MonoBehaviour
             // 현재는 우선 순위를 따지지 않고 리스트의 첫번째 요소 선택
             IInteractable target = nearbyInteractables[0];
             // 대상에게 상호작용 실행
-            bool shouldRemove = target.Interact();
+            bool shouldRemove = target.Interact(identity.entityID);
             
             // 상호작용 후 제거 될 대상(아이템 등)이라면 리스트에서 제거
             if (shouldRemove)

@@ -14,11 +14,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TID: 101
   itemName: "\uAD8C\uCD1D?"
-  icon: 
-  slotSize: 0
+  icon:
+    m_AssetGUID: fb902b28974cf4a4fab2e16114c9c1cf
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
   desc: "\uC774\uAC74 \uAD8C\uCD1D..\uC778\uAC00\uC694?"
+  category: 1
+  effectID: 0
+  itemMultiple: 1
+  itemPrefabRef:
+    m_AssetGUID: c419aaafcbf53de4a84acb42f22678da
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
   fireRate: 0.5
   fireRange: 10
   AtkValue: 10
   dreamBarrierBreakValue: 10
-  fireEffect: 
+  fireEffect:
+    m_AssetGUID: 
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0

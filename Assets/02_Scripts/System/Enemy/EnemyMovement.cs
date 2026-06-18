@@ -74,10 +74,7 @@ public class EnemyMovement : MonoBehaviour
         while(myStatus.nowState != EnemyStatus.EnemyState.Dead)
         {
             UpdateTarget();
-
-            if(targetPlayer != null)
-                ChaseTarget();
-
+            ChaseTarget();
             yield return checkingTime;
         }
     }
@@ -111,8 +108,17 @@ public class EnemyMovement : MonoBehaviour
     /* 거리 계산을 통한 추적 및 공격 상태 지정 */
     private void ChaseTarget()
     {
+        if(targetPlayer==null)
+        {
+            myStatus.SetNowState(EnemyStatus.EnemyState.Idle);
+            animator.SetBool("isWalk", false);
+            targetPlayer = null;
+            navAgent.ResetPath();
+            return;
+        }
+
+        // 적과 플레이어 사이 거리 계산
         float sqrDistToTarget = (transform.position - targetPlayer.position).sqrMagnitude;
-        
         // 공격 사거리 안에 있을 경우 공격
         if(attackLengthSqr >= sqrDistToTarget)
         {
@@ -124,14 +130,6 @@ public class EnemyMovement : MonoBehaviour
             navAgent.SetDestination(targetPlayer.position);
             myStatus.SetNowState(EnemyStatus.EnemyState.Chase);
             animator.SetBool("isWalk", true);
-        }
-        // 시야 밖으로 나갔을 경우 대기
-        else
-        {
-            myStatus.SetNowState(EnemyStatus.EnemyState.Idle);
-            animator.SetBool("isWalk", false);
-            targetPlayer = null;
-            navAgent.ResetPath();
         }
     }
 

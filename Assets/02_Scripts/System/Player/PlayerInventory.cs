@@ -1,45 +1,67 @@
+/// <summary>
+/// 플레이어의 인벤토리 데이터와 내부의 슬롯, 아이템을 관리하는 클래스
+/// </summary>
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class PlayerInventory : MonoBehaviour
 {
-    private void OnEnable()
+    public List<InventorySlotData> slots = new List<InventorySlotData>();
+    public int slotNum { get; private set; }
+
+    // 로컬 이벤트
+    public event Action<int> OnSlotChanged;             // 특정 칸의 정보 업데이트
+    
+    // Addressable Assets 불러오기
+    private AsyncOperationHandle<Sprite> loadHandle;    // 메모리 관리를 위해 로드 상태를 저장할 핸들
+
+    void Awake()
     {
-        /// 이벤트 구독 ///
-        GlobalEventBus.OnItemPickedUp += GetInteraction;
+        slotNum = 10;
+
+        for (int i = 0; i < slotNum; i++)
+        {
+            slots.Add(new InventorySlotData(0, i, 0, null));
+        }
     }
 
-    private void OnDisable()
+    public void AddItem(ItemData _itemData, int _count)
     {
-        /// 이벤트 구독 해제 ///
-        GlobalEventBus.OnItemPickedUp -= GetInteraction;
+        if(_itemData==null) return;
+
+        for (int i = 0; i < slotNum; i++)
+        {
+            // 해당 인벤토리 칸이 비어있다면
+            if(slots[i].TID==0)
+            {
+                slots[i].TID = _itemData.TID;
+                slots[i].amount = _count;
+                LoadSprite(_itemData.icon, i);
+                return;
+            }
+        }
     }
 
-    private void GetInteraction(int itemTID)
+    private void LoadSprite(AssetReferenceSprite iconRef, int slotIndex)
     {
-        // 아이템 TID에 따른 처리
-        Debug.Log("Item picked up with TID: " + itemTID);
+        loadHandle = Addressables.LoadAssetAsync<Sprite>(iconRef);
 
-        // TID 100대는 무기
-        if(100 < itemTID && itemTID < 200)
+        loadHandle.Completed += (handle) =>
         {
-            Debug.Log("Weapon item added to inventory.");
-            //GlobalEventBus.OnWeaponEquipped?.Invoke(itemTID);   // 무기 장착 이벤트 발생
-        }
-        // TID 200대는 총알
-        else if(200 < itemTID && itemTID < 300)
-        {
-            Debug.Log("Ammo item added to inventory.");
-        }
-        // TID 300대는 파밍 아이템
-        else if(300 < itemTID && itemTID < 400)
-        {
-            Debug.Log("General item added to inventory.");
-        }
-        // 그 외 아이템은 알 수 없는 아이템
-        else
-        {
-            Debug.LogWarning("Unknown item TID: " + itemTID);
-        }
+            // 성공적으로 가져왔는지 확인
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                // handle.Result에 실제 Sprite 데이터가 들어있음
+                //Debug.Log("스프라이트 로드 성공");
+                slots[slotIndex].icon = handle.Result;
+            }
+            else
+            {
+                //Debug.LogError("스프라이트를 불러오는 데 실패했습니다.");
+            }
+        };
     }
 }
