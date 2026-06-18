@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 744f3422f67401545a4d478eefbfb7e4, type: 3}
+  m_Name: testHealpack
+  m_EditorClassIdentifier: 
+  TID: 0
+  itemName: 
+  desc: 
+  category: 0
+  effectID: 0
+  itemMultiple: 0
+  icon:
+    m_AssetGUID: 706c148020f277049a3e04776b64de88
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  itemPrefabRef:
+    m_AssetGUID: 
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  useEffect: {fileID: 11400000, guid: cf12e36062a65d04789241d745364d89, type: 2}
+  useType: 0
+  useRange: 0
+  useDelay: 0
+  effectRange: 0
+  effectTarget: 0
+  effectType: 0
+  effectValue: 0

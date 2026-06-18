@@ -11,8 +11,6 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class InventorySlotUI : MonoBehaviour
 {
-    private InventorySlotData itemData;
-
     [Header("슬롯 내 요소")]
     [SerializeField] private Image itemImg;
     [SerializeField] private TMP_Text itemStack;
@@ -24,32 +22,12 @@ public class InventorySlotUI : MonoBehaviour
         itemStack.text = "";
     }
 
-    /* 해당 슬롯의 UI를 변경하는 함수 (스프라이트 이미지, 아이템 갯수) */
-    public void SetStackCount(int stack)
+    /* 해당 슬롯의 UI를 변경하는 함수 (아이템 갯수, 스프라이트 이미지) */
+    public void UpdateSlot(int _stack, Sprite _sprite)
     {
-        itemStack.text = $"{stack}";
+        if(_stack==0 || _sprite==null) return;
+        itemStack.text = $"{_stack}";
+        itemImg.sprite = _sprite;
+        itemImg.enabled = true;
     }
-
-    /* 아이콘 이미지 설정 */
-    public void SetIcon(AssetReferenceSprite _ref)
-    {
-        // 스프라이트 이미지 주소의 유효성 검사
-        if (_ref == null || !_ref.RuntimeKeyIsValid()) return;
-        // 비동기 로드
-        AsyncOperationHandle<Sprite> loadIcon = Addressables.LoadAssetAsync<Sprite>(_ref);
-        loadIcon.Completed += (handle) =>
-        {
-            if (handle.Status == AsyncOperationStatus.Succeeded)
-            {
-                // 스프라이트 적용
-                itemImg.sprite = handle.Result;
-                itemImg.enabled = true;
-            }
-            else
-            {
-                Debug.LogError("이미지 로드 실패");
-            }
-        };
-    }
-
 }

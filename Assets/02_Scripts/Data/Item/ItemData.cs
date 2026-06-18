@@ -17,11 +17,12 @@ public abstract class ItemData : ScriptableObject
     [Header("아이템 기본 정보")]
     public int TID;                                     // 아이템 코드(고유 ID)
     public string itemName;                             // 아이템 이름
-    public AssetReferenceSprite icon;                   // 아이템 아이콘
     public string desc;                                 // 아이템 설명
     public itemCategory category;                       // 아이템 종류
     public int effectID;                                // 아이템 종류별 적용 효과 ID
     public int itemMultiple;                            // 중첩 용량
-    public AssetReferenceGameObject itemPrefabRef;      // 아이템 프리팹 주소
 
+    [Header("연관 파일 주소")]
+    public AssetReferenceSprite icon;                   // 아이템 아이콘
+    public AssetReferenceGameObject itemPrefabRef;      // 아이템 프리팹 주소
 }

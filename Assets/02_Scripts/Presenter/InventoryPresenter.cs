@@ -1,37 +1,28 @@
 /// <summary>
 /// 아이템과 인벤토리에 관한 모든 상호작용의 중재자 역할을 수행합니다.
 /// 아이템 습득 시 상황에 따라 즉시 장착하거나 인벤토리에 수납합니다.
-/// [26.06.15_강다영] 인벤토리 UI 및 기능 구현 이후 인벤토리에 아이템이 들어가는 기능도 추가할 것
 /// </summary>
 using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 using UnityEditor.Graphs;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 public class InventoryPresenter : MonoBehaviour
 {
     // 게임 데이터 스크립트 참조
-    private PlayerWeapon playerWeapon;          // 플레이어 무기
-    private PlayerInventory playerInventory;    // 플레이어 인벤토리
-    private LocalInputReader localInputReader;  // 플레이어 입력 처리
+    private PlayerWeapon playerWeapon;                  // 플레이어 무기
+    private PlayerInventory playerInventory;            // 플레이어 인벤토리
+    private LocalInputReader localInputReader;          // 플레이어 입력 처리
 
-    // UI 스크립트 참조
-    [SerializeField]private InventoryUI inventoryUI;            // 인벤토리 UI
-
-    [Header("UI 프리팹/인스턴스 참조")]
-    [SerializeField] private GameObject inventoryUIPanel;
+    // UI 캐시
+    private InventoryUI inventoryUI;                    // 인벤토리 UI 캐시
 
     private void Awake()
     {
         playerWeapon = GetComponent<PlayerWeapon>();
         playerInventory = GetComponent<PlayerInventory>();
         localInputReader = GetComponent<LocalInputReader>();
-        //inventoryUI = GetComponent<InventoryUI>();
         
-        if(playerWeapon==null || playerInventory==null || localInputReader==null || inventoryUI==null)
+        if(playerWeapon==null || playerInventory==null || localInputReader==null)
         {
             this.enabled = false;
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
@@ -41,10 +32,13 @@ public class InventoryPresenter : MonoBehaviour
 
     private void OnEnable()
     {
-        // 바닥에서 아이템이 주어졌을 때 터지는 전역 이벤트를 구독합니다.
+        // 바닥에서 아이템이 주어졌을 때 터지는 전역 이벤트를 구독합니다
         GlobalEventBus.OnItemPickedUp += HandleItemPickUp;
         localInputReader.OnInventoryOpenRequested += OpenInventoryUI;
         localInputReader.OnInventoryCloseRequested += CloseInventoryUI;
+
+        // 인벤토리 데이터 변경 이벤트를 구독 합니다
+        playerInventory.OnSlotChanged += HandleSlotChanged;
     }
 
     private void OnDisable()
@@ -53,6 +47,8 @@ public class InventoryPresenter : MonoBehaviour
         GlobalEventBus.OnItemPickedUp -= HandleItemPickUp;
         localInputReader.OnInventoryOpenRequested -= OpenInventoryUI;
         localInputReader.OnInventoryCloseRequested -= CloseInventoryUI;
+
+        playerInventory.OnSlotChanged -= HandleSlotChanged;
     }
 
     /// <summary>
@@ -74,7 +70,7 @@ public class InventoryPresenter : MonoBehaviour
         // TID 100대는 무기
         if(100 < pickedItemTID && pickedItemTID < 200)
         {
-            Debug.Log("Weapon item added to inventory.");
+            //Debug.Log("Weapon item added to inventory.");
             // 만약 장착하고 있는 무기가 없다면 무기를 장착하고, 그렇지 않다면 인벤토리에 수납
             if(!playerWeapon.isEquipped)
             {
@@ -86,20 +82,20 @@ public class InventoryPresenter : MonoBehaviour
             }
             else
             {
-                playerInventory.AddItem(pickedItemTID, count);
+                playerInventory.AddItem(data, count);
             }
         }
         // TID 300대는 소모품
         else if(300 < pickedItemTID && pickedItemTID < 400)
         {
-            Debug.Log("Consume item added to inventory.");
-            playerInventory.AddItem(pickedItemTID, count);
+            //Debug.Log("Consume item added to inventory.");
+            playerInventory.AddItem(data, count);
         }
         // TID 400대는 파밍 아이템
         else if(400 < pickedItemTID && pickedItemTID < 500)
         {
-            Debug.Log("General item added to inventory.");
-            playerInventory.AddItem(pickedItemTID, count);
+            //Debug.Log("General item added to inventory.");
+            playerInventory.AddItem(data, count);
         }
         // 그 외 아이템은 알 수 없는 아이템
         else
@@ -108,35 +104,30 @@ public class InventoryPresenter : MonoBehaviour
         }
     }
 
-    public void OpenInventoryUI()
+    /* 특정 칸의 인벤토리 슬롯이 바뀌었을 때 해당 칸을 갱신함 */
+    private void HandleSlotChanged(int index)
     {
-        // 인벤토리 UI 활성화/비활성화 이벤트
-        GlobalEventBus.OnUIPushRequested?.Invoke(inventoryUIPanel);
-
-        // 인벤토리가 열릴 때 슬롯도 함께 생성
-        inventoryUI.CreatSlots(playerInventory.slotNum, (index, slotObj) =>
-        {
-            var itemData = playerInventory.slots[index];
-            var slotComponemt = slotObj.GetComponent<InventorySlotUI>();
-
-            // 아이템이 존재 한다면 아이콘 이미지 주소 불러와 이미지 추가
-            if(itemData.TID != 0)
-            {
-                ItemData data = DataManager.Instance.GetItemData(itemData.TID);
-                slotComponemt.SetIcon(data.icon);
-                slotComponemt.SetStackCount(itemData.amount);
-            }
-            // 그렇지 않다면 빈 칸으로 초기화
-            else
-            {
-                slotComponemt.Initialize();
-            }
-        });
+        if (inventoryUI == null || !inventoryUI.gameObject.activeInHierarchy) return;
+        inventoryUI.UpdateSlot(index, playerInventory.slots[index]);
     }
 
+    public void OpenInventoryUI()
+    {
+        // 인벤토리 UI 활성화 및 UI 오브젝트 캐시 저장
+        inventoryUI = UIManager.Instance.Open<InventoryUI>();
+        if(inventoryUI==null) return;
+
+        // 인벤토리 첫 실행시 슬롯 생성
+        inventoryUI.CreatSlots(playerInventory.slotNum);
+
+        // 인벤토리의 아이템 상태를 동기화
+        //for(int i=0; i<playerInventory.slotNum; i++)
+        //    inventoryUI.UpdateSlot(i, playerInventory.slots[i]);
+    }
+
+    /* 인벤토리 UI 비활성화 */
     public void CloseInventoryUI()
     {
-        // 인벤토리 UI 활성화/비활성화 이벤트
-        GlobalEventBus.OnUIPopRequested?.Invoke(inventoryUIPanel);
+        UIManager.Instance.Close<InventoryUI>();
     }
 }

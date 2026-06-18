@@ -236,7 +236,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0060f6fb8c72b74439933b440e5a5046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  InventoryList: {fileID: 0}
+  slotContainer: {fileID: 2790347562561381162}
+  slotsObj: []
+  slotPrefab: {fileID: 1011526392357912481, guid: b338405f1c6f0044aa1e6255d1aa0fab,
+    type: 3}
 --- !u!1 &8320628540029736447
 GameObject:
   m_ObjectHideFlags: 0

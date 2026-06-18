@@ -17,13 +17,23 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: c50e6a64479f53b419454afd384ff002
   m_SerializeEntries:
+  - m_GUID: 706c148020f277049a3e04776b64de88
+    m_Address: Image_301_testHealpack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c419aaafcbf53de4a84acb42f22678da
     m_Address: Weapon_101_testGun
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: faab77ee407a7e041bbf4527bec04be9
+    m_Address: Image_302_testManaPiece
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fb902b28974cf4a4fab2e16114c9c1cf
-    m_Address: Assets/04_Graphics/Images/img_testGun.png
+    m_Address: Image_101_testGun
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
