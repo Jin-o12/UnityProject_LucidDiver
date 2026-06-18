@@ -121,8 +121,8 @@ public class InventoryPresenter : MonoBehaviour
         inventoryUI.CreatSlots(playerInventory.slotNum);
 
         // 인벤토리의 아이템 상태를 동기화
-        //for(int i=0; i<playerInventory.slotNum; i++)
-        //    inventoryUI.UpdateSlot(i, playerInventory.slots[i]);
+        for(int i=0; i<playerInventory.slotNum; i++)
+            inventoryUI.UpdateSlot(i, playerInventory.slots[i]);
     }
 
     /* 인벤토리 UI 비활성화 */

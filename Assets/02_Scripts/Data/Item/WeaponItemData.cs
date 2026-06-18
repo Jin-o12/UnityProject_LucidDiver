@@ -14,4 +14,5 @@ public class WeaponItemData : ItemData
     // areaWidth: 공격 범위
     public float dreamBarrierBreakValue;        // 몽막 공격력
     public AssetReferenceGameObject fireEffect; // 공격 시 이펙트 주소
+    public float useMana;                       // 마나 소모량
 }

@@ -14,13 +14,13 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     public bool isReloading { get; private set; }           // 재장전 실행 중 여부
     
     // 플레이어 체력
-    public float hpMax;                     // 전체 체력
-    public float hpCurrent;                 // 현재 체력
+    public float hpMax;                                     // 전체 체력
+    public float hpCurrent;                                 // 현재 체력
 
     // 플레이어 마나
-    public float manaMax;                       // 마나 최대값
-    public float currentMana;                   // 현재 마나
-    public float manaRegen;                     // 초탕 마나 화복량
+    public float mpMax;                                     // 마나 최대값
+    public float mpCurrent { get; private set; }            // 현재 마나
+    public float manaRegen;                                 // 초탕 마나 화복량
 
     void Awake()
     {
@@ -29,8 +29,8 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
         hpMax = 100;
         hpCurrent = hpMax;
-        manaMax = 100;
-        currentMana = manaMax;
+        mpMax = 100;
+        mpCurrent = mpMax;
         manaRegen = 5.0f;
     }
 
@@ -41,6 +41,9 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         {
             GlobalRuntimeData.ActivePlayers.Add(this.transform);
         }
+
+        /// 이벤트 구독 ///
+        //GlobalEventBus.OnAttackInput += UseAttackMana;
     }
 
     private void OnDisable()
@@ -51,12 +54,15 @@ public class PlayerStatus : MonoBehaviour, IDamageable
             GlobalRuntimeData.ActivePlayers.Remove(this.transform);
         }
 
+        /// 이벤트 구독 해제 ///
+        //GlobalEventBus.OnAttackInput -= UseAttackMana;
     }
 
     void Start()
     {
         // UI 초기 업데이트
-        UpdataHp();
+        UpdateHp();
+        UpdateMp();
 
         // 코루틴 시작
         StartCoroutine(HealingManaPerSeconds());
@@ -69,14 +75,31 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     public void TakeDamage(float dmg)
     {
         hpCurrent = Mathf.Clamp(hpCurrent-dmg, 0, hpMax);
-        UpdataHp();
+        UpdateHp();
+    }
+
+    public void UseAttackMana(float _useMana)
+    {
+        mpCurrent = Mathf.Clamp(mpCurrent-_useMana, 0, mpMax);
+        UpdateMp();
+    }
+
+    /* 초상화 UI 업데이트 */
+    private void UpdateFaceImage()
+    {
+        /// 플레이어 데이터 구조가 구축되면 연동하여 업데이트 할 것 ///
     }
 
     /* 체력 UI 업데이트 */
-    private void UpdataHp()
+    private void UpdateHp()
     {
-        Debug.Log("체력 업데이트");
         GlobalEventBus.OnPlayerHealthChanged?.Invoke(hpCurrent, hpMax);
+    }
+
+    /* 마나 UI 업데이트 */
+    private void UpdateMp()
+    {
+        GlobalEventBus.OnPlayerManaChanged?.Invoke(mpCurrent, mpMax);
     }
 
     /* 초당 마나 회복 코루틴 */
@@ -84,7 +107,8 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     {
         while(nowState != livingState.gameover)
         {
-            currentMana += manaRegen;
+            mpCurrent = Mathf.Clamp(mpCurrent += manaRegen, 0, mpMax);
+            UpdateMp();
             yield return new WaitForSeconds(1.0f);
         }
     }
