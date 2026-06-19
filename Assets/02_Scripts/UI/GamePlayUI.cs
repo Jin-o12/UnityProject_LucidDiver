@@ -6,22 +6,22 @@ public class GamePlayUI : MonoBehaviour
 {
     [Header("하위 UI 판넬 컴포넌트")]
     [SerializeField] PlayerStatusUI statusUI;
-    [SerializeField] QuickSlotUI quickSlotUI;
+    [SerializeField] QuickSlotGroupUI quickSlotGroupUI;
 
     private void Awake()
     {
         statusUI = GetComponent<PlayerStatusUI>();
-        quickSlotUI = GetComponent<QuickSlotUI>();
+        quickSlotGroupUI = GetComponent<QuickSlotGroupUI>();
 
-        if(statusUI==null || quickSlotUI==null)
+        if(statusUI==null || quickSlotGroupUI==null)
         {
             this.enabled = false;
-            Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
+            Debug.LogError("GamePlayUI: 필요한 컴포넌트가 없습니다.");
             return;
         }
 
         // 퀵슬롯 초기화
-        quickSlotUI.initialize();
+        quickSlotGroupUI.InitializeSlots();
     }
 
 

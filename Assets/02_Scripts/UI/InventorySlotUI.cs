@@ -111,13 +111,6 @@ public class InventorySlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
                 // 두 슬롯간에 교환이 있었음을 방송
                 GlobalEventBus.OnSwapInventorySlot(slotIndex, originSlot.slotIndex);
-
-                // 두 슬롯간에 이미지 교환
-                //(originSlot.itemImg.sprite, this.itemImg.sprite) = (this.itemImg.sprite, originSlot.itemImg.sprite);
-                //(originSlot.itemStack.text, this.itemStack.text) = (this.itemStack.text, originSlot.itemStack.text);
-
-                itemInfo.SetParent(this.transform);
-                itemInfo.localPosition = Vector3.zero;
             }
         }
     }

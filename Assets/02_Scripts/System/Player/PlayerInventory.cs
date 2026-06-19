@@ -23,7 +23,7 @@ public class PlayerInventory : MonoBehaviour
     void Awake()
     {
         slotNum = 10;
-        quickSlotNum = 4;
+        quickSlotNum = 3;
 
         // 모든 슬롯 데이터 초기화
         for (int i = 0; i < slotNum; i++)
@@ -40,12 +40,14 @@ public class PlayerInventory : MonoBehaviour
     {
         /// 이벤트 구독 ///
         GlobalEventBus.OnSwapInventorySlot += SwapSlotData;
+        GlobalEventBus.OnDropItemQuickSlot += AddItemToQuickslot;
     }
 
     private void OnDisable()
     {
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnSwapInventorySlot -= SwapSlotData;
+        GlobalEventBus.OnDropItemQuickSlot -= AddItemToQuickslot;
     }
 
     public void AddItem(ItemData _itemData, int _count)
@@ -116,5 +118,39 @@ public class PlayerInventory : MonoBehaviour
         // 변동사항 알림
         OnSlotChanged?.Invoke(_index1);
         OnSlotChanged?.Invoke(_index2);
+    }
+
+    /* 퀵슬롯에 아이템 추가 */
+    public void AddItemToQuickslot(int _quickIndex, int _slotIndex)
+    {
+        InventorySlotData slot = slots[_slotIndex];
+        InventorySlotData qSlot = quickSlots[_quickIndex];
+
+        // 절대적 갯수를 확인하여 총 갯수를 넘겨줌
+        int sumCount = 0;
+        for (int i = 0; i < slotNum; i++)
+        {
+            // 현재 찾는 아이템과 인벤토리에 있는 아이템이 동일한 경우
+            if(slots[i].TID==slot.TID)
+            {
+                sumCount += slots[i].amount;
+            }
+        }
+
+        // 이미 퀵슬롯에 있다면 기존의 퀵슬롯 내용을 삭제
+        for (int i = 0; i < quickSlotNum; i++)
+        {
+            if(quickSlots[i].TID==slot.TID)
+            {
+                GlobalEventBus.OnQuickSlotChanged?.Invoke(i, null, 0);
+            }
+        }
+
+        qSlot.TID = slot.TID;
+        qSlot.amount = sumCount;
+        qSlot.icon = slot.icon;
+
+        OnSlotChanged?.Invoke(_slotIndex);
+        GlobalEventBus.OnQuickSlotChanged?.Invoke(_quickIndex, qSlot.icon, qSlot.amount);
     }
 }
