@@ -17,6 +17,8 @@ public class GlobalEventBus
 
     /// 아이템 관련 이벤트 ///
     public static Action<int, int, int> OnItemPickedUp;             // 아아템을 주웠을 시: Action<플레이어 식별자 코드, 아이템 코드, 아이템 갯수>
+    public static Action<int, int> OnSwapInventorySlot;             // 인벤토리 슬롯이 바뀌었을 시: Action<int, int>
+    public static Action<GameObject, float> OnGainManaRequested;    // 마나 회복 효과: 
 
     /// 전투 관련 이벤트 ///
     public static Action<float, float> OnPlayerHealthChanged;       // 플레이어 체력 변동: Action<현재 체력, 전체 체력>

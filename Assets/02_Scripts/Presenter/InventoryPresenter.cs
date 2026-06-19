@@ -108,9 +108,10 @@ public class InventoryPresenter : MonoBehaviour
     private void HandleSlotChanged(int index)
     {
         if (inventoryUI == null || !inventoryUI.gameObject.activeInHierarchy) return;
-        inventoryUI.UpdateSlot(index, playerInventory.slots[index]);
+            inventoryUI.UpdateSlot(index, playerInventory.slots[index]);
     }
 
+    /* 인벤토리 UI 활성화 */
     public void OpenInventoryUI()
     {
         // 인벤토리 UI 활성화 및 UI 오브젝트 캐시 저장

@@ -28,11 +28,8 @@ MonoBehaviour:
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
-  useEffect: {fileID: 11400000, guid: cf12e36062a65d04789241d745364d89, type: 2}
   useType: 0
   useRange: 0
   useDelay: 0
-  effectRange: 0
-  effectTarget: 0
-  effectType: 0
-  effectValue: 0
+  useEffect:
+  - {fileID: 11400000, guid: cf12e36062a65d04789241d745364d89, type: 2}
