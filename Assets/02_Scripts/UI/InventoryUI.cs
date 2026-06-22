@@ -27,7 +27,7 @@ public class InventoryUI : MonoBehaviour
         {
             // 새로운 슬롯 생성
             GameObject newSlot = Instantiate(slotPrefab, slotContainer.transform);
-            newSlot.GetComponent<InventorySlotUI>().Initialize();
+            newSlot.GetComponent<InventorySlotUI>().Initialize(i);
             slotsObj.Add(newSlot);
         }
     }

@@ -14,6 +14,7 @@ public class PlayerWeapon : MonoBehaviour
     [SerializeField] private Transform handPos;             // 무기가 장착되는 손 위치
     [SerializeField] private Transform firePoint;           // 총알이 발사되는 위치
     public bool isEquipped => weaponData != null;           // 무기가 장착되어 있는지 여부
+    public float nowUseMana => weaponData.useMana;          // 현재 무기가 소모하는 마나량
     private GameObject currentWeaponInstance;               // 현재 장착 중인 무기 오브젝트
 
 
@@ -22,35 +23,23 @@ public class PlayerWeapon : MonoBehaviour
     public GameObject bulletPrefab;
     public GameObject bulletPool;
 
-    private void OnEnable()
+
+    private void Awake()
     {
         weaponData = null;    // 무기가 장착되어 있지 않음
-        
-        /// 이벤트 구독 ///
-        GlobalEventBus.OnAttackInput += PlayerAttack;
-    }
-
-    private void OnDisable()
-    {
-        /// 이벤트 구독 해제 ///
-        GlobalEventBus.OnAttackInput -= PlayerAttack;
     }
 
     /* 플레이어 공격 처리 */
-    private void PlayerAttack()
+    public void PlayerAttack()
     {
-        // 무기 소지 시 공격 처리 (무기 종류에 따른 다른 공격 방식 처리 차후 추가)
-        if(weaponData != null)
+        // 공격 신호 시 총알 발사
+        // 이후 무기에 따른 공격 패턴의 분리, 발사체 및 이펙트 생성 시 오브젝트 풀링 적용
+        GameObject currentBulletObject = Instantiate(bulletPrefab, handPos.transform.position, handPos.transform.rotation, bulletPool.transform);
+        // 무기의 스텟에 따라 발사체의 스텟 전달 
+        ProjectileSystem bulletSystem = currentBulletObject.GetComponent<ProjectileSystem>();
+        if(bulletSystem!=null)
         {
-            // 공격 신호 시 총알 발사
-            // 이후 무기에 따른 공격 패턴의 분리, 발사체 및 이펙트 생성 시 오브젝트 풀링 적용
-            GameObject currentBulletObject = Instantiate(bulletPrefab, handPos.transform.position, handPos.transform.rotation, bulletPool.transform);
-            // 무기의 스텟에 따라 발사체의 스텟 전달 
-            ProjectileSystem bulletSystem = currentBulletObject.GetComponent<ProjectileSystem>();
-            if(bulletSystem!=null)
-            {
-                bulletSystem.Setup(weaponData.AtkValue, Faction.player, weaponData.fireRange, weaponData.fireRange);
-            }
+            bulletSystem.Setup(weaponData.AtkValue, Faction.player, weaponData.fireRange, weaponData.fireRange);
         }
     }
 

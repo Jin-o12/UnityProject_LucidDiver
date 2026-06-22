@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 744f3422f67401545a4d478eefbfb7e4, type: 3}
-  m_Name: testManaPiece
+  m_Name: testHealMedicine
   m_EditorClassIdentifier: 
-  TID: 302
-  itemName: "\uB9C8\uB098\uC11D"
-  desc: "\uC0AC\uC6A9 \uC2DC \uB9C8\uB098 5 \uD68C\uBCF5"
+  TID: 301
+  itemName: "\uD68C\uBCF5\uC57D"
+  desc: "\uCCB4\uB825\uC744 10 \uD68C\uBCF5\uC2DC\uCF1C \uC90D\uB2C8\uB2E4"
   category: 3
   effectID: 0
   itemMultiple: 5
   icon:
-    m_AssetGUID: faab77ee407a7e041bbf4527bec04be9
+    m_AssetGUID: 4e02c9e1f07b002469477ef272336c98
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
@@ -32,4 +32,4 @@ MonoBehaviour:
   useRange: 0
   useDelay: 0
   useEffect:
-  - {fileID: 11400000, guid: 40c2460df4e28a44181198c5d964259d, type: 2}
+  - {fileID: 11400000, guid: cf12e36062a65d04789241d745364d89, type: 2}

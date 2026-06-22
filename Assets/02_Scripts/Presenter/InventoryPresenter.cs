@@ -82,7 +82,9 @@ public class InventoryPresenter : MonoBehaviour
             }
             else
             {
-                playerInventory.AddItem(data, count);
+                int throwItem = playerInventory.AddItem(data, count);
+
+                /// ※ 버려지는 아이템에 대한 로직 추가 ///
             }
         }
         // TID 300대는 소모품
@@ -95,7 +97,9 @@ public class InventoryPresenter : MonoBehaviour
         else if(400 < pickedItemTID && pickedItemTID < 500)
         {
             //Debug.Log("General item added to inventory.");
-            playerInventory.AddItem(data, count);
+            int throwItem = playerInventory.AddItem(data, count);
+
+            /// ※ 버려지는 아이템에 대한 로직 추가 ///
         }
         // 그 외 아이템은 알 수 없는 아이템
         else
@@ -108,9 +112,10 @@ public class InventoryPresenter : MonoBehaviour
     private void HandleSlotChanged(int index)
     {
         if (inventoryUI == null || !inventoryUI.gameObject.activeInHierarchy) return;
-        inventoryUI.UpdateSlot(index, playerInventory.slots[index]);
+            inventoryUI.UpdateSlot(index, playerInventory.slots[index]);
     }
 
+    /* 인벤토리 UI 활성화 */
     public void OpenInventoryUI()
     {
         // 인벤토리 UI 활성화 및 UI 오브젝트 캐시 저장
@@ -121,8 +126,8 @@ public class InventoryPresenter : MonoBehaviour
         inventoryUI.CreatSlots(playerInventory.slotNum);
 
         // 인벤토리의 아이템 상태를 동기화
-        //for(int i=0; i<playerInventory.slotNum; i++)
-        //    inventoryUI.UpdateSlot(i, playerInventory.slots[i]);
+        for(int i=0; i<playerInventory.slotNum; i++)
+            inventoryUI.UpdateSlot(i, playerInventory.slots[i]);
     }
 
     /* 인벤토리 UI 비활성화 */

@@ -14,13 +14,13 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     public bool isReloading { get; private set; }           // 재장전 실행 중 여부
     
     // 플레이어 체력
-    public float hpMax;                     // 전체 체력
-    public float hpCurrent;                 // 현재 체력
+    public float hpMax;                                     // 전체 체력
+    public float hpCurrent;                                 // 현재 체력
 
     // 플레이어 마나
-    public float manaMax;                       // 마나 최대값
-    public float currentMana;                   // 현재 마나
-    public float manaRegen;                     // 초탕 마나 화복량
+    public float mpMax;                                     // 마나 최대값
+    public float mpCurrent { get; private set; }            // 현재 마나
+    public float manaRegen;                                 // 초탕 마나 화복량
 
     void Awake()
     {
@@ -29,9 +29,9 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
         hpMax = 100;
         hpCurrent = hpMax;
-        manaMax = 100;
-        currentMana = manaMax;
-        manaRegen = 5.0f;
+        mpMax = 100;
+        mpCurrent = mpMax;
+        manaRegen = 1.0f;
     }
 
     private void OnEnable()
@@ -41,6 +41,10 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         {
             GlobalRuntimeData.ActivePlayers.Add(this.transform);
         }
+
+        /// 이벤트 구독 ///
+        GlobalEventBus.OnGainManaRequested += GainMana;
+        GlobalEventBus.OnHealRequested += HealingHealth;
     }
 
     private void OnDisable()
@@ -51,32 +55,62 @@ public class PlayerStatus : MonoBehaviour, IDamageable
             GlobalRuntimeData.ActivePlayers.Remove(this.transform);
         }
 
+        /// 이벤트 구독 해제 ///
+        GlobalEventBus.OnGainManaRequested -= GainMana;
+        GlobalEventBus.OnHealRequested -= HealingHealth;
     }
 
     void Start()
     {
         // UI 초기 업데이트
-        UpdataHp();
+        UpdateHp();
+        UpdateMp();
 
-        // 코루틴 시작
+        // 초당 마나 소모 코루틴 시작
         StartCoroutine(HealingManaPerSeconds());
     }
 
+#region Status Management
     /* 피격 시 자신의 타입을 반환 */
     public Faction EntityFaction => Faction.player;
+
+    /* 체력 UI 업데이트 */
+    private void UpdateHp()
+    {
+        GlobalEventBus.OnPlayerHealthChanged?.Invoke(hpCurrent, hpMax);
+    }
+
+    /* 마나 UI 업데이트 */
+    private void UpdateMp()
+    {
+        GlobalEventBus.OnPlayerManaChanged?.Invoke(mpCurrent, mpMax);
+    }
+
+    /* 체력 변화 */
+    private void GetHp(float _val)
+    {
+        hpCurrent = Mathf.Clamp(hpCurrent+_val, 0, hpMax);
+        UpdateHp();
+    }
+
+    /* 마나 변화 */
+    private void GetMp(float _val)
+    {
+        mpCurrent = Mathf.Clamp(mpCurrent+_val, 0, mpMax);
+        UpdateMp();
+    }
+#endregion
 
     /* 피해 입을 시 체력 감소 처리 */
     public void TakeDamage(float dmg)
     {
-        hpCurrent = Mathf.Clamp(hpCurrent-dmg, 0, hpMax);
-        UpdataHp();
+        GetHp(-dmg);
     }
 
-    /* 체력 UI 업데이트 */
-    private void UpdataHp()
+    /* 공격 시 마나 사용 */
+    public void UseAttackMana(float _useMana)
     {
-        Debug.Log("체력 업데이트");
-        GlobalEventBus.OnPlayerHealthChanged?.Invoke(hpCurrent, hpMax);
+        GetMp(-_useMana);
     }
 
     /* 초당 마나 회복 코루틴 */
@@ -84,8 +118,28 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     {
         while(nowState != livingState.gameover)
         {
-            currentMana += manaRegen;
+            GetMp(manaRegen);
             yield return new WaitForSeconds(1.0f);
         }
+    }
+
+    private void HealingHealth(GameObject _target, float _effectValue)
+    {
+        // 대상이 내가 아니라면 리턴
+        if(_target!=this.gameObject) return;
+        GetHp(_effectValue);
+    }
+
+    private void GainMana(GameObject _target, float _effectValue)
+    {
+        // 대상이 내가 아니라면 리턴
+        if(_target!=this.gameObject) return;
+        GetMp(_effectValue);
+    }
+
+    /* 초상화 UI 업데이트 */
+    private void UpdateFaceImage()
+    {
+        /// 플레이어 데이터 구조가 구축되면 연동하여 업데이트 할 것 ///
     }
 }

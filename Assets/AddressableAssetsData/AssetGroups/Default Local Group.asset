@@ -17,8 +17,13 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: c50e6a64479f53b419454afd384ff002
   m_SerializeEntries:
-  - m_GUID: 706c148020f277049a3e04776b64de88
-    m_Address: Image_301_testHealpack
+  - m_GUID: 4e02c9e1f07b002469477ef272336c98
+    m_Address: Image_301_testHealMedicine
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa9423379d442b74bba59f8933ebd6c3
+    m_Address: Assets/04_Graphics/Images/Img_MemoryPiece.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
