@@ -10,6 +10,7 @@ public enum Faction
     neutral     // 그 외
 }
 
+// 아이템 카테고리
 public enum itemCategory
 {
     idle,           // 기타 아이템
@@ -18,6 +19,7 @@ public enum itemCategory
     consume         // 소모품
 }
 
+// 아이템 사용 방법 종류
 public enum UseType
 {
     target,             // 사용자가 대상을 선택
@@ -26,13 +28,22 @@ public enum UseType
     rectangle           // rectangle
 }
 
+// 아이템 효과 적용 대상
 public enum EffectTarget
 {
     self,               // 플레이어 자신
     enemy               // 적 캐릭터
 }
 
+// 아이템 효과 종류
 public enum EffectType
 {
-    mana_recover_inst   // 마나 즉시 회복
+    health_recover_inst,    // 체력 즉시 회복
+    mana_recover_inst       // 마나 즉시 회복
+}
+
+// 기억 파편 사용 가능 캐릭터 타입
+public enum UserType
+{
+    main                // 메인 캐릭터
 }

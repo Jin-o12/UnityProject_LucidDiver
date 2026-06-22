@@ -9,17 +9,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 744f3422f67401545a4d478eefbfb7e4, type: 3}
-  m_Name: testHealpack
+  m_Script: {fileID: 11500000, guid: 6ca8cded9ead1c4459f897c9699f3707, type: 3}
+  m_Name: testMemoryPiece
   m_EditorClassIdentifier: 
-  TID: 0
-  itemName: 
-  desc: 
+  TID: 401
+  itemName: "\uAE30\uC5B5 \uC870\uAC01"
+  desc: "\uB2E4\uC774\uBC84\uC758 \uB3D9\uC870\uC728\uC744 \uC0C1\uC2B9\uC2DC\uD0AC
+    \uC218 \uC788\uC2B5\uB2C8\uB2E4"
   category: 0
   effectID: 0
-  itemMultiple: 0
+  itemMultiple: 10
   icon:
-    m_AssetGUID: 706c148020f277049a3e04776b64de88
+    m_AssetGUID: aa9423379d442b74bba59f8933ebd6c3
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
@@ -28,8 +29,6 @@ MonoBehaviour:
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
-  useType: 0
-  useRange: 0
-  useDelay: 0
-  useEffect:
-  - {fileID: 11400000, guid: cf12e36062a65d04789241d745364d89, type: 2}
+  userType: 0
+  charID: 0
+  linkRateGain: 0

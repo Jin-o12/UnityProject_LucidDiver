@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: GainManaEffect
   m_EditorClassIdentifier: 
   effectTarget: 0
-  effectType: 0
+  effectType: 1
   effectRange: 0
   effectValue: 5

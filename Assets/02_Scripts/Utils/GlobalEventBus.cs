@@ -23,6 +23,7 @@ public class GlobalEventBus
     public static Action<int, int> OnDropItemQuickSlot;             // 인벤토리에서 퀵슬롯에 아이템을 드래그 앤 드롭 할 시: Action<퀵슬롯 번호, 인벤토리 번호>
     
     /// 특정 효과 발동 이벤트 ///
+    public static Action<GameObject, float> OnHealRequested;        // 체력 회복 효과: Action<대상, 값>
     public static Action<GameObject, float> OnGainManaRequested;    // 마나 회복 효과: Action<대상, 값>
 
     /// 전투 관련 이벤트 ///

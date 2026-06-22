@@ -146,6 +146,9 @@ public class PlayerInventory : MonoBehaviour
         InventorySlotData slot = slots[_slotIndex];
         InventorySlotData qSlot = quickSlots[_quickIndex];
 
+        // 소모품이 아닐 경우에는 퀵슬롯에 등록하지 않음
+        if(slot.TID<=300 || slot.TID>=400) return;
+
         // 이미 퀵슬롯에 있다면 기존의 퀵슬롯 내용을 삭제
         for (int i = 0; i < quickSlotNum; i++)
         {
