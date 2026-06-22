@@ -41,6 +41,7 @@ public class PlayerInventory : MonoBehaviour
         /// 이벤트 구독 ///
         GlobalEventBus.OnSwapInventorySlot += SwapSlotData;
         GlobalEventBus.OnDropItemQuickSlot += AddItemToQuickslot;
+        GlobalEventBus.OnSwapItemQuickSlot += SwapItemQuickSlot;
     }
 
     private void OnDisable()
@@ -48,6 +49,7 @@ public class PlayerInventory : MonoBehaviour
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnSwapInventorySlot -= SwapSlotData;
         GlobalEventBus.OnDropItemQuickSlot -= AddItemToQuickslot;
+        GlobalEventBus.OnSwapItemQuickSlot -= SwapItemQuickSlot;
     }
 
     /* 인벤토리에 아이템 추가 또는 더해짐 */
@@ -67,21 +69,34 @@ public class PlayerInventory : MonoBehaviour
                 throwItem = (slots[i].amount+_count)-_itemData.itemMultiple;
                 return throwItem;
             }
-        }
-
-        for (int i = 0; i < slotNum; i++)
-        {
-            // 해당 인벤토리 칸이 비어있다면
-            if(slots[i].TID==0)
+            // 녛으려는 아이템과 동일하나, 이미 최대 스텍이라면 아이템 넣는 것을 포기
+            else if(slots[i].TID == _itemData.TID && slots[i].amount>=_itemData.itemMultiple)
             {
-                slots[i].TID = _itemData.TID;
-                slots[i].amount = _count;
-                LoadSprite(_itemData.icon, i);
-                return 0;
+                return _count;
             }
         }
 
-        return 0;
+        // 동일한 아이템이 존재하지 않는다면 빈 자리에 아이템을 추가
+        for (int i = 0; i < slotNum; i++)
+        {
+            // 해당 인벤토리 칸이 비어있다면 아이템 저장
+            if(slots[i].TID==0)
+            {
+                slots[i].TID = _itemData.TID;
+                LoadSprite(_itemData.icon, i);
+                
+                int throwItem = 0;
+                // 아이템을 합산 했을 때, 스텍을 초과하면 나머지는 먹지 않고, 그렇지 않다면 모두 합산
+                slots[i].amount = slots[i].amount+_count>=_itemData.itemMultiple ? _itemData.itemMultiple : _count;
+                throwItem = (slots[i].amount+_count)-_itemData.itemMultiple;
+
+                return throwItem;
+            }
+        }
+
+        // 인벤토리 꽉 참 혹은 모종의 이유로 아이템을 주울 수 없을 경우 줍기를 실행하지 않음
+        Debug.Log("인벤토리가 꽉 찼거나 모종의 이유로 아이템을 주울 수 없습니다."); 
+        return _count;
     }
 
     /* 아이템 아이콘 Addressable 주소 해석 및 스프라이트 이미지 가져오기 */
@@ -122,7 +137,7 @@ public class PlayerInventory : MonoBehaviour
         }
     }
 
-    /* 슬롯 데이터를 교환 */
+    /* 인벤토리 슬롯 데이터를 교환 */
     public void SwapSlotData(int _index1, int _index2)
     {
         /// ※추가: 해당 아이템이 동일한 아이템이라면 존재한다면 합산 가능한지 판정 후 합산 ///
@@ -176,5 +191,21 @@ public class PlayerInventory : MonoBehaviour
         slot.amount--;
         // 사용에 따른 퀵슬롯 변화
         GlobalEventBus.OnQuickSlotChanged?.Invoke(_index, slot.icon, slot.amount);
+    }
+
+    /* 퀵슬롯간에 아이템 교환 */
+    private void SwapItemQuickSlot(int _index1, int _index2)
+    {
+        InventorySlotData slot1 = quickSlots[_index1];
+        InventorySlotData slot2 = quickSlots[_index2];
+        
+        // 두 데이터 교환
+        (slot1.TID, slot2.TID) = (slot2.TID, slot1.TID);
+        (slot1.amount, slot2.amount) = (slot2.amount, slot1.amount);
+        (slot1.icon, slot2.icon) = (slot2.icon, slot1.icon);
+        
+        // 변동사항 알림
+        GlobalEventBus.OnQuickSlotChanged?.Invoke(_index1, slot1.icon, slot1.amount);
+        GlobalEventBus.OnQuickSlotChanged?.Invoke(_index2, slot2.icon, slot2.amount);
     }
 }
