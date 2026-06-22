@@ -101,8 +101,13 @@ public class QuickSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         {
             if(droppedObj.TryGetComponent<InventorySlotUI>(out var originSlot))
             {
-                // 두 슬롯간에 교환이 있었음을 방송
+                // 인벤토리와 퀵슬롯간에 교환이 있었음을 방송
                 GlobalEventBus.OnDropItemQuickSlot(slotIndex, originSlot.slotIndex);
+            }
+            else if(droppedObj.TryGetComponent<QuickSlotUI>(out var quickSlot))
+            {
+                // 두 퀵슬롯 간에 교환이 있었음을 방송
+                GlobalEventBus.OnSwapItemQuickSlot(quickSlot.slotIndex, slotIndex);
             }
         }
     }
