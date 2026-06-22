@@ -43,7 +43,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         }
 
         /// 이벤트 구독 ///
-        //GlobalEventBus.OnAttackInput += UseAttackMana;
+        GlobalEventBus.OnGainManaRequested += GainMana;
     }
 
     private void OnDisable()
@@ -55,7 +55,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         }
 
         /// 이벤트 구독 해제 ///
-        //GlobalEventBus.OnAttackInput -= UseAttackMana;
+        GlobalEventBus.OnGainManaRequested -= GainMana;
     }
 
     void Start()
@@ -64,7 +64,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         UpdateHp();
         UpdateMp();
 
-        // 코루틴 시작
+        // 초당 마나 소모 코루틴 시작
         StartCoroutine(HealingManaPerSeconds());
     }
 
@@ -111,5 +111,14 @@ public class PlayerStatus : MonoBehaviour, IDamageable
             UpdateMp();
             yield return new WaitForSeconds(1.0f);
         }
+    }
+
+    private void GainMana(GameObject _target, float _effectValue)
+    {
+        // 대상이 내가 아니라면 리턴
+        if(_target!=this.gameObject) return;
+        // 마나 회복
+        mpCurrent = Mathf.Clamp(mpCurrent += _effectValue, 0, mpMax);
+        UpdateMp();
     }
 }

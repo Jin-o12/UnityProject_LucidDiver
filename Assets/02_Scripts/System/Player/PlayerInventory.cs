@@ -50,9 +50,24 @@ public class PlayerInventory : MonoBehaviour
         GlobalEventBus.OnDropItemQuickSlot -= AddItemToQuickslot;
     }
 
-    public void AddItem(ItemData _itemData, int _count)
+    /* 인벤토리에 아이템 추가 또는 더해짐 */
+    public int AddItem(ItemData _itemData, int _count)
     {
-        if(_itemData==null) return;
+        if(_itemData==null) return 0;
+
+        // 동일 아이템이 이미 인벤토리에 존재한다면 합산 (합산 가능한 스텍일 시)
+        for (int i = 0; i < slotNum; i++)
+        {
+            // 해당 아이템이 넣으려는 아이템과 동일하고 최대 스택 미만이라면 합산하여 저장
+            if(slots[i].TID == _itemData.TID && slots[i].amount<_itemData.itemMultiple)
+            {
+                int throwItem = 0;
+                // 아이템을 합산 했을 때, 스텍을 초과하면 나머지는 먹지 않고, 그렇지 않다면 모두 합산
+                slots[i].amount = slots[i].amount+_count>=_itemData.itemMultiple ? _itemData.itemMultiple : _count;
+                throwItem = (slots[i].amount+_count)-_itemData.itemMultiple;
+                return throwItem;
+            }
+        }
 
         for (int i = 0; i < slotNum; i++)
         {
@@ -62,11 +77,14 @@ public class PlayerInventory : MonoBehaviour
                 slots[i].TID = _itemData.TID;
                 slots[i].amount = _count;
                 LoadSprite(_itemData.icon, i);
-                return;
+                return 0;
             }
         }
+
+        return 0;
     }
 
+    /* 아이템 아이콘 Addressable 주소 해석 및 스프라이트 이미지 가져오기 */
     private void LoadSprite(AssetReferenceSprite iconRef, int slotIndex)
     {
         loadHandle = Addressables.LoadAssetAsync<Sprite>(iconRef);
@@ -107,6 +125,8 @@ public class PlayerInventory : MonoBehaviour
     /* 슬롯 데이터를 교환 */
     public void SwapSlotData(int _index1, int _index2)
     {
+        /// ※추가: 해당 아이템이 동일한 아이템이라면 존재한다면 합산 가능한지 판정 후 합산 ///
+ 
         InventorySlotData slot1 = slots[_index1];
         InventorySlotData slot2 = slots[_index2];
         
@@ -126,17 +146,6 @@ public class PlayerInventory : MonoBehaviour
         InventorySlotData slot = slots[_slotIndex];
         InventorySlotData qSlot = quickSlots[_quickIndex];
 
-        // 절대적 갯수를 확인하여 총 갯수를 넘겨줌
-        int sumCount = 0;
-        for (int i = 0; i < slotNum; i++)
-        {
-            // 현재 찾는 아이템과 인벤토리에 있는 아이템이 동일한 경우
-            if(slots[i].TID==slot.TID)
-            {
-                sumCount += slots[i].amount;
-            }
-        }
-
         // 이미 퀵슬롯에 있다면 기존의 퀵슬롯 내용을 삭제
         for (int i = 0; i < quickSlotNum; i++)
         {
@@ -147,10 +156,22 @@ public class PlayerInventory : MonoBehaviour
         }
 
         qSlot.TID = slot.TID;
-        qSlot.amount = sumCount;
+        qSlot.amount = slot.amount;
         qSlot.icon = slot.icon;
 
         OnSlotChanged?.Invoke(_slotIndex);
         GlobalEventBus.OnQuickSlotChanged?.Invoke(_quickIndex, qSlot.icon, qSlot.amount);
+    }
+
+    /* 퀵슬롯 아이템 사용 */
+    public void UseQuickSlotItem(int _index)
+    {
+        if(quickSlots[_index]==null || _index>quickSlotNum) return;
+
+        InventorySlotData slot = quickSlots[_index];
+        // 아이템 사용으로 갯수 감소
+        slot.amount--;
+        // 사용에 따른 퀵슬롯 변화
+        GlobalEventBus.OnQuickSlotChanged?.Invoke(_index, slot.icon, slot.amount);
     }
 }

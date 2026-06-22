@@ -1,3 +1,6 @@
+/// <summary>
+/// 마나 회복 아이템 효과에 대한 Scriptable Object
+/// </summary>
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

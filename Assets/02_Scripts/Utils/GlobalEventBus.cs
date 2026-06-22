@@ -18,9 +18,12 @@ public class GlobalEventBus
     /// 아이템 관련 이벤트 ///
     public static Action<int, int, int> OnItemPickedUp;             // 아아템을 주웠을 시: Action<플레이어 식별자 코드, 아이템 코드, 아이템 갯수>
     public static Action<int, Sprite, int> OnQuickSlotChanged;      // 퀵슬롯 정보가 변경되었을 시: Action<퀵슬롯 번호, 이미지, 갯수>
+    public static Action<int> OnQuickSlotUseRequested;              // 특정 퀵슬롯 번호가 눌렷을 시: Action<퀵슬롯 번호>
     public static Action<int, int> OnSwapInventorySlot;             // 인벤토리 슬롯이 바뀌었을 시: Action<1번 슬롯 번호, 2번 슬롯 번호>
     public static Action<int, int> OnDropItemQuickSlot;             // 인벤토리에서 퀵슬롯에 아이템을 드래그 앤 드롭 할 시: Action<퀵슬롯 번호, 인벤토리 번호>
-    public static Action<GameObject, float> OnGainManaRequested;    // 마나 회복 효과: 
+    
+    /// 특정 효과 발동 이벤트 ///
+    public static Action<GameObject, float> OnGainManaRequested;    // 마나 회복 효과: Action<대상, 값>
 
     /// 전투 관련 이벤트 ///
     public static Action<float, float> OnPlayerHealthChanged;       // 플레이어 체력 변동: Action<현재 체력, 전체 체력>

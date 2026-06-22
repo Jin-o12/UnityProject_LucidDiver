@@ -82,7 +82,9 @@ public class InventoryPresenter : MonoBehaviour
             }
             else
             {
-                playerInventory.AddItem(data, count);
+                int throwItem = playerInventory.AddItem(data, count);
+
+                /// ※ 버려지는 아이템에 대한 로직 추가 ///
             }
         }
         // TID 300대는 소모품
@@ -95,7 +97,9 @@ public class InventoryPresenter : MonoBehaviour
         else if(400 < pickedItemTID && pickedItemTID < 500)
         {
             //Debug.Log("General item added to inventory.");
-            playerInventory.AddItem(data, count);
+            int throwItem = playerInventory.AddItem(data, count);
+
+            /// ※ 버려지는 아이템에 대한 로직 추가 ///
         }
         // 그 외 아이템은 알 수 없는 아이템
         else

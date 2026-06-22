@@ -986,7 +986,7 @@ PrefabInstance:
     - target: {fileID: 6062342294370211581, guid: 1a83250437eb7cb40ac2d57f6f005a8e,
         type: 3}
       propertyPath: stackCount
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1489,6 +1489,7 @@ Transform:
   - {fileID: 471656234}
   - {fileID: 937507499}
   - {fileID: 898767690}
+  - {fileID: 1563163096}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &471656234 stripped
@@ -3366,7 +3367,7 @@ PrefabInstance:
     - target: {fileID: 6062342294370211581, guid: 1a83250437eb7cb40ac2d57f6f005a8e,
         type: 3}
       propertyPath: stackCount
-      value: 50
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3615,6 +3616,7 @@ GameObject:
   - component: {fileID: 1359725910}
   - component: {fileID: 1359725912}
   - component: {fileID: 1359725913}
+  - component: {fileID: 1359725914}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -3827,6 +3829,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 0afa2470-9d36-4c74-aef6-7b04beeb1dc2
     m_ActionName: Player/Inventory[/Keyboard/e]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1359725907}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnUseQuickSlot
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: cab83422-cfb2-4925-af40-a30c1c892a2a
+    m_ActionName: Player/QuickSlot[/Keyboard/1,/Keyboard/2,/Keyboard/3]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -3932,6 +3950,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a94e893213ecdb4d85684794c369cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1359725914
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1359725899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22bb18a97d662274bbca19a37bc1de66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inventory: {fileID: 0}
 --- !u!1 &1419062048
 GameObject:
   m_ObjectHideFlags: 0
@@ -4142,6 +4173,12 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1428697287}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1563163096 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+    type: 3}
+  m_PrefabInstance: {fileID: 1774077598}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1611410701
 GameObject:
   m_ObjectHideFlags: 0
@@ -4503,6 +4540,79 @@ Transform:
   - {fileID: 832575519}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1774077598
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 420978737}
+    m_Modifications:
+    - target: {fileID: 642343213891003965, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: stackCount
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2853218730071156465, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_Name
+      value: testManaPiece_Drop (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -3.24
+      objectReference: {fileID: 0}
+    - target: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 5.61
+      objectReference: {fileID: 0}
+    - target: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8139594606947525524, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 69d5691a300e73d48807dd8d4dad4f01, type: 3}
 --- !u!1 &1811193080
 GameObject:
   m_ObjectHideFlags: 0
@@ -5158,6 +5268,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 420978737}
     m_Modifications:
+    - target: {fileID: 642343213891003965, guid: 69d5691a300e73d48807dd8d4dad4f01,
+        type: 3}
+      propertyPath: stackCount
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 2853218730071156465, guid: 69d5691a300e73d48807dd8d4dad4f01,
         type: 3}
       propertyPath: m_Name
