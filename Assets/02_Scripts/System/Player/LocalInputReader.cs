@@ -84,4 +84,17 @@ public class LocalInputReader : MonoBehaviour
             OnInventoryCloseRequested?.Invoke();
         }
     }
+    
+    public void OnUseQuickSlot(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            // Scale값을 float로 읽어옴
+            float rawValue = context.ReadValue<float>();
+            // int로 형변환 하여 인덱스로 사용
+            int slotIndex = (int)rawValue;
+            // 퀵슬롯 사용 요청
+            GlobalEventBus.OnQuickSlotUseRequested?.Invoke(slotIndex);
+        }
+    }
 }
