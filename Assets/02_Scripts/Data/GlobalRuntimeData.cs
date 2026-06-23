@@ -7,7 +7,7 @@ using UnityEngine;
 public class GlobalRuntimeData
 {   
     // 게임 상에 있는 모든 플레이어의 Transform 값
-    public static List<Transform> ActivePlayers = new List<Transform>();
+    public static List<GameObject> ActivePlayers = new();
 
     // 엔티티 생성 시 해당 위치에 저장
     public static Dictionary<EntityIdentity, GameObject> entityList = new(); 
