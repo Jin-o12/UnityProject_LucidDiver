@@ -359,7 +359,7 @@ Transform:
   m_GameObject: {fileID: 186051289}
   serializedVersion: 2
   m_LocalRotation: {x: 0.35355338, y: -0.35355338, z: 0.1464466, w: 0.8535535}
-  m_LocalPosition: {x: 10, y: 16, z: -13.79}
+  m_LocalPosition: {x: 10, y: 16, z: 45.11}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1024,7 +1024,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0.35355338, y: -0.35355338, z: 0.1464466, w: 0.8535535}
-  m_LocalPosition: {x: 10, y: 16, z: -13.79}
+  m_LocalPosition: {x: 10, y: 16, z: 45.11}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1117,8 +1117,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 331859820}
+  - component: {fileID: 331859824}
   - component: {fileID: 331859821}
   - component: {fileID: 331859822}
+  - component: {fileID: 331859823}
   m_Layer: 0
   m_Name: ==Manager==
   m_TagString: Untagged
@@ -1167,6 +1169,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiPrefabs:
   - {fileID: 7265668968344406401, guid: 51b33faa5b2f4eb42b2d5d516dba5780, type: 3}
+--- !u!114 &331859823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331859819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43e1600a75fe4ec4c92997721d2ce85b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &331859824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331859819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30678141003b34d45921133c6294d6ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  timerCanvas: {fileID: 5195423864273901398, guid: 4688cf8c2e04dee4a90da3adb1a86be5,
+    type: 3}
 --- !u!1 &335469027
 GameObject:
   m_ObjectHideFlags: 0
@@ -3535,7 +3563,7 @@ Transform:
   m_GameObject: {fileID: 1359725899}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -3.79}
+  m_LocalPosition: {x: 0, y: 0, z: 55.11}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

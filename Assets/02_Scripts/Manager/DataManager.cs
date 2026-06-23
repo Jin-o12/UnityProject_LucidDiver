@@ -1,3 +1,6 @@
+/// <summary>
+/// 게임 데이터들을 불러오고 관리하는 인스턴스 클래스
+/// </summary>
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

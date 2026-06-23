@@ -1,3 +1,6 @@
+/// <summary>
+/// 게임 내 모든 UI들을 관리하는 인스턴스 클래스
+/// </summary>
 using System;
 using System.Collections.Generic;
 using UnityEngine;
