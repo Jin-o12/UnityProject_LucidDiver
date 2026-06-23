@@ -4170,9 +4170,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1934016421}
-  - component: {fileID: 1934016424}
   - component: {fileID: 1934016423}
   - component: {fileID: 1934016422}
+  - component: {fileID: 1934016424}
   m_Layer: 0
   m_Name: Potal
   m_TagString: Untagged
