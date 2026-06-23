@@ -69,7 +69,7 @@ public class EnemyStatus : MonoBehaviour, IDamageable
         {
             nowState = EnemyState.Dead;
             OnLocalDeath?.Invoke();
-            GlobalEventBus.EnemyDead?.Invoke(objID);
+            GlobalEventBus.OnEnemyDead?.Invoke(objID);
         }
     }
 }

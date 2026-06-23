@@ -8,6 +8,6 @@ public class ItemBox : MonoBehaviour, IInteractable
     {
         Debug.Log("상자와 상호작용 함");
 
-        return true;    // 상호작용 성공, 상호작용 리스트에서 삭제 요청
+        return false;    // 상호작용 성공, 상호작용 리스트에서 삭제 요청
     }
 }
