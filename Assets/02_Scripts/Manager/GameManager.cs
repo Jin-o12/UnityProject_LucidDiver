@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 인게임 전반의 시스템을 관리하는 인스턴스 클래스
 /// [26.06.22_강다영] 결과 씬 제작 이후에 연결하여 탈출 시 결과 화면으로 넘어가게 할 것
 /// </summary>
@@ -11,14 +11,13 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    // 참조 컴포넌트
-    private PlayerStatus playerStatus;
-
     // 탈출에 관한 필드
-    [SerializeField] private GameObject timerCanvas;
-    private const float EscapeTimer = 5.0f;
-    private WaitForSeconds escapeTimerWs;
-    
+    private bool extractionResult;                      //탈출 성공 여부 판정
+    private bool isEscaping = false;                    //탈출 코루틴 실행 중인지 판정
+    // [SerializeField] private GameObject timerCanvas; //탈출 타이머 캔버스
+    private const float EscapeTimer = 0.0f;             //탈출 판정 대기 시간(P0 버전은 즉시 = 0초)
+    private WaitForSeconds escapeTimerWs;               //탈출 판정 대기 WFS
+    private ResultUI resultPanel;                       //결과 창 UI 캐시
 
     private void Awake()
     {
@@ -30,16 +29,15 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         escapeTimerWs = new WaitForSeconds(EscapeTimer);
+        GlobalEventBus.OnEscapeRequest += StartEscape;  //탈출 요청 이벤트에 탈출 시작 메소드 연결
+        GlobalEventBus.onPlayerDead += GameOver;        //플레이어 사망 이벤트에 게임오버 메소드 연결
+        Debug.Log("GameManager Awake - subscribed to OnEscapeRequest");
     }
 
-    private void OnEnable()
-    {
-        GlobalEventBus.OnEscapeRequest += StartEscape;
-    }
-
-    private void OnDisable()
+    private void OnDestroy()
     {
         GlobalEventBus.OnEscapeRequest -= StartEscape;
+        GlobalEventBus.onPlayerDead -= GameOver;
     }
 
     private void SpawnEntities()
@@ -49,32 +47,64 @@ public class GameManager : MonoBehaviour
 
     private void StartEscape(int _playerID)
     {
+        Debug.Log($"GameManager.StartEscape called for player {_playerID}");
+        // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
+        if (!IsPlayerIdle(_playerID)) return;
+        // 이미 탈출 판정 중이면 탈출 판정을 중복해서 시작하지 않음
+        if (isEscaping) return;
         // 탈출 타이머 시작
-        StartCoroutine(StartEscapeTimer());
+        StartCoroutine(StartEscapeTimer(_playerID));
     }
 
-    private IEnumerator StartEscapeTimer()
+    private IEnumerator StartEscapeTimer(int _playerID)
     {
         Debug.Log("타이머 시작");
         //GameObject timerCanvas = Instantiate(timerCanvas, );
-        //playerStatus.nowState = PlayerStatus.livingState.escape;
+        //플레이어 상태를 escape로 변경하고 탈출 판정 시작
+        ResultServiceLocator.Instance.HandleEscapeSuccess(_playerID);
+        isEscaping = true;
         // 해당 시간 동안 대기
         yield return escapeTimerWs;
         // 게임 종료
         Debug.Log("타이머 종료");
+        extractionResult = true;
         QuitGame();
+    }
+
+    private void GameOver(int _playerID)  //게임 오버 시 결과 정산 메소드
+    {
+        // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
+        if (!IsPlayerIdle(_playerID)) return;
+        ResultServiceLocator.Instance.HandleEscapeFail(_playerID);
+        extractionResult = false;
+        QuitGame();
+    }
+
+    private bool IsPlayerIdle(int _playerID)  //플레이어 상태가 idle(대기)인지 확인하는 헬퍼 메소드
+    {
+        var svc = ResultServiceLocator.Instance;
+        if (svc == null)
+        {
+            Debug.LogWarning("StartEscape: ResultServiceLocator.Instance is null");
+            return false;
+        }
+        PlayerStatus ps = svc.GetPlayerStatus(_playerID);
+        if (ps == null)
+        {
+            Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {_playerID}");
+            return false;
+        }
+        return ps.nowState == PlayerStatus.livingState.idle;
     }
 
     public void QuitGame()
     {
-        Debug.Log("게임 종료를 시도합니다...");
-
-#if UNITY_EDITOR
-        // 유니티 에디터 환경일 경우: 플레이 모드를 해제합니다.
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        // 실제 빌드된 환경일 경우: 애플리케이션을 종료합니다.
-        Application.Quit();
-#endif
+        Debug.Log("결과 창 패널을 출력합니다...");
+        // UIManager에서 Canvas-ResultPanel을 받아와 실행
+        resultPanel = UIManager.Instance.Open<ResultUI>();
+        if (resultPanel == null) return;
+        // extractionResult를 resultPanel에 전달해 UI 갱신
+        resultPanel.extractionResult = extractionResult;
+        resultPanel.RefreshResult();
     }
 }
