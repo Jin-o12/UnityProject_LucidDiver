@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 public class ResultManager : MonoBehaviour, IResultService
 {
@@ -13,10 +13,13 @@ public class ResultManager : MonoBehaviour, IResultService
         else
             Instance = this;
         DontDestroyOnLoad(gameObject);
+        // ResultServiceLocator에 자신을 등록
+        ResultServiceLocator.Instance = this;
+        Debug.Log("ResultManager Awake - registered to ResultServiceLocator");
     }
     private void OnDestroy()  //IResultService 구현체 (로케이터에 등록)
     {
-        if (ResultServiceLocator.Instance == this) ResultServiceLocator.Instance = null;
+        if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
         if (Instance == this) Instance = null;
     }
     // 플레이어 등록
@@ -46,18 +49,19 @@ public class ResultManager : MonoBehaviour, IResultService
     }
     public void HandleEscapeSuccess(int playerID)
     {
-        if (_players.TryGetValue(playerID, out var ps))
-        {
-            ps.nowState = PlayerStatus.livingState.escape;
-        }
+        SetPlayerState(playerID, PlayerStatus.livingState.escape);
     }
     // 탈출 실패 처리 (예: hp <= 0 시 호출)
     public void HandleEscapeFail(int playerID)
     {
+        SetPlayerState(playerID, PlayerStatus.livingState.gameover);
+    }
+    private void SetPlayerState(int playerID, PlayerStatus.livingState state)
+    {
         var ps = GetPlayerStatus(playerID);
         if (ps != null)
         {
-            ps.nowState = PlayerStatus.livingState.gameover;
+            ps.nowState = state;
         }
     }
 }

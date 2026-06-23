@@ -1182,6 +1182,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df754175ecc50b5469c1ff24f8982967, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &331859824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331859819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30678141003b34d45921133c6294d6ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &335469027
 GameObject:
   m_ObjectHideFlags: 0
@@ -4749,9 +4761,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1934016421}
-  - component: {fileID: 1934016424}
   - component: {fileID: 1934016423}
   - component: {fileID: 1934016422}
+  - component: {fileID: 1934016424}
   m_Layer: 0
   m_Name: Potal
   m_TagString: Untagged
