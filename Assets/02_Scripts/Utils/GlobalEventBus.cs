@@ -32,5 +32,8 @@ public class GlobalEventBus
     public static Action<float, float> OnPlayerManaChanged;         // 플레이어 마나 변동: Action<현재 마나, 전체 마나>
     public static Func<float, bool> OnRequestManaConsume;           // 플레이어 마나 소비 요청: Func<소모량, 성공여부>
     public static Action<int, float, float> OnEnemyHealthChanged;   // 적의 체력 변동: Action<고유 번호, 현재 체력, 전체 체력>
-    public static Action<int> EnemyDead;                            // 적의 사망 여부: Action<고유 번호>
+    public static Action<int> OnEnemyDead;                          // 적의 사망 여부: Action<고유 번호>
+
+    /// 게임 시스템 관련 이벤트 ///
+    public static Action<int> OnEscapeRequest;                      // 탈출 구역에서 탈출 요청 입력 시
 }
