@@ -51,7 +51,8 @@ public class PlayerWeapon : MonoBehaviour
         // 무기 프리팹 주소가 비어 있을 시 실패
         if(!weaponData.itemPrefabRef.RuntimeKeyIsValid()) return;
         // Addressble을 통해 비동기로 무기를 소환, 손 위치에 부착함
-        Addressables.InstantiateAsync(weaponData.itemPrefabRef, handPos).Completed += OnWeaponLoaded;
+        // 2D 캐릭터를 사용하기 때문에 3D 무기 장착 코드는 사용하지 않습니다
+        // Addressables.InstantiateAsync(weaponData.itemPrefabRef, handPos).Completed += OnWeaponLoaded;
     }
 
     /* Addressables을 통한 로딩 완료 시 실행되는 콜백 함수 */
