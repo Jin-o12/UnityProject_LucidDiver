@@ -11,6 +11,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
+    private PlayerInventory inventory;
+
     // 탈출에 관한 필드
     private bool extractionResult;                      //탈출 성공 여부 판정
     private bool isEscaping = false;                    //탈출 코루틴 실행 중인지 판정
@@ -31,7 +33,7 @@ public class GameManager : MonoBehaviour
         escapeTimerWs = new WaitForSeconds(EscapeTimer);
         GlobalEventBus.OnEscapeRequest += StartEscape;  //탈출 요청 이벤트에 탈출 시작 메소드 연결
         GlobalEventBus.onPlayerDead += GameOver;        //플레이어 사망 이벤트에 게임오버 메소드 연결
-        Debug.Log("GameManager Awake - subscribed to OnEscapeRequest");
+        inventory = GameObject.Find("Player").GetComponent<PlayerInventory>();
     }
 
     private void OnDestroy()
@@ -105,6 +107,20 @@ public class GameManager : MonoBehaviour
         if (resultPanel == null) return;
         // extractionResult를 resultPanel에 전달해 UI 갱신
         resultPanel.extractionResult = extractionResult;
+        resultPanel.potionCount = FindItemCount(301);
+        resultPanel.manaStoneCount = FindItemCount(302);
+        resultPanel.memoryFragmentCount = FindItemCount(401);
         resultPanel.RefreshResult();
+    }
+    public int FindItemCount(int _tid)
+    {
+        foreach (InventorySlotData slot in inventory.slots)
+        {
+            if (slot.TID == _tid)
+            {
+                return slot.amount;
+            }
+        }
+        return 0;
     }
 }
