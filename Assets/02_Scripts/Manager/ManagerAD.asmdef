@@ -1,0 +1,20 @@
+{
+    "name": "ManagerAD",
+    "rootNamespace": "",
+    "references": [
+        "GUID:7535be9703bf08544a6161f4c3f68fbe",
+        "GUID:79d9013a8cfa71d4495f33d1fa80f976",
+        "GUID:4116d224785ded84a8c9a38930c03cb7",
+        "GUID:8f15eda85deabaa45b425bd5de0fdb12",
+        "GUID:c0253e1e764423945924d96fa154d657"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

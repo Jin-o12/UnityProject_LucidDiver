@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 744f3422f67401545a4d478eefbfb7e4, type: 3}
+  m_Name: testManaPiece
+  m_EditorClassIdentifier: 
+  TID: 302
+  itemName: "\uB9C8\uB098\uC11D"
+  desc: "\uC0AC\uC6A9 \uC2DC \uB9C8\uB098 5 \uD68C\uBCF5"
+  category: 3
+  effectID: 0
+  itemMultiple: 5
+  icon:
+    m_AssetGUID: faab77ee407a7e041bbf4527bec04be9
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  itemPrefabRef:
+    m_AssetGUID: 
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  useType: 0
+  useRange: 0
+  useDelay: 0
+  useEffect:
+  - {fileID: 11400000, guid: 40c2460df4e28a44181198c5d964259d, type: 2}
