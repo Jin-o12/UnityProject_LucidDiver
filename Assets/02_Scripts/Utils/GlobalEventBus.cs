@@ -36,5 +36,5 @@ public class GlobalEventBus
     public static Action<int> OnEnemyDead;                          // 적의 사망 여부: Action<고유 번호>
 
     /// 게임 시스템 관련 이벤트 ///
-    public static Action<int> OnEscapeRequest;                      // 탈출 구역에서 탈출 요청 입력 시: Action<고유 번호>
+    public static Action<bool> OnEscapeRequest;                // 탈출 판정 발생 시: Action<탈출 성공 여부>
 }

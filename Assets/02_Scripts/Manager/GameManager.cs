@@ -31,10 +31,6 @@ public class GameManager : MonoBehaviour
     private readonly string playScene = "DemoScene";    //플레이 시간을 측정할 신
     // 탈출에 관한 필드
     private bool extractionResult;                      //탈출 성공 여부 판정
-    private bool isEscaping = false;                    //탈출 코루틴 실행 중인지 판정
-    // [SerializeField] private GameObject timerCanvas; //탈출 타이머 캔버스
-    private const float EscapeTimer = 0.0f;             //탈출 판정 대기 시간(P0 버전은 즉시 = 0초)
-    private WaitForSeconds escapeTimerWs;               //탈출 판정 대기 WFS
     private ResultUI resultPanel;                       //결과 창 UI 캐시
     // 동조율 관련 코드
     public int linkRateLevel = 0;                       //동조율 상승 후 다이버와의 동조율 단계
@@ -50,16 +46,13 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         entityCount = 0;
-        escapeTimerWs = new WaitForSeconds(EscapeTimer);
         SceneManager.sceneLoaded += OnSceneLoaded;      //신 로드 완료 시점에 실행하는 메소드 연결
-        GlobalEventBus.OnEscapeRequest += StartEscape;  //탈출 요청 이벤트에 탈출 시작 메소드 연결
-        GlobalEventBus.onPlayerDead += GameOver;        //플레이어 사망 이벤트에 게임오버 메소드 연결
+        GlobalEventBus.OnEscapeRequest += QuitGame;     //탈출 판정 이벤트에 탈출 처리 메소드 연결
     }
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        GlobalEventBus.OnEscapeRequest -= StartEscape;
-        GlobalEventBus.onPlayerDead -= GameOver;
+        GlobalEventBus.OnEscapeRequest -= QuitGame;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -109,60 +102,9 @@ public class GameManager : MonoBehaviour
         GlobalEventBus.OnPlayerSpawned?.Invoke(spawnedPlayer);
     }
 
-    private void StartEscape(int _playerID)
+    public void QuitGame(bool _extractionResult)
     {
-        Debug.Log($"GameManager.StartEscape called for player {_playerID}");
-        // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
-        if (!IsPlayerIdle(_playerID)) return;
-        // 이미 탈출 판정 중이면 탈출 판정을 중복해서 시작하지 않음
-        if (isEscaping) return;
-        // 탈출 타이머 시작
-        StartCoroutine(StartEscapeTimer(_playerID));
-    }
-
-    private IEnumerator StartEscapeTimer(int _playerID)
-    {
-        Debug.Log("타이머 시작");
-        //GameObject timerCanvas = Instantiate(timerCanvas, );
-        //플레이어 상태를 escape로 변경하고 탈출 판정 시작
-        ResultServiceLocator.Instance.HandleEscapeSuccess(_playerID);
-        isEscaping = true;
-        // 해당 시간 동안 대기
-        yield return escapeTimerWs;
-        // 게임 종료
-        Debug.Log("타이머 종료");
-        extractionResult = true;
-        QuitGame();
-    }
-
-    private void GameOver(int _playerID)  //게임 오버 시 결과 정산 메소드
-    {
-        // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
-        if (!IsPlayerIdle(_playerID)) return;
-        ResultServiceLocator.Instance.HandleEscapeFail(_playerID);
-        extractionResult = false;
-        QuitGame();
-    }
-
-    public bool IsPlayerIdle(int _playerID)  //플레이어 상태가 idle(대기)인지 확인하는 헬퍼 메소드
-    {
-        var svc = ResultServiceLocator.Instance;
-        if (svc == null)
-        {
-            Debug.LogWarning("StartEscape: ResultServiceLocator.Instance is null");
-            return false;
-        }
-        PlayerStatus ps = (PlayerStatus)svc.GetPlayerComponent<PlayerStatus>(_playerID);
-        if (ps == null)
-        {
-            Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {_playerID}");
-            return false;
-        }
-        return ps.nowState == PlayerStatus.livingState.idle;
-    }
-
-    public void QuitGame()
-    {
+        extractionResult = _extractionResult;
         // 이번 세션에서의 플레이 시간을 계산
         if (timeTrack)
         {
@@ -176,7 +118,7 @@ public class GameManager : MonoBehaviour
         // 결과 창 패널 출력 메소드
         OpenResultPanel();
         // 탈출 실패 시 각 아이템을 인벤토리에서 제거
-        if (!extractionResult)
+        if (!_extractionResult)
         {
             RemoveFromInventory(301);
             RemoveFromInventory(302);

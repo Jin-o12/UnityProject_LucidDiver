@@ -113,9 +113,42 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void GetHp(float _val)
     {
         hpCurrent = Mathf.Clamp(hpCurrent+_val, 0, hpMax);
-        // 플레이어 체력이 0이 되었을 때 게임 오버 이벤트를 발동
-        if (hpCurrent <= 0) GlobalEventBus.onPlayerDead?.Invoke(playerID);
         UpdateHp();
+        // 플레이어 체력이 0이 되었을 때 사망 처리 이벤트 및 게임오버 메소드를 발동
+        if (hpCurrent <= 0)
+        {
+            GlobalEventBus.onPlayerDead?.Invoke(playerID);
+            GameOver(playerID);
+        }
+    }
+
+    /* 게임 오버 처리 */
+    public void GameOver(int _playerID)  
+    {
+        // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
+        if (!IsPlayerIdle(_playerID)) return;
+        // 플레이어 상태를 gameover로 변경
+        ResultServiceLocator.Instance.HandleEscapeFail(_playerID);
+        // 탈출 실패 판정 이벤트를 전송
+        GlobalEventBus.OnEscapeRequest?.Invoke(false);
+    }
+
+    // 플레이어가 idle 상태인지 확인
+    public static bool IsPlayerIdle(int playerID)
+    {
+        var svc = ResultServiceLocator.Instance;
+        if (svc == null)
+        {
+            Debug.LogWarning("IsPlayerIdle: ResultServiceLocator.Instance is null");
+            return false;
+        }
+        var comp = svc.GetPlayerComponent<PlayerStatus>(playerID) as PlayerStatus;
+        if (comp == null)
+        {
+            Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {playerID}");
+            return false;
+        }
+        return comp.nowState == PlayerStatus.livingState.idle;
     }
 
     /* 마나 변화 */
