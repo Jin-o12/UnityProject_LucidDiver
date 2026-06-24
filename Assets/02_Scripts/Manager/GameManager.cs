@@ -46,9 +46,19 @@ public class GameManager : MonoBehaviour
             Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        entityCount = 0;
         SceneManager.sceneLoaded += OnSceneLoaded;      //신 로드 완료 시점에 실행하는 메소드 연결
         GlobalEventBus.OnEscapeRequest += QuitGame;     //탈출 판정 이벤트에 탈출 처리 메소드 연결
+
+        // 플레이어와 적 스폰지점 불러오기
+        foreach (Transform point in playerSpawnPool.transform)
+        {
+            playerSpawnPoint.Add(point);
+        }
+        foreach (Transform point in enemySpawnPool.transform)
+        {
+            enemySpawnPoint.Add(point);
+        }
+
     }
     private void OnDestroy()
     {

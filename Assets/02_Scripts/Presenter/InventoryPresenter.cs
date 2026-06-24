@@ -44,7 +44,7 @@ public class InventoryPresenter : MonoBehaviour
         playerInventory.OnSlotChanged += HandleSlotChanged;
 
         // 게임 종료시 이벤트
-        GlobalEventBus.OnShowGameResult += OpenResultUI;
+        //GlobalEventBus.OnShowGameResult += OpenResultUI;
     }
 
     private void OnDisable()
@@ -56,7 +56,7 @@ public class InventoryPresenter : MonoBehaviour
 
         playerInventory.OnSlotChanged -= HandleSlotChanged;
 
-        GlobalEventBus.OnShowGameResult -= OpenResultUI;
+        //GlobalEventBus.OnShowGameResult -= OpenResultUI;
     }
 
     /// <summary>
