@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 public class ResultManager : MonoBehaviour, IResultService
 {
@@ -23,7 +23,7 @@ public class ResultManager : MonoBehaviour, IResultService
         if (Instance == this) Instance = null;
     }
     // 플레이어 등록
-    public void Register(int playerID, PlayerStatus ps)
+    public void Register(int playerID, Component ps)
     {
         // 플레이어 상태 값 null 체크를 먼저 실행
         if (ps == null) return;
@@ -31,7 +31,7 @@ public class ResultManager : MonoBehaviour, IResultService
         var idComp = ps.GetComponent<EntityIdentity>();
         if (idComp == null) return;
         // EntityIdentity에서 ID 값을 불러옴
-        _players[playerID] = ps;
+        _players[playerID] = (PlayerStatus)ps;
     }
     // 플레이어 등록 해제
     public void Unregister(int playerID)
@@ -40,7 +40,7 @@ public class ResultManager : MonoBehaviour, IResultService
         _players.Remove(playerID);
     }
     // 조회 유틸
-    public PlayerStatus GetPlayerStatus(int playerID)
+    public Component GetPlayerComponent<PlayerStatue>(int playerID)
     {
         // playerID에 매핑된 PlayerStatus를 가져옴
         if (_players.TryGetValue(playerID, out var ps)) return ps;
@@ -58,7 +58,7 @@ public class ResultManager : MonoBehaviour, IResultService
     }
     private void SetPlayerState(int playerID, PlayerStatus.livingState state)
     {
-        var ps = GetPlayerStatus(playerID);
+        PlayerStatus ps = (PlayerStatus)GetPlayerComponent<PlayerStatus>(playerID);
         if (ps != null)
         {
             ps.nowState = state;

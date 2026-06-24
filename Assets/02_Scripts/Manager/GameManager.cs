@@ -152,7 +152,7 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("StartEscape: ResultServiceLocator.Instance is null");
             return false;
         }
-        PlayerStatus ps = svc.GetPlayerStatus(_playerID);
+        PlayerStatus ps = (PlayerStatus)svc.GetPlayerComponent<PlayerStatus>(_playerID);
         if (ps == null)
         {
             Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {_playerID}");
