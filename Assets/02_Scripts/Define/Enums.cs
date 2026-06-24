@@ -23,7 +23,8 @@ public enum itemCategory
     idle,           // 기타 아이템
     weapon,         // 무장
     armor,          // 방어구
-    consume         // 소모품
+    consume,        // 소모품
+    memory          // 기억 파편
 }
 
 // 아이템 사용 방법 종류
