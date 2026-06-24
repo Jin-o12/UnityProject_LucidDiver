@@ -4,12 +4,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 public class DataManager : MonoBehaviour
 {
     public static DataManager Instance { get; private set; }
     
-    private Dictionary<int, ItemData> itemDataDictionary;  // 아이템 데이터 사전
+    private Dictionary<int, ItemData> itemDataDictionary;           // 아이템 데이터 사전
+    private Dictionary<int, CharacterData> CharDataDictionary;      // 캐릭터 데이터 사전
+
+    public PlayerSaveData playerData { get; private set; }          // 계정 데이터
+    [SerializeField] private string saveFilePath;
 
     private void Awake()
     {
@@ -17,23 +22,69 @@ public class DataManager : MonoBehaviour
         {
             Instance = this;
             itemDataDictionary = new Dictionary<int, ItemData>();
+            CharDataDictionary = new Dictionary<int, CharacterData>();
         }
         else
         {
             Destroy(gameObject);
+            return;
         }
         DontDestroyOnLoad(gameObject);
 
+        // 저장 경로 설정
+        saveFilePath = Path.Combine(Application.persistentDataPath, "SaveFile.json");
+        LoadGame();
+
+        // 캐릭터를 고르는 로비 씬과 연결이 되지 않았으므로 캐릭터 데이터를 코드에서 설정
+        playerData.SelectCharID = 1;
+
         LoadGameData();
+    }
+
+    /* 플레이어 게임 데이터 저장하기 */
+    public void SaveGame()
+    {
+        if (playerData == null)
+        {
+            playerData = new PlayerSaveData();
+        }
+
+        string json = JsonUtility.ToJson(playerData, true);
+        File.WriteAllText(saveFilePath, json);
+        Debug.Log("Game Saved");
+    }
+
+    /* 플레이어 게임 데이터 불러오기 */
+    public void LoadGame()
+    {
+        if (File.Exists(saveFilePath))
+        {
+            string json = File.ReadAllText(saveFilePath);
+            playerData = JsonUtility.FromJson<PlayerSaveData>(json);
+        }
+        else
+        {
+            // 세이브 파일이 없으면 새 데이터 생성
+            playerData = new PlayerSaveData();
+            SaveGame();
+        }
     }
 
     /* 모든 게임 데이터 로드 */
     private void LoadGameData()
     {
+        // 아이템 데이터
         ItemData[] itemDatas = Resources.LoadAll<ItemData>("ScriptableObjects/Item");
         foreach(ItemData data in itemDatas)
         {
             itemDataDictionary[data.TID] = data;
+        }
+
+        // 캐릭터 데이터
+        CharacterData[] charDatas = Resources.LoadAll<CharacterData>("ScriptableObjects/Character");
+        foreach(CharacterData data in charDatas)
+        {
+            CharDataDictionary[data.TID] = data;
         }
     }
 
@@ -47,6 +98,20 @@ public class DataManager : MonoBehaviour
         else
         {
             Debug.LogWarning("Item TID " + itemTID + " not found!");
+            return null;
+        }
+    }
+
+    /* 캐릭터 데이터 가져오기 */
+    public CharacterData GetCharacterData(int charTID)
+    {
+        if(CharDataDictionary.TryGetValue(charTID, out CharacterData data))
+        {
+            return data;
+        }
+        else
+        {
+            Debug.LogWarning("char TID " + charTID + " not found!");
             return null;
         }
     }

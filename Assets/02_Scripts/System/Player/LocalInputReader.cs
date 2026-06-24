@@ -60,31 +60,24 @@ public class LocalInputReader : MonoBehaviour
         Vector2 mousePos = context.ReadValue<Vector2>();
         GlobalEventBus.OnMousePositionInput?.Invoke(mousePos);
     }
-    
+
     public void OpenInventoryUI(InputAction.CallbackContext context)
     {
-        if (context.performed) 
+        if (context.performed)
         {
-            // 조작권을 UI맵으로 전환
-            playerInput.SwitchCurrentActionMap("UI");
-
-            // 인벤토리 UI 활성화 이벤트
+            SwitchToUIMap();
             OnInventoryOpenRequested?.Invoke();
         }
     }
 
     public void CloseInventoryUI(InputAction.CallbackContext context)
     {
-        if (context.performed) 
+        if (context.performed)
         {
-            // 조작권을 UI맵으로 전환
-            playerInput.SwitchCurrentActionMap("Player");
-
-            // 인벤토리 UI 비활성화 이벤트
             OnInventoryCloseRequested?.Invoke();
         }
     }
-    
+
     public void OnUseQuickSlot(InputAction.CallbackContext context)
     {
         if(context.performed)
@@ -96,5 +89,16 @@ public class LocalInputReader : MonoBehaviour
             // 퀵슬롯 사용 요청
             GlobalEventBus.OnQuickSlotUseRequested?.Invoke(slotIndex);
         }
+    }
+    /* 액션맵을 UI 모드로 전환 */
+    public void SwitchToUIMap()
+    {
+        playerInput.SwitchCurrentActionMap("UI");
+    }
+
+    /* 액션맵을 플레이어 모드로 전환 */
+    public void SwitchToPlayerMap()
+    {
+        playerInput.SwitchCurrentActionMap("Player");
     }
 }
