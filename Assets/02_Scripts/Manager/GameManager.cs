@@ -46,8 +46,9 @@ public class GameManager : MonoBehaviour
             Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        SceneManager.sceneLoaded += OnSceneLoaded;      //신 로드 완료 시점에 실행하는 메소드 연결
-        GlobalEventBus.OnEscapeRequest += QuitGame;     //탈출 판정 이벤트에 탈출 처리 메소드 연결
+        SceneManager.sceneLoaded += OnSceneLoaded;              //신 로드 완료 시점에 실행하는 메소드 연결
+        GlobalEventBus.OnEscapeRequest += QuitGame;             //탈출 판정 이벤트에 탈출 처리 메소드 연결
+        GlobalEventBus.OnReturnToLobby += CloseResultPanel;     //로비로 돌아가기 버튼에 결과 창 닫기 연결
 
         // 플레이어와 적 스폰지점 불러오기
         foreach (Transform point in playerSpawnPool.transform)
@@ -60,10 +61,12 @@ public class GameManager : MonoBehaviour
         }
 
     }
+
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
         GlobalEventBus.OnEscapeRequest -= QuitGame;
+        GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -75,6 +78,7 @@ public class GameManager : MonoBehaviour
         }
         else timeTrack = false;     //인게임 세션 신을 벗어나면 기록 중단
     }
+
     private void Start()
     {
         // 캐릭터 데이터 가져오기
@@ -85,14 +89,18 @@ public class GameManager : MonoBehaviour
         // 플레이어 1회 생성
         SpawnPlayer();
     }
+
     private void SpawnPlayer()
     {
         // 플레이어 스폰 포인트 중 무작위로 하나 선정
         int spawnNum = Random.Range(0, playerSpawnPoint.Count-1);
 
         // 스폰 장소 오브젝트가 없을 경우 대비
-        if(playerSpawnPoint[spawnNum]==null) return;
-
+        if (playerSpawnPoint[spawnNum] == null)
+        {
+            Debug.LogError("Player spawn point not found");
+            return;
+        }
         // 플레이어 오브젝트 생성
         Transform spawnPoint = playerSpawnPoint[spawnNum].transform;
         GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
@@ -177,6 +185,12 @@ public class GameManager : MonoBehaviour
         resultPanel.linkRateGain = linkRateGain;
         // 결과 창 UI 출력 갱신
         resultPanel.RefreshResult();
+    }
+
+    // 결과 창 패널 닫기
+    void CloseResultPanel()
+    {
+        UIManager.Instance.Close<ResultUI>();
     }
 
     private void RemoveFromInventory(int _tid)  //아이템 ID별로 인벤토리에서 제거
