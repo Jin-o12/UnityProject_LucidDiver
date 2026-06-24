@@ -6,13 +6,19 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
+    // 인벤토리 기록에 관한 필드
     private PlayerInventory inventory;
-
+    // 플레이 타임 기록에 관한 필드
+    private float playTime;                             //이번 세션 플레이 시간
+    private bool timeTrack = false;                     //플레이 시간 측정 중
+    private float startTime;                            //플레이 시작 시점
+    private readonly string playScene = "DemoScene";    //플레이 시간을 측정할 신
     // 탈출에 관한 필드
     private bool extractionResult;                      //탈출 성공 여부 판정
     private bool isEscaping = false;                    //탈출 코루틴 실행 중인지 판정
@@ -34,6 +40,27 @@ public class GameManager : MonoBehaviour
         GlobalEventBus.OnEscapeRequest += StartEscape;  //탈출 요청 이벤트에 탈출 시작 메소드 연결
         GlobalEventBus.onPlayerDead += GameOver;        //플레이어 사망 이벤트에 게임오버 메소드 연결
         inventory = GameObject.Find("Player").GetComponent<PlayerInventory>();
+    }
+
+    private void OnEnable()  //신 로드 시점 이벤트 등록
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if(scene.name == playScene) //인게임 세션 신에서 실행
+        {
+            startTime = Time.time;  //시작 시점 등록
+            timeTrack = true;       //시간 기록 시작
+            inventory = GameObject.Find("Player").GetComponent<PlayerInventory>(); // 재바인딩
+        }
+        else timeTrack = false;     //인게임 세션 신을 벗어나면 기록 중단
     }
 
     private void OnDestroy()
@@ -82,7 +109,7 @@ public class GameManager : MonoBehaviour
         QuitGame();
     }
 
-    private bool IsPlayerIdle(int _playerID)  //플레이어 상태가 idle(대기)인지 확인하는 헬퍼 메소드
+    public bool IsPlayerIdle(int _playerID)  //플레이어 상태가 idle(대기)인지 확인하는 헬퍼 메소드
     {
         var svc = ResultServiceLocator.Instance;
         if (svc == null)
@@ -101,15 +128,22 @@ public class GameManager : MonoBehaviour
 
     public void QuitGame()
     {
+        // 이번 세션에서의 플레이 시간을 계산
+        if (timeTrack)
+        {
+            playTime = Time.time - startTime;
+            timeTrack = false;
+        }
         Debug.Log("결과 창 패널을 출력합니다...");
         // UIManager에서 Canvas-ResultPanel을 받아와 실행
         resultPanel = UIManager.Instance.Open<ResultUI>();
         if (resultPanel == null) return;
-        // extractionResult를 resultPanel에 전달해 UI 갱신
+        // 인게임 세션에서 측정된 데이터를 resultPanel에 전달해 UI 갱신
         resultPanel.extractionResult = extractionResult;
         resultPanel.potionCount = FindItemCount(301);
         resultPanel.manaStoneCount = FindItemCount(302);
         resultPanel.memoryFragmentCount = FindItemCount(401);
+        resultPanel.playTime = playTime;
         resultPanel.RefreshResult();
     }
     public int FindItemCount(int _tid)

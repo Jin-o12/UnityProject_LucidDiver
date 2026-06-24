@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
 /// </summary>
@@ -22,7 +22,10 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     // 플레이어 마나
     public float mpMax;                                     // 마나 최대값
     public float mpCurrent { get; private set; }            // 현재 마나
-    public float manaRegen;                                 // 초탕 마나 화복량
+    public float manaRegen;                                 // 초탕 마나 회복량
+
+    private LocalInputReader _input;                        // 플레이어 인게임 조작 입력
+    private PlayerMovement _movement;                       // 플레이어 이동 조작
 
     void Awake()
     {
@@ -37,6 +40,9 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
         // EntityIdentity에서 플레이어 고유 번호를 가져옴
         playerID = GetComponent<EntityIdentity>().entityID;
+        // 플레이어의 조작 관련 컴포넌트를 가져옴
+        _input = GetComponent<LocalInputReader>();
+        _movement = GetComponent<PlayerMovement>();
     }
 
     private void OnEnable()
@@ -74,6 +80,14 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
         // 초당 마나 소모 코루틴 시작
         StartCoroutine(HealingManaPerSeconds());
+    }
+
+    void FixedUpdate()  //현재 상태를 확인하여 입력 동작 여부를 체크
+    {
+        // 플레이어 상태가 idle인 경우에 입력 동작을 처리함
+        bool canInput = (nowState == livingState.idle);
+        if (_input != null) _input.enabled = canInput;
+        if (_movement != null) _movement.enabled = canInput;
     }
 
 #region Status Management
