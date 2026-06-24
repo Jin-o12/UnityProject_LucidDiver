@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
 /// </summary>
@@ -29,15 +29,6 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
     void Awake()
     {
-        // 플레이어 상태 및 스텟 초기화
-        nowState = livingState.idle;
-
-        hpMax = 100;
-        hpCurrent = hpMax;
-        mpMax = 100;
-        mpCurrent = mpMax;
-        manaRegen = 1.0f;
-
         // EntityIdentity에서 플레이어 고유 번호를 가져옴
         playerID = GetComponent<EntityIdentity>().entityID;
         // 플레이어의 조작 관련 컴포넌트를 가져옴

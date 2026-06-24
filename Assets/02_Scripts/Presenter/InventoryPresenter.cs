@@ -108,6 +108,9 @@ public class InventoryPresenter : MonoBehaviour
         {
             Debug.LogWarning("Unknown item TID: " + pickedItemTID);
         }
+
+        // DataManager의 playerData 저장
+        DataManager.Instance.SaveGame();
     }
 
     /* 특정 칸의 인벤토리 슬롯이 바뀌었을 때 해당 칸을 갱신함 */

@@ -1167,6 +1167,9 @@ MonoBehaviour:
   - {fileID: 1321498869}
   - {fileID: 1973087802}
   - {fileID: 1906308622}
+  potionData: {fileID: 0}
+  manaStoneData: {fileID: 0}
+  memoryFragmentData: {fileID: 0}
 --- !u!114 &331859825
 MonoBehaviour:
   m_ObjectHideFlags: 0
