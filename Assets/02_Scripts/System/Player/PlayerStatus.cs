@@ -48,9 +48,9 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void OnEnable()
     {
         // 플레이어 첫 생성시 전체 플레이어 명단에 본인 등록
-        if (!GlobalRuntimeData.ActivePlayers.Contains(this.transform))
+        if (!GlobalRuntimeData.ActivePlayers.Contains(this.gameObject))
         {
-            GlobalRuntimeData.ActivePlayers.Add(this.transform);
+            GlobalRuntimeData.ActivePlayers.Add(this.gameObject);
         }
 
         /// 이벤트 구독 ///
@@ -61,9 +61,9 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void OnDisable()
     {
         // 플레이어 디스폰시 현재 플레이어 목록에서 본인 제거
-        if (GlobalRuntimeData.ActivePlayers.Contains(this.transform))
+        if (GlobalRuntimeData.ActivePlayers.Contains(this.gameObject))
         {
-            GlobalRuntimeData.ActivePlayers.Remove(this.transform);
+            GlobalRuntimeData.ActivePlayers.Remove(this.gameObject);
         }
 
         /// 이벤트 구독 해제 ///
@@ -91,6 +91,18 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     }
 
 #region Status Management
+    /* 플레이어 상태 및 스텟 초기화 */
+    public void initialize(float _hp, float _mp, float _regen)
+    {
+        nowState = livingState.idle;
+
+        hpMax = _hp;
+        hpCurrent = hpMax;
+        mpMax = _mp;
+        mpCurrent = mpMax;
+        manaRegen = _regen;
+    }
+
     /* 피격 시 자신의 타입을 반환 */
     public Faction EntityFaction => Faction.player;
 

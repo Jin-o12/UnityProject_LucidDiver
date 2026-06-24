@@ -87,18 +87,18 @@ public class EnemyMovement : MonoBehaviour
         Transform bestTarget = null;
 
         // 현재 존재하는 모든 플레이어들 중 적에게 가장 가까운 대상을 추적합니다
-        foreach(Transform player in GlobalRuntimeData.ActivePlayers)
+        foreach(GameObject player in GlobalRuntimeData.ActivePlayers)
         {
             if(player==null) continue;
 
             // 나(적)과 상대(플레이어) 사이의 거리 제곱을 계산하여 시야반경 내에 있는지 확인
-            float sqrDist = (transform.position - player.position).sqrMagnitude;
+            float sqrDist = (transform.position - player.transform.position).sqrMagnitude;
             if(sqrDist > sightLengthSqr) continue;
 
             if(sqrDist<moreCloser)
             {
                 moreCloser = sqrDist;
-                bestTarget = player;
+                bestTarget = player.transform;
             }
         }
         // 가장 가까운 사람을 타겟으로 지정합니다
