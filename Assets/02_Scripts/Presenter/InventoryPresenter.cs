@@ -15,6 +15,7 @@ public class InventoryPresenter : MonoBehaviour
 
     // UI 캐시
     private InventoryUI inventoryUI;                    // 인벤토리 UI 캐시
+    private ResultUI resultUI;                          // 결과창 UI 캐시
 
     private void Awake()
     {
@@ -39,6 +40,9 @@ public class InventoryPresenter : MonoBehaviour
 
         // 인벤토리 데이터 변경 이벤트를 구독 합니다
         playerInventory.OnSlotChanged += HandleSlotChanged;
+
+        // 게임 종료시 이벤트
+        GlobalEventBus.OnShowGameResult += OpenResultUI;
     }
 
     private void OnDisable()
@@ -49,6 +53,8 @@ public class InventoryPresenter : MonoBehaviour
         localInputReader.OnInventoryCloseRequested -= CloseInventoryUI;
 
         playerInventory.OnSlotChanged -= HandleSlotChanged;
+
+        GlobalEventBus.OnShowGameResult -= OpenResultUI;
     }
 
     /// <summary>
@@ -134,5 +140,27 @@ public class InventoryPresenter : MonoBehaviour
     public void CloseInventoryUI()
     {
         UIManager.Instance.Close<InventoryUI>();
+    }
+
+    private void OpenResultUI(bool _result)
+    {
+        Debug.Log("결과 창 패널을 출력합니다...");
+        // UIManager에서 Canvas-ResultPanel을 받아와 실행
+        resultUI = UIManager.Instance.Open<ResultUI>();
+        
+        if (resultUI == null) return;
+        resultUI.UpdateResultUI(_result);
+    }
+
+    public int FindItemCount(int _tid)
+    {
+        foreach (InventorySlotData slot in playerInventory.slots)
+        {
+            if (slot.TID == _tid)
+            {
+                return slot.amount;
+            }
+        }
+        return 0;
     }
 }

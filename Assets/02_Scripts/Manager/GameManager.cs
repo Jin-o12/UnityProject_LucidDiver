@@ -1,6 +1,6 @@
 ﻿/// <summary>
 /// 인게임 전반의 시스템을 관리하는 인스턴스 클래스
-/// [26.06.22_강다영] 결과 씬 제작 이후에 연결하여 탈출 시 결과 화면으로 넘어가게 할 것
+/// [26.06.24_강다영] playerPrefab, EnemyPrefab: 캐릭터 및 적 프리팹은 생성 시 결정되도록 바꿀 것
 /// </summary>
 using System.Collections;
 using System.Collections.Generic;
@@ -13,20 +13,17 @@ public class GameManager : MonoBehaviour
     [Header("엔티티 생성")]
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject EnemyPrefab;
-    [SerializeField] private GameObject[] playerSpawnPoint;
-    [SerializeField] private GameObject[] enemySpawnPoint;
-    private int entityCount;                                    // 생성된 엔티티의 고유 번호
+    [SerializeField] private GameObject playerSpawnPool;
+    [SerializeField] private GameObject enemySpawnPool;
+    private List<Transform> playerSpawnPoint = new();
+    private List<Transform> enemySpawnPoint = new();
     CharacterData charData;                                     // 가져올 캐릭터 데이터
-
-    private PlayerInventory inventory;
 
     // 탈출에 관한 필드
     private bool extractionResult;                      //탈출 성공 여부 판정
     private bool isEscaping = false;                    //탈출 코루틴 실행 중인지 판정
-    // [SerializeField] private GameObject timerCanvas; //탈출 타이머 캔버스
     private const float EscapeTimer = 0.0f;             //탈출 판정 대기 시간(P0 버전은 즉시 = 0초)
     private WaitForSeconds escapeTimerWs;               //탈출 판정 대기 WFS
-    private ResultUI resultPanel;                       //결과 창 UI 캐시
 
     private void Awake()
     {
@@ -37,11 +34,20 @@ public class GameManager : MonoBehaviour
             Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        entityCount = 0;
         escapeTimerWs = new WaitForSeconds(EscapeTimer);
         GlobalEventBus.OnEscapeRequest += StartEscape;  //탈출 요청 이벤트에 탈출 시작 메소드 연결
         GlobalEventBus.onPlayerDead += GameOver;        //플레이어 사망 이벤트에 게임오버 메소드 연결
-        inventory = GameObject.Find("Player").GetComponent<PlayerInventory>();
+
+        // 스폰 포인트 등록
+        foreach (Transform point in playerSpawnPool.transform)
+        {
+            playerSpawnPoint.Add(point);
+        }
+
+        foreach (Transform point in enemySpawnPool.transform)
+        {
+            enemySpawnPoint.Add(point);
+        }
     }
 
     private void Start()
@@ -68,7 +74,7 @@ public class GameManager : MonoBehaviour
     private void SpawnPlayer()
     {
         // 플레이어 스폰 포인트 중 무작위로 하나 선정
-        int spawnNum = Random.Range(0, playerSpawnPoint.Length-1);
+        int spawnNum = Random.Range(0, playerSpawnPoint.Count-1);
 
         // 스폰 장소 오브젝트가 없을 경우 대비
         if(playerSpawnPoint[spawnNum]==null) return;
@@ -78,7 +84,7 @@ public class GameManager : MonoBehaviour
         GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
         
         // 플레이어 오브젝트 세션 데이터에 등록
-
+        GlobalRuntimeData.CountingEntityData(spawnedPlayer);
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
@@ -90,6 +96,7 @@ public class GameManager : MonoBehaviour
             movement.initialize(charData.moveSpeed);
         }
 
+        // 플레이어 스폰 여부 이벤트
         GlobalEventBus.OnPlayerSpawned?.Invoke(spawnedPlayer);
     }
 
@@ -147,26 +154,7 @@ public class GameManager : MonoBehaviour
 
     public void QuitGame()
     {
-        Debug.Log("결과 창 패널을 출력합니다...");
-        // UIManager에서 Canvas-ResultPanel을 받아와 실행
-        resultPanel = UIManager.Instance.Open<ResultUI>();
-        if (resultPanel == null) return;
         // extractionResult를 resultPanel에 전달해 UI 갱신
-        resultPanel.extractionResult = extractionResult;
-        resultPanel.potionCount = FindItemCount(301);
-        resultPanel.manaStoneCount = FindItemCount(302);
-        resultPanel.memoryFragmentCount = FindItemCount(401);
-        resultPanel.RefreshResult();
-    }
-    public int FindItemCount(int _tid)
-    {
-        foreach (InventorySlotData slot in inventory.slots)
-        {
-            if (slot.TID == _tid)
-            {
-                return slot.amount;
-            }
-        }
-        return 0;
+        GlobalEventBus.OnShowGameResult?.Invoke(extractionResult);
     }
 }

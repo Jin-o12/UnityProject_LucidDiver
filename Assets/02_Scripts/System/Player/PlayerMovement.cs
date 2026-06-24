@@ -13,7 +13,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 currentMousePos;                    // 현재 마우스 화면 좌표
 
     private readonly float isometricYAngle = -45.0f;    // 쿼터뷰 기준 이동 방향 보정
-    public float moveSpeed = 7f;                        // 이동 속도
+    public float moveSpeed;                             // 이동 속도
     public float rotationSpeed = 10f;                   // 회전 속도
 
     [Header("Player Animation Controll")]
@@ -23,6 +23,10 @@ public class PlayerMovement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
 
         // 필수 컴포넌트가 없으면 비활성화
         if (rb == null || animator == null || mainCamera == null)
@@ -48,6 +52,11 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         MoveAndRotate();
+    }
+
+    public void initialize(float _speed)
+    {
+        moveSpeed = _speed;
     }
 
     /* 플레이어 이동 입력 갱신 */

@@ -41,7 +41,18 @@ public class ResultUI : MonoBehaviour
         RefreshResult();
     }
 
-    public void RefreshResult()  //결과 창 패널의 출력 데이터 갱신 메소드
+    public void UpdateResultUI(bool _result)
+    {
+        extractionResult = _result;
+        /// 데이터 베이스에서 찾아 대입할 것이기 때문에 주석처리 
+        //potionCount = FindItemCount(301);
+        //manaStoneCount = FindItemCount(302);
+        //memoryFragmentCount = FindItemCount(401);
+        RefreshResult();
+    }
+
+    /* 결과 창 패널의 출력 데이터 갱신 메소드 */
+    public void RefreshResult()  
     {
         //이미지 배너를 세션 성패 결과에 따라 탈출 성공 시 / 강제 각성 시로 나누어 출력
         if (image_Banner != null) image_Banner.sprite = extractionResult ? Banner_Success : Banner_Failed;

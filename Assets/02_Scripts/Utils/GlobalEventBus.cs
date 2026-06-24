@@ -37,4 +37,5 @@ public class GlobalEventBus
 
     /// 게임 시스템 관련 이벤트 ///
     public static Action<int> OnEscapeRequest;                      // 탈출 구역에서 탈출 요청 입력 시: Action<고유 번호>
+    public static Action<bool> OnShowGameResult;                    // 게임 결과 판넬 출력: Action<성공 여부>
 }
