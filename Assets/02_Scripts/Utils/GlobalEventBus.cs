@@ -11,8 +11,8 @@ public class GlobalEventBus
     public static Action<Vector2> OnPlayerMove;                     // 플레이어 이동 버튼 입력: Action<이동 버튼 입력 벡터>
     public static Action OnAttackInput;                             // 공격 버튼 입력
     public static Action OnInteractionInput;                        // 상호작용 버튼 입력
-    public static Action<Vector2> OnMousePositionInput;             // 마우스의 현재 화면 죄표 전달: Action<화면 상의 좌표>
-    public static Action<GameObject> OnPlayerSpawned;                // 플레이어 생성 시 위치 정보 전달: Action<플레이어의 Transform>
+    public static Action<Vector2> OnMousePositionInput;             // 마우스의 현재 화면 좌표 전달: Action<화면 상의 좌표>
+    public static Action<GameObject> OnPlayerSpawned;               // 플레이어 생성 시 위치 정보 전달: Action<플레이어의 Transform>
     public static Action<Transform> OnPlayerDespawned;              // 플레이어 제거 시 위치 정보 전달: Action<플레이어의 Transform>
 
     /// 아이템 관련 이벤트 ///
@@ -21,7 +21,7 @@ public class GlobalEventBus
     public static Action<int> OnQuickSlotUseRequested;              // 특정 퀵슬롯 번호가 눌렷을 시: Action<퀵슬롯 번호>
     public static Action<int, int> OnSwapInventorySlot;             // 인벤토리 슬롯이 바뀌었을 시: Action<1번 슬롯 번호, 2번 슬롯 번호>
     public static Action<int, int> OnDropItemQuickSlot;             // 인벤토리에서 퀵슬롯에 아이템을 드래그 앤 드롭 할 시: Action<퀵슬롯 번호, 인벤토리 번호> | 인벤토리->퀵슬롯
-    public static Action<int, int> OnSwapItemQuickSlot;           // 퀵슬롯에서 퀵슬롯으로 아이템을 드래그 앤 드롭 할 시: Action<1번 퀵슬롯 번호, 2번 퀵슬롯 번호)> | 2번슬롯->1번슬롯
+    public static Action<int, int> OnSwapItemQuickSlot;             // 퀵슬롯에서 퀵슬롯으로 아이템을 드래그 앤 드롭 할 시: Action<1번 퀵슬롯 번호, 2번 퀵슬롯 번호)> | 2번슬롯->1번슬롯
     
     /// 특정 효과 발동 이벤트 ///
     public static Action<GameObject, float> OnHealRequested;        // 체력 회복 효과: Action<대상, 값>
@@ -36,5 +36,6 @@ public class GlobalEventBus
     public static Action<int> OnEnemyDead;                          // 적의 사망 여부: Action<고유 번호>
 
     /// 게임 시스템 관련 이벤트 ///
-    public static Action<bool> OnEscapeRequest;                // 탈출 판정 발생 시: Action<탈출 성공 여부>
+    public static Action<bool> OnEscapeRequest;                     // 탈출 판정 발생 시: Action<탈출 성공 여부>
+    public static Action OnReturnToLobby;                           // 로비로 돌아가기 이벤트 발생
 }

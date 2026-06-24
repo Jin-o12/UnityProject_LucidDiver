@@ -162,6 +162,8 @@ public class ResultUI : MonoBehaviour
 
     public void OnReturnLobbyClick()  //로비로 돌아가기 버튼 터치 동작
     {
+        // 로비로 돌아가기 이벤트를 호출
+        GlobalEventBus.OnReturnToLobby.Invoke();
         // LobbyScene으로 이동하기
         SceneManager.LoadScene(_lobbySceneName);
     }
