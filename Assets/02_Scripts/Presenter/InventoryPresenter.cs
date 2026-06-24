@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 아이템과 인벤토리에 관한 모든 상호작용의 중재자 역할을 수행합니다.
 /// 아이템 습득 시 상황에 따라 즉시 장착하거나 인벤토리에 수납합니다.
 /// </summary>
@@ -12,6 +12,7 @@ public class InventoryPresenter : MonoBehaviour
     private PlayerWeapon playerWeapon;                  // 플레이어 무기
     private PlayerInventory playerInventory;            // 플레이어 인벤토리
     private LocalInputReader localInputReader;          // 플레이어 입력 처리
+    private PlayerStatus playerStatus;                  // 플레이어 상태
 
     // UI 캐시
     private InventoryUI inventoryUI;                    // 인벤토리 UI 캐시
@@ -22,8 +23,9 @@ public class InventoryPresenter : MonoBehaviour
         playerWeapon = GetComponent<PlayerWeapon>();
         playerInventory = GetComponent<PlayerInventory>();
         localInputReader = GetComponent<LocalInputReader>();
-        
-        if(playerWeapon==null || playerInventory==null || localInputReader==null)
+        playerStatus = GetComponent<PlayerStatus>();
+
+        if (playerWeapon==null || playerInventory==null || localInputReader==null)
         {
             this.enabled = false;
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
@@ -112,6 +114,9 @@ public class InventoryPresenter : MonoBehaviour
         {
             Debug.LogWarning("Unknown item TID: " + pickedItemTID);
         }
+
+        // DataManager의 playerData 저장
+        DataManager.Instance.SaveGame();
     }
 
     /* 특정 칸의 인벤토리 슬롯이 바뀌었을 때 해당 칸을 갱신함 */
@@ -124,6 +129,9 @@ public class InventoryPresenter : MonoBehaviour
     /* 인벤토리 UI 활성화 */
     public void OpenInventoryUI()
     {
+        // 플레이어 상태가 idle이 아니면 인벤토리 창 조작을 수행하지 않음
+        if (playerStatus.nowState != PlayerStatus.livingState.idle) return;
+
         // 인벤토리 UI 활성화 및 UI 오브젝트 캐시 저장
         inventoryUI = UIManager.Instance.Open<InventoryUI>();
         if(inventoryUI==null) return;
@@ -139,6 +147,9 @@ public class InventoryPresenter : MonoBehaviour
     /* 인벤토리 UI 비활성화 */
     public void CloseInventoryUI()
     {
+        // 플레이어 상태가 idle이 아니면 인벤토리 창 조작을 수행하지 않음
+        if (playerStatus.nowState != PlayerStatus.livingState.idle) return;
+
         UIManager.Instance.Close<InventoryUI>();
     }
 

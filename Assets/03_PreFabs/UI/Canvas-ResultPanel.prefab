@@ -2455,13 +2455,19 @@ MonoBehaviour:
   returnDialogueID: 
   enemyKillCount: 0
   _lobbySceneName: LobbyScene
+  potionData: {fileID: 11400000, guid: e1f045e6d1c51e143a76ad1a32e8bf41, type: 2}
+  manaStoneData: {fileID: 11400000, guid: 36f1d5fb5ed6737499dc5a46fa2f09cd, type: 2}
+  memoryFragmentData: {fileID: 11400000, guid: 6864ad3bfd9a78b4fb3eedba4599fb5f, type: 2}
   image_Banner: {fileID: 8034121711670500306}
   text_playTime: {fileID: 8758344084923695250}
   text_enemyKillCount: {fileID: 6068161064921168821}
+  image_memoryFragmentIcon: {fileID: 6173978446217951987}
   text_getMemoryFragment: {fileID: 3545491913913321293}
   text_linkRate: {fileID: 1369103070854608163}
   text_memoryLogUnlocked: {fileID: 4645654938423374871}
+  image_manaStoneIcon: {fileID: 2229627532762034742}
   text_manaStoneCount: {fileID: 6587944048801142547}
+  image_potionIcon: {fileID: 1495840250195983064}
   text_potionCount: {fileID: 7481784490366416458}
   image_manaStoneLost: {fileID: 4034565077410086683}
   image_potionLost: {fileID: 7052561747800267532}

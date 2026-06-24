@@ -22,11 +22,18 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     // 플레이어 마나
     public float mpMax;                                     // 마나 최대값
     public float mpCurrent { get; private set; }            // 현재 마나
-    public float manaRegen;                                 // 초탕 마나 화복량
+    public float manaRegen;                                 // 초탕 마나 회복량
+
+    private LocalInputReader _input;                        // 플레이어 인게임 조작 입력
+    private PlayerMovement _movement;                       // 플레이어 이동 조작
 
     void Awake()
     {
-        
+        // EntityIdentity에서 플레이어 고유 번호를 가져옴
+        playerID = GetComponent<EntityIdentity>().entityID;
+        // 플레이어의 조작 관련 컴포넌트를 가져옴
+        _input = GetComponent<LocalInputReader>();
+        _movement = GetComponent<PlayerMovement>();
     }
 
     private void OnEnable()
@@ -66,6 +73,14 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         StartCoroutine(HealingManaPerSeconds());
     }
 
+    void FixedUpdate()  //현재 상태를 확인하여 입력 동작 여부를 체크
+    {
+        // 플레이어 상태가 idle인 경우에 입력 동작을 처리함
+        bool canInput = (nowState == livingState.idle);
+        if (_input != null) _input.enabled = canInput;
+        if (_movement != null) _movement.enabled = canInput;
+    }
+
 #region Status Management
     /* 플레이어 상태 및 스텟 초기화 */
     public void initialize(float _hp, float _mp, float _regen)
@@ -98,9 +113,42 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void GetHp(float _val)
     {
         hpCurrent = Mathf.Clamp(hpCurrent+_val, 0, hpMax);
-        // 플레이어 체력이 0이 되었을 때 게임 오버 이벤트를 발동
-        if (hpCurrent <= 0) GlobalEventBus.onPlayerDead?.Invoke(playerID);
         UpdateHp();
+        // 플레이어 체력이 0이 되었을 때 사망 처리 이벤트 및 게임오버 메소드를 발동
+        if (hpCurrent <= 0)
+        {
+            GlobalEventBus.onPlayerDead?.Invoke(playerID);
+            GameOver(playerID);
+        }
+    }
+
+    /* 게임 오버 처리 */
+    public void GameOver(int _playerID)  
+    {
+        // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
+        if (!IsPlayerIdle(_playerID)) return;
+        // 플레이어 상태를 gameover로 변경
+        ResultServiceLocator.Instance.HandleEscapeFail(_playerID);
+        // 탈출 실패 판정 이벤트를 전송
+        GlobalEventBus.OnEscapeRequest?.Invoke(false);
+    }
+
+    // 플레이어가 idle 상태인지 확인
+    public static bool IsPlayerIdle(int playerID)
+    {
+        var svc = ResultServiceLocator.Instance;
+        if (svc == null)
+        {
+            Debug.LogWarning("IsPlayerIdle: ResultServiceLocator.Instance is null");
+            return false;
+        }
+        var comp = svc.GetPlayerComponent<PlayerStatus>(playerID) as PlayerStatus;
+        if (comp == null)
+        {
+            Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {playerID}");
+            return false;
+        }
+        return comp.nowState == PlayerStatus.livingState.idle;
     }
 
     /* 마나 변화 */
