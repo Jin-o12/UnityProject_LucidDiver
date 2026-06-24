@@ -2,6 +2,7 @@
     "name": "UIAD",
     "rootNamespace": "",
     "references": [
+        "GUID:7535be9703bf08544a6161f4c3f68fbe",
         "GUID:6055be8ebefd69e48b49212b09b47b2f",
         "GUID:4116d224785ded84a8c9a38930c03cb7",
         "GUID:8f15eda85deabaa45b425bd5de0fdb12",

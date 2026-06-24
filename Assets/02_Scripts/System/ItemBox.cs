@@ -1,60 +1,194 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// í”Œë ˆì´ì–´ê°€ ìƒí˜¸ì‘ìš©í–ˆì„ ë•Œ ëœë¤í•œ ì•„ì´í…œ ë“œëì„ ìƒì„±í•˜ëŠ” ìƒì ìŠ¤í¬ë¦½íŠ¸
-/// ë“œë í”„ë¦¬íŒ¹ì„ ë°°ì—´ë¡œ ë°›ì•„ ë™ì¼í•œ í™•ë¥ ë¡œ í•˜ë‚˜ë¥¼ ì„ íƒí•¨
+/// ÇÃ·¹ÀÌ¾î°¡ »óÈ£ÀÛ¿ëÇÒ ¼ö ÀÖ´Â ÄÁÅ×ÀÌ³Ê ¹Ú½ºÀÔ´Ï´Ù.
+/// »óÀÚ ¾È¿¡´Â ½ÇÁ¦·Î ¿Å±æ ¼ö ÀÖ´Â ¾ÆÀÌÅÛ µ¥ÀÌÅÍ°¡ µé¾î ÀÖÀ¸¸ç,
+/// ÇÊ¿ä ½Ã ½ÃÀÛ ½ÃÁ¡¿¡ ·£´ıÀ¸·Î ¾ÆÀÌÅÛÀ» »ı¼ºÇØ Ã¤¿ö ³Ö½À´Ï´Ù.
 /// </summary>
 public class ItemBox : MonoBehaviour, IInteractable
 {
-    [Header("Drop Settings")]
-    [SerializeField] private GameObject[] dropPrefabs;    // ëœë¤ ë“œë í›„ë³´ í”„ë¦¬íŒ¹ ëª©ë¡
-    [SerializeField] private Transform dropPoint;         // ì•„ì´í…œì´ ìƒì„±ë  ìœ„ì¹˜
+    [Header("Container Contents")]
+    [SerializeField] private List<BoxItemEntry> items = new();
 
-    private bool isOpened = false;                        // í•œ ë²ˆ ì—´ë¦° ìƒìëŠ” ë‹¤ì‹œ ì—´ë¦¬ì§€ ì•Šë„ë¡ ì²´í¬
+    [Header("Random Loot Settings")]
+    [SerializeField] private bool useRandomLoot = true;              // ½ÃÀÛ ½Ã ·£´ı ¾ÆÀÌÅÛ »ı¼º »ç¿ë ¿©ºÎ
+    [SerializeField] private int minCreateCount = 1;                // ÃÖ¼Ò »ı¼º ¾ÆÀÌÅÛ Á¾·ù ¼ö
+    [SerializeField] private int maxCreateCount = 2;                // ÃÖ´ë »ı¼º ¾ÆÀÌÅÛ Á¾·ù ¼ö
+    [SerializeField] private bool allowDuplicateLoot = false;       // °°Àº ¾ÆÀÌÅÛ Áßº¹ »ı¼º Çã¿ë ¿©ºÎ
+    [SerializeField] private List<BoxLootOption> lootOptions = new(); // ·£´ı ÈÄº¸ ¾ÆÀÌÅÛ ¸ñ·Ï
+
+    private bool isOpened = false;
 
     /// <summary>
-    /// í”Œë ˆì´ì–´ê°€ ìƒìì™€ ìƒí˜¸ì‘ìš©í•˜ë©´ í˜¸ì¶œë¨
-    /// 3ê°œì˜ ë“œë í›„ë³´ ì¤‘ í•˜ë‚˜ë¥¼ ëœë¤ ìƒì„±í•˜ê³  ìƒìëŠ” ì œê±°ë¨
+    /// ÇöÀç »óÀÚ ¾È¿¡ µé¾î ÀÖ´Â ¾ÆÀÌÅÛ ¸ñ·ÏÀÔ´Ï´Ù.
+    /// ChestUI°¡ ÀÌ µ¥ÀÌÅÍ¸¦ ÀĞ¾î¼­ ½½·ÔÀ» »ı¼ºÇÕ´Ï´Ù.
+    /// </summary>
+    public IReadOnlyList<BoxItemEntry> Items => items;
+
+    private void Awake()
+    {
+        // ·£´ı »ı¼º ¸ğµå¸¦ »ç¿ëÇÏ°í,
+        // ¾ÆÁ÷ »óÀÚ ³»¿ëÀÌ ºñ¾î ÀÖÀ» ¶§¸¸ ½ÃÀÛ ½Ã ÇÑ ¹ø ¾ÆÀÌÅÛÀ» Ã¤¿ó´Ï´Ù.
+        if (useRandomLoot && items.Count == 0)
+            GenerateRandomItems();
+    }
+
+    /// <summary>
+    /// ÀÎ½ºÆåÅÍ ¿ìÅ¬¸¯ ¸Ş´º¿¡¼­ ¼öµ¿À¸·Î ·£´ı ¾ÆÀÌÅÛÀ» ´Ù½Ã »ı¼ºÇÒ ¶§ »ç¿ëÇÕ´Ï´Ù.
+    /// Å×½ºÆ®ÇÒ ¶§ ÆíÇÏ°Ô È®ÀÎÇÒ ¼ö ÀÖµµ·Ï Ãß°¡ÇÕ´Ï´Ù.
+    /// </summary>
+    [ContextMenu("Generate Random Items")]
+    private void GenerateRandomItemsFromContextMenu()
+    {
+        GenerateRandomItems();
+    }
+
+    /// <summary>
+    /// ÇÃ·¹ÀÌ¾î°¡ »óÀÚ¿Í »óÈ£ÀÛ¿ëÇßÀ» ¶§ È£ÃâµË´Ï´Ù.
+    /// ÀÌ¹Ì ¿­·Á ÀÖÀ¸¸é Áßº¹À¸·Î ¿­Áö ¾Ê½À´Ï´Ù.
     /// </summary>
     public bool Interact(int playerID)
     {
-        // ì´ë¯¸ ì—´ë¦° ìƒìëŠ” ë‹¤ì‹œ ì²˜ë¦¬í•˜ì§€ ì•ŠìŒ
+        // ÀÌ¹Ì ¿­·Á ÀÖÀ¸¸é ´Ù½Ã ¿­Áö ¾ÊÀ½
         if (isOpened)
             return false;
 
-        // ë“œë í”„ë¦¬íŒ¹ì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìœ¼ë©´ ì¢…ë£Œ
-        if (dropPrefabs == null || dropPrefabs.Length == 0)
-        {
-            Debug.LogWarning("ItemBox: ë“œë í”„ë¦¬íŒ¹ì´ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŒ.", this);
-            return false;
-        }
-
-        // ë°°ì—´ ê¸¸ì´ ê¸°ì¤€ìœ¼ë¡œ ëœë¤ ì¸ë±ìŠ¤ë¥¼ ë½‘ê¸° ë•Œë¬¸ì—
-        // 3ê°œë¥¼ ë„£ìœ¼ë©´ 1:1:1 ë¹„ìœ¨ë¡œ ëœë¤ ë“œëì´ ë¨
-        int randomIndex = Random.Range(0, dropPrefabs.Length);
-        GameObject selectedDropPrefab = dropPrefabs[randomIndex];
-
-        if (selectedDropPrefab == null)
-        {
-            Debug.LogWarning("ItemBox: ë¹„ì–´ ìˆëŠ” ë“œë í”„ë¦¬íŒ¹ ìŠ¬ë¡¯ì´ ìˆìŒ.", this);
-            return false;
-        }
-
-        // dropPointê°€ ìˆìœ¼ë©´ ê·¸ ìœ„ì¹˜ì— ìƒì„±í•˜ê³ 
-        // ì—†ìœ¼ë©´ ìƒì ìœ„ìª½ìœ¼ë¡œ ì‚´ì§ ë„ì›Œì„œ ìƒì„±
-        Vector3 spawnPosition = dropPoint != null
-            ? dropPoint.position
-            : transform.position + Vector3.up * 0.75f;
-
-        Quaternion spawnRotation = selectedDropPrefab.transform.rotation;
-
-        Instantiate(selectedDropPrefab, spawnPosition, spawnRotation);
-
         isOpened = true;
-        Debug.Log("ìƒìë¥¼ ì—´ì—ˆê³  ì•„ì´í…œì„ ë“œëí•¨: " + selectedDropPrefab.name);
 
-        // ìƒìëŠ” í•œ ë²ˆ ì‚¬ìš© í›„ ì œê±°
-        Destroy(gameObject);
-        return true;
+        // »óÀÚ ¿­¸² ÀÌº¥Æ®¸¦ ¹ßÇàÇÏ¿© Presenter°¡ UI¸¦ ¿­µµ·Ï ¿äÃ»
+        GlobalEventBus.OnItemBoxOpened?.Invoke(this, playerID);
+
+        // »óÀÚ´Â »ç¶óÁöÁö ¾ÊÀ¸¹Ç·Î false ¹İÈ¯
+        return false;
+    }
+
+    /// <summary>
+    /// ÁöÁ¤ÇÑ ÀÎµ¦½ºÀÇ »óÀÚ ¾ÆÀÌÅÛ µ¥ÀÌÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+    /// </summary>
+    public BoxItemEntry GetItem(int index)
+    {
+        if (index < 0 || index >= items.Count)
+            return null;
+
+        return items[index];
+    }
+
+    /// <summary>
+    /// »óÀÚ ¾È Æ¯Á¤ ¾ÆÀÌÅÛÀÇ ¼ö·®À» °¨¼Ò½ÃÅµ´Ï´Ù.
+    /// ¼ö·®ÀÌ 0 ÀÌÇÏ°¡ µÇ¸é ÇØ´ç ¿£Æ®¸®¸¦ Á¦°ÅÇÕ´Ï´Ù.
+    /// </summary>
+    public void RemoveAmount(int index, int amount)
+    {
+        if (index < 0 || index >= items.Count)
+            return;
+
+        items[index].amount -= amount;
+
+        if (items[index].amount <= 0)
+            items.RemoveAt(index);
+    }
+
+    /// <summary>
+    /// »óÀÚ ¾È¿¡ ´õ ÀÌ»ó ¾ÆÀÌÅÛÀÌ ¾ø´ÂÁö È®ÀÎÇÕ´Ï´Ù.
+    /// </summary>
+    public bool IsEmpty()
+    {
+        return items.Count == 0;
+    }
+
+    /// <summary>
+    /// »óÀÚ UI¸¦ ´İÀ» ¶§ ´Ù½Ã ¿­ ¼ö ÀÖµµ·Ï »óÅÂ¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
+    /// </summary>
+    public void CloseBox()
+    {
+        isOpened = false;
+    }
+
+    /// <summary>
+    /// ·£´ı ÈÄº¸ ¸ñ·Ï¿¡¼­ 1~2°³ÀÇ ¾ÆÀÌÅÛÀ» »Ì¾Æ »óÀÚ ³»¿ëÀ¸·Î Ã¤¿ó´Ï´Ù.
+    /// ±âÁ¸ ³»¿ëÀº Áö¿ì°í »õ·Î »ı¼ºÇÕ´Ï´Ù.
+    /// </summary>
+    private void GenerateRandomItems()
+    {
+        // Àß¸øµÈ ¼³Á¤ ¹æÁö
+        int createMin = Mathf.Max(1, minCreateCount);
+        int createMax = Mathf.Max(createMin, maxCreateCount);
+
+        // À¯È¿ÇÑ ÈÄº¸¸¸ µû·Î ¸ğÀ¾´Ï´Ù.
+        List<BoxLootOption> pool = new List<BoxLootOption>();
+
+        for (int i = 0; i < lootOptions.Count; i++)
+        {
+            if (lootOptions[i] == null || lootOptions[i].itemData == null)
+                continue;
+
+            pool.Add(lootOptions[i]);
+        }
+
+        // ÈÄº¸°¡ ¾øÀ¸¸é »ı¼ºÇÏÁö ¾ÊÀ½
+        if (pool.Count == 0)
+            return;
+
+        items.Clear();
+
+        // ÀÌ¹ø »óÀÚ¿¡ ¸î Á¾·ùÀÇ ¾ÆÀÌÅÛÀ» ³ÖÀ»Áö °áÁ¤
+        int createCount = Random.Range(createMin, createMax + 1);
+
+        for (int i = 0; i < createCount; i++)
+        {
+            // Áßº¹ ±İÁö »óÅÂ¿¡¼­ ÈÄº¸¸¦ ´Ù ¼ÒÁøÇÏ¸é Á¾·á
+            if (pool.Count == 0)
+                break;
+
+            BoxLootOption selectedOption = PickRandomOption(pool);
+
+            if (selectedOption == null || selectedOption.itemData == null)
+                continue;
+
+            // ¼ö·® ¹üÀ§°¡ Àß¸ø µé¾î¿Íµµ ÃÖ¼Ò 1°³ ÀÌ»ó »ı¼ºµÇµµ·Ï º¸Á¤
+            int minAmount = Mathf.Max(1, selectedOption.minAmount);
+            int maxAmount = Mathf.Max(minAmount, selectedOption.maxAmount);
+            int amount = Random.Range(minAmount, maxAmount + 1);
+
+            // ½ÇÁ¦ »óÀÚ ³»¿ë ¸®½ºÆ®¿¡ Ãß°¡
+            items.Add(new BoxItemEntry
+            {
+                itemData = selectedOption.itemData,
+                amount = amount
+            });
+
+            // °°Àº ¾ÆÀÌÅÛÀ» ÇÑ »óÀÚ¿¡¼­ Áßº¹ »ı¼ºÇÏÁö ¾ÊÀ¸·Á¸é Á¦°Å
+            if (!allowDuplicateLoot)
+                pool.Remove(selectedOption);
+        }
+    }
+
+    /// <summary>
+    /// °¡ÁßÄ¡(weight)¸¦ ±âÁØÀ¸·Î ÈÄº¸ ¾ÆÀÌÅÛ ÇÏ³ª¸¦ ·£´ı ¼±ÅÃÇÕ´Ï´Ù.
+    /// weight °ªÀÌ Å¬¼ö·Ï ¼±ÅÃµÉ È®·üÀÌ ³ô¾ÆÁı´Ï´Ù.
+    /// </summary>
+    private BoxLootOption PickRandomOption(List<BoxLootOption> options)
+    {
+        int totalWeight = 0;
+
+        for (int i = 0; i < options.Count; i++)
+        {
+            totalWeight += Mathf.Max(1, options[i].weight);
+        }
+
+        int randomValue = Random.Range(0, totalWeight);
+        int currentWeight = 0;
+
+        for (int i = 0; i < options.Count; i++)
+        {
+            currentWeight += Mathf.Max(1, options[i].weight);
+
+            if (randomValue < currentWeight)
+                return options[i];
+        }
+
+        // ¿¹¿Ü »óÈ² ¹æÁö¿ë ¸¶Áö¸· ¹İÈ¯
+        return options[options.Count - 1];
     }
 }
