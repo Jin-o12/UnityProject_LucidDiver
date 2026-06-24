@@ -37,4 +37,5 @@ public class GlobalEventBus
 
     /// 게임 시스템 관련 이벤트 ///
     public static Action<int> OnEscapeRequest;                      // 탈출 구역에서 탈출 요청 입력 시: Action<고유 번호>
+    public static Action<IInteractable, int> OnItemBoxOpened;      // 상자와 상호작용하여 UI를 열었을 시: Action<열린 상자, 상호작용한 플레이어 ID>
 }
