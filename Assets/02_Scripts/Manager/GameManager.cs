@@ -1,6 +1,6 @@
 ﻿/// <summary>
 /// 인게임 전반의 시스템을 관리하는 인스턴스 클래스
-/// [26.06.22_강다영] 결과 씬 제작 이후에 연결하여 탈출 시 결과 화면으로 넘어가게 할 것
+/// [26.06.24_강다영] playerPrefab, EnemyPrefab: 캐릭터 및 적 프리팹은 생성 시 결정되도록 바꿀 것
 /// </summary>
 using System.Collections;
 using System.Collections.Generic;
@@ -14,9 +14,10 @@ public class GameManager : MonoBehaviour
     [Header("엔티티 생성")]
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject EnemyPrefab;
-    [SerializeField] private GameObject[] playerSpawnPoint;
-    [SerializeField] private GameObject[] enemySpawnPoint;
-    private int entityCount;                                    // 생성된 엔티티의 고유 번호
+    [SerializeField] private GameObject playerSpawnPool;
+    [SerializeField] private GameObject enemySpawnPool;
+    private List<Transform> playerSpawnPoint = new();
+    private List<Transform> enemySpawnPoint = new();
     CharacterData charData;                                     // 가져올 캐릭터 데이터
 
     // 인벤토리 기록에 관한 필드
@@ -77,7 +78,7 @@ public class GameManager : MonoBehaviour
     private void SpawnPlayer()
     {
         // 플레이어 스폰 포인트 중 무작위로 하나 선정
-        int spawnNum = Random.Range(0, playerSpawnPoint.Length-1);
+        int spawnNum = Random.Range(0, playerSpawnPoint.Count-1);
 
         // 스폰 장소 오브젝트가 없을 경우 대비
         if(playerSpawnPoint[spawnNum]==null) return;
@@ -87,7 +88,7 @@ public class GameManager : MonoBehaviour
         GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
         
         // 플레이어 오브젝트 세션 데이터에 등록
-
+        GlobalRuntimeData.CountingEntityData(spawnedPlayer);
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
@@ -99,6 +100,7 @@ public class GameManager : MonoBehaviour
             movement.initialize(charData.moveSpeed);
         }
 
+        // 플레이어 스폰 여부 이벤트
         GlobalEventBus.OnPlayerSpawned?.Invoke(spawnedPlayer);
     }
 

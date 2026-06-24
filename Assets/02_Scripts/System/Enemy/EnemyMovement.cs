@@ -165,6 +165,8 @@ public class EnemyMovement : MonoBehaviour
 
     public void isPlayerTakeDamage()
     {
+        // 공격 중 플레이어가 범위를 벗어났을 경우 피격당하지 않음
+        if(targetPlayer==null) return;
         float sqrDistToTarget = (transform.position - targetPlayer.position).sqrMagnitude;
         
         // 공격 성공 여부 판정 시 타겟이 범위 내에 있을 경우
