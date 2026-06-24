@@ -2,6 +2,13 @@
 /// 게임 내 모든 Enum형을 관리합니다
 /// </summary>
 
+// 캐릭터 종류
+public enum UserType
+{
+    main,       // 메인 다이버
+    enemy       // 적
+}
+
 // 피해를 받는 대상이 될 수 있는 것 타입
 public enum Faction 
 { 
@@ -16,11 +23,12 @@ public enum itemCategory
     idle,           // 기타 아이템
     weapon,         // 무장
     armor,          // 방어구
-    consume         // 소모품
+    consume,        // 소모품
+    memory          // 기억 파편
 }
 
 // 아이템 사용 방법 종류
-public enum UseType
+public enum AreaType
 {
     target,             // 사용자가 대상을 선택
     circle_zone,        // 효과가 발동할 원형 구역의 중심 지점을 선택
@@ -42,8 +50,3 @@ public enum EffectType
     mana_recover_inst       // 마나 즉시 회복
 }
 
-// 기억 파편 사용 가능 캐릭터 타입
-public enum UserType
-{
-    main                // 메인 캐릭터
-}

@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
 /// </summary>
@@ -12,6 +12,8 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     public enum livingState { idle, escape, gameover }      // 플레이어가 가질 수 있는 상태의 종류
     public livingState nowState;                            // 현재 플레이어
     public bool isReloading { get; private set; }           // 재장전 실행 중 여부
+
+    int playerID;                                           // 플레이어 고유 번호
     
     // 플레이어 체력
     public float hpMax;                                     // 전체 체력
@@ -24,22 +26,15 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
     void Awake()
     {
-        // 플레이어 상태 및 스텟 초기화
-        nowState = livingState.idle;
-
-        hpMax = 100;
-        hpCurrent = hpMax;
-        mpMax = 100;
-        mpCurrent = mpMax;
-        manaRegen = 1.0f;
+        
     }
 
     private void OnEnable()
     {
         // 플레이어 첫 생성시 전체 플레이어 명단에 본인 등록
-        if (!GlobalRuntimeData.ActivePlayers.Contains(this.transform))
+        if (!GlobalRuntimeData.ActivePlayers.Contains(this.gameObject))
         {
-            GlobalRuntimeData.ActivePlayers.Add(this.transform);
+            GlobalRuntimeData.ActivePlayers.Add(this.gameObject);
         }
 
         /// 이벤트 구독 ///
@@ -50,9 +45,9 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void OnDisable()
     {
         // 플레이어 디스폰시 현재 플레이어 목록에서 본인 제거
-        if (GlobalRuntimeData.ActivePlayers.Contains(this.transform))
+        if (GlobalRuntimeData.ActivePlayers.Contains(this.gameObject))
         {
-            GlobalRuntimeData.ActivePlayers.Remove(this.transform);
+            GlobalRuntimeData.ActivePlayers.Remove(this.gameObject);
         }
 
         /// 이벤트 구독 해제 ///
@@ -62,6 +57,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
     void Start()
     {
+        ResultServiceLocator.Instance.Register(playerID, this);
         // UI 초기 업데이트
         UpdateHp();
         UpdateMp();
@@ -71,6 +67,18 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     }
 
 #region Status Management
+    /* 플레이어 상태 및 스텟 초기화 */
+    public void initialize(float _hp, float _mp, float _regen)
+    {
+        nowState = livingState.idle;
+
+        hpMax = _hp;
+        hpCurrent = hpMax;
+        mpMax = _mp;
+        mpCurrent = mpMax;
+        manaRegen = _regen;
+    }
+
     /* 피격 시 자신의 타입을 반환 */
     public Faction EntityFaction => Faction.player;
 
@@ -90,6 +98,8 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void GetHp(float _val)
     {
         hpCurrent = Mathf.Clamp(hpCurrent+_val, 0, hpMax);
+        // 플레이어 체력이 0이 되었을 때 게임 오버 이벤트를 발동
+        if (hpCurrent <= 0) GlobalEventBus.onPlayerDead?.Invoke(playerID);
         UpdateHp();
     }
 

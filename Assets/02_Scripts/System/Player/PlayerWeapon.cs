@@ -82,10 +82,11 @@ public class PlayerWeapon : MonoBehaviour
 
         weaponData = weaponItemData;
 
-        if (!weaponData.itemPrefabRef.RuntimeKeyIsValid())
-            return;
-
-        Addressables.InstantiateAsync(weaponData.itemPrefabRef, handPos).Completed += OnWeaponLoaded;
+        // 무기 프리팹 주소가 비어 있을 시 실패
+        if(!weaponData.itemPrefabRef.RuntimeKeyIsValid()) return;
+        // Addressble을 통해 비동기로 무기를 소환, 손 위치에 부착함
+        // 2D 캐릭터를 사용하기 때문에 3D 무기 장착 코드는 사용하지 않습니다
+        // Addressables.InstantiateAsync(weaponData.itemPrefabRef, handPos).Completed += OnWeaponLoaded;
     }
 
     private void OnWeaponLoaded(AsyncOperationHandle<GameObject> handle)
