@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 아이템과 인벤토리에 관한 모든 상호작용의 중재자 역할을 수행합니다.
 /// 아이템 습득 시 상황에 따라 즉시 장착하거나 인벤토리에 수납합니다.
 /// 인벤토리 UI와 상자 UI의 열기/닫기 흐름도 함께 관리합니다.
@@ -13,13 +13,14 @@ public class InventoryPresenter : MonoBehaviour
     private LocalInputReader localInputReader;          // 플레이어 입력 처리
     private EntityIdentity identity;                    // 플레이어 고유 ID 참조
 
-    // UI 캐시
-    private InventoryUI inventoryUI;                    // 인벤토리 UI 캐시
-    private ChestUI chestUI;                            // 상자 UI 캐시
-
     // 컨테이너 상태 캐시
     private ItemBox currentBox;                         // 현재 열려 있는 상자
     private bool isChestOpen;                           // 상자 UI가 열려 있는지 여부
+    private PlayerStatus playerStatus;                  // 플레이어 상태
+
+    // UI 캐시
+    private InventoryUI inventoryUI;                    // 인벤토리 UI 캐시
+    private ResultUI resultUI;                          // 결과창 UI 캐시
 
     private void Awake()
     {
@@ -50,6 +51,9 @@ public class InventoryPresenter : MonoBehaviour
 
         // 인벤토리 데이터 변경 이벤트를 구독 합니다
         playerInventory.OnSlotChanged += HandleSlotChanged;
+
+        // 게임 종료시 이벤트
+        //GlobalEventBus.OnShowGameResult += OpenResultUI;
     }
 
     private void OnDisable()
@@ -62,6 +66,8 @@ public class InventoryPresenter : MonoBehaviour
         localInputReader.OnInventoryCloseRequested -= CloseInventoryUI;
 
         playerInventory.OnSlotChanged -= HandleSlotChanged;
+
+        //GlobalEventBus.OnShowGameResult -= OpenResultUI;
     }
 
     /// <summary>
@@ -114,6 +120,9 @@ public class InventoryPresenter : MonoBehaviour
         {
             Debug.LogWarning("Unknown item TID: " + pickedItemTID);
         }
+
+        // DataManager의 playerData 저장
+        DataManager.Instance.SaveGame();
     }
 
     /* 상자와 상호작용 했을 때 상자 UI와 인벤토리 UI를 함께 오픈 */
@@ -157,6 +166,9 @@ public class InventoryPresenter : MonoBehaviour
     /* 인벤토리 UI 활성화 */
     public void OpenInventoryUI()
     {
+        // 플레이어 상태가 idle이 아니면 인벤토리 창 조작을 수행하지 않음
+        if (playerStatus.nowState != PlayerStatus.livingState.idle) return;
+
         // 인벤토리 UI 활성화 및 UI 오브젝트 캐시 저장
         inventoryUI = UIManager.Instance.Open<InventoryUI>();
         if (inventoryUI == null) return;
@@ -172,13 +184,16 @@ public class InventoryPresenter : MonoBehaviour
     /* 인벤토리 UI 비활성화 */
     public void CloseInventoryUI()
     {
+        // 플레이어 상태가 idle이 아니면 인벤토리 창 조작을 수행하지 않음
+        if (playerStatus.nowState != PlayerStatus.livingState.idle) return;
+        
         // 상자 UI가 열려 있으면 인벤토리만 따로 닫지 않고 컨테이너 UI 전체를 닫음
         if (isChestOpen)
         {
             CloseContainerUI();
             return;
         }
-
+        
         UIManager.Instance.Close<InventoryUI>();
         inventoryUI = null;
 
@@ -205,5 +220,27 @@ public class InventoryPresenter : MonoBehaviour
 
         // 입력 액션맵을 다시 플레이어 모드로 전환
         localInputReader.SwitchToPlayerMap();
+    }
+
+    private void OpenResultUI(bool _result)
+    {
+        Debug.Log("결과 창 패널을 출력합니다...");
+        // UIManager에서 Canvas-ResultPanel을 받아와 실행
+        resultUI = UIManager.Instance.Open<ResultUI>();
+        
+        if (resultUI == null) return;
+        resultUI.UpdateResultUI(_result);
+    }
+
+    public int FindItemCount(int _tid)
+    {
+        foreach (InventorySlotData slot in playerInventory.slots)
+        {
+            if (slot.TID == _tid)
+            {
+                return slot.amount;
+            }
+        }
+        return 0;
     }
 }

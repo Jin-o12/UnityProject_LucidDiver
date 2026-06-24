@@ -6,24 +6,23 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 public class PlayerWeapon : MonoBehaviour
 {
     [Header("Equip Weapon")]
-    [SerializeField] private WeaponItemData weaponData;
-    [SerializeField] private Transform handPos;
-    [SerializeField] private Transform firePoint;
-    [SerializeField] private LayerMask hitMask;
+    [SerializeField] private WeaponItemData weaponData;                 // 무기 데이터
+    [SerializeField] private Transform firePoint;                       // 발사 지점
+    [SerializeField] private LayerMask hitMask;                         // 피격 대상 레이어 마스크
 
     [Header("Shot Trace Visual")]
-    [SerializeField] private bool showShotTrace = true;
-    [SerializeField] private LineRenderer shotTraceRenderer;
-    [SerializeField] private float shotTraceDuration = 0.08f;
-    [SerializeField] private Color hitTraceColor = Color.white;
-    [SerializeField] private Color missTraceColor = Color.red;
+    [SerializeField] private bool showShotTrace = true;                 // 궤적 보이기 여부
+    [SerializeField] private LineRenderer shotTraceRenderer;            // 궤적 렌더러
+    [SerializeField] private float shotTraceDuration = 0.08f;           // 궤적이 보이는 시간
+    [SerializeField] private Color hitTraceColor = Color.white;         // 적중 했을 시 궤적 색상
+    [SerializeField] private Color missTraceColor = Color.red;          // 적중하지 않을 시 궤적 색상
 
-    public bool isEquipped => weaponData != null;
-    public float nowUseMana => weaponData.useMana;
+    public bool isEquipped => weaponData != null;                       // 무기 장착 여부
+    public float nowUseMana => weaponData.useMana;                      // 현재 무기의 마나 사용량
 
-    private GameObject currentWeaponInstance;
-    private Coroutine shotTraceCoroutine;
-    private WaitForSeconds shotTraceWait;
+    private GameObject currentWeaponInstance;                           // 현재 무기 인스턴스
+    private Coroutine shotTraceCoroutine;                               // 궤적 출력 코루틴
+    private WaitForSeconds shotTraceWait;                               // 궤적 출력 코루틴 WS
 
     private void Awake()
     {

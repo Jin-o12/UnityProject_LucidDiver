@@ -93,7 +93,7 @@ GameObject:
   - component: {fileID: 138772351977270662}
   - component: {fileID: 5890371029895251960}
   m_Layer: 5
-  m_Name: Image_ButtonIcon
+  m_Name: Image-ButtonIcon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -168,7 +168,7 @@ GameObject:
   - component: {fileID: 7867054768612674894}
   - component: {fileID: 7125896479074262100}
   m_Layer: 5
-  m_Name: Text (TMP)_ButtonArrow
+  m_Name: Text (TMP)-ButtonArrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -303,7 +303,7 @@ GameObject:
   - component: {fileID: 1548739516666265423}
   - component: {fileID: 5256806970443828623}
   m_Layer: 5
-  m_Name: Text (TMP)_DialogueBody
+  m_Name: Text (TMP)-DialogueBody
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -359,8 +359,8 @@ MonoBehaviour:
   m_text: "\uB610 \uBB34\uC2A8 \uC784\uBB34\uC57C? ...\uB3D9\uC870\uC728\uC740 \uC548\uC815\uC801\uC774\uB124.\n\uADF8\uB807\uB2E4\uACE0
     \uB108\uBB34 \uAE34\uC7A5 \uD480\uC9C4 \uB9C8."
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -439,7 +439,7 @@ GameObject:
   - component: {fileID: 6328282550473973502}
   - component: {fileID: 5558255535988144168}
   m_Layer: 5
-  m_Name: Image_ButtonIcon
+  m_Name: Image-ButtonIcon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -514,7 +514,7 @@ GameObject:
   - component: {fileID: 7523558604954234622}
   - component: {fileID: 6860020454716549812}
   m_Layer: 5
-  m_Name: Text (TMP)_NewBadge
+  m_Name: Text (TMP)-NewBadge
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -648,7 +648,7 @@ GameObject:
   - component: {fileID: 157560250518380076}
   - component: {fileID: 7739499574642014094}
   m_Layer: 5
-  m_Name: Image_LinkRateBarBG
+  m_Name: Image-LinkRateBarBG
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -726,7 +726,7 @@ GameObject:
   - component: {fileID: 8120845298221695462}
   - component: {fileID: 4524665842324270314}
   m_Layer: 5
-  m_Name: Button_Sortie
+  m_Name: Button-Sortie
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -750,10 +750,10 @@ RectTransform:
   - {fileID: 1559124190196485108}
   m_Father: {fileID: 8878467443024430893}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 310, y: -106}
+  m_SizeDelta: {x: 620, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &957923600065394331
 CanvasRenderer:
@@ -836,7 +836,31 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 423021869445099392}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 2838638639429370787}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &4524665842324270314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -869,7 +893,7 @@ GameObject:
   - component: {fileID: 38161169495364688}
   - component: {fileID: 476606836927009399}
   m_Layer: 5
-  m_Name: Text (TMP)_ButtonTitle
+  m_Name: Text (TMP)-ButtonTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -891,8 +915,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 300, y: 15}
-  m_SizeDelta: {x: 260, y: 80}
+  m_AnchoredPosition: {x: 330, y: 10}
+  m_SizeDelta: {x: 320, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &38161169495364688
 CanvasRenderer:
@@ -922,10 +946,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uB2E4\uC774\uBC84"
+  m_text: "\uB2E4\uC774\uBC84 / \uAE30\uB85D"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -950,8 +974,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 64
-  m_fontSizeBase: 64
+  m_fontSize: 50
+  m_fontSizeBase: 50
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1181,7 +1205,7 @@ GameObject:
   - component: {fileID: 3496464540221909140}
   - component: {fileID: 1478390536387401357}
   m_Layer: 5
-  m_Name: Text (TMP)_SubTitle
+  m_Name: Text (TMP)-SubTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1316,7 +1340,7 @@ GameObject:
   - component: {fileID: 1376114831609316754}
   - component: {fileID: 5699506290713654612}
   m_Layer: 5
-  m_Name: Text (TMP)_SubTitle
+  m_Name: Text (TMP)-SubTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1451,13 +1475,14 @@ GameObject:
   - component: {fileID: 6656717384714049221}
   - component: {fileID: 4032586390846618248}
   - component: {fileID: 3423699262701415708}
+  - component: {fileID: 6502900581990125564}
   m_Layer: 5
-  m_Name: Canvas_Lobby
+  m_Name: Canvas-Lobby
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1107564121793119972
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1541,6 +1566,35 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &6502900581990125564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2838638639429370787}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee833ebb16fc1534cb71a2084450f068, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canvasLobby: {fileID: 2838638639429370787}
+  canvasSortiePrepare: {fileID: 0}
+  canvasDiverRecord: {fileID: 0}
+  canvasStorageInventory: {fileID: 0}
+  buttonSortie: {fileID: 8120845298221695462}
+  buttonDiverRecord: {fileID: 978118831516236612}
+  buttonStorage: {fileID: 1586132335830246493}
+  textDiverName: {fileID: 848244235026976283}
+  textLinkRateLevel: {fileID: 965834552413327166}
+  textSpeakerName: {fileID: 4516556617685114177}
+  textDialogue: {fileID: 5256806970443828623}
+  newMemoryLogMark: {fileID: 861047826772908163}
+  testDiverName: "\uC720\uC548"
+  testLinkRateLevel: 0
+  testLobbyDialogue: "\uAD00\uC81C \uC900\uBE44 \uC644\uB8CC. \uCD9C\uACA9 \uBA85\uB839\uC744
+    \uAE30\uB2E4\uB9AC\uACE0 \uC788\uC5B4."
+  testHasNewMemoryLog: 0
 --- !u!1 &2867315597536943714
 GameObject:
   m_ObjectHideFlags: 0
@@ -1595,7 +1649,7 @@ GameObject:
   - component: {fileID: 7367632849860555017}
   - component: {fileID: 5052829772659330179}
   m_Layer: 5
-  m_Name: Text (TMP)_ButtonTitle
+  m_Name: Text (TMP)-ButtonTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1617,7 +1671,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 300, y: 15}
+  m_AnchoredPosition: {x: 300, y: 10}
   m_SizeDelta: {x: 260, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7367632849860555017
@@ -1650,8 +1704,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uCC3D\uACE0"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1676,8 +1730,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 64
-  m_fontSizeBase: 64
+  m_fontSize: 50
+  m_fontSizeBase: 50
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1730,7 +1784,7 @@ GameObject:
   - component: {fileID: 8048055712914484889}
   - component: {fileID: 4516556617685114177}
   m_Layer: 5
-  m_Name: Text (TMP)_SpeakerName
+  m_Name: Text (TMP)-SpeakerName
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1785,8 +1839,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uC720\uC548"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1903,7 +1957,7 @@ GameObject:
   - component: {fileID: 2504954394328389349}
   - component: {fileID: 2291340232982740793}
   m_Layer: 5
-  m_Name: Text (TMP)_CurrentScreenSub
+  m_Name: Text (TMP)-CurrentScreenSub
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1958,8 +2012,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: CONTROL ROOM
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -2038,7 +2092,7 @@ GameObject:
   - component: {fileID: 8291276164435803442}
   - component: {fileID: 594783189212436734}
   m_Layer: 5
-  m_Name: Text (TMP)_ProjectSubTitle
+  m_Name: Text (TMP)-ProjectSubTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2093,8 +2147,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: LUCID DIVERS
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -2174,7 +2228,7 @@ GameObject:
   - component: {fileID: 2338701143874290283}
   - component: {fileID: 1752476560514436757}
   m_Layer: 5
-  m_Name: Button_Option
+  m_Name: Button-Option
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2294,7 +2348,7 @@ GameObject:
   - component: {fileID: 6425365946501866852}
   - component: {fileID: 6850641576392325901}
   m_Layer: 5
-  m_Name: Text (TMP)_CurrentScreen
+  m_Name: Text (TMP)-CurrentScreen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2349,8 +2403,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uAD00\uC81C\uC2E4"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -2429,7 +2483,7 @@ GameObject:
   - component: {fileID: 1454251052505252627}
   - component: {fileID: 1992209450806881948}
   m_Layer: 5
-  m_Name: Image_DiverStanding
+  m_Name: Image-DiverStanding
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2540,7 +2594,7 @@ GameObject:
   - component: {fileID: 3523442674331911535}
   - component: {fileID: 351726921765878503}
   m_Layer: 5
-  m_Name: Text (TMP)_ButtonArrow
+  m_Name: Text (TMP)-ButtonArrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2675,7 +2729,7 @@ GameObject:
   - component: {fileID: 8128995724247804666}
   - component: {fileID: 965834552413327166}
   m_Layer: 5
-  m_Name: Text (TMP)_LinkRateLabel
+  m_Name: Text (TMP)-LinkRateLevel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2730,8 +2784,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uB3D9\uC870\uC728 Lv.0"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -2810,7 +2864,7 @@ GameObject:
   - component: {fileID: 3538418754470597026}
   - component: {fileID: 8062635709001690799}
   m_Layer: 5
-  m_Name: Text (TMP)_LinkStatus
+  m_Name: Text (TMP)-LinkStatus
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2865,8 +2919,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u2022\uC0C1\uD0DC: \uB9C1\uD06C \uC548\uC815"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -2945,7 +2999,7 @@ GameObject:
   - component: {fileID: 737848054534170600}
   - component: {fileID: 3926196251055318324}
   m_Layer: 5
-  m_Name: Image_DiverInfoBoxBG
+  m_Name: Image-DiverInfoBoxBG
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3020,7 +3074,7 @@ GameObject:
   - component: {fileID: 5739305926362043726}
   - component: {fileID: 2424237765373848083}
   m_Layer: 5
-  m_Name: Image_DimOverlay
+  m_Name: Image-DimOverlay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3095,7 +3149,7 @@ GameObject:
   - component: {fileID: 2026817598292197270}
   - component: {fileID: 9008596589281028599}
   m_Layer: 5
-  m_Name: Text (TMP)_ButtonTitle
+  m_Name: Text (TMP)-ButtonTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3117,7 +3171,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 300, y: 15}
+  m_AnchoredPosition: {x: 300, y: 10}
   m_SizeDelta: {x: 260, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2026817598292197270
@@ -3150,8 +3204,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uCD9C\uACA9"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -3176,8 +3230,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 64
-  m_fontSizeBase: 64
+  m_fontSize: 50
+  m_fontSizeBase: 50
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -3230,7 +3284,7 @@ GameObject:
   - component: {fileID: 4434158639130738833}
   - component: {fileID: 4571001255074631911}
   m_Layer: 5
-  m_Name: Image_DiverEmblem
+  m_Name: Image-DiverEmblem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3305,7 +3359,7 @@ GameObject:
   - component: {fileID: 8113357354049223530}
   - component: {fileID: 2960955253247111671}
   m_Layer: 5
-  m_Name: Text (TMP)_DiverRole
+  m_Name: Text (TMP)-DiverRole
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3360,8 +3414,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Main Diver
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -3442,7 +3496,7 @@ GameObject:
   - component: {fileID: 1586132335830246493}
   - component: {fileID: 5213781315431094410}
   m_Layer: 5
-  m_Name: Button_Storage
+  m_Name: Button-Storage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3466,10 +3520,10 @@ RectTransform:
   - {fileID: 5574566596941690850}
   m_Father: {fileID: 8878467443024430893}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 310, y: -414}
+  m_SizeDelta: {x: 620, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5898757664046980623
 CanvasRenderer:
@@ -3587,7 +3641,7 @@ GameObject:
   - component: {fileID: 978118831516236612}
   - component: {fileID: 6292879054835601061}
   m_Layer: 5
-  m_Name: Button_DiverRecord
+  m_Name: Button-DiverRecord
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3612,10 +3666,10 @@ RectTransform:
   - {fileID: 3579303797404132806}
   m_Father: {fileID: 8878467443024430893}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 310, y: -260}
+  m_SizeDelta: {x: 620, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1571190231842768230
 CanvasRenderer:
@@ -3698,7 +3752,31 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3769511474927287889}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 2838638639429370787}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &6292879054835601061
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3731,7 +3809,7 @@ GameObject:
   - component: {fileID: 7548186716881792252}
   - component: {fileID: 8576512741530426444}
   m_Layer: 5
-  m_Name: Text (TMP)_SubTitle
+  m_Name: Text (TMP)-SubTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3946,7 +4024,7 @@ GameObject:
   - component: {fileID: 814664021176411271}
   - component: {fileID: 848244235026976283}
   m_Layer: 5
-  m_Name: Text (TMP)_DiverName
+  m_Name: Text (TMP)-DiverName
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4001,8 +4079,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uC720\uC548"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -4081,7 +4159,7 @@ GameObject:
   - component: {fileID: 4464384765602981223}
   - component: {fileID: 7620989656738429175}
   m_Layer: 5
-  m_Name: Image_ButtonIcon
+  m_Name: Image-ButtonIcon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4156,7 +4234,7 @@ GameObject:
   - component: {fileID: 8758161562890081953}
   - component: {fileID: 1284412273146751183}
   m_Layer: 5
-  m_Name: Image_TopBarBG
+  m_Name: Image-TopBarBG
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4231,7 +4309,7 @@ GameObject:
   - component: {fileID: 5169187169415589466}
   - component: {fileID: 2017488884545358041}
   m_Layer: 5
-  m_Name: Text (TMP)_ProjectTitle
+  m_Name: Text (TMP)-ProjectTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4286,8 +4364,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uCE68\uBABD\uB3C4\uC2DC: \uB8E8\uC2DC\uB4DC \uB2E4\uC774\uBC84"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 55f72cf7d29e0d84a88f49991752839b, type: 2}
+  m_sharedMaterial: {fileID: -4130039320307269689, guid: 55f72cf7d29e0d84a88f49991752839b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -4403,7 +4481,7 @@ GameObject:
   - component: {fileID: 2426065724624979552}
   - component: {fileID: 3701862455849354346}
   m_Layer: 5
-  m_Name: Image_DialogueBoxBG
+  m_Name: Image-DialogueBoxBG
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4478,7 +4556,7 @@ GameObject:
   - component: {fileID: 3714720850868884774}
   - component: {fileID: 1767591387603784533}
   m_Layer: 5
-  m_Name: Text (TMP)_ButtonArrow
+  m_Name: Text (TMP)-ButtonArrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4613,7 +4691,7 @@ GameObject:
   - component: {fileID: 4771433280326545228}
   - component: {fileID: 742334546333889029}
   m_Layer: 5
-  m_Name: Image_LinkRateBarFill
+  m_Name: Image-LinkRateBarFill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4688,7 +4766,7 @@ GameObject:
   - component: {fileID: 3896140960277550144}
   - component: {fileID: 6059827208739768157}
   m_Layer: 5
-  m_Name: Image_Background
+  m_Name: Image-Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4763,7 +4841,7 @@ GameObject:
   - component: {fileID: 5666535851264789673}
   - component: {fileID: 4773305908315412377}
   m_Layer: 5
-  m_Name: Image_CurrentScreenBar
+  m_Name: Image-CurrentScreenBar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
