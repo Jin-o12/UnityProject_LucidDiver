@@ -26,6 +26,12 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
 
+        // mainCamera가 인스펙터에서 할당되지 않았을 경우 자동으로 찾아 할당
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
         // 필수 컴포넌트가 존재하지 않을 시 스크립트 비활성화
         if(rb==null || animator==null)
         {

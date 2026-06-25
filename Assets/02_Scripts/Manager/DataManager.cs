@@ -1,10 +1,10 @@
 /// <summary>
 /// 게임 데이터들을 불러오고 관리하는 인스턴스 클래스
 /// </summary>
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using Newtonsoft.Json;
 
 public class DataManager : MonoBehaviour
 {
@@ -12,6 +12,9 @@ public class DataManager : MonoBehaviour
     
     private Dictionary<int, ItemData> itemDataDictionary;           // 아이템 데이터 사전
     private Dictionary<int, CharacterData> CharDataDictionary;      // 캐릭터 데이터 사전
+
+    // 캐릭터 대사 데이터를 TID를 Key로 하여 딕셔너리로 관리
+    private Dictionary<int, CharacterDialogueData> dialogueDataDictionary; 
 
     public PlayerSaveData playerData { get; private set; }          // 계정 데이터
     [SerializeField] private string saveFilePath;
@@ -23,6 +26,7 @@ public class DataManager : MonoBehaviour
             Instance = this;
             itemDataDictionary = new Dictionary<int, ItemData>();
             CharDataDictionary = new Dictionary<int, CharacterData>();
+            dialogueDataDictionary = new Dictionary<int, CharacterDialogueData>();
         }
         else
         {
@@ -36,7 +40,7 @@ public class DataManager : MonoBehaviour
         LoadGame();
 
         // 캐릭터를 고르는 로비 씬과 연결이 되지 않았으므로 캐릭터 데이터를 코드에서 설정
-        playerData.SelectCharID = 1;
+        playerData.SelectCharID = 101;
 
         LoadGameData();
     }
@@ -86,6 +90,22 @@ public class DataManager : MonoBehaviour
         {
             CharDataDictionary[data.TID] = data;
         }
+
+        // 캐릭터 대사 스크립트 데이터
+        TextAsset jsonAsset = Resources.Load<TextAsset>($"JSON/CharacterDialogues");
+        if(jsonAsset != null)
+        {
+            // JSON 파싱
+            CharacterDialogueData parsedData = JsonConvert.DeserializeObject<CharacterDialogueData>(jsonAsset.text);
+            // 딕셔너리에 저장
+            dialogueDataDictionary[parsedData.CharacterTID] = parsedData;
+            
+            Debug.Log("데이터 로드 완료");
+        }
+        else
+        {
+            Debug.LogError($"캐릭터 대사를 로드할 수 없었습니다.");
+        }
     }
 
     /* 아이템 데이터 가져오기 */
@@ -115,4 +135,31 @@ public class DataManager : MonoBehaviour
             return null;
         }
     }
+
+    /* 캐릭터 대사 데이터 가져오기 */
+    public string GetRandomDialogue(int _charTID, DialogueType _type)
+    {
+        // 해당 TID에 맞는 캐릭터 데이터가 있는지 확인
+        if(dialogueDataDictionary.TryGetValue(_charTID, out CharacterDialogueData data))
+        {
+            // 해당 캐릭터 데이터 내에 지정한 상황의 대사 리스트가 있는지 확인
+            if(data.Dialogues.TryGetValue(_type, out List<DialogueLine> lines) && lines.Count > 0)
+            {
+                // 리스트에서 무작위로 하나 뽑아서 텍스트 반환
+                int randomIndex = Random.Range(0, lines.Count);
+                return lines[randomIndex].Text;
+            }
+            else
+            {
+                Debug.LogWarning($"[TID: {_charTID}] 캐릭터에게 [{_type}] 상황의 대사가 없습니다!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[TID: {_charTID}] 캐릭터의 대사 데이터가 없습니다");
+        }
+
+        return string.Empty;
+    }
+
 }

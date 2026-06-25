@@ -41,7 +41,6 @@ public class GameManager : MonoBehaviour
         escapeTimerWs = new WaitForSeconds(EscapeTimer);
         GlobalEventBus.OnEscapeRequest += StartEscape;  //탈출 요청 이벤트에 탈출 시작 메소드 연결
         GlobalEventBus.onPlayerDead += GameOver;        //플레이어 사망 이벤트에 게임오버 메소드 연결
-        inventory = GameObject.Find("Player").GetComponent<PlayerInventory>();
     }
 
     private void Start()
@@ -52,6 +51,7 @@ public class GameManager : MonoBehaviour
 
         // 플레이어 1회 생성
         SpawnPlayer();
+        inventory = GameObject.Find("Player").GetComponentInChildren<PlayerInventory>();
     }
 
     private void OnEnable()
