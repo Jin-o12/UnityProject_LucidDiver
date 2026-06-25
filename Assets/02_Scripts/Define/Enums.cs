@@ -50,3 +50,15 @@ public enum EffectType
     mana_recover_inst       // 마나 즉시 회복
 }
 
+public enum DialogueType
+{
+    lobbyEnter,         // 관제실 화면 진입 시
+    storyOpen,          // 개방된 심상 기록
+    worldEnter,         // 인게임 세션 진입 시 말풍선 툴팁
+    enemyEncounter,     // 인게임에서 적 캐릭터 발견 시 말풍선 툴팁
+    hitAttack,          // 인게임에서 적 공격에 피격 시 말풍선 툴팁
+    getMemory,          // 인게임에서 기억 파편 획득 시 말풍선 툴팁
+    getConsume,         // 인게임에서 소비 기물 획득 시 말풍선 툴팁
+    escapeSuccess,      // 탈출 성공 시
+    escapeFailed        // 탈출 실패 시
+}
