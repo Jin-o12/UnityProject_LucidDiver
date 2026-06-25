@@ -27,10 +27,11 @@ public class InventoryPresenter : MonoBehaviour
     {
         playerWeapon = GetComponent<PlayerWeapon>();
         playerInventory = GetComponent<PlayerInventory>();
+        playerStatus = GetComponent<PlayerStatus>();
         localInputReader = GetComponent<LocalInputReader>();
         identity = GetComponent<EntityIdentity>();
 
-        if (playerWeapon == null || playerInventory == null || localInputReader == null || identity == null)
+        if (playerWeapon == null || playerInventory == null || playerStatus==null || localInputReader == null || identity == null)
         {
             this.enabled = false;
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
