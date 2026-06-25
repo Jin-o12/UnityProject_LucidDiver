@@ -58,6 +58,7 @@ public class DataManager : MonoBehaviour
         Debug.Log("Game Saved");
     }
 
+#region 데이터 불러오기
     /* 플레이어 게임 데이터 불러오기 */
     public void LoadGame()
     {
@@ -107,7 +108,9 @@ public class DataManager : MonoBehaviour
             Debug.LogError($"캐릭터 대사를 로드할 수 없었습니다.");
         }
     }
+#endregion
 
+#region 정적 데이터 추출 메서드
     /* 아이템 데이터 가져오기 */
     public ItemData GetItemData(int itemTID)
     {
@@ -162,4 +165,35 @@ public class DataManager : MonoBehaviour
         return string.Empty;
     }
 
+    /* 특정 상황에 맞는 대사 중 원하는 순서의 대사를 뽑아오는 함수 */
+    public string GetDialogueByIndex(int charTID, DialogueType type, int index)
+    {
+        // 해당 캐릭터의 데이터가 있는지 확인
+        if(dialogueDataDictionary.TryGetValue(charTID, out CharacterDialogueData data))
+        {
+            // 캐릭터 데이터 안에 요청한 상황의 대사 리스트가 있는지 확인
+            if(data.Dialogues.TryGetValue(type, out List<DialogueLine> lines))
+            {
+                // 요청한 순서가 실제 대사 개수 범위를 벗어나지 않는지 확인
+                if (index >= 0 && index < lines.Count)
+                {
+                    return lines[index].Text; // 원하는 순서의 대사 반환
+                }
+                else
+                {
+                    Debug.LogWarning($"[TID: {charTID}] [{type}] 상황의 {index}번째 대사가 없습니다 (현재 총 대사 수: {lines.Count}개)");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[TID: {charTID}] 캐릭터에게 [{type}] 상황의 대사가 없습니다");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[TID: {charTID}] 캐릭터의 대사 데이터가 없습니다");
+        }
+        return string.Empty; // 에러 시 빈 문자열 반환
+    }
+#endregion
 }
