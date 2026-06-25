@@ -55,7 +55,6 @@ public class DataManager : MonoBehaviour
 
         string json = JsonUtility.ToJson(playerData, true);
         File.WriteAllText(saveFilePath, json);
-        Debug.Log("Game Saved");
     }
 
 #region 데이터 불러오기
