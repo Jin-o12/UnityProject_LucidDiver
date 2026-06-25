@@ -88,7 +88,6 @@ public class GameManager : MonoBehaviour
 
         // 플레이어 1회 생성
         SpawnPlayer();
-        inventory = GameObject.Find("Player").GetComponentInChildren<PlayerInventory>();
     }
 
     private void SpawnPlayer()
