@@ -15,13 +15,54 @@ public class ResultManager : MonoBehaviour, IResultService
         DontDestroyOnLoad(gameObject);
         // ResultServiceLocator에 자신을 등록
         ResultServiceLocator.Instance = this;
-        Debug.Log("ResultManager Awake - registered to ResultServiceLocator");
+
+        // 씬에 이미 존재하는 PlayerStatus를 찾아 등록 (타이밍 안전성 보장)
+        foreach (var p in FindObjectsOfType<PlayerStatus>())
+        {
+            if (p == null) continue;
+            var idComp = p.GetComponent<EntityIdentity>();
+            if (idComp == null)
+            {
+                Debug.LogWarning($"ResultManager Awake: EntityIdentity 없음 - gameObject={p.gameObject.name}");
+                continue;
+            }
+            // Register는 내부적으로 동일 key를 덮어쓰므로 중복 걱정 없음
+            Register(idComp.entityID, p);
+            Debug.Log($"ResultManager Awake: Registered existing playerID={idComp.entityID} (gameObject={p.gameObject.name})");
+        }
     }
 
     private void OnDestroy()  //IResultService 구현체 (로케이터에 등록)
     {
         if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
         if (Instance == this) Instance = null;
+    }
+
+    public void RefreshPlayerCache()
+    {
+        // 기존 매핑 중 파괴된 오브젝트 제거
+        var keysToRemove = new List<int>();
+        foreach (var kv in _players)
+        {
+            if (kv.Value == null) keysToRemove.Add(kv.Key);
+        }
+        foreach (var key in keysToRemove)
+        {
+            _players.Remove(key);
+            Debug.Log($"ResultManager.RefreshPlayerCache: Removed null playerID={key}");
+        }
+
+        // 씬의 모든 PlayerStatus를 스캔해 등록
+        foreach (var p in FindObjectsOfType<PlayerStatus>())
+        {
+            if (p == null) continue;
+            if (!p.TryGetComponent<EntityIdentity>(out var idComp)) { Debug.LogWarning($"ResultManager.RefreshPlayerCache: EntityIdentity 없음 - {p.gameObject.name}"); continue; }
+            if (!_players.ContainsKey(idComp.entityID))
+            {
+                _players[idComp.entityID] = p;
+                Debug.Log($"ResultManager.RefreshPlayerCache: Registered playerID={idComp.entityID} ({p.gameObject.name})");
+            }
+        }
     }
 
     // 플레이어 등록
@@ -34,6 +75,7 @@ public class ResultManager : MonoBehaviour, IResultService
         if (idComp == null) return;
         // EntityIdentity에서 ID 값을 불러옴
         _players[playerID] = (PlayerStatus)ps;
+        Debug.Log($"ResultManager.Register: playerID={playerID} registered (obj={ps.gameObject.name})");
     }
 
     // 플레이어 등록 해제
@@ -43,34 +85,34 @@ public class ResultManager : MonoBehaviour, IResultService
         _players.Remove(playerID);
     }
 
-    // 조회 유틸
-    public Component GetPlayerComponent<PlayerStatue>(int playerID)
+    // 플레이어가 requester 자신인 경우에 등록 해제
+    public void UnregisterIfOwner(int playerID, Component requester)
     {
-        // playerID에 매핑된 PlayerStatus를 가져옴
+        // 딕셔너리에 등록된 것이 requester 자신인 경우에만 제거
+        if (_players.TryGetValue(playerID, out var current) && current == requester)
+        {
+            _players.Remove(playerID);
+        }
+    }
+
+    // 조회 유틸
+    public Component GetPlayerComponent(int playerID)
+    {
+        // playerID에 매핑된 컴포넌트를 가져옴
         if (_players.TryGetValue(playerID, out var ps)) return ps;
         // 매핑되지 않았으면 null 처리
-        else return null;
+        return null;
     }
 
     // 탈출 성공 처리
-    public void HandleEscapeSuccess(int playerID)
-    {
-        SetPlayerState(playerID, PlayerStatus.livingState.escape);
-    }
+    public void HandleEscapeSuccess(int playerID) => SetPlayerState(playerID, PlayerStatus.livingState.escape);
 
-    // 탈출 실패 처리 (예: hp <= 0 시 호출)
-    public void HandleEscapeFail(int playerID)
-    {
-        SetPlayerState(playerID, PlayerStatus.livingState.gameover);
-    }
+    // 탈출 실패 처리
+    public void HandleEscapeFail(int playerID) => SetPlayerState(playerID, PlayerStatus.livingState.gameover);
 
     // 플레이어 상태 변경
     private void SetPlayerState(int playerID, PlayerStatus.livingState state)
     {
-        PlayerStatus ps = (PlayerStatus)GetPlayerComponent<PlayerStatus>(playerID);
-        if (ps != null)
-        {
-            ps.nowState = state;
-        }
+        if (_players.TryGetValue(playerID, out var ps)) ps.nowState = state;
     }
 }

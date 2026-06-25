@@ -107,7 +107,6 @@ public class DiverRecordUI : MonoBehaviour
             memoryLogUnlocked = testMemoryLogUnlocked;
             hasNewMemoryLog = testHasNewMemoryLog;
         }
-
         // {UI가 열릴 때마다 최신 상태로 갱신}
         Refresh();
     }
@@ -289,8 +288,9 @@ public class DiverRecordUI : MonoBehaviour
         if (popupMemoryLog01 != null)
             popupMemoryLog01.SetActive(true);
 
-        // {기록을 열람했으므로 NEW 배지 제거}
-        hasNewMemoryLog = false;
+        // {기록을 열람했으므로 hasNewMemoryLog를 false로 설정하여 NEW 배지 제거}
+        // hasNewMemoryLog = false;
+        SetData(linkRateLevel, memoryLogUnlocked, false);
 
         if (textNewBadge01 != null)
             textNewBadge01.gameObject.SetActive(false);

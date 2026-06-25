@@ -31,7 +31,10 @@ public class InventoryPresenter : MonoBehaviour
         localInputReader = GetComponent<LocalInputReader>();
         identity = GetComponent<EntityIdentity>();
 
-        if (playerWeapon == null || playerInventory == null || playerStatus==null || localInputReader == null || identity == null)
+        //PlayerStatus 연결이 끊긴 경우 내부 PlayerStatus를 새로 찾아서 연결
+        if (playerStatus == null) playerStatus = GetComponent<PlayerStatus>();
+
+        if (playerWeapon == null || playerInventory == null || localInputReader == null || identity == null)
         {
             this.enabled = false;
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");

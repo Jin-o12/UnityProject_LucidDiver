@@ -60,11 +60,21 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnGainManaRequested -= GainMana;
         GlobalEventBus.OnHealRequested -= HealingHealth;
+
+        // PlayerStatus에서 자기 자신이 등록된 경우에만 제거 (다른 플레이어 인스턴스가 덮어쓴 경우 제거 안 함)
+        try
+        {
+            ResultServiceLocator.Instance?.UnregisterIfOwner(playerID, this);
+        }
+        catch { }
     }
 
     void Start()
     {
-        ResultServiceLocator.Instance.Register(playerID, this);
+        // PlayerStatus에서 Locator 등록
+        try { ResultServiceLocator.Instance?.Register(playerID, this); }
+        catch { Debug.LogWarning("PlayerStatus.Start: ResultServiceLocator.Instance.Register 호출 실패 (타이밍 문제)."); }
+
         // UI 초기 업데이트
         UpdateHp();
         UpdateMp();
@@ -142,13 +152,15 @@ public class PlayerStatus : MonoBehaviour, IDamageable
             Debug.LogWarning("IsPlayerIdle: ResultServiceLocator.Instance is null");
             return false;
         }
-        var comp = svc.GetPlayerComponent<PlayerStatus>(playerID) as PlayerStatus;
+        Component comp = svc.GetPlayerComponent(playerID);
+        Debug.Log($"{comp.GetType().Name}");
         if (comp == null)
         {
             Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {playerID}");
             return false;
         }
-        return comp.nowState == PlayerStatus.livingState.idle;
+        PlayerStatus ps = (PlayerStatus)comp;
+        return ps.nowState == livingState.idle;
     }
 
     /* 마나 변화 */
