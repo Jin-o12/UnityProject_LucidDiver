@@ -17,11 +17,19 @@ public class SortiePrepareUI : MonoBehaviour
     [SerializeField] private Image imageSlotIcon1;
     [SerializeField] private TextMeshProUGUI textSlotName1;
     [SerializeField] private TextMeshProUGUI textSlotCount1;
+    public int slotTID1;        //1번 슬롯 아이템의 ID값 데이터를 받아옴
+    public Sprite slotSprite1;  //1번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
+    public string slotName1;    //1번 슬롯 아이템의 이름 스트링 데이터를 받아옴
+    public int slotCount1;      //1번 슬롯 아이템의 개수 데이터를 받아옴
 
     [Header("Slot 2")]
     [SerializeField] private Image imageSlotIcon2;
     [SerializeField] private TextMeshProUGUI textSlotName2;
     [SerializeField] private TextMeshProUGUI textSlotCount2;
+    public int slotTID2;        //2번 슬롯 아이템의 ID값 데이터를 받아옴
+    public Sprite slotSprite2;  //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
+    public string slotName2;    //2번 슬롯 아이템의 이름 스트링 데이터를 받아옴
+    public int slotCount2;      //2번 슬롯 아이템의 개수 데이터를 받아옴
 
     [Header("Scene")]
     [SerializeField] private string gameSceneName = "GameScene";
@@ -36,10 +44,13 @@ public class SortiePrepareUI : MonoBehaviour
         // {출격 버튼 클릭 이벤트 등록}
         if (buttonStartSortie != null)
             buttonStartSortie.onClick.AddListener(OnClickStartSortie);
+        // (퀵슬롯 데이터 업데이트 이벤트 등록)
+        //  GlobalEventBus.OnQuickSlotChanged += UpdateSlot;
     }
 
     private void OnEnable()
     {
+        // (퀵슬롯 데이터를 받아오는 이벤트를 등록)
         // {출격 준비 UI가 열릴 때마다 표시 정보 갱신}
         Refresh();
     }
@@ -49,6 +60,8 @@ public class SortiePrepareUI : MonoBehaviour
         // {오브젝트 파괴 시 출격 버튼 이벤트 해제}
         if (buttonStartSortie != null)
             buttonStartSortie.onClick.RemoveListener(OnClickStartSortie);
+        // (퀵슬롯 데이터 업데이트 이벤트 해제)
+        //  GlobalEventBus.OnQuickSlotChanged += UpdateSlot;
     }
 
     public void Refresh()
@@ -121,10 +134,10 @@ public class SortiePrepareUI : MonoBehaviour
         // {P0 공식 아이템 ID를 화면 표시명으로 변환}
         switch (itemId)
         {
-            case "mana_stone":
+            case "302":
                 return "기묘한 사탕";
 
-            case "potion":
+            case "301":
                 return "변질된 붕대";
 
             default:

@@ -262,9 +262,9 @@ public class GameManager : MonoBehaviour
         resultPanel.extractionResult = extractionResult;
         resultPanel.playTime = playTime;
         // 아이템 ID에 따라 개수 및 데이터 값 추출
-        FindItem(301, out resultPanel.potionCount, out potionData);
-        FindItem(302, out resultPanel.manaStoneCount, out manaStoneData);
-        FindItem(401, out resultPanel.memoryFragmentCount, out memoryFragmentData);
+        FindItemCountAndData(301, out resultPanel.potionCount, out potionData);
+        FindItemCountAndData(302, out resultPanel.manaStoneCount, out manaStoneData);
+        FindItemCountAndData(401, out resultPanel.memoryFragmentCount, out memoryFragmentData);
         resultPanel.potionData = potionData;
         resultPanel.manaStoneData = manaStoneData;
         resultPanel.memoryFragmentData = memoryFragmentData;
@@ -301,7 +301,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void FindItem(int _tid, out int count, out ItemData data)
+    public void FindItemCountAndData(int _tid, out int count, out ItemData data)
     {
         foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
         {
