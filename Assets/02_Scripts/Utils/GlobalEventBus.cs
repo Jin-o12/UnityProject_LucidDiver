@@ -38,4 +38,5 @@ public class GlobalEventBus
     /// 게임 시스템 관련 이벤트 ///
     public static Action<bool> OnEscapeRequest;                     // 탈출 판정 발생 시: Action<탈출 성공 여부>
     public static Action OnReturnToLobby;                           // 로비로 돌아가기 이벤트 발생
+    public static Action<IInteractable, int> OnItemBoxOpened;      // 상자와 상호작용하여 UI를 열었을 시: Action<열린 상자, 상호작용한 플레이어 ID>
 }

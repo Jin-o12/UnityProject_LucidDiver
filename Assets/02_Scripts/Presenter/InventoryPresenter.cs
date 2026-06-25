@@ -21,6 +21,7 @@ public class InventoryPresenter : MonoBehaviour
     // UI 캐시
     private InventoryUI inventoryUI;                    // 인벤토리 UI 캐시
     private ResultUI resultUI;                          // 결과창 UI 캐시
+    private ChestUI chestUI;                            // 상자 UI 캐시
 
     private void Awake()
     {
