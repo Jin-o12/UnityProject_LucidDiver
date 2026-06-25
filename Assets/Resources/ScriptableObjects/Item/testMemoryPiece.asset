@@ -29,6 +29,8 @@ MonoBehaviour:
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
+  dropPrefab: {fileID: 2408898140837872565, guid: be7dbcd4181dbe04891bcc710918239f,
+    type: 3}
   userType: 0
   charID: 0
   linkRateGain: 0
