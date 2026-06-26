@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +8,11 @@ public class PlayerSaveData
     // 캐릭터 데이터
     public List<SaveCharacterData> myCharacters = new();    // 보유 캐릭터 리스트
     public int SelectCharID;                                // 선택한 캐릭터 ID
-    
+
+    // 심상 기록 해금 상태 데이터
+    public bool memoryLogUnlocked = false;
+    public bool hasNewMemoryLog = true;
+
     // 아이템 데이터
     public List<SaveSlotData> storageSlots = new();         // 창고
     public List<SaveSlotData> inventorySlots = new();       // 인벤토리

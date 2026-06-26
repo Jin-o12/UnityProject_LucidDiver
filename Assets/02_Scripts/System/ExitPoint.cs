@@ -42,5 +42,6 @@ public class ExitPoint : MonoBehaviour, IInteractable
         yield return new WaitForSeconds(escapeTime);
         // 탈출 판정 전달 이벤트를 발송
         GlobalEventBus.OnEscapeRequest?.Invoke(true);
+        isEscaping = false;
     }
 }

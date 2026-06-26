@@ -19,7 +19,6 @@ public class SortiePrepareUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textSlotCount1;
     public int slotTID1;        //1번 슬롯 아이템의 ID값 데이터를 받아옴
     public Sprite slotSprite1;  //1번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
-    public string slotName1;    //1번 슬롯 아이템의 이름 스트링 데이터를 받아옴
     public int slotCount1;      //1번 슬롯 아이템의 개수 데이터를 받아옴
 
     [Header("Slot 2")]
@@ -28,7 +27,6 @@ public class SortiePrepareUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textSlotCount2;
     public int slotTID2;        //2번 슬롯 아이템의 ID값 데이터를 받아옴
     public Sprite slotSprite2;  //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
-    public string slotName2;    //2번 슬롯 아이템의 이름 스트링 데이터를 받아옴
     public int slotCount2;      //2번 슬롯 아이템의 개수 데이터를 받아옴
 
     [Header("Scene")]
@@ -44,15 +42,24 @@ public class SortiePrepareUI : MonoBehaviour
         // {출격 버튼 클릭 이벤트 등록}
         if (buttonStartSortie != null)
             buttonStartSortie.onClick.AddListener(OnClickStartSortie);
-        // (퀵슬롯 데이터 업데이트 이벤트 등록)
-        //  GlobalEventBus.OnQuickSlotChanged += UpdateSlot;
     }
 
     private void OnEnable()
     {
-        // (퀵슬롯 데이터를 받아오는 이벤트를 등록)
+        // (퀵슬롯 데이터 업데이트 이벤트 등록)
+        GlobalEventBus.QuickSlotLoad += UpdateQuickSlot;
+
+        // 출격 준비 UI 오픈 이벤트 발생
+        GlobalEventBus.OnOpenPrepareUI?.Invoke();
+
         // {출격 준비 UI가 열릴 때마다 표시 정보 갱신}
         Refresh();
+    }
+
+    private void OnDisable()
+    {
+        // (퀵슬롯 데이터 업데이트 이벤트 해제)
+        GlobalEventBus.QuickSlotLoad -= UpdateQuickSlot;
     }
 
     private void OnDestroy()
@@ -60,8 +67,26 @@ public class SortiePrepareUI : MonoBehaviour
         // {오브젝트 파괴 시 출격 버튼 이벤트 해제}
         if (buttonStartSortie != null)
             buttonStartSortie.onClick.RemoveListener(OnClickStartSortie);
-        // (퀵슬롯 데이터 업데이트 이벤트 해제)
-        //  GlobalEventBus.OnQuickSlotChanged += UpdateSlot;
+    }
+
+    private void UpdateQuickSlot(int index, int tid, Sprite icon, int count)
+    {
+        if (!gameObject.activeInHierarchy) return;
+
+        if (index == 0)
+        {
+            slotTID1 = tid;
+            slotSprite1 = icon;
+            slotCount1 = count;
+        }
+        else if (index == 1)
+        {
+            slotTID2 = tid;
+            slotSprite2 = icon;
+            slotCount2 = count;
+        }
+
+        Refresh();
     }
 
     public void Refresh()
@@ -78,33 +103,33 @@ public class SortiePrepareUI : MonoBehaviour
 
         // {소지품 슬롯 1번 표시}
         SetSlotUI(
-            testEquippedItemSlot1,
-            imageSlotIcon1,
+            slotTID1.ToString(),
+            imageSlotIcon1, slotSprite1,
             textSlotName1,
-            textSlotCount1,
+            textSlotCount1, slotCount1,
             "슬롯 1"
         );
 
         // {소지품 슬롯 2번 표시}
         SetSlotUI(
-            testEquippedItemSlot2,
-            imageSlotIcon2,
+            slotTID2.ToString(),
+            imageSlotIcon2, slotSprite2,
             textSlotName2,
-            textSlotCount2,
+            textSlotCount2, slotCount2,
             "슬롯 2"
         );
     }
 
     private void SetSlotUI(
         string itemId,
-        Image slotIcon,
+        Image slotIcon, Sprite slotSprite,
         TextMeshProUGUI slotName,
-        TextMeshProUGUI slotCount,
+        TextMeshProUGUI slotCount, int slotCnt,
         string emptySlotName
     )
     {
         // {아이템이 장착되지 않은 슬롯 표시}
-        if (string.IsNullOrEmpty(itemId))
+        if (string.IsNullOrEmpty(itemId) || itemId == "0")
         {
             if (slotIcon != null)
                 slotIcon.enabled = false;
@@ -120,13 +145,16 @@ public class SortiePrepareUI : MonoBehaviour
 
         // {아이템이 장착된 슬롯 표시}
         if (slotIcon != null)
+        {
             slotIcon.enabled = true;
+            slotIcon.sprite = slotSprite;
+        }
 
         if (slotName != null)
             slotName.text = GetItemDisplayName(itemId);
 
         if (slotCount != null)
-            slotCount.text = "x1";
+            slotCount.text = $"x{slotCnt}";
     }
 
     private string GetItemDisplayName(string itemId)

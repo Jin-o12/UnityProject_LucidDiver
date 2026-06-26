@@ -15,7 +15,8 @@ public class ResultUI : MonoBehaviour
     public int prevLinkRateLevel = 0;           //동조율 상승 전 다이버와의 동조율 단계
     public int linkRateLevel = 0;               //동조율 상승 후 다이버와의 동조율 단계
     public int linkRateGain = 1;                //세션 탈출 성공 시 가산되는 동조율 단계 증가치
-    public bool memoryLogUnlocked = false;      //개인 심상 기록 01의 해금 여부 플래그 (기본 false, 탈출 성공 시 기억 파편 수가 1개 이상이면 true)
+    public bool linkRateUp = false;             //동조율 단계가 증가했는지 여부 체크
+    public bool memoryLogUnlocked = false;      //개인 심상 기록 01의 해금 여부 플래그
     public int manaStoneCount;                  //이번 세션에서 플레이어가 파밍하여 탈출 성공한 기묘한 사탕 개수
     public int potionCount;                     //이번 세션에서 플레이어가 파밍하여 탈출 성공한 변질된 붕대 개수
     public string returnDialogueID;             //세션 종료 판정에 따라 로비 복귀 시 출력해야 할 귀환 대사 ID
@@ -123,7 +124,7 @@ public class ResultUI : MonoBehaviour
             ? $"기억 파편 × {memoryFragmentCount}\n자동 사용"
             : $"기억 파편 유실\n(0개 사용)";
         //동조율 레벨 업 텍스트 출력
-        text_linkRate.text = extractionResult && memoryLogUnlocked
+        text_linkRate.text = extractionResult && linkRateUp
             ? $"동조율 Lv.{prevLinkRateLevel} → <color=#80ff00>Lv.{linkRateLevel}</color>"
             : $"동조율 변화 없음\n(Lv.{prevLinkRateLevel} 유지)";
         //개인 심상 기록 해금 텍스트 출력
