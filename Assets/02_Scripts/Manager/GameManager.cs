@@ -1,24 +1,33 @@
 /// <summary>
 /// 인게임 전반의 시스템을 관리하는 인스턴스 클래스
-/// [26.06.22_강다영] 결과 씬 제작 이후에 연결하여 탈출 시 결과 화면으로 넘어가게 할 것
+/// [26.06.24_강다영] playerPrefab, EnemyPrefab: 캐릭터 및 적 프리팹은 생성 시 결정되도록 바꿀 것
 /// </summary>
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-
-    // 참조 컴포넌트
-    private PlayerStatus playerStatus;
-
-    // 탈출에 관한 필드
-    [SerializeField] private GameObject timerCanvas;
-    private const float EscapeTimer = 5.0f;
-    private WaitForSeconds escapeTimerWs;
     
+    [Header("엔티티 생성")]
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private GameObject EnemyPrefab;
+    private GameObject playerSpawnPool;
+    private GameObject enemySpawnPool;
+    private readonly string playerSpawnPoolTag = "PlayerSpawnPool"; //플레이어 스폰 풀 태그
+    private readonly string enemySpawnPoolTag = "EnemySpawnPool";   //적 스폰 풀 태그
+    private List<Transform> playerSpawnPoint = new();
+    private List<Transform> enemySpawnPoint = new();
+    CharacterData charData;                             // 가져올 캐릭터 데이터
+    public PlayerSaveData _playerSaveData;             //인벤토리 기록이 저장된 플레이어 세이브 데이터
+    // 플레이 타임 기록에 관한 필드
+    private readonly string playScene = "DemoScene";    //인게임 세션 신
+    private bool timeTrack = false;                     //플레이 시간 측정 중
+    private float startTime;                            //플레이 시작 시점
+    public event Action<bool, float> ResultTimeRecord;  //결과 창에 경과 시간을 전달하는 이벤트
 
     private void Awake()
     {
@@ -29,52 +38,100 @@ public class GameManager : MonoBehaviour
             Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        escapeTimerWs = new WaitForSeconds(EscapeTimer);
+        SceneManager.sceneLoaded += OnSceneLoaded;              //신 로드 완료 시점에 실행하는 메소드 연결
+        GlobalEventBus.OnEscapeRequest += ResultTime;           //탈출 판정 이벤트에 경과 시간 기록 메소드 연결
     }
 
-    private void OnEnable()
+    private void OnDestroy()
     {
-        GlobalEventBus.OnEscapeRequest += StartEscape;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        GlobalEventBus.OnEscapeRequest -= ResultTime;
     }
 
-    private void OnDisable()
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        GlobalEventBus.OnEscapeRequest -= StartEscape;
+        if (scene.name == playScene) //인게임 세션 신에서 실행
+        {
+            RefreshSpawnPoints();   //스폰 포인트 최신화
+
+            // ResultManager의 플레이어 캐시 새로고침 (씬 전환 후)
+            if (ResultManager.Instance != null) ResultManager.Instance.RefreshPlayerCache();
+
+            startTime = Time.time;  //시작 시점 등록
+            timeTrack = true;       //시간 기록 시작
+
+            // 캐릭터 데이터 가져오기
+            DataManager dataManager = DataManager.Instance;
+            _playerSaveData = dataManager.playerData;
+            charData = dataManager.GetCharacterData(dataManager.playerData.SelectCharID);
+
+            // 플레이어 1회 생성
+            SpawnPlayer();
+
+            // ResultManager에서 ResultServiceLocator 연결이 끊겨 있으면 다시 등록
+            //StartCoroutine(EnsureResultServiceLocator());
+        }
+        else
+        {
+            timeTrack = false;     //인게임 세션 신을 벗어나면 시간 기록 중단
+        }
     }
 
-    private void SpawnEntities()
+    private void RefreshSpawnPoints()
     {
-        
+        playerSpawnPoint.Clear();
+        enemySpawnPoint.Clear();
+
+        //스폰 풀 불러오기 (풀 오브젝트에 전용 태그를 붙여 인식)
+        playerSpawnPool = GameObject.FindGameObjectWithTag(playerSpawnPoolTag);
+        enemySpawnPool = GameObject.FindGameObjectWithTag(enemySpawnPoolTag);
+
+        // 플레이어와 적 스폰지점 불러오기
+        foreach (Transform point in playerSpawnPool.transform)
+        {
+            playerSpawnPoint.Add(point);
+        }
+        foreach (Transform point in enemySpawnPool.transform)
+        {
+            enemySpawnPoint.Add(point);
+        }
     }
 
-    private void StartEscape(int _playerID)
+    private void SpawnPlayer()
     {
-        // 탈출 타이머 시작
-        StartCoroutine(StartEscapeTimer());
+        // 이미 플레이어가 있으면 스폰을 스킵
+        if (FindObjectOfType<PlayerStatus>() != null) return;
+
+        // 플레이어 스폰 포인트 중 무작위로 하나 선정
+        int spawnNum = UnityEngine.Random.Range(0, playerSpawnPoint.Count-1);
+
+        // 스폰 장소 오브젝트가 없을 경우 대비
+        if (playerSpawnPoint[spawnNum] == null)
+        {
+            Debug.LogError("Player spawn point not found");
+            return;
+        }
+        // 플레이어 오브젝트 생성
+        Transform spawnPoint = playerSpawnPoint[spawnNum].transform;
+        GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
+
+        // 플레이어에게 세이브 데이터 넘겨주기
+        if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
+        {
+            status.initialize(charData.hpMax, charData.manaMax, charData.manaRegen);
+        }
+        if(spawnedPlayer.TryGetComponent<PlayerMovement>(out var movement))
+        {
+            movement.initialize(charData.moveSpeed);
+        }
+
+        // 플레이어 스폰 여부 이벤트
+        GlobalEventBus.OnPlayerSpawned?.Invoke(spawnedPlayer);
     }
 
-    private IEnumerator StartEscapeTimer()
+    private void ResultTime(bool _extractionResult)
     {
-        Debug.Log("타이머 시작");
-        //GameObject timerCanvas = Instantiate(timerCanvas, );
-        //playerStatus.nowState = PlayerStatus.livingState.escape;
-        // 해당 시간 동안 대기
-        yield return escapeTimerWs;
-        // 게임 종료
-        Debug.Log("타이머 종료");
-        QuitGame();
-    }
-
-    public void QuitGame()
-    {
-        Debug.Log("게임 종료를 시도합니다...");
-
-#if UNITY_EDITOR
-        // 유니티 에디터 환경일 경우: 플레이 모드를 해제합니다.
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        // 실제 빌드된 환경일 경우: 애플리케이션을 종료합니다.
-        Application.Quit();
-#endif
+        timeTrack = false;  //시간 기록을 중단하고 기록 고정
+        ResultTimeRecord?.Invoke(_extractionResult, startTime);
     }
 }

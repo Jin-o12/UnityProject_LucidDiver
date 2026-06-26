@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 플레이어의 인벤토리 데이터와 내부의 슬롯, 아이템을 관리하는 클래스
 /// </summary>
 using System;
@@ -19,10 +19,11 @@ public class PlayerInventory : MonoBehaviour
     
     // Addressable Assets 불러오기
     private AsyncOperationHandle<Sprite> loadHandle;    // 메모리 관리를 위해 로드 상태를 저장할 핸들
+    private List<AsyncOperationHandle<Sprite>> loadHandles = new();  // 메모리 누수 방지
 
     void Awake()
     {
-        slotNum = 10;
+        slotNum = 20;
         quickSlotNum = 3;
 
         // 모든 슬롯 데이터 초기화
@@ -34,6 +35,19 @@ public class PlayerInventory : MonoBehaviour
         {
             quickSlots.Add(new InventorySlotData(0, i, 0, null));
         }
+    }
+
+    private void OnDestroy()
+    {
+        // 모든 로드된 Addressable Assets 언로드
+        foreach (var handle in loadHandles)
+        {
+            if (handle.IsValid())
+            {
+                Addressables.Release(handle);
+            }
+        }
+        loadHandles.Clear();
     }
 
     private void OnEnable()
@@ -53,69 +67,79 @@ public class PlayerInventory : MonoBehaviour
     }
 
     /* 인벤토리에 아이템 추가 또는 더해짐 */
+    /* 인벤토리에 아이템 추가 및 남는 수량 반환 */
     public int AddItem(ItemData _itemData, int _count)
     {
-        if(_itemData==null) return 0;
+        if (_itemData == null) return 0;
 
-        // 동일 아이템이 이미 인벤토리에 존재한다면 합산 (합산 가능한 스텍일 시)
+        // 동일 아이템이 이미 있으면 먼저 해당 슬롯에 누적 시도
         for (int i = 0; i < slotNum; i++)
         {
-            // 해당 아이템이 넣으려는 아이템과 동일하고 최대 스택 미만이라면 합산하여 저장
-            if(slots[i].TID == _itemData.TID && slots[i].amount<_itemData.itemMultiple)
+            if (slots[i].TID == _itemData.TID && slots[i].amount < _itemData.itemMultiple)
             {
-                int throwItem = 0;
-                // 아이템을 합산 했을 때, 스텍을 초과하면 나머지는 먹지 않고, 그렇지 않다면 모두 합산
-                slots[i].amount = slots[i].amount+_count>=_itemData.itemMultiple ? _itemData.itemMultiple : _count;
-                throwItem = (slots[i].amount+_count)-_itemData.itemMultiple;
-                return throwItem;
-            }
-            // 녛으려는 아이템과 동일하나, 이미 최대 스텍이라면 아이템 넣는 것을 포기
-            else if(slots[i].TID == _itemData.TID && slots[i].amount>=_itemData.itemMultiple)
-            {
-                return _count;
+                // 현재 수량 + 추가 수량을 합친 뒤 최대 스택 수를 넘는지 계산
+                int totalAmount = slots[i].amount + _count;
+
+                // 슬롯에는 최대 스택 수까지만 저장
+                slots[i].amount = totalAmount >= _itemData.itemMultiple ? _itemData.itemMultiple : totalAmount;
+
+                // UI 갱신 이벤트 호출
+                OnSlotChanged?.Invoke(i);
+
+                // 초과 수량 반환
+                int remain = totalAmount - _itemData.itemMultiple;
+                return remain > 0 ? remain : 0;
             }
         }
 
-        // 동일한 아이템이 존재하지 않는다면 빈 자리에 아이템을 추가
+        // 빈 슬롯이 있으면 새 슬롯에 아이템 추가
         for (int i = 0; i < slotNum; i++)
         {
-            // 해당 인벤토리 칸이 비어있다면 아이템 저장
-            if(slots[i].TID==0)
+            if (slots[i].TID == 0)
             {
                 slots[i].TID = _itemData.TID;
-                LoadSprite(_itemData.icon, i);
-                
-                int throwItem = 0;
-                // 아이템을 합산 했을 때, 스텍을 초과하면 나머지는 먹지 않고, 그렇지 않다면 모두 합산
-                slots[i].amount = slots[i].amount+_count>=_itemData.itemMultiple ? _itemData.itemMultiple : _count;
-                throwItem = (slots[i].amount+_count)-_itemData.itemMultiple;
 
-                return throwItem;
+                // 아이콘 로드
+                LoadSprite(_itemData.icon, i);
+
+                // 새 슬롯에도 최대 스택 수까지만 저장
+                slots[i].amount = _count >= _itemData.itemMultiple ? _itemData.itemMultiple : _count;
+
+                // UI 갱신 이벤트 호출
+                OnSlotChanged?.Invoke(i);
+
+                // 초과 수량 반환
+                int remain = _count - _itemData.itemMultiple;
+                return remain > 0 ? remain : 0;
             }
         }
 
-        // 인벤토리 꽉 참 혹은 모종의 이유로 아이템을 주울 수 없을 경우 줍기를 실행하지 않음
-        Debug.Log("인벤토리가 꽉 찼거나 모종의 이유로 아이템을 주울 수 없습니다."); 
+        // 인벤토리가 가득 차서 넣지 못한 경우 남은 수량 그대로 반환
+        Debug.Log("인벤토리가 가득차서 아이템을 주울 수 없습니다.");
         return _count;
     }
 
-    /* 아이템 아이콘 Addressable 주소 해석 및 스프라이트 이미지 가져오기 */
+    /* 아이템의 아이콘 Addressable 주소 해석 및 스프라이트 이미지 가져오기 */
     private void LoadSprite(AssetReferenceSprite iconRef, int slotIndex)
     {
         loadHandle = Addressables.LoadAssetAsync<Sprite>(iconRef);
+        loadHandles.Add(loadHandle);  // 핸들 추가
 
         loadHandle.Completed += (handle) =>
         {
             // 성공적으로 가져왔는지 확인
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
-                // handle.Result에 실제 Sprite 데이터가 들어있음
-                //Debug.Log("스프라이트 로드 성공");
+                // 로드된 아이콘을 슬롯 데이터에 반영
                 slots[slotIndex].icon = handle.Result;
+
+                // 아이콘이 준비된 시점에 UI를 한 번 더 갱신
+                OnSlotChanged?.Invoke(slotIndex);
             }
             else
             {
-                //Debug.LogError("스프라이트를 불러오는 데 실패했습니다.");
+                // 필요 시 에러 로그 추가 가능
+                // Debug.LogError("스프라이트를 불러오는데 실패했습니다.");
             }
         };
     }
@@ -153,6 +177,10 @@ public class PlayerInventory : MonoBehaviour
         // 변동사항 알림
         OnSlotChanged?.Invoke(_index1);
         OnSlotChanged?.Invoke(_index2);
+
+        // 퀵슬롯 변경 시 캐시 저장 이벤트
+        GlobalEventBus.QuickSlotLoad?.Invoke(_index1, slot1.TID, slot1.icon, slot1.amount);
+        GlobalEventBus.QuickSlotLoad?.Invoke(_index2, slot2.TID, slot2.icon, slot2.amount);
     }
 
     /* 퀵슬롯에 아이템 추가 */
@@ -179,6 +207,9 @@ public class PlayerInventory : MonoBehaviour
 
         OnSlotChanged?.Invoke(_slotIndex);
         GlobalEventBus.OnQuickSlotChanged?.Invoke(_quickIndex, qSlot.icon, qSlot.amount);
+
+        // 퀵슬롯 변경 시 캐시 저장 이벤트
+        GlobalEventBus.QuickSlotLoad?.Invoke(_quickIndex, qSlot.TID, qSlot.icon, qSlot.amount);
     }
 
     /* 퀵슬롯 아이템 사용 */
