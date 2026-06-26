@@ -1132,6 +1132,7 @@ MonoBehaviour:
   - {fileID: 2838638639429370787, guid: 11913553fbac33348b64af24ef6e3f2b, type: 3}
   - {fileID: 6617218257314298997, guid: cb5d7151e5247ba46b2058892439fc6b, type: 3}
   - {fileID: 7828075556213926546, guid: 3577809b906886c40bfad8731c78de43, type: 3}
+  - {fileID: 4337375261074865489, guid: c1f13161693f33947bd9862d789625db, type: 3}
 --- !u!114 &331859823
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1146,8 +1147,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   linkRateLevel: 0
   linkRateGain: 1
-  MemoryLogUnlocked: 0
-  hasNewMemoryLog: 1
   slotTID1: 0
   slotSprite1: {fileID: 0}
   slotCount1: 0
@@ -1170,10 +1169,14 @@ MonoBehaviour:
     type: 3}
   EnemyPrefab: {fileID: 5821617809353532596, guid: 4f1d7c647241b76438ef6f5ba02ccf9c,
     type: 3}
-  playerSpawnPool: {fileID: 22377260}
-  enemySpawnPool: {fileID: 864556063}
   _playerSaveData:
+    myCharacters:
+    - TID: 101
+      linkRateLevel: 0
+      TotallinkRateValue: 0
     SelectCharID: 0
+    memoryLogUnlocked: 0
+    hasNewMemoryLog: 1
     storageSlots: []
     inventorySlots: []
     quickSlots: 
