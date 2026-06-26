@@ -94,7 +94,8 @@ public class EnemyMovement : MonoBehaviour
         float moreCloser = sightLengthSqr;
         Transform bestTarget = null;
 
-        foreach (GameObject player in GlobalRuntimeData.ActivePlayers)
+        // 현재 존재하는 모든 플레이어들 중 적에게 가장 가까운 대상을 추적합니다
+        foreach(GameObject player in GlobalRuntimeData.GetActivePlayers())
         {
             if (player == null)
                 continue;

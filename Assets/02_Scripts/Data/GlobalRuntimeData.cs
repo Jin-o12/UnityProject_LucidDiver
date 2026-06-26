@@ -34,11 +34,34 @@ public class GlobalRuntimeData
     /* 번호로 엔티티 오브젝트를 가져오기 */
     public static GameObject CountingEntityData(int _id)
     {
-        if (entityList.TryGetValue(_id, out GameObject obj))
+        if (playerList.TryGetValue(_id, out GameObject obj))
         {
             return obj;
         }
+        else
+        {
+            Debug.LogError($"{_id}번 플레이어 엔티티는 존재하지 않습니다");
+            return null;
+        }
+    }
 
-        return null;
+    /* 번호로 적 엔티티 가져오가 할당 */
+    public static GameObject FindEnemyData(int _id)
+    {
+        if (enemyList.TryGetValue(_id, out GameObject obj))
+        {
+            return obj;
+        }
+        else
+        {
+            Debug.LogError($"{_id}번 적 엔티티는 존재하지 않습니다");
+            return null;
+        }
+    }
+
+    /* 특정 번호 플레이어 엔티티 삭제 */
+    public static void RemovePlayer(int _id)
+    {
+        playerList.Remove(_id);
     }
 }

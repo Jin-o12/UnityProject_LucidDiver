@@ -29,6 +29,7 @@ public class InventoryPresenter : MonoBehaviour
     {
         playerWeapon = GetComponent<PlayerWeapon>();
         playerInventory = GetComponent<PlayerInventory>();
+        playerStatus = GetComponent<PlayerStatus>();
         localInputReader = GetComponent<LocalInputReader>();
         identity = GetComponent<EntityIdentity>();
         playerStatus = GetComponent<PlayerStatus>();
