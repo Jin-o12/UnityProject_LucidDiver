@@ -29,8 +29,6 @@ MonoBehaviour:
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
-  dropPrefab: {fileID: 5664091797780557949, guid: 1a83250437eb7cb40ac2d57f6f005a8e,
-    type: 3}
   fireRate: 0.5
   fireRange: 10
   AtkValue: 10

@@ -82,11 +82,6 @@ public class GameManager : MonoBehaviour
         playerSpawnPool = GameObject.FindGameObjectWithTag(playerSpawnPoolTag);
         enemySpawnPool = GameObject.FindGameObjectWithTag(enemySpawnPoolTag);
 
-        // 플레이어 1회 생성
-        SpawnPlayer();
-
-        // 적 1회 생성
-        SpawnEnemy();
         // 플레이어와 적 스폰지점 불러오기
         foreach (Transform point in playerSpawnPool.transform)
         {
@@ -104,7 +99,7 @@ public class GameManager : MonoBehaviour
         if (FindObjectOfType<PlayerStatus>() != null) return;
 
         // 플레이어 스폰 포인트 중 무작위로 하나 선정
-        int spawnNum = Random.Range(0, playerSpawnPoint.Count);
+        int spawnNum = UnityEngine.Random.Range(0, playerSpawnPoint.Count-1);
 
         // 스폰 장소 오브젝트가 없을 경우 대비
         if (playerSpawnPoint[spawnNum] == null)
@@ -130,113 +125,7 @@ public class GameManager : MonoBehaviour
         GlobalEventBus.OnPlayerSpawned?.Invoke(spawnedPlayer);
     }
 
-    private void SpawnEnemy()
-    {
-        // 적 프리팹이 연결되지 않았을 경우 대비
-        if (EnemyPrefab == null)
-        {
-            Debug.LogError("Enemy prefab not found");
-            return;
-        }
-
-        // 적 스폰 포인트가 하나도 없을 경우 대비
-        if (enemySpawnPoint.Count == 0)
-        {
-            Debug.LogError("Enemy spawn point list is empty");
-            return;
-        }
-
-        // 적 스폰 포인트 중 무작위로 하나 선정
-        // 플레이어 스폰 방식과 동일한 구조로 맞춘다.
-        int spawnNum = Random.Range(0, enemySpawnPoint.Count );
-
-        // 스폰 장소 오브젝트가 없을 경우 대비
-        if (enemySpawnPoint[spawnNum] == null)
-        {
-            Debug.LogError("Enemy spawn point not found");
-            return;
-        }
-
-        // 적 오브젝트 생성
-        Transform spawnPoint = enemySpawnPoint[spawnNum].transform;
-        GameObject spawnedEnemy = Instantiate(EnemyPrefab, spawnPoint.position, spawnPoint.rotation);
-
-        // 생성된 적 오브젝트를 런타임 데이터에 등록
-        GlobalRuntimeData.CountingEntityData(spawnedEnemy);
-    }
-
-    public void QuitGame(bool _extractionResult)
-    {
-        extractionResult = _extractionResult;
-        // 이번 세션에서의 플레이 시간을 계산
-        if (timeTrack)
-        {
-            playTime = Time.time - startTime;
-            timeTrack = false;
-        }
-        // 인벤토리 데이터를 불러와 동기화 갱신
-        InventorySync();
-        // 갱신 후 DataManager에서 playerData를 저장
-        DataManager.Instance.SaveGame();
-        // 결과 창 패널 출력 메소드
-        OpenResultPanel();
-        // 탈출 실패 시 각 아이템을 인벤토리에서 제거
-        if (!_extractionResult)
-        {
-            RemoveFromInventory(301);
-            RemoveFromInventory(302);
-            RemoveFromInventory(401);
-            resultPanel.memoryLogUnlocked = false;
-        }
-        // 탈출 성공 시에는 기억 파편을 사용해 동조율 상승 → 심상 기록 해금 처리를 실행
-        else
-        {
-            LinkRateUp();
-        }
-        // 모든 처리 완료 후 후 DataManager에서 playerData를 저장
-        DataManager.Instance.SaveGame();
-    }
-
-    private void LinkRateUp()
-    {
-        bool memoryLogUnlocked = resultPanel.memoryFragmentCount > 0;
-        resultPanel.memoryLogUnlocked = memoryLogUnlocked;
-        RemoveFromInventory(401);
-        resultPanel.RefreshResult();
-    }
-
-    private void OpenResultPanel()
-    {
-        Debug.Log("결과 창 패널을 출력합니다...");
-        // UIManager에서 Canvas-ResultPanel을 받아와 UI 오픈
-        resultPanel = UIManager.Instance.Open<ResultUI>();
-        if (resultPanel == null) return;
-        // 인게임 세션에서 저장된 데이터를 resultPanel에 전달해 UI 갱신
-        _playerSaveData = DataManager.Instance.playerData;
-        resultPanel.extractionResult = extractionResult;
-        resultPanel.playTime = playTime;
-        // 아이템 ID에 따라 개수 및 데이터 값 추출
-        FindItem(301, out resultPanel.potionCount, out potionData);
-        FindItem(302, out resultPanel.manaStoneCount, out manaStoneData);
-        FindItem(401, out resultPanel.memoryFragmentCount, out memoryFragmentData);
-        resultPanel.potionData = potionData;
-        resultPanel.manaStoneData = manaStoneData;
-        resultPanel.memoryFragmentData = memoryFragmentData;
-        // 동조율 단계 데이터 전달
-        resultPanel.prevLinkRateLevel = linkRateLevel;
-        resultPanel.linkRateLevel = linkRateLevel + linkRateGain;
-        resultPanel.linkRateGain = linkRateGain;
-        // 결과 창 UI 출력 갱신
-        resultPanel.RefreshResult();
-    }
-
-    // 결과 창 패널 닫기
-    void CloseResultPanel()
-    {
-        UIManager.Instance.Close<ResultUI>();
-    }
-
-    private void RemoveFromInventory(int _tid)  //아이템 ID별로 인벤토리에서 제거
+    private void ResultTime(bool _extractionResult)
     {
             //시간 기록을 중단하고 기록 고정
         timeTrack = false;
