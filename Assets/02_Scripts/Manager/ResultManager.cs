@@ -1,10 +1,44 @@
-﻿using System.Collections.Generic;
+﻿/// <summary>
+/// 인게임 세션 종료 시 데이터 변동을 관리하는 클래스
+/// (탈출 성공 여부, 플레이 타임, 인벤토리 및 퀵슬롯, 동조율 단계)
+/// </summary>
+using System.Collections.Generic;
 using UnityEngine;
 public class ResultManager : MonoBehaviour, IResultService
 {
     public static ResultManager Instance { get; private set; }  //싱글톤 인스턴스 지정
     // playerID -> PlayerStatus 매핑 딕셔너리
     public readonly Dictionary<int, PlayerStatus> _players = new Dictionary<int, PlayerStatus>();
+
+    // 플레이 타임 기록 필드
+    private float playTime;                             //이번 세션 플레이 시간
+    private float startTime;                            //플레이 시작 시점
+    private readonly string playScene = "DemoScene";    //플레이 시간을 측정할 신
+    // 탈출 여부 및 결과 창 필드
+    private bool extractionResult;                      //탈출 성공 여부 판정
+    private ResultUI resultPanel;                       //결과 창 UI 
+    // 동조율 저장 필드
+    public int linkRateLevel = 0;                       //동조율 상승 후 다이버와의 동조율 단계
+    public int linkRateGain = 1;                        //세션 탈출 성공 시 가산되는 동조율 단계 증가치
+    private bool MemoryLogUnlocked = false;             //세션 탈출 시 개인 심상 기록 해금 여부 저장
+    private bool hasNewMemoryLog = true;                //개인 심상 기록 확인 여부 저장
+    // 인벤토리 기록에 관한 필드
+    private PlayerSaveData _playerSaveData;             //인벤토리 기록이 저장된 플레이어 세이브 데이터
+    private PlayerInventory _inven;                     //현재 인게임 세션의 플레이어 인벤토리 데이터
+    private ItemData potionData;                        //변질된 붕대 아이템 데이터
+    private ItemData manaStoneData;                     //기묘한 사탕 아이템 데이터
+    private ItemData memoryFragmentData;                //기억 파편 아이템 데이터
+    private int potionCount;                            //변질된 붕대 개수
+    private int mpStoneCount;                           //기묘한 사탕 개수
+    private int memoryFragmentCount;                    //기억 파편 개수
+    // 퀵슬롯 저장 필드
+    public int slotTID1;                                //1번 슬롯 아이템의 ID값 데이터를 받아옴
+    public Sprite slotSprite1;                          //1번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
+    public int slotCount1;                              //1번 슬롯 아이템의 개수 데이터를 받아옴
+    public int slotTID2;                                //2번 슬롯 아이템의 ID값 데이터를 받아옴
+    public Sprite slotSprite2;                          //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
+    public int slotCount2;                              //2번 슬롯 아이템의 개수 데이터를 받아옴
+
     private void Awake()
     {
         // 싱글톤 인스턴스 중복 방지 설정
@@ -30,12 +64,31 @@ public class ResultManager : MonoBehaviour, IResultService
             Register(idComp.entityID, p);
             Debug.Log($"ResultManager Awake: Registered existing playerID={idComp.entityID} (gameObject={p.gameObject.name})");
         }
+
+        //GameManager에서 탈출 결과와 시작 시점을 받아서 결과 정산 시작
+        GetComponent<GameManager>().ResultTimeRecord += GameResult;
+        //로비로 돌아가기 버튼에 동조율 데이터 갱신 연결
+        GlobalEventBus.OnSetRecordData += RenewLinkRateData;
+        //로비로 돌아가기 버튼에 결과 창 닫기 연결
+        GlobalEventBus.OnReturnToLobby += CloseResultPanel;
+        //출격 준비 UI 오픈 이벤트 연결
+        GlobalEventBus.OnOpenPrepareUI += SendQuickSlotCacheEvent;
+        //다이버/기록 UI 오픈 이벤트 연결
+        GlobalEventBus.OnOpenRecordUI += SendLinkRecordData;
+        //다이버/기록 UI 읽음 이벤트 연결
+        GlobalEventBus.OnRecordRead += NewMemoryRead;
     }
 
     private void OnDestroy()  //IResultService 구현체 (로케이터에 등록)
     {
         if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
         if (Instance == this) Instance = null;
+        GetComponent<GameManager>().ResultTimeRecord -= GameResult;
+        GlobalEventBus.OnSetRecordData -= RenewLinkRateData;
+        GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
+        GlobalEventBus.OnOpenPrepareUI -= SendQuickSlotCacheEvent;
+        GlobalEventBus.OnOpenRecordUI -= SendLinkRecordData;
+        GlobalEventBus.OnRecordRead -= NewMemoryRead;
     }
 
     public void RefreshPlayerCache()
@@ -114,5 +167,194 @@ public class ResultManager : MonoBehaviour, IResultService
     private void SetPlayerState(int playerID, PlayerStatus.livingState state)
     {
         if (_players.TryGetValue(playerID, out var ps)) ps.nowState = state;
+    }
+
+    public void GameResult(bool _extractionResult, float beginTime)
+    {
+        // 탈출 성공 여부를 가장 먼저 기록
+        extractionResult = _extractionResult;
+        // 이번 세션에서의 플레이 시간을 계산
+        startTime = beginTime;
+        playTime = Time.time - startTime;
+        // 플레이어 세이브 데이터를 가져옴
+        _playerSaveData = GameManager.Instance._playerSaveData;
+        // 플레이어 오브젝트에서 PlayerInventory 컴포넌트를 찾아 데이터 동기화
+        _inven = FindObjectOfType<PlayerInventory>();
+        if (_inven == null)
+        {
+            Debug.LogWarning("PlayerInventory를 찾을 수 없습니다.");
+            return;
+        }
+        // 인벤토리 및 퀵슬롯 데이터를 불러와 동기화 갱신
+        InventorySync();
+        CacheQuickSlotData(_extractionResult);
+        // 아이템 ID에 따라 개수 및 데이터 값 추출
+        FindItemCountAndData(301, out potionCount, out potionData);
+        FindItemCountAndData(302, out mpStoneCount, out manaStoneData);
+        FindItemCountAndData(401, out memoryFragmentCount, out memoryFragmentData);
+        // 결과 창 패널 출력 메소드
+        OpenResultPanel();
+        // 탈출 실패 시 각 아이템을 인벤토리에서 제거
+        if (!_extractionResult)
+        {
+            RemoveFromInventory(301);
+            RemoveFromInventory(302);
+            RemoveFromInventory(401);
+        }
+        // 탈출 성공 시에는 기억 파편을 사용해 동조율 상승 → 심상 기록 해금 처리를 실행
+        else
+        {
+            LinkRateUp();
+        }
+        // 심상 기록 해금 상태 저장 (P0에서는 동조율 단계가 1 이상이면 개인 심상 기록 해금)
+        _playerSaveData.memoryLogUnlocked = linkRateLevel > 0;
+        _playerSaveData.hasNewMemoryLog = hasNewMemoryLog;
+        // 모든 처리 완료 후 후 DataManager에서 playerData를 저장
+        DataManager.Instance.SaveGame();
+    }
+
+    private void InventorySync()
+    {
+        // PlayerSaveData의 인벤토리 슬롯을 비우고 현재 플레이어 인벤토리 데이터로 채우기
+        _playerSaveData.inventorySlots.Clear();
+        foreach (var slot in _inven.slots)
+        {
+            // TID가 0이 아닌 슬롯만 저장 (빈 슬롯 제외)
+            if (slot.TID != 0)
+            {
+                _playerSaveData.inventorySlots.Add(new SaveSlotData
+                {
+                    index = slot.order,
+                    TID = slot.TID,
+                    amount = slot.amount
+                });
+            }
+        }
+
+        // PlayerSaveData의 퀵슬롯을 비우고 현재 플레이어 퀵슬롯 데이터로 채우기
+        _playerSaveData.quickSlots.Clear();
+        _playerSaveData.quickSlots.Add(_inven.quickSlots[0].TID);
+        _playerSaveData.quickSlots.Add(_inven.quickSlots[1].TID);
+
+        // 갱신 후 DataManager에서 playerData를 저장
+        DataManager.Instance.SaveGame();
+    }
+
+    // 퀵슬롯 데이터 캐싱 (탈출 실패 시 전부 소실됨)
+    private void CacheQuickSlotData(bool _extractionResult)
+    {
+        slotTID1 = _extractionResult ? _inven.quickSlots[0].TID : 0;
+        slotSprite1 = _extractionResult ? _inven.quickSlots[0].icon : null;
+        slotCount1 = _extractionResult ? _inven.quickSlots[0].amount : 0;
+        slotTID2 = _extractionResult ? _inven.quickSlots[1].TID : 0;
+        slotSprite2 = _extractionResult ? _inven.quickSlots[1].icon : null;
+        slotCount2 = _extractionResult ? _inven.quickSlots[1].amount : 0;
+    }
+
+    private void LinkRateUp()
+    {
+        resultPanel.linkRateUp = memoryFragmentCount > 0;
+        // 기억 파편을 사용했거나 이미 해금 상태(기억 동조율 단계 > 0)라면 '해금됨=true' 전달
+        MemoryLogUnlocked = resultPanel.linkRateUp || linkRateLevel > 0;
+        resultPanel.memoryLogUnlocked = MemoryLogUnlocked;
+        // 기억 파편을 인벤토리에서 제거
+        RemoveFromInventory(401);
+        // 결과 창 UI 출력 갱신
+        resultPanel.RefreshResult();
+    }
+
+    private void RemoveFromInventory(int _tid)  //아이템 ID별로 인벤토리에서 제거
+    {
+        foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
+        {
+            // 해당 아이템이 이미 창고에 존재한다면 보유 개수를 창고에 더함
+            if (slot.TID == _tid)
+            {
+                slot.amount = 0;
+            }
+        }
+    }
+
+    // 결과 창 패널 출력 메소드
+    public void OpenResultPanel()
+    {
+        // UIManager에서 Canvas-ResultPanel을 받아와 UI 오픈
+        resultPanel = UIManager.Instance.Open<ResultUI>();
+        if (resultPanel == null) return;
+        // 인게임 세션에서 저장된 데이터를 resultPanel에 전달해 UI 갱신
+        _playerSaveData = DataManager.Instance.playerData;
+        resultPanel.extractionResult = extractionResult;
+        resultPanel.playTime = playTime;
+        resultPanel.potionCount = potionCount;
+        resultPanel.potionData = potionData;
+        resultPanel.manaStoneCount = mpStoneCount;
+        resultPanel.manaStoneData = manaStoneData;
+        resultPanel.memoryFragmentCount = memoryFragmentCount;
+        resultPanel.memoryFragmentData = memoryFragmentData;
+        // 동조율 단계 데이터를 결과 창에 전달
+        int prevLinkRateLevel = linkRateLevel;
+        resultPanel.prevLinkRateLevel = prevLinkRateLevel;
+        int nextLinkRateLevel = linkRateLevel + linkRateGain;
+        resultPanel.linkRateLevel = nextLinkRateLevel;
+        resultPanel.linkRateGain = linkRateGain;
+        // 동조율 단계 데이터 갱신
+        linkRateLevel = extractionResult ? nextLinkRateLevel : prevLinkRateLevel;
+        RenewLinkRateData(linkRateLevel, linkRateLevel > 0);
+        // 결과 창 UI 출력 갱신
+        resultPanel.RefreshResult();
+    }
+
+    // 아이템 개수 및 데이터를 추출
+    public void FindItemCountAndData(int _tid, out int count, out ItemData data)
+    {
+        count = 0;
+        data = null;
+
+        // 인벤토리 슬롯에서 아이템 개수 합계 및 각 아이템 데이터를 추출
+        foreach (InventorySlotData slot in _inven.slots)
+        {
+            if (slot.TID == _tid)
+            {
+                count += slot.amount;
+                if (data == null) data = DataManager.Instance.GetItemData(_tid);
+            }
+        }
+    }
+
+    // 로비로 이동 시 동조율 데이터 갱신
+    public void RenewLinkRateData(int a, bool b)
+    {
+        linkRateLevel = a;      //동조율 단계 갱신
+        MemoryLogUnlocked = b;  //심상 기록 해금 상태 갱신
+    }
+
+    // 결과 창 패널 닫기
+    private void CloseResultPanel()
+    {
+        UIManager.Instance.Close<ResultUI>();
+    }
+
+    // 출격 준비 패널 오픈 시 퀵슬롯 정보 전달 이벤트를 발송
+    public void SendQuickSlotCacheEvent()
+    {
+        // 캐싱한 퀵슬롯 정보 저장 이벤트를 전송
+        GlobalEventBus.QuickSlotLoad?.Invoke(0, slotTID1, slotSprite1, slotCount1);
+        GlobalEventBus.QuickSlotLoad?.Invoke(1, slotTID2, slotSprite2, slotCount2);
+    }
+
+    // 다이버/기록 패널 오픈 시 심상 기록 해금 상태 전달 이벤트를 발송
+    public void SendLinkRecordData()
+    {
+        _playerSaveData = DataManager.Instance.playerData;
+        GlobalEventBus.RecordDataLoad?.Invoke(linkRateLevel, MemoryLogUnlocked, hasNewMemoryLog);
+    }
+
+    // 다이버/기록 패널에서 심상 기록 최초 확인 시 NEW 레드닷 비활성화
+    public void NewMemoryRead()
+    {
+        hasNewMemoryLog = false;
+        _playerSaveData = DataManager.Instance.playerData;
+        _playerSaveData.hasNewMemoryLog = false;
+        DataManager.Instance.SaveGame();
     }
 }

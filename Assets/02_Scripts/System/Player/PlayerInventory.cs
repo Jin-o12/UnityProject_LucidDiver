@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 플레이어의 인벤토리 데이터와 내부의 슬롯, 아이템을 관리하는 클래스
 /// </summary>
 using System;
@@ -19,10 +19,11 @@ public class PlayerInventory : MonoBehaviour
     
     // Addressable Assets 불러오기
     private AsyncOperationHandle<Sprite> loadHandle;    // 메모리 관리를 위해 로드 상태를 저장할 핸들
+    private List<AsyncOperationHandle<Sprite>> loadHandles = new();  // 메모리 누수 방지
 
     void Awake()
     {
-        slotNum = 10;
+        slotNum = 20;
         quickSlotNum = 3;
 
         // 모든 슬롯 데이터 초기화
@@ -34,6 +35,19 @@ public class PlayerInventory : MonoBehaviour
         {
             quickSlots.Add(new InventorySlotData(0, i, 0, null));
         }
+    }
+
+    private void OnDestroy()
+    {
+        // 모든 로드된 Addressable Assets 언로드
+        foreach (var handle in loadHandles)
+        {
+            if (handle.IsValid())
+            {
+                Addressables.Release(handle);
+            }
+        }
+        loadHandles.Clear();
     }
 
     private void OnEnable()
@@ -109,6 +123,7 @@ public class PlayerInventory : MonoBehaviour
     private void LoadSprite(AssetReferenceSprite iconRef, int slotIndex)
     {
         loadHandle = Addressables.LoadAssetAsync<Sprite>(iconRef);
+        loadHandles.Add(loadHandle);  // 핸들 추가
 
         loadHandle.Completed += (handle) =>
         {
@@ -162,6 +177,10 @@ public class PlayerInventory : MonoBehaviour
         // 변동사항 알림
         OnSlotChanged?.Invoke(_index1);
         OnSlotChanged?.Invoke(_index2);
+
+        // 퀵슬롯 변경 시 캐시 저장 이벤트
+        GlobalEventBus.QuickSlotLoad?.Invoke(_index1, slot1.TID, slot1.icon, slot1.amount);
+        GlobalEventBus.QuickSlotLoad?.Invoke(_index2, slot2.TID, slot2.icon, slot2.amount);
     }
 
     /* 퀵슬롯에 아이템 추가 */
@@ -188,6 +207,9 @@ public class PlayerInventory : MonoBehaviour
 
         OnSlotChanged?.Invoke(_slotIndex);
         GlobalEventBus.OnQuickSlotChanged?.Invoke(_quickIndex, qSlot.icon, qSlot.amount);
+
+        // 퀵슬롯 변경 시 캐시 저장 이벤트
+        GlobalEventBus.QuickSlotLoad?.Invoke(_quickIndex, qSlot.TID, qSlot.icon, qSlot.amount);
     }
 
     /* 퀵슬롯 아이템 사용 */

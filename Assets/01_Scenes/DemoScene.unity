@@ -1144,6 +1144,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df754175ecc50b5469c1ff24f8982967, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  linkRateLevel: 0
+  linkRateGain: 1
+  MemoryLogUnlocked: 0
+  hasNewMemoryLog: 1
+  slotTID1: 0
+  slotSprite1: {fileID: 0}
+  slotCount1: 0
+  slotTID2: 0
+  slotSprite2: {fileID: 0}
+  slotCount2: 0
 --- !u!114 &331859824
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1162,8 +1172,11 @@ MonoBehaviour:
     type: 3}
   playerSpawnPool: {fileID: 22377260}
   enemySpawnPool: {fileID: 864556063}
-  linkRateLevel: 0
-  linkRateGain: 1
+  _playerSaveData:
+    SelectCharID: 0
+    storageSlots: []
+    inventorySlots: []
+    quickSlots: 
 --- !u!114 &331859825
 MonoBehaviour:
   m_ObjectHideFlags: 0

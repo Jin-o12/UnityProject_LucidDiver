@@ -44,12 +44,6 @@ public class DiverRecordUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textMemoryLogTitle;
     [SerializeField] private TextMeshProUGUI textMemoryLogBody;
 
-    [Header("Temporary Test Data")]
-    [SerializeField] private bool useTestData = true;
-    [SerializeField] private int testLinkRateLevel = 0;
-    [SerializeField] private bool testMemoryLogUnlocked = false;
-    [SerializeField] private bool testHasNewMemoryLog = false;
-
     private int linkRateLevel;
     private bool memoryLogUnlocked;
     private bool hasNewMemoryLog;
@@ -100,15 +94,17 @@ public class DiverRecordUI : MonoBehaviour
 
     private void OnEnable()
     {
-        // {테스트 데이터 사용 시 임시 값 적용}
-        if (useTestData)
-        {
-            linkRateLevel = testLinkRateLevel;
-            memoryLogUnlocked = testMemoryLogUnlocked;
-            hasNewMemoryLog = testHasNewMemoryLog;
-        }
+        // ResultManager에서 SetData 값을 이벤트로 받아옴
+        GlobalEventBus.RecordDataLoad += SetData;
+        // 다이버/기록 UI 오픈 이벤트 발생
+        GlobalEventBus.OnOpenRecordUI?.Invoke();
         // {UI가 열릴 때마다 최신 상태로 갱신}
         Refresh();
+    }
+
+    private void OnDisable()
+    {
+        GlobalEventBus.RecordDataLoad -= SetData;
     }
 
     private void OnDestroy()
@@ -132,9 +128,6 @@ public class DiverRecordUI : MonoBehaviour
 
     public void SetData(int newLinkRateLevel, bool newMemoryLogUnlocked, bool newHasNewMemoryLog)
     {
-        // {외부에서 실제 저장 데이터를 전달할 때 사용}
-        useTestData = false;
-
         linkRateLevel = newLinkRateLevel;
         memoryLogUnlocked = newMemoryLogUnlocked;
         hasNewMemoryLog = newHasNewMemoryLog;
@@ -291,6 +284,8 @@ public class DiverRecordUI : MonoBehaviour
         // {기록을 열람했으므로 hasNewMemoryLog를 false로 설정하여 NEW 배지 제거}
         // hasNewMemoryLog = false;
         SetData(linkRateLevel, memoryLogUnlocked, false);
+
+        GlobalEventBus.OnRecordRead?.Invoke();
 
         if (textNewBadge01 != null)
             textNewBadge01.gameObject.SetActive(false);

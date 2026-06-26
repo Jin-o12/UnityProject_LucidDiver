@@ -34,5 +34,6 @@ public class ExitPoint : MonoBehaviour, IInteractable
         //Debug.Log("타이머 종료");
         // 탈출 판정 전달 이벤트를 발송
         GlobalEventBus.OnEscapeRequest?.Invoke(true);
+        isEscaping = false;
     }
 }
