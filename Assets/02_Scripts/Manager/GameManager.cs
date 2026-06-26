@@ -88,6 +88,9 @@ public class GameManager : MonoBehaviour
 
         // 플레이어 1회 생성
         SpawnPlayer();
+
+        // 적 1회 생성
+        SpawnEnemy();
     }
 
     private void SpawnPlayer()
@@ -120,6 +123,41 @@ public class GameManager : MonoBehaviour
 
         // 플레이어 스폰 여부 이벤트
         GlobalEventBus.OnPlayerSpawned?.Invoke(spawnedPlayer);
+    }
+
+    private void SpawnEnemy()
+    {
+        // 적 프리팹이 연결되지 않았을 경우 대비
+        if (EnemyPrefab == null)
+        {
+            Debug.LogError("Enemy prefab not found");
+            return;
+        }
+
+        // 적 스폰 포인트가 하나도 없을 경우 대비
+        if (enemySpawnPoint.Count == 0)
+        {
+            Debug.LogError("Enemy spawn point list is empty");
+            return;
+        }
+
+        // 적 스폰 포인트 중 무작위로 하나 선정
+        // 플레이어 스폰 방식과 동일한 구조로 맞춘다.
+        int spawnNum = Random.Range(0, enemySpawnPoint.Count - 1);
+
+        // 스폰 장소 오브젝트가 없을 경우 대비
+        if (enemySpawnPoint[spawnNum] == null)
+        {
+            Debug.LogError("Enemy spawn point not found");
+            return;
+        }
+
+        // 적 오브젝트 생성
+        Transform spawnPoint = enemySpawnPoint[spawnNum].transform;
+        GameObject spawnedEnemy = Instantiate(EnemyPrefab, spawnPoint.position, spawnPoint.rotation);
+
+        // 생성된 적 오브젝트를 런타임 데이터에 등록
+        GlobalRuntimeData.CountingEntityData(spawnedEnemy);
     }
 
     public void QuitGame(bool _extractionResult)

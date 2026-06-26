@@ -75,51 +75,90 @@ public class InventoryPresenter : MonoBehaviour
 
     /// <summary>
     /// 아이템 줍기 이벤트를 받았을 때 자동 장착 또는 인벤토리 수납을 처리한다.
+    /// 인벤토리에 다 못 들어간 수량은 바닥 아이템에 그대로 남긴다.
     /// </summary>
-    private void HandleItemPickUp(int pickerID, int pickedItemTID, int count)
+    private void HandleItemPickUp(int pickerID, int pickedItemTID, int count, IInteractable sourceInteractable)
     {
+        // 이 획득 이벤트를 발생시킨 실제 바닥 아이템 참조
+        DropItem sourceDrop = sourceInteractable as DropItem;
+
         ItemData data = DataManager.Instance.GetItemData(pickedItemTID);
         if (data == null)
             return;
 
+        // 기본값은 "아직 아무것도 못 주웠다"로 시작한다.
+        int remain = count;
+
         // TID 100대는 무기
         if (100 < pickedItemTID && pickedItemTID < 200)
         {
+            // 무기를 장착하지 않은 상태라면 바로 장착한다.
             if (!playerWeapon.isEquipped)
             {
                 WeaponItemData weaponData = data as WeaponItemData;
 
                 if (weaponData != null)
+                {
                     playerWeapon.EquipWeapon(weaponData);
+                    remain = 0;
+                }
                 else
+                {
                     Debug.LogError("무기가 아닌 아이템이 잘못된 TID를 가지고 있습니다.");
+                }
             }
             else
             {
-                int throwItem = playerInventory.AddItem(data, count);
-
-                /// ※ 버려지는 아이템에 대한 로직 추가 ///
+                // 이미 무기를 들고 있다면 인벤토리에 넣고,
+                // 남은 수량은 바닥에 유지한다.
+                remain = playerInventory.AddItem(data, count);
             }
         }
         // TID 300대는 소모품
         else if (300 < pickedItemTID && pickedItemTID < 400)
         {
-            playerInventory.AddItem(data, count);
+            remain = playerInventory.AddItem(data, count);
         }
         // TID 400대는 파밍 아이템
         else if (400 < pickedItemTID && pickedItemTID < 500)
         {
-            int throwItem = playerInventory.AddItem(data, count);
-
-            /// ※ 버려지는 아이템에 대한 로직 추가 ///
+            remain = playerInventory.AddItem(data, count);
         }
-        // 그 외는 알 수 없는 아이템
+        // 그 외 아이템은 알 수 없는 아이템
         else
         {
             Debug.LogWarning("Unknown item TID: " + pickedItemTID);
+            return;
         }
 
+        // 실제로 몇 개를 주웠는지 결과를 보고 바닥 아이템 상태를 갱신한다.
+        UpdateGroundItemAfterPickup(sourceDrop, count, remain);
+
         DataManager.Instance.SaveGame();
+    }
+
+    /// <summary>
+    /// 아이템 획득 결과에 따라 바닥 아이템을 삭제하거나,
+    /// 남은 수량만 유지하도록 갱신한다.
+    /// </summary>
+    private void UpdateGroundItemAfterPickup(DropItem sourceDrop, int originalCount, int remain)
+    {
+        if (sourceDrop == null)
+            return;
+
+        // 전부 주운 경우: 바닥 아이템 삭제
+        if (remain <= 0)
+        {
+            Destroy(sourceDrop.gameObject);
+            return;
+        }
+
+        // 하나도 못 주운 경우: 바닥 아이템 그대로 유지
+        if (remain >= originalCount)
+            return;
+
+        // 일부만 주운 경우: 남은 수량만 바닥에 유지
+        sourceDrop.stackCount = remain;
     }
 
     /// <summary>

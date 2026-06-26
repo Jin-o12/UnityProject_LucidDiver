@@ -20,14 +20,14 @@ public class GlobalEventBus
     /// <summary>
     /// 아이템 관련 이벤트
     /// </summary>
-    public static Action<int, int, int> OnItemPickedUp;          // 아이템 획득
-    public static Action<IInteractable, int> OnItemBoxOpened;    // 상자 열기 요청
-    public static Action<int, Sprite, int> OnQuickSlotChanged;   // 퀵슬롯 정보 변경
-    public static Action<int> OnQuickSlotUseRequested;           // 퀵슬롯 사용 요청
-    public static Action<int, int> OnSwapInventorySlot;          // 인벤토리 슬롯 교환
-    public static Action<int> OnInventoryDropRequested;          // 인벤토리 아이템 버리기 요청
-    public static Action<int, int> OnDropItemQuickSlot;          // 인벤토리 -> 퀵슬롯 드랍
-    public static Action<int, int> OnSwapItemQuickSlot;          // 퀵슬롯끼리 교환
+    public static Action<int, int, int, IInteractable> OnItemPickedUp;   // 아이템 획득
+    public static Action<IInteractable, int> OnItemBoxOpened;             // 상자 열기 요청
+    public static Action<int, Sprite, int> OnQuickSlotChanged;            // 퀵슬롯 정보 변경
+    public static Action<int> OnQuickSlotUseRequested;                    // 퀵슬롯 사용 요청
+    public static Action<int, int> OnSwapInventorySlot;                   // 인벤토리 슬롯 교환
+    public static Action<int> OnInventoryDropRequested;                   // 인벤토리 아이템 버리기 요청
+    public static Action<int, int> OnDropItemQuickSlot;                   // 인벤토리 -> 퀵슬롯 드랍
+    public static Action<int, int> OnSwapItemQuickSlot;                   // 퀵슬롯끼리 교환
 
     /// <summary>
     /// 아이템 효과 이벤트
