@@ -197,6 +197,7 @@ public class GameManager : MonoBehaviour
 //////////////////////////
         
         // 플레이어 오브젝트 세션 데이터에 등록 및 고유 번호 할당
+        
         int entityId = GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
         spawnedPlayer.GetComponent<EntityIdentity>().SetupIdentity(entityId, Faction.player);
 

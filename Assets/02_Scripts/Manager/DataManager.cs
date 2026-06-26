@@ -10,11 +10,15 @@ public class DataManager : MonoBehaviour
 {
     public static DataManager Instance { get; private set; }
     
+    // 정적 데이터
     private Dictionary<int, ItemData> itemDataDictionary;           // 아이템 데이터 사전
     private Dictionary<int, CharacterData> CharDataDictionary;      // 캐릭터 데이터 사전
 
     // 캐릭터 대사 데이터를 TID를 Key로 하여 딕셔너리로 관리
     private Dictionary<int, CharacterDialogueData> dialogueDataDictionary; 
+
+    // 동적 데이터
+    public GlobalRuntimeData runtimeData { get; private set; }      // 게임이 실행되는 동안의 데이터
 
     public PlayerSaveData playerData { get; private set; }          // 계정 데이터
     [SerializeField] private string saveFilePath;
