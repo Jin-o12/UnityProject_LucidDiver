@@ -6,10 +6,6 @@ TagManager:
   tags:
   - DropItem
   - Enemy
-  - PlayerSpawnPool
-  - EnemySpawnPool
-  - playerCamera
-  - Manager
   layers:
   - Default
   - TransparentFX

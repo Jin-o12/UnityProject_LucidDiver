@@ -62,11 +62,11 @@ public class QuickSlotPresenter : MonoBehaviour
                 // 타겟 지정
                 switch(currentEffect.effectTarget)
                 {
-                    case TargetType.self:
+                    case EffectTarget.self:
                         //Debug.Log($"자신에게 아이템 사용: {itemData.itemName}");
                         targetObj = this.gameObject;
                         break;
-                    case TargetType.enemy:
+                    case EffectTarget.enemy:
                         Debug.Log($"적에게 아이템 사용: {itemData.itemName}");
                         break;
                 }

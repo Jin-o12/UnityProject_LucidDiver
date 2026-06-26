@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4351d13ec99562d4c8e3ddfe4b599e9e, type: 3}
   m_Name: GainManaEffect
   m_EditorClassIdentifier: 
-  effectTarget: 1
-  effectType: 4
+  effectTarget: 0
+  effectType: 1
   effectRange: 0
   effectValue: 5

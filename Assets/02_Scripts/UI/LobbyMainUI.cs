@@ -49,7 +49,8 @@ public class LobbyMainUI : MonoBehaviour
 
     private void OnEnable()
     {
-
+        // {로비 UI가 켜질 때마다 표시 정보를 갱신한다}
+        Refresh();
     }
 
     private void OnDestroy()
@@ -67,23 +68,23 @@ public class LobbyMainUI : MonoBehaviour
             buttonStorage.onClick.RemoveListener(OpenStorageInventory);
     }
 
-    public void RefreshDiverInfo(CharacterData _char, PlayerSaveData _playerData, string _dialogue)
+    public void Refresh()
     {
         // {다이버 이름을 표시한다}
         if (textDiverName != null)
-            textDiverName.text = _char.charName;
+            textDiverName.text = testDiverName;
 
         // {현재 동조율 단계를 표시한다}
         if (textLinkRateLevel != null)
-            textLinkRateLevel.text = $"동조율 Lv.{_playerData.GetLinkRateLevel()}";
+            textLinkRateLevel.text = $"동조율 Lv.{testLinkRateLevel}";
 
         // {로비 기본 대사를 표시한다}
         if (textSpeakerName != null)
-            textSpeakerName.text = _char.charName;
-
+            textSpeakerName.text = testDiverName;
+        
         // {로비 기본 대사를 표시한다}
         if (textDialogue != null)
-            textDialogue.text = _dialogue;
+            textDialogue.text = testLobbyDialogue;
 
         // {신규 심상 기록 알림 표시 여부를 갱신한다}
         if (newMemoryLogMark != null)
@@ -92,30 +93,26 @@ public class LobbyMainUI : MonoBehaviour
 
     public void OpenSortiePrepare()
     {
-        GlobalEventBus.OnOpenPrepareUI?.Invoke();
-        
-        // // {다른 로비 서브 Canvas를 모두 닫는다}
-        // CloseSubCanvases();
+        // {다른 로비 서브 Canvas를 모두 닫는다}
+        CloseSubCanvases();
 
-        // // {로비 Canvas를 닫는다}
-        // SetCanvas(canvasLobby, false);
+        // {로비 Canvas를 닫는다}
+        SetCanvas(canvasLobby, false);
 
-        // // {출격 준비 Canvas를 연다}
-        // SetCanvas(canvasSortiePrepare, true);
+        // {출격 준비 Canvas를 연다}
+        SetCanvas(canvasSortiePrepare, true);
     }
 
     public void OpenDiverRecord()
     {
-        GlobalEventBus.OnOpenRecordUI?.Invoke();
+        // {다른 로비 서브 Canvas를 모두 닫는다}
+        CloseSubCanvases();
 
-        // // {다른 로비 서브 Canvas를 모두 닫는다}
-        // CloseSubCanvases();
+        // {로비 Canvas를 닫는다}
+        SetCanvas(canvasLobby, false);
 
-        // // {로비 Canvas를 닫는다}
-        // SetCanvas(canvasLobby, false);
-
-        // // {다이버 기록 Canvas를 연다}
-        // SetCanvas(canvasDiverRecord, true);
+        // {다이버 기록 Canvas를 연다}
+        SetCanvas(canvasDiverRecord, true);
     }
 
     public void OpenStorageInventory()
@@ -132,16 +129,14 @@ public class LobbyMainUI : MonoBehaviour
 
     public void BackToLobby()
     {
-        GlobalEventBus.OnOpenRecordUI?.Invoke();
+        // {다른 로비 서브 Canvas를 모두 닫는다}
+        CloseSubCanvases();
 
-        // // {다른 로비 서브 Canvas를 모두 닫는다}
-        // CloseSubCanvases();
+        // {로비 Canvas를 다시 연다}
+        SetCanvas(canvasLobby, true);
 
-        // // {로비 Canvas를 다시 연다}
-        // SetCanvas(canvasLobby, true);
-
-        // // {로비로 돌아올 때 표시 정보를 갱신한다}
-        // Refresh();
+        // {로비로 돌아올 때 표시 정보를 갱신한다}
+        Refresh();
     }
 
     private void CloseSubCanvases()

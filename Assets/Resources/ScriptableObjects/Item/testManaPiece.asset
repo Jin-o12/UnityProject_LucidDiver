@@ -15,7 +15,7 @@ MonoBehaviour:
   TID: 302
   itemName: "\uB9C8\uB098\uC11D"
   desc: "\uC0AC\uC6A9 \uC2DC \uB9C8\uB098 5 \uD68C\uBCF5"
-  category: 1
+  category: 3
   effectID: 0
   itemMultiple: 5
   icon:

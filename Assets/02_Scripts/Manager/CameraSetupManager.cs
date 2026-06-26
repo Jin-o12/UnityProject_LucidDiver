@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
@@ -7,7 +7,6 @@ public class CameraSetupManager : MonoBehaviour
 {
     [Header("시네머신 카메라")]
     public CinemachineVirtualCamera virtualCamera; // Unity 6의 새 컴포넌트 이름
-    private readonly string playerCameraTag = "playerCamera";  //플레이어 추적 카메라 태그
 
     private void OnEnable()
     {
@@ -21,12 +20,6 @@ public class CameraSetupManager : MonoBehaviour
 
     private void SetupCameraTarget(GameObject localPlayer)
     {
-        // 시네머신 카메라가 연결이 끊겨 있으면 태그를 통해 다시 연결
-        if ( virtualCamera == null)
-        {
-            virtualCamera = GameObject.FindGameObjectWithTag(playerCameraTag).GetComponent<CinemachineVirtualCamera>();
-        }
-
         // 카메라가 쫓아갈 핵심 타겟 지점을 찾음
         Transform targetRoot = localPlayer.transform.Find("CameraRoot");
 

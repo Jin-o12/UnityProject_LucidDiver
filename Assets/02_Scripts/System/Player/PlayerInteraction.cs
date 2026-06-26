@@ -50,7 +50,7 @@ public class PlayerInteraction : MonoBehaviour
         nearbyInteractables.Add(interactable);
         SetPromptVisible(interactable, true);
 
-        //Debug.Log("Interactable detected: " + other.gameObject.name);
+        Debug.Log("Interactable detected: " + other.gameObject.name);
     }
 
     /// <summary>

@@ -16,7 +16,7 @@ MonoBehaviour:
   itemName: "\uAE30\uC5B5 \uC870\uAC01"
   desc: "\uB2E4\uC774\uBC84\uC758 \uB3D9\uC870\uC728\uC744 \uC0C1\uC2B9\uC2DC\uD0AC
     \uC218 \uC788\uC2B5\uB2C8\uB2E4"
-  category: 2
+  category: 0
   effectID: 0
   itemMultiple: 10
   icon:

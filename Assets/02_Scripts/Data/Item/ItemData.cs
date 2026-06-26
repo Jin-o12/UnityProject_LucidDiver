@@ -8,12 +8,12 @@ using UnityEngine.AddressableAssets;
 public abstract class ItemData : ScriptableObject
 {
     [Header("아이템 기본 정보")]
-    public int TID;                                     // 아이템 코드(고유 ID)
-    public string itemName;                             // 아이템 이름
-    public string desc;                                 // 아이템 설명
-    public ItemType category;                       // 아이템 종류
-    public int effectID;                                // 아이템 종류별 적용 효과 ID
-    public int itemMultiple;                            // 중첩 용량
+    public int TID;                               // 아이템 고유 ID
+    public string itemName;                       // 아이템 이름
+    public string desc;                           // 아이템 설명
+    public itemCategory category;                 // 아이템 분류
+    public int effectID;                          // 아이템 효과 ID
+    public int itemMultiple;                      // 최대 스택 수량
 
     [Header("참조 리소스")]
     public AssetReferenceSprite icon;             // UI 아이콘
