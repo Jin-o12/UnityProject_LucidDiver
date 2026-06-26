@@ -22,7 +22,7 @@ public class PlayerInventory : MonoBehaviour
 
     void Awake()
     {
-        slotNum = 10;
+        slotNum = 20;
         quickSlotNum = 3;
 
         // 모든 슬롯 데이터 초기화

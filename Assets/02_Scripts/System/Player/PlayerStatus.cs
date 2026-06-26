@@ -40,10 +40,10 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void OnEnable()
     {
         // 플레이어 첫 생성시 전체 플레이어 명단에 본인 등록
-        if (!GlobalRuntimeData.ActivePlayers.Contains(this.gameObject))
-        {
-            GlobalRuntimeData.ActivePlayers.Add(this.gameObject);
-        }
+        int entityId = 0;
+        if (!GlobalRuntimeData.GetActivePlayers().Contains(this.gameObject))
+            entityId = GlobalRuntimeData.CountingPlayerData(this.gameObject);
+        this.GetComponent<EntityIdentity>().SetupIdentity(entityId, Faction.player);
 
         /// 이벤트 구독 ///
         GlobalEventBus.OnGainManaRequested += GainMana;
@@ -53,10 +53,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void OnDisable()
     {
         // 플레이어 디스폰시 현재 플레이어 목록에서 본인 제거
-        if (GlobalRuntimeData.ActivePlayers.Contains(this.gameObject))
-        {
-            GlobalRuntimeData.ActivePlayers.Remove(this.gameObject);
-        }
+        GlobalRuntimeData.RemovePlayer(playerID);
 
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnGainManaRequested -= GainMana;
@@ -145,24 +142,6 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         // 탈출 실패 판정 이벤트를 전송
         GlobalEventBus.OnEscapeRequest?.Invoke(false);
     }
-
-    // // 플레이어가 idle 상태인지 확인
-    // public bool IsPlayerIdle()
-    // {
-    //     var svc = ResultServiceLocator.Instance;
-    //     if (svc == null)
-    //     {
-    //         Debug.LogWarning("IsPlayerIdle: ResultServiceLocator.Instance is null");
-    //         return false;
-    //     }
-    //     var comp = svc.GetPlayerComponent<PlayerStatus>(playerID) as PlayerStatus;
-    //     if (comp == null)
-    //     {
-    //         Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {playerID}");
-    //         return false;
-    //     }
-    //     return comp.nowState == PlayerStatus.livingState.idle;
-    // }
 
     /* 마나 변화 */
     private void GetMp(float _val)

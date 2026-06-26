@@ -1158,8 +1158,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerPrefab: {fileID: 6799049228847976370, guid: ea09e9cc13d1e7d488e069fe5917de7c,
     type: 3}
-  playerSpawnPool: {fileID: 22377260}
-  enemySpawnPool: {fileID: 864556063}
+  EnemyPrefab: {fileID: 0}
   linkRateLevel: 0
   linkRateGain: 1
 --- !u!114 &331859825
@@ -3957,7 +3956,7 @@ Transform:
   m_GameObject: {fileID: 1921956238}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -7.9, y: 0, z: 60.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

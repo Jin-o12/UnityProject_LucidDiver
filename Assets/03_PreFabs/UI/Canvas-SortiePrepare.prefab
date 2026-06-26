@@ -3340,7 +3340,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &7469706760161453476
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3444,9 +3444,17 @@ MonoBehaviour:
   imageSlotIcon1: {fileID: 1969267021942001645}
   textSlotName1: {fileID: 5939687267126509818}
   textSlotCount1: {fileID: 1166896368705155323}
+  slotTID1: 0
+  slotSprite1: {fileID: 0}
+  slotName1: 
+  slotCount1: 0
   imageSlotIcon2: {fileID: 8758090645972811707}
   textSlotName2: {fileID: 2985133945277945678}
   textSlotCount2: {fileID: 6979918404558329573}
+  slotTID2: 0
+  slotSprite2: {fileID: 0}
+  slotName2: 
+  slotCount2: 0
   gameSceneName: DemoScene
   testLinkRateLevel: 0
   testEquippedItemSlot1: 

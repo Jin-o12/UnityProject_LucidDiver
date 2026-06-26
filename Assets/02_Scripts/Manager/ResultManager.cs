@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-public class ResultManager : MonoBehaviour, IResultService
+public class ResultManager : MonoBehaviour/*, IResultService*/
 {
     public static ResultManager Instance { get; private set; }  //싱글톤 인스턴스 지정
     // playerID -> PlayerStatus 매핑 딕셔너리
@@ -13,29 +13,6 @@ public class ResultManager : MonoBehaviour, IResultService
         else
             Instance = this;
         DontDestroyOnLoad(gameObject);
-        // ResultServiceLocator에 자신을 등록
-        ResultServiceLocator.Instance = this;
-
-        // 씬에 이미 존재하는 PlayerStatus를 찾아 등록 (타이밍 안전성 보장)
-        foreach (var p in FindObjectsOfType<PlayerStatus>())
-        {
-            if (p == null) continue;
-            var idComp = p.GetComponent<EntityIdentity>();
-            if (idComp == null)
-            {
-                Debug.LogWarning($"ResultManager Awake: EntityIdentity 없음 - gameObject={p.gameObject.name}");
-                continue;
-            }
-            // Register는 내부적으로 동일 key를 덮어쓰므로 중복 걱정 없음
-            Register(idComp.entityID, p);
-            Debug.Log($"ResultManager Awake: Registered existing playerID={idComp.entityID} (gameObject={p.gameObject.name})");
-        }
-    }
-
-    private void OnDestroy()  //IResultService 구현체 (로케이터에 등록)
-    {
-        if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
-        if (Instance == this) Instance = null;
     }
 
     public void RefreshPlayerCache()
@@ -65,18 +42,18 @@ public class ResultManager : MonoBehaviour, IResultService
         }
     }
 
-    // 플레이어 등록
-    public void Register(int playerID, Component ps)
-    {
-        // 플레이어 상태 값 null 체크를 먼저 실행
-        if (ps == null) return;
-        // 플레이어 EntityIdentity 컴포넌트를 가져오고 null 체크
-        var idComp = ps.GetComponent<EntityIdentity>();
-        if (idComp == null) return;
-        // EntityIdentity에서 ID 값을 불러옴
-        _players[playerID] = (PlayerStatus)ps;
-        Debug.Log($"ResultManager.Register: playerID={playerID} registered (obj={ps.gameObject.name})");
-    }
+    // // 플레이어 등록
+    // public void Register(int playerID, Component ps)
+    // {
+    //     // 플레이어 상태 값 null 체크를 먼저 실행
+    //     if (ps == null) return;
+    //     // 플레이어 EntityIdentity 컴포넌트를 가져오고 null 체크
+    //     var idComp = ps.GetComponent<EntityIdentity>();
+    //     if (idComp == null) return;
+    //     // EntityIdentity에서 ID 값을 불러옴
+    //     _players[playerID] = (PlayerStatus)ps;
+    //     Debug.Log($"ResultManager.Register: playerID={playerID} registered (obj={ps.gameObject.name})");
+    // }
 
     // 플레이어 등록 해제
     public void Unregister(int playerID)
@@ -113,6 +90,6 @@ public class ResultManager : MonoBehaviour, IResultService
     // 플레이어 상태 변경
     private void SetPlayerState(int playerID, PlayerStatus.livingState state)
     {
-        if (_players.TryGetValue(playerID, out var ps)) ps.nowState = state;
+        if (_players.TryGetValue(playerID, out var ps)) ps.SetPlayerState(state);
     }
 }

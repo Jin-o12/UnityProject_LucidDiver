@@ -43,20 +43,12 @@ public class DataManager : MonoBehaviour
         saveFilePath = Path.Combine(Application.persistentDataPath, "SaveFile.json");
         LoadGame();
 
-        // 캐릭터를 고르는 로비 씬과 연결이 되지 않았으므로 캐릭터 데이터를 코드에서 설정
-        playerData.SelectCharID = 101;
-
         LoadGameData();
     }
 
     /* 플레이어 게임 데이터 저장하기 */
     public void SaveGame()
     {
-        if (playerData == null)
-        {
-            playerData = new PlayerSaveData();
-        }
-
         string json = JsonUtility.ToJson(playerData, true);
         File.WriteAllText(saveFilePath, json);
     }
@@ -74,8 +66,20 @@ public class DataManager : MonoBehaviour
         {
             // 세이브 파일이 없으면 새 데이터 생성
             playerData = new PlayerSaveData();
-            SaveGame();
+            NewSaveData();
         }
+    }
+
+    /* 게임 첫 실행 시 새로운 게임 데이터 생성 */
+    private void NewSaveData()
+    {
+        if (playerData == null)
+        {
+            playerData = new PlayerSaveData();
+        }
+
+        string json = JsonUtility.ToJson(playerData, true);
+        File.WriteAllText(saveFilePath, json);
     }
 
     /* 모든 게임 데이터 로드 */

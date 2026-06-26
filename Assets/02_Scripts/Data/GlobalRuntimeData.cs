@@ -7,13 +7,16 @@ using UnityEngine;
 public class GlobalRuntimeData
 {   
     // 게임 상에 있는 모든 플레이어의 Transform 값
-    public static List<GameObject> ActivePlayers = new();
+    private static List<GameObject> ActivePlayers = new();
+    public static List<GameObject> GetActivePlayers() => ActivePlayers;
 
     // 엔티티 생성 시 해당 위치에 저장
-    public static Dictionary<int, GameObject> playerList = new();
-    public static Dictionary<int, GameObject> enemyList = new();
+    private static Dictionary<int, GameObject> playerList = new();
+    public static Dictionary<int, GameObject> GetPlayerList() => playerList;
+    private static Dictionary<int, GameObject> enemyList = new();
+    public static Dictionary<int, GameObject> GetEnemyList() => enemyList;
 
-    public static int entityCount = 1;
+    private static int entityCount = 1;
 
     /* 플레이어를 생성해 고유 엔티티 번호를 할당 해주고 카운팅 */    
     public static int CountingPlayerData(GameObject _obbject)
@@ -55,5 +58,11 @@ public class GlobalRuntimeData
             Debug.LogError($"{_id}번 적 엔티티는 존재하지 않습니다");
             return null;
         }
+    }
+
+    /* 특정 번호 플레이어 엔티티 삭제 */
+    public static void RemovePlayer(int _id)
+    {
+        playerList.Remove(_id);
     }
 }
