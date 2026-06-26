@@ -1,27 +1,29 @@
-﻿/// <summary>
-/// 아이템과 인벤토리에 관한 모든 상호작용의 중재자 역할을 수행합니다.
-/// 아이템 습득 시 상황에 따라 즉시 장착하거나 인벤토리에 수납합니다.
-/// 인벤토리 UI와 상자 UI의 열기/닫기 흐름도 함께 관리합니다.
+/// <summary>
+/// 아이템과 인벤토리에 관한 모든 상호작용의 중재자 역할을 수행한다.
+/// 아이템 습득, 인벤토리 UI 열기/닫기, 체스트 UI 연결, 월드 드랍 처리를 담당한다.
 /// </summary>
 using UnityEngine;
 
 public class InventoryPresenter : MonoBehaviour
 {
     // 게임 데이터 스크립트 참조
-    private PlayerWeapon playerWeapon;                  // 플레이어 무기
-    private PlayerInventory playerInventory;            // 플레이어 인벤토리
-    private LocalInputReader localInputReader;          // 플레이어 입력 처리
-    private EntityIdentity identity;                    // 플레이어 고유 ID 참조
+    private PlayerWeapon playerWeapon;               // 플레이어 무기
+    private PlayerInventory playerInventory;         // 플레이어 인벤토리
+    private LocalInputReader localInputReader;       // 플레이어 입력 처리
+    private EntityIdentity identity;                 // 플레이어 고유 ID
+    private PlayerStatus playerStatus;               // 플레이어 상태
 
     // 컨테이너 상태 캐시
-    private ItemBox currentBox;                         // 현재 열려 있는 상자
-    private bool isChestOpen;                           // 상자 UI가 열려 있는지 여부
-    private PlayerStatus playerStatus;                  // 플레이어 상태
+    private ItemBox currentBox;                      // 현재 열려 있는 상자
+    private bool isChestOpen;                        // 체스트 UI가 열려 있는지 여부
 
     // UI 캐시
-    private InventoryUI inventoryUI;                    // 인벤토리 UI 캐시
-    private ResultUI resultUI;                          // 결과창 UI 캐시
-    private ChestUI chestUI;                            // 상자 UI 캐시
+    private InventoryUI inventoryUI;                 // 인벤토리 UI 캐시
+    private ChestUI chestUI;                         // 체스트 UI 캐시
+    private ResultUI resultUI;                       // 결과창 UI 캐시
+
+    private const float dropForwardDistance = 1.0f; // 플레이어 앞에 떨어질 거리
+    private const float dropUpOffset = 0.3f;        // 바닥 겹침 방지용 높이 보정
 
     private void Awake()
     {
@@ -30,8 +32,9 @@ public class InventoryPresenter : MonoBehaviour
         playerStatus = GetComponent<PlayerStatus>();
         localInputReader = GetComponent<LocalInputReader>();
         identity = GetComponent<EntityIdentity>();
+        playerStatus = GetComponent<PlayerStatus>();
 
-        if (playerWeapon == null || playerInventory == null || playerStatus==null || localInputReader == null || identity == null)
+        if (playerWeapon == null || playerInventory == null || localInputReader == null || identity == null || playerStatus == null)
         {
             this.enabled = false;
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
@@ -41,21 +44,21 @@ public class InventoryPresenter : MonoBehaviour
 
     private void OnEnable()
     {
-        // 바닥에서 아이템이 주어졌을 때 터지는 전역 이벤트를 구독합니다
+        // 바닥에서 아이템을 주웠을 때 발생하는 이벤트를 구독한다.
         GlobalEventBus.OnItemPickedUp += HandleItemPickUp;
 
-        // 상자와 상호작용했을 때 열림 요청 이벤트를 구독합니다
+        // 상자와 상호작용했을 때 체스트 UI를 열기 위한 이벤트를 구독한다.
         GlobalEventBus.OnItemBoxOpened += HandleItemBoxOpened;
 
-        // 입력으로 인벤토리 열기 / 닫기 요청이 들어왔을 때 실행할 메서드를 구독합니다
+        // 인벤토리 아이템 버리기 요청 이벤트를 구독한다.
+        GlobalEventBus.OnInventoryDropRequested += HandleInventoryDropRequested;
+
+        // 입력으로 인벤토리 열기/닫기 요청이 들어오면 대응한다.
         localInputReader.OnInventoryOpenRequested += OpenInventoryUI;
         localInputReader.OnInventoryCloseRequested += CloseInventoryUI;
 
-        // 인벤토리 데이터 변경 이벤트를 구독 합니다
+        // 인벤토리 슬롯 데이터 변경을 구독한다.
         playerInventory.OnSlotChanged += HandleSlotChanged;
-
-        // 게임 종료시 이벤트
-        //GlobalEventBus.OnShowGameResult += OpenResultUI;
     }
 
     private void OnDisable()
@@ -63,186 +66,297 @@ public class InventoryPresenter : MonoBehaviour
         // 메모리 누수 방지를 위한 구독 해제
         GlobalEventBus.OnItemPickedUp -= HandleItemPickUp;
         GlobalEventBus.OnItemBoxOpened -= HandleItemBoxOpened;
+        GlobalEventBus.OnInventoryDropRequested -= HandleInventoryDropRequested;
 
         localInputReader.OnInventoryOpenRequested -= OpenInventoryUI;
         localInputReader.OnInventoryCloseRequested -= CloseInventoryUI;
 
         playerInventory.OnSlotChanged -= HandleSlotChanged;
-
-        //GlobalEventBus.OnShowGameResult -= OpenResultUI;
     }
 
     /// <summary>
-    /// 인벤토리 UI에서 유저가 직접 장착 버튼을 누르는 경우 (인벤토리 구현 후 개발)
+    /// 아이템 줍기 이벤트를 받았을 때 자동 장착 또는 인벤토리 수납을 처리한다.
+    /// 인벤토리에 다 못 들어간 수량은 바닥 아이템에 그대로 남긴다.
     /// </summary>
-    // public void OnRequestEquipWeapon(string weaponTID)
-    // {}
-
-    /* 아이템 줍기 이벤트 신호를 받았을 때 자동 장착 혹은 인벤토리 수납 수행 */
-    private void HandleItemPickUp(int pickerID, int pickedItemTID, int count)
+    private void HandleItemPickUp(int pickerID, int pickedItemTID, int count, IInteractable sourceInteractable)
     {
-        // DataManager를 통해 ID로 아이템 원본 데이터를 찾음
-        ItemData data = DataManager.Instance.GetItemData(pickedItemTID);
-        if (data == null) return;
+        // 이 획득 이벤트를 발생시킨 실제 바닥 아이템 참조
+        DropItem sourceDrop = sourceInteractable as DropItem;
 
-        // 주운 아이템을 인벤토리에 먼저 추가 후 하위 작업 진행(이후 구현)
+        ItemData data = DataManager.Instance.GetItemData(pickedItemTID);
+        if (data == null)
+            return;
+
+        // 기본값은 "아직 아무것도 못 주웠다"로 시작한다.
+        int remain = count;
+
         // TID 100대는 무기
         if (100 < pickedItemTID && pickedItemTID < 200)
         {
-            // 만약 장착하고 있는 무기가 없다면 무기를 장착하고, 그렇지 않다면 인벤토리에 수납
+            // 무기를 장착하지 않은 상태라면 바로 장착한다.
             if (!playerWeapon.isEquipped)
             {
                 WeaponItemData weaponData = data as WeaponItemData;
+
                 if (weaponData != null)
+                {
                     playerWeapon.EquipWeapon(weaponData);
+                    remain = 0;
+                }
                 else
+                {
                     Debug.LogError("무기가 아닌 아이템이 잘못된 TID를 가지고 있습니다.");
+                }
             }
             else
             {
-                int throwItem = playerInventory.AddItem(data, count);
-
-                /// ※ 버려지는 아이템에 대한 로직 추가 ///
+                // 이미 무기를 들고 있다면 인벤토리에 넣고,
+                // 남은 수량은 바닥에 유지한다.
+                remain = playerInventory.AddItem(data, count);
             }
         }
         // TID 300대는 소모품
         else if (300 < pickedItemTID && pickedItemTID < 400)
         {
-            playerInventory.AddItem(data, count);
+            remain = playerInventory.AddItem(data, count);
         }
         // TID 400대는 파밍 아이템
         else if (400 < pickedItemTID && pickedItemTID < 500)
         {
-            int throwItem = playerInventory.AddItem(data, count);
-
-            /// ※ 버려지는 아이템에 대한 로직 추가 ///
+            remain = playerInventory.AddItem(data, count);
         }
         // 그 외 아이템은 알 수 없는 아이템
         else
         {
             Debug.LogWarning("Unknown item TID: " + pickedItemTID);
+            return;
         }
 
-        // DataManager의 playerData 저장
+        // 실제로 몇 개를 주웠는지 결과를 보고 바닥 아이템 상태를 갱신한다.
+        UpdateGroundItemAfterPickup(sourceDrop, count, remain);
+
         DataManager.Instance.SaveGame();
     }
 
-    /* 상자와 상호작용 했을 때 상자 UI와 인벤토리 UI를 함께 오픈 */
+    /// <summary>
+    /// 아이템 획득 결과에 따라 바닥 아이템을 삭제하거나,
+    /// 남은 수량만 유지하도록 갱신한다.
+    /// </summary>
+    private void UpdateGroundItemAfterPickup(DropItem sourceDrop, int originalCount, int remain)
+    {
+        if (sourceDrop == null)
+            return;
+
+        // 전부 주운 경우: 바닥 아이템 삭제
+        if (remain <= 0)
+        {
+            Destroy(sourceDrop.gameObject);
+            return;
+        }
+
+        // 하나도 못 주운 경우: 바닥 아이템 그대로 유지
+        if (remain >= originalCount)
+            return;
+
+        // 일부만 주운 경우: 남은 수량만 바닥에 유지
+        sourceDrop.stackCount = remain;
+    }
+
+    /// <summary>
+    /// 상자와 상호작용했을 때 인벤토리 UI와 체스트 UI를 함께 연다.
+    /// </summary>
     private void HandleItemBoxOpened(IInteractable interactable, int playerID)
     {
-        // 다른 플레이어가 연 상자라면 무시
+        // 다른 플레이어가 연 상자면 무시한다.
         if (identity.entityID != playerID)
             return;
 
-        // 상호작용한 대상이 ItemBox가 아니면 무시
         ItemBox box = interactable as ItemBox;
         if (box == null)
             return;
 
-        // 현재 열린 상자 상태 저장
         currentBox = box;
         isChestOpen = true;
 
-        // 입력 액션맵을 UI 모드로 전환
+        // 체스트를 여는 동안 입력을 UI 모드로 전환한다.
         localInputReader.SwitchToUIMap();
 
-        // 왼쪽 인벤토리 UI 오픈
+        // 왼쪽 인벤토리 UI를 연다.
         OpenInventoryUI();
 
-        // 오른쪽 상자 UI 오픈 및 데이터 바인딩
+        // 오른쪽 체스트 UI를 열고 데이터와 닫기 콜백을 연결한다.
         chestUI = UIManager.Instance.Open<ChestUI>();
-        if (chestUI == null) return;
+        if (chestUI == null)
+            return;
 
-        // 상자 UI가 닫힐 때 현재 Presenter의 CloseContainerUI를 호출하도록 연결
         chestUI.Bind(box, playerInventory, CloseContainerUI);
     }
 
-    /* 특정 칸의 인벤토리 슬롯이 바뀌었을 때 해당 칸을 갱신함 */
+    /// <summary>
+    /// 특정 인벤토리 슬롯이 바뀌었을 때 UI의 그 슬롯만 갱신한다.
+    /// </summary>
     private void HandleSlotChanged(int index)
     {
-        if (inventoryUI == null || !inventoryUI.gameObject.activeInHierarchy) return;
+        if (inventoryUI == null || !inventoryUI.gameObject.activeInHierarchy)
+            return;
 
         inventoryUI.UpdateSlot(index, playerInventory.slots[index]);
     }
 
-    /* 인벤토리 UI 활성화 */
+    /// <summary>
+    /// 인벤토리 UI를 연다.
+    /// 일반 인벤토리일 때만 드랍존을 사용 가능하게 둔다.
+    /// </summary>
     public void OpenInventoryUI()
     {
-        // 플레이어 상태가 idle이 아니면 인벤토리 창 조작을 수행하지 않음
-        if (playerStatus.nowState != PlayerStatus.livingState.idle) return;
+        if (playerStatus.nowState != PlayerStatus.livingState.idle)
+            return;
 
-        // 인벤토리 UI 활성화 및 UI 오브젝트 캐시 저장
         inventoryUI = UIManager.Instance.Open<InventoryUI>();
-        if (inventoryUI == null) return;
+        if (inventoryUI == null)
+            return;
 
-        // 인벤토리 첫 실행시 슬롯 생성
+        // 입력 처리 쪽에도 인벤토리 열림 상태를 알려 준다.
+        // 일반 인벤토리는 Player 맵을 유지하므로 이 값으로 공격/상호작용을 막는다.
+        localInputReader.SetInventoryOpenState(true);
+
+        inventoryUI.SetDropZoneAvailable(!isChestOpen);
         inventoryUI.CreatSlots(playerInventory.slotNum);
 
-        // 인벤토리의 아이템 상태를 동기화
         for (int i = 0; i < playerInventory.slotNum; i++)
             inventoryUI.UpdateSlot(i, playerInventory.slots[i]);
     }
 
-    /* 인벤토리 UI 비활성화 */
+    /// <summary>
+    /// 일반 인벤토리 UI를 닫는다.
+    /// 체스트가 열려 있는 경우에는 체스트 UI까지 함께 닫는다.
+    /// </summary>
     public void CloseInventoryUI()
     {
-        // 플레이어 상태가 idle이 아니면 인벤토리 창 조작을 수행하지 않음
-        if (playerStatus.nowState != PlayerStatus.livingState.idle) return;
-        
-        // 상자 UI가 열려 있으면 인벤토리만 따로 닫지 않고 컨테이너 UI 전체를 닫음
+        if (playerStatus.nowState != PlayerStatus.livingState.idle)
+            return;
+
         if (isChestOpen)
         {
             CloseContainerUI();
             return;
         }
-        
+
         UIManager.Instance.Close<InventoryUI>();
         inventoryUI = null;
 
-        // 일반 인벤토리를 닫았을 때는 다시 플레이 조작으로 복귀
+        // 일반 인벤토리를 닫았으니 입력 상태도 원래대로 되돌린다.
+        localInputReader.SetInventoryOpenState(false);
         localInputReader.SwitchToPlayerMap();
     }
 
-    /* 상자 UI와 인벤토리 UI를 함께 닫음 */
+    /// <summary>
+    /// 체스트 UI와 인벤토리 UI를 함께 닫는다.
+    /// </summary>
     public void CloseContainerUI()
     {
-        // 현재 열려 있던 상자의 열림 상태 해제
         if (currentBox != null)
             currentBox.CloseBox();
 
-        // 상자 UI와 인벤토리 UI를 함께 닫음
         UIManager.Instance.Close<ChestUI>();
         UIManager.Instance.Close<InventoryUI>();
 
-        // 캐시 및 상태값 초기화
         chestUI = null;
         inventoryUI = null;
         currentBox = null;
         isChestOpen = false;
 
-        // 입력 액션맵을 다시 플레이어 모드로 전환
+        // 체스트 UI와 인벤토리를 모두 닫았으니 인벤토리 열림 상태를 해제한다.
+        localInputReader.SetInventoryOpenState(false);
         localInputReader.SwitchToPlayerMap();
     }
 
-    private void OpenResultUI(bool _result)
+    /// <summary>
+    /// 인벤토리 아이템을 드랍존에 놓으면 플레이어 앞 바닥에 드랍 아이템을 생성한다.
+    /// 체스트가 열려 있을 때는 사용하지 않는다.
+    /// </summary>
+    private void HandleInventoryDropRequested(int slotIndex)
     {
-        Debug.Log("결과 창 패널을 출력합니다...");
-        // UIManager에서 Canvas-ResultPanel을 받아와 실행
-        resultUI = UIManager.Instance.Open<ResultUI>();
-        
-        if (resultUI == null) return;
-        resultUI.UpdateResultUI(_result);
+        if (isChestOpen)
+            return;
+
+        InventorySlotData slot = playerInventory.GetSlot(slotIndex);
+        if (slot == null || playerInventory.IsSlotEmpty(slotIndex))
+            return;
+
+        ItemData itemData = playerInventory.GetSlotItemData(slotIndex);
+        if (itemData == null)
+            return;
+
+        if (itemData.dropPrefab == null)
+        {
+            Debug.LogWarning($"드랍 프리팹이 연결되지 않았어. TID: {itemData.TID}");
+            return;
+        }
+
+        int dropCount = slot.amount;
+
+        Vector3 dropPosition = transform.position
+            + transform.forward * dropForwardDistance
+            + Vector3.up * dropUpOffset;
+
+        // 드랍 프리팹이 GameObject가 아닌 다른 Unity 오브젝트로 잡혀 있어도
+        // 런타임에서 최대한 안전하게 실제 게임오브젝트를 찾아 생성한다.
+        UnityEngine.Object prefabObject = itemData.dropPrefab;
+
+        Debug.Log($"인벤토리 드랍 생성 시도: item={itemData.itemName}, prefab={prefabObject.name}, type={prefabObject.GetType().Name}");
+        UnityEngine.Object spawnedObject = Instantiate(prefabObject, dropPosition, Quaternion.identity);
+
+        GameObject dropObject = null;
+
+        if (spawnedObject is GameObject prefabGameObject)
+            dropObject = prefabGameObject;
+        else if (spawnedObject is Component prefabComponent)
+            dropObject = prefabComponent.gameObject;
+
+        if (dropObject == null)
+        {
+            Debug.LogError($"드랍 프리팹 생성 결과를 GameObject로 변환하지 못했어. item={itemData.itemName}, spawnedType={spawnedObject.GetType().Name}");
+            Destroy(spawnedObject);
+            return;
+        }
+
+        DropItem dropItem = dropObject.GetComponent<DropItem>();
+
+        if (dropItem == null)
+        {
+            Debug.LogError("드랍 프리팹에 DropItem 컴포넌트가 없어.");
+            Destroy(dropObject);
+            return;
+        }
+
+        dropItem.itemData = itemData;
+        dropItem.stackCount = dropCount;
+
+        // 월드 드랍 생성이 끝난 뒤 인벤토리에서 수량을 제거한다.
+        playerInventory.RemoveAmount(slotIndex, dropCount);
+        DataManager.Instance.SaveGame();
     }
 
-    public int FindItemCount(int _tid)
+    private void OpenResultUI(bool result)
+    {
+        Debug.Log("결과 창을 출력합니다.");
+        resultUI = UIManager.Instance.Open<ResultUI>();
+
+        if (resultUI == null)
+            return;
+
+        resultUI.UpdateResultUI(result);
+    }
+
+    public int FindItemCount(int tid)
     {
         foreach (InventorySlotData slot in playerInventory.slots)
         {
-            if (slot.TID == _tid)
-            {
+            if (slot.TID == tid)
                 return slot.amount;
-            }
         }
+
         return 0;
     }
 }

@@ -1,39 +1,38 @@
 /// <summary>
-/// 게임 실행 중에 여러 시스템이 공통으로 접근해야 하는 데이터를 보관합니다
+/// 게임 실행 중에 여러 시스템이 공통으로 참조해야 하는 데이터를 보관합니다.
 /// </summary>
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GlobalRuntimeData
-{   
-    // 게임 상에 있는 모든 플레이어의 Transform 값
-    private static List<GameObject> ActivePlayers = new();
-    public static List<GameObject> GetActivePlayers() => ActivePlayers;
+{
+    // 게임 안에 있는 모든 플레이어 오브젝트 목록
+    public static List<GameObject> ActivePlayers = new();
 
-    // 엔티티 생성 시 해당 위치에 저장
-    private static Dictionary<int, GameObject> playerList = new();
-    public static Dictionary<int, GameObject> GetPlayerList() => playerList;
-    private static Dictionary<int, GameObject> enemyList = new();
-    public static Dictionary<int, GameObject> GetEnemyList() => enemyList;
+    // 생성된 엔티티를 고유 번호와 함께 저장하는 목록
+    public static Dictionary<int, GameObject> entityList = new();
 
-    private static int entityCount = 1;
+    // 다음에 부여할 엔티티 번호
+    // static으로 바로 초기화해야 실제 사용 시점에 값이 유지된다.
+    public static int entityCount = 1;
 
-    /* 플레이어를 생성해 고유 엔티티 번호를 할당 해주고 카운팅 */    
-    public static int CountingPlayerData(GameObject _obbject)
+    /* 엔티티 번호를 부여하고 런타임 데이터에 등록 */
+    public static void CountingEntityData(GameObject _object)
     {
-        playerList.Add(entityCount, _obbject);
-        return entityCount++;   
+        if (_object == null)
+        {
+            Debug.LogWarning("CountingEntityData: 등록할 오브젝트가 없습니다.");
+            return;
+        }
+
+        entityList.Add(entityCount, _object);
+
+        // 다음 엔티티는 다른 번호를 사용하도록 증가시킨다.
+        entityCount++;
     }
 
-    //* 적을 생성해 고유 엔티티 번호를 할당 해주고 카운팅 */ 
-    public static int CountingEnemyData(GameObject _object)
-    {
-        enemyList.Add(entityCount, _object);
-        return entityCount++; 
-    }
-
-    /* 번호로 플레이어 엔티티 가져오가 할당 */
-    public static GameObject FindPlayerData(int _id)
+    /* 번호로 엔티티 오브젝트를 가져오기 */
+    public static GameObject CountingEntityData(int _id)
     {
         if (playerList.TryGetValue(_id, out GameObject obj))
         {
