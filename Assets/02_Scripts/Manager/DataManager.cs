@@ -10,11 +10,15 @@ public class DataManager : MonoBehaviour
 {
     public static DataManager Instance { get; private set; }
     
+    // 정적 데이터
     private Dictionary<int, ItemData> itemDataDictionary;           // 아이템 데이터 사전
     private Dictionary<int, CharacterData> CharDataDictionary;      // 캐릭터 데이터 사전
 
     // 캐릭터 대사 데이터를 TID를 Key로 하여 딕셔너리로 관리
     private Dictionary<int, CharacterDialogueData> dialogueDataDictionary; 
+
+    // 동적 데이터
+    public GlobalRuntimeData runtimeData { get; private set; }      // 게임이 실행되는 동안의 데이터
 
     public PlayerSaveData playerData { get; private set; }          // 계정 데이터
     [SerializeField] private string saveFilePath;
@@ -39,20 +43,12 @@ public class DataManager : MonoBehaviour
         saveFilePath = Path.Combine(Application.persistentDataPath, "SaveFile.json");
         LoadGame();
 
-        // 캐릭터를 고르는 로비 씬과 연결이 되지 않았으므로 캐릭터 데이터를 코드에서 설정
-        playerData.SelectCharID = 101;
-
         LoadGameData();
     }
 
     /* 플레이어 게임 데이터 저장하기 */
     public void SaveGame()
     {
-        if (playerData == null)
-        {
-            playerData = new PlayerSaveData();
-        }
-
         string json = JsonUtility.ToJson(playerData, true);
         File.WriteAllText(saveFilePath, json);
     }
@@ -70,8 +66,20 @@ public class DataManager : MonoBehaviour
         {
             // 세이브 파일이 없으면 새 데이터 생성
             playerData = new PlayerSaveData();
-            SaveGame();
+            NewSaveData();
         }
+    }
+
+    /* 게임 첫 실행 시 새로운 게임 데이터 생성 */
+    private void NewSaveData()
+    {
+        if (playerData == null)
+        {
+            playerData = new PlayerSaveData();
+        }
+
+        string json = JsonUtility.ToJson(playerData, true);
+        File.WriteAllText(saveFilePath, json);
     }
 
     /* 모든 게임 데이터 로드 */

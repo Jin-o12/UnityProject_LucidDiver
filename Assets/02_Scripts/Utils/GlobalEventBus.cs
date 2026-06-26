@@ -7,6 +7,10 @@ using UnityEngine;
 
 public class GlobalEventBus
 {
+    /// <summary>
+    /// 인게임 이벤트
+    /// </summary>
+
     /// 플레이어 행동에 의한 이벤트 ///
     public static Action<Vector2> OnPlayerMove;                     // 플레이어 이동 버튼 입력: Action<이동 버튼 입력 벡터>
     public static Action OnAttackInput;                             // 공격 버튼 입력
@@ -40,4 +44,14 @@ public class GlobalEventBus
     public static Action OnReturnToLobby;                           // 로비로 돌아가기 이벤트 발생
     public static Action<int, bool> OnSetRecordData;                // 탈출 판정으로 다이버 기록 데이터 변경 시: Action<newLinkRateLevel, newMemoryLogUnlocked>
     public static Action<IInteractable, int> OnItemBoxOpened;       // 상자와 상호작용하여 UI를 열었을 시: Action<열린 상자, 상호작용한 플레이어 ID>
+
+
+    /// <summary>
+    /// 로비 씬 이벤트
+    /// </summary>
+    
+    /// UI 관리 이벤트 ///
+    public static Action OnOpenLobbyUI;                             // 로비 UI 실행
+    public static Action OnOpenPrepareUI;                           // 출격 준비 UI 실행
+    public static Action OnOpenRecordUI;                            // 다이버 기록 UI 실행
 }
