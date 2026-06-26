@@ -13,25 +13,20 @@ public class GlobalRuntimeData
     public static Dictionary<int, GameObject> playerList = new();
     public static Dictionary<int, GameObject> enemyList = new();
 
-    public static int entityCount;
-
-    public GlobalRuntimeData()
-    {
-        entityCount = 1;
-    }
+    public static int entityCount = 1;
 
     /* 플레이어를 생성해 고유 엔티티 번호를 할당 해주고 카운팅 */    
     public static int CountingPlayerData(GameObject _obbject)
     {
         playerList.Add(entityCount, _obbject);
-        return ++entityCount;   
+        return entityCount++;   
     }
 
     //* 적을 생성해 고유 엔티티 번호를 할당 해주고 카운팅 */ 
     public static int CountingEnemyData(GameObject _object)
     {
         enemyList.Add(entityCount, _object);
-        return ++entityCount; 
+        return entityCount++; 
     }
 
     /* 번호로 플레이어 엔티티 가져오가 할당 */
