@@ -70,7 +70,7 @@ public class ResultManager : MonoBehaviour, IResultService
         PlayerStatus ps = (PlayerStatus)GetPlayerComponent<PlayerStatus>(playerID);
         if (ps != null)
         {
-            ps.nowState = state;
+            ps.SetPlayerState(state);
         }
     }
 }

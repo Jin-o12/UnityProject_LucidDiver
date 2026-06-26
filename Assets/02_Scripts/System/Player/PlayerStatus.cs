@@ -9,23 +9,24 @@ using UnityEngine;
 public class PlayerStatus : MonoBehaviour, IDamageable
 {
     // 플레이어 상태
-    public enum livingState { idle, escape, gameover }      // 플레이어가 가질 수 있는 상태의 종류
-    public livingState nowState;                            // 현재 플레이어
-    public bool isReloading { get; private set; }           // 재장전 실행 중 여부
+    public enum livingState { idle, down, escape, gameover }    // 플레이어가 가질 수 있는 상태의 종류
+    public livingState nowState { get; private set; }           // 현재 플레이어 상태
+    public void SetPlayerState(livingState _state) => nowState = _state;
+    public bool isReloading { get; private set; }               // 재장전 실행 중 여부
 
-    int playerID;                                           // 플레이어 고유 번호
+    int playerID;                                               // 플레이어 고유 번호
     
     // 플레이어 체력
-    public float hpMax;                                     // 전체 체력
-    public float hpCurrent;                                 // 현재 체력
+    public float hpMax;                                         // 전체 체력
+    public float hpCurrent;                                     // 현재 체력
 
     // 플레이어 마나
-    public float mpMax;                                     // 마나 최대값
-    public float mpCurrent { get; private set; }            // 현재 마나
-    public float manaRegen;                                 // 초탕 마나 회복량
+    public float mpMax;                                         // 마나 최대값
+    public float mpCurrent { get; private set; }                // 현재 마나
+    public float manaRegen;                                     // 초탕 마나 회복량
 
-    private LocalInputReader _input;                        // 플레이어 인게임 조작 입력
-    private PlayerMovement _movement;                       // 플레이어 이동 조작
+    private LocalInputReader _input;                            // 플레이어 인게임 조작 입력
+    private PlayerMovement _movement;                           // 플레이어 이동 조작
 
     void Awake()
     {
@@ -118,38 +119,40 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         if (hpCurrent <= 0)
         {
             GlobalEventBus.onPlayerDead?.Invoke(playerID);
-            GameOver(playerID);
+            GameOver();
         }
     }
 
     /* 게임 오버 처리 */
-    public void GameOver(int _playerID)  
+    public void GameOver()  
     {
-        // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
-        if (!IsPlayerIdle(_playerID)) return;
+        // 플레이어 상태가 이미 사망했으면 사망 판정을 시작하지 않음
+        if (nowState==livingState.gameover) return;
+
         // 플레이어 상태를 gameover로 변경
-        ResultServiceLocator.Instance.HandleEscapeFail(_playerID);
+        nowState = livingState.gameover;
+
         // 탈출 실패 판정 이벤트를 전송
         GlobalEventBus.OnEscapeRequest?.Invoke(false);
     }
 
-    // 플레이어가 idle 상태인지 확인
-    public static bool IsPlayerIdle(int playerID)
-    {
-        var svc = ResultServiceLocator.Instance;
-        if (svc == null)
-        {
-            Debug.LogWarning("IsPlayerIdle: ResultServiceLocator.Instance is null");
-            return false;
-        }
-        var comp = svc.GetPlayerComponent<PlayerStatus>(playerID) as PlayerStatus;
-        if (comp == null)
-        {
-            Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {playerID}");
-            return false;
-        }
-        return comp.nowState == PlayerStatus.livingState.idle;
-    }
+    // // 플레이어가 idle 상태인지 확인
+    // public bool IsPlayerIdle()
+    // {
+    //     var svc = ResultServiceLocator.Instance;
+    //     if (svc == null)
+    //     {
+    //         Debug.LogWarning("IsPlayerIdle: ResultServiceLocator.Instance is null");
+    //         return false;
+    //     }
+    //     var comp = svc.GetPlayerComponent<PlayerStatus>(playerID) as PlayerStatus;
+    //     if (comp == null)
+    //     {
+    //         Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {playerID}");
+    //         return false;
+    //     }
+    //     return comp.nowState == PlayerStatus.livingState.idle;
+    // }
 
     /* 마나 변화 */
     private void GetMp(float _val)

@@ -12,12 +12,11 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
     
     [Header("엔티티 생성")]
-    [SerializeField] private GameObject playerPrefab;
-    [SerializeField] private GameObject EnemyPrefab;
-    [SerializeField] private GameObject playerSpawnPool;
-    [SerializeField] private GameObject enemySpawnPool;
-    private List<Transform> playerSpawnPoint = new();
-    private List<Transform> enemySpawnPoint = new();
+    [SerializeField] private GameObject playerPrefab;           // 플레이어 프리팹 (삭제 예정)
+    [SerializeField] private GameObject playerSpawnPool;        // 플레이어 스폰 풀 루트 오브젝트 
+    [SerializeField] private GameObject enemySpawnPool;         // 적 스폰 풀 루트 오브젝트
+    private List<Transform> playerSpawnPoint = new();           // 플레이어 스폰 포인트 리스트
+    private List<Transform> enemySpawnPoint = new();            // 적 스폰 포인트 리스트
     CharacterData charData;                                     // 가져올 캐릭터 데이터
 
     // 인벤토리 기록에 관한 필드
@@ -105,8 +104,9 @@ public class GameManager : MonoBehaviour
         Transform spawnPoint = playerSpawnPoint[spawnNum].transform;
         GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
         
-        // 플레이어 오브젝트 세션 데이터에 등록
-        GlobalRuntimeData.CountingEntityData(spawnedPlayer);
+        // 플레이어 오브젝트 세션 데이터에 등록 및 고유 번호 할당
+        int entityId = GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
+        spawnedPlayer.GetComponent<EntityIdentity>().SetupIdentity(entityId, Faction.player);
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
