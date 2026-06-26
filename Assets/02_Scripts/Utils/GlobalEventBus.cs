@@ -53,18 +53,17 @@ public class GlobalEventBus
     public static Action<int, bool> OnSetRecordData;                // 탈출 판정으로 다이버 기록 데이터 변경 시: Action<newLinkRateLevel, newMemoryLogUnlocked>
     public static Action<IInteractable, int> OnItemBoxOpened;       // 상자와 상호작용하여 UI를 열었을 시: Action<열린 상자, 상호작용한 플레이어 ID>
 
-    /// UI 관리 이벤트 ///
-    public static Action OnOpenPrepareUI;                          // 출격 준비 UI 오픈 
-    public static Action OnOpenRecordUI;                           // 다이버/기록 UI 오픈 
-    public static Action<int, bool, bool> RecordDataLoad;           // 다이버 개인 심상 기록 데이터 전달 : Action<newLinkRateLevel, newMemoryLogUnlocked, newHasNewMemoryLog>
-    public static Action OnRecordRead;                              // 다이버 개인 심상 기록 읽음
-
     /// <summary>
     /// 로비 씬 이벤트
     /// </summary>
-    
+
     /// UI 관리 이벤트 ///
     public static Action OnOpenLobbyUI;                             // 로비 UI 실행
-    public static Action OnOpenPrepareUI;                           // 출격 준비 UI 실행
-    public static Action OnOpenRecordUI;                            // 다이버 기록 UI 실행
+    public static Action OnOpenPrepareUI;                           // 출격 준비 UI 오픈 (LobbyMainUI → LobbyPresenter)
+    public static Action PrepareUIOpen;                             // 출격 준비 UI 오픈 (SortiePrepareUI → ResultManager)
+    public static Action OnOpenRecordUI;                            // 다이버/기록 UI 오픈  (LobbyMainUI → LobbyPresenter)
+    public static Action RecordUIOpen;                              // 다이버/기록 UI 오픈  (DiverRecordUI → ResultManager)
+    public static Action<int, bool, bool> RecordDataLoad;           // 다이버 개인 심상 기록 데이터 전달 : Action<newLinkRateLevel, newMemoryLogUnlocked, newHasNewMemoryLog>
+    public static Action OnRecordRead;                              // 다이버 개인 심상 기록 읽음
+
 }

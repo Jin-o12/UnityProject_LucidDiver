@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 인게임 전반의 시스템을 관리하는 인스턴스 클래스
 /// [26.06.24_강다영] playerPrefab, EnemyPrefab: 캐릭터 및 적 프리팹은 생성 시 결정되도록 바꿀 것
 /// </summary>
@@ -27,7 +27,6 @@ public class GameManager : MonoBehaviour
     private readonly string playScene = "DemoScene";    //인게임 세션 신
     private bool timeTrack = false;                     //플레이 시간 측정 중
     private float startTime;                            //플레이 시작 시점
-    public event Action<bool, float> ResultTimeRecord;  //결과 창에 경과 시간을 전달하는 이벤트
 
     private void Awake()
     {
@@ -67,9 +66,6 @@ public class GameManager : MonoBehaviour
 
             // 플레이어 1회 생성
             SpawnPlayer();
-
-            // ResultManager에서 ResultServiceLocator 연결이 끊겨 있으면 다시 등록
-            //StartCoroutine(EnsureResultServiceLocator());
         }
         else
         {
@@ -242,7 +238,9 @@ public class GameManager : MonoBehaviour
 
     private void RemoveFromInventory(int _tid)  //아이템 ID별로 인벤토리에서 제거
     {
-        timeTrack = false;  //시간 기록을 중단하고 기록 고정
-        ResultTimeRecord?.Invoke(_extractionResult, startTime);
+            //시간 기록을 중단하고 기록 고정
+        timeTrack = false;
+            //결과 계산 시작
+        ResultManager.Instance.GameResult(_extractionResult, startTime);
     }
 }

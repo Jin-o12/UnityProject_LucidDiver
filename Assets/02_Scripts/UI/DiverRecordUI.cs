@@ -97,7 +97,7 @@ public class DiverRecordUI : MonoBehaviour
         // ResultManager에서 SetData 값을 이벤트로 받아옴
         GlobalEventBus.RecordDataLoad += SetData;
         // 다이버/기록 UI 오픈 이벤트 발생
-        GlobalEventBus.OnOpenRecordUI?.Invoke();
+        GlobalEventBus.RecordUIOpen?.Invoke();
         // {UI가 열릴 때마다 최신 상태로 갱신}
         Refresh();
     }

@@ -4,7 +4,7 @@
 /// </summary>
 using System.Collections.Generic;
 using UnityEngine;
-public class ResultManager : MonoBehaviour/*, IResultService*/
+public class ResultManager : MonoBehaviour, IResultService
 {
     public static ResultManager Instance { get; private set; }  //싱글톤 인스턴스 지정
     // playerID -> PlayerStatus 매핑 딕셔너리
@@ -65,16 +65,14 @@ public class ResultManager : MonoBehaviour/*, IResultService*/
             Debug.Log($"ResultManager Awake: Registered existing playerID={idComp.entityID} (gameObject={p.gameObject.name})");
         }
 
-        //GameManager에서 탈출 결과와 시작 시점을 받아서 결과 정산 시작
-        GetComponent<GameManager>().ResultTimeRecord += GameResult;
         //로비로 돌아가기 버튼에 동조율 데이터 갱신 연결
         GlobalEventBus.OnSetRecordData += RenewLinkRateData;
         //로비로 돌아가기 버튼에 결과 창 닫기 연결
         GlobalEventBus.OnReturnToLobby += CloseResultPanel;
         //출격 준비 UI 오픈 이벤트 연결
-        GlobalEventBus.OnOpenPrepareUI += SendQuickSlotCacheEvent;
+        GlobalEventBus.PrepareUIOpen += SendQuickSlotCacheEvent;
         //다이버/기록 UI 오픈 이벤트 연결
-        GlobalEventBus.OnOpenRecordUI += SendLinkRecordData;
+        GlobalEventBus.RecordUIOpen += SendLinkRecordData;
         //다이버/기록 UI 읽음 이벤트 연결
         GlobalEventBus.OnRecordRead += NewMemoryRead;
     }
@@ -83,11 +81,10 @@ public class ResultManager : MonoBehaviour/*, IResultService*/
     {
         if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
         if (Instance == this) Instance = null;
-        GetComponent<GameManager>().ResultTimeRecord -= GameResult;
         GlobalEventBus.OnSetRecordData -= RenewLinkRateData;
         GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
-        GlobalEventBus.OnOpenPrepareUI -= SendQuickSlotCacheEvent;
-        GlobalEventBus.OnOpenRecordUI -= SendLinkRecordData;
+        GlobalEventBus.PrepareUIOpen -= SendQuickSlotCacheEvent;
+        GlobalEventBus.RecordUIOpen -= SendLinkRecordData;
         GlobalEventBus.OnRecordRead -= NewMemoryRead;
     }
 
@@ -118,18 +115,18 @@ public class ResultManager : MonoBehaviour/*, IResultService*/
         }
     }
 
-    // // 플레이어 등록
-    // public void Register(int playerID, Component ps)
-    // {
-    //     // 플레이어 상태 값 null 체크를 먼저 실행
-    //     if (ps == null) return;
-    //     // 플레이어 EntityIdentity 컴포넌트를 가져오고 null 체크
-    //     var idComp = ps.GetComponent<EntityIdentity>();
-    //     if (idComp == null) return;
-    //     // EntityIdentity에서 ID 값을 불러옴
-    //     _players[playerID] = (PlayerStatus)ps;
-    //     Debug.Log($"ResultManager.Register: playerID={playerID} registered (obj={ps.gameObject.name})");
-    // }
+    // 플레이어 등록
+    public void Register(int playerID, Component ps)
+    {
+        // 플레이어 상태 값 null 체크를 먼저 실행
+        if (ps == null) return;
+        // 플레이어 EntityIdentity 컴포넌트를 가져오고 null 체크
+        var idComp = ps.GetComponent<EntityIdentity>();
+        if (idComp == null) return;
+        // EntityIdentity에서 ID 값을 불러옴
+        _players[playerID] = (PlayerStatus)ps;
+        Debug.Log($"ResultManager.Register: playerID={playerID} registered (obj={ps.gameObject.name})");
+    }
 
     // 플레이어 등록 해제
     public void Unregister(int playerID)
