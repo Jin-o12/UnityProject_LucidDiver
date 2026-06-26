@@ -156,6 +156,8 @@ public class GameManager : MonoBehaviour
         Transform spawnPoint = playerSpawnPoint[spawnNum].transform;
         GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
 
+/////////////////////
+
         // 생성한 플레이어를 ResultServiceLocator에 등록
         if (spawnedPlayer != null)
         {
@@ -192,6 +194,13 @@ public class GameManager : MonoBehaviour
         {
             GlobalRuntimeData.CountingEntityData(spawnedPlayer);
         }
+//////////////////////////
+        
+        // 플레이어 오브젝트 세션 데이터에 등록 및 고유 번호 할당
+        int entityId = GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
+        spawnedPlayer.GetComponent<EntityIdentity>().SetupIdentity(entityId, Faction.player);
+
+///////////////////////////
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
