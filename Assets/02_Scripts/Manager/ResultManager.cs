@@ -72,7 +72,7 @@ public class ResultManager : MonoBehaviour, IResultService
         //출격 준비 UI 오픈 이벤트 연결
         GlobalEventBus.PrepareUIOpen += SendQuickSlotCacheEvent;
         //다이버/기록 UI 오픈 이벤트 연결
-        GlobalEventBus.OnOpenRecordUI += SendLinkRecordData;
+        GlobalEventBus.RecordUIOpen += SendLinkRecordData;
         //다이버/기록 UI 읽음 이벤트 연결
         GlobalEventBus.OnRecordRead += NewMemoryRead;
     }
@@ -84,7 +84,7 @@ public class ResultManager : MonoBehaviour, IResultService
         GlobalEventBus.OnSetRecordData -= RenewLinkRateData;
         GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
         GlobalEventBus.PrepareUIOpen -= SendQuickSlotCacheEvent;
-        GlobalEventBus.OnOpenRecordUI -= SendLinkRecordData;
+        GlobalEventBus.RecordUIOpen -= SendLinkRecordData;
         GlobalEventBus.OnRecordRead -= NewMemoryRead;
     }
 
