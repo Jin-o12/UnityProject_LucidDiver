@@ -18,7 +18,7 @@ public abstract class ItemData : ScriptableObject
     public int TID;                                     // 아이템 코드(고유 ID)
     public string itemName;                             // 아이템 이름
     public string desc;                                 // 아이템 설명
-    public ItemType category;                       // 아이템 종류
+    public itemCategory category;                       // 아이템 종류
     public int effectID;                                // 아이템 종류별 적용 효과 ID
     public int itemMultiple;                            // 중첩 용량
 

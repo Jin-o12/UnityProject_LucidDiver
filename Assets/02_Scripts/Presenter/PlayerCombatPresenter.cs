@@ -33,12 +33,9 @@ public class PlayerCombatPresenter : MonoBehaviour
         GlobalEventBus.OnAttackInput -= TryAttack;
     }
 
+    /* 플레이어의 상황에 따라 공격을 수행할 지 여부에 대해 판정 */
     private void TryAttack()
     {
-        // 플레이어 상태가 idle이 아니면 공격을 수행하지 않음
-        if (playerStatus.nowState != PlayerStatus.livingState.idle)
-            return;
-
         // 무기를 가지고 있지 않거나 현재 마나가 소비 할 마나보다 부족하다면 공격하지 않음
         if(!playerWeapon.isEquipped || playerStatus.mpCurrent<playerWeapon.nowUseMana)
             return;

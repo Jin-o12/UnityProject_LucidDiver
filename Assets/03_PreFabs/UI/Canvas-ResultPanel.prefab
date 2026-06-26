@@ -120,19 +120,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8151078503362098722}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: -3431454728824534225}
-        m_TargetAssemblyTypeName: ResultUI, UIAD
-        m_MethodName: OnReturnLobbyClick
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &1240099492101712578
 GameObject:
   m_ObjectHideFlags: 0
@@ -200,9 +188,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: PlayerDialogue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2305fed54108ef04f9feecdc2db6ed59, type: 2}
-  m_sharedMaterial: {fileID: -2044392198750055926, guid: 2305fed54108ef04f9feecdc2db6ed59,
-    type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -335,9 +322,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: '[BACK TO LOBBY]'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2305fed54108ef04f9feecdc2db6ed59, type: 2}
-  m_sharedMaterial: {fileID: -2044392198750055926, guid: 2305fed54108ef04f9feecdc2db6ed59,
-    type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5302535af1044152a457ed104f1f4b91, type: 2}
+  m_sharedMaterial: {fileID: 2164040, guid: 5302535af1044152a457ed104f1f4b91, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -470,9 +456,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "manaStoneCount \xD7 00"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2305fed54108ef04f9feecdc2db6ed59, type: 2}
-  m_sharedMaterial: {fileID: -2044392198750055926, guid: 2305fed54108ef04f9feecdc2db6ed59,
-    type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -823,14 +808,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -982,9 +967,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'kills: 000'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2305fed54108ef04f9feecdc2db6ed59, type: 2}
-  m_sharedMaterial: {fileID: -2044392198750055926, guid: 2305fed54108ef04f9feecdc2db6ed59,
-    type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1193,9 +1177,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'Play Time: mm:ss'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2305fed54108ef04f9feecdc2db6ed59, type: 2}
-  m_sharedMaterial: {fileID: -2044392198750055926, guid: 2305fed54108ef04f9feecdc2db6ed59,
-    type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1403,9 +1386,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: memoryLogUnlocked
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2305fed54108ef04f9feecdc2db6ed59, type: 2}
-  m_sharedMaterial: {fileID: -2044392198750055926, guid: 2305fed54108ef04f9feecdc2db6ed59,
-    type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1691,9 +1673,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "MemoryFragment \xD700\n(Used)"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2305fed54108ef04f9feecdc2db6ed59, type: 2}
-  m_sharedMaterial: {fileID: -2044392198750055926, guid: 2305fed54108ef04f9feecdc2db6ed59,
-    type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1826,9 +1807,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "potionCount \xD7 00"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2305fed54108ef04f9feecdc2db6ed59, type: 2}
-  m_sharedMaterial: {fileID: -2044392198750055926, guid: 2305fed54108ef04f9feecdc2db6ed59,
-    type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1928,7 +1908,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 300, y: 60}
+  m_AnchoredPosition: {x: 300, y: 360}
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7168435042105295959
@@ -1952,14 +1932,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2446,8 +2426,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   extractionResult: 0
   playTime: 0
-  memoryFragmentCount: 3
-  prevLinkRateLevel: 0
+  memoryFragmentCount: 0
   linkRateLevel: 0
   linkRateGain: 1
   memoryLogUnlocked: 0
@@ -2455,25 +2434,18 @@ MonoBehaviour:
   potionCount: 0
   returnDialogueID: 
   enemyKillCount: 0
-  _lobbySceneName: LobbyScene
-  potionData: {fileID: 11400000, guid: e1f045e6d1c51e143a76ad1a32e8bf41, type: 2}
-  manaStoneData: {fileID: 11400000, guid: 36f1d5fb5ed6737499dc5a46fa2f09cd, type: 2}
-  memoryFragmentData: {fileID: 11400000, guid: 6864ad3bfd9a78b4fb3eedba4599fb5f, type: 2}
   image_Banner: {fileID: 8034121711670500306}
   text_playTime: {fileID: 8758344084923695250}
   text_enemyKillCount: {fileID: 6068161064921168821}
-  image_memoryFragmentIcon: {fileID: 6173978446217951987}
   text_getMemoryFragment: {fileID: 3545491913913321293}
   text_linkRate: {fileID: 1369103070854608163}
   text_memoryLogUnlocked: {fileID: 4645654938423374871}
-  image_manaStoneIcon: {fileID: 2229627532762034742}
   text_manaStoneCount: {fileID: 6587944048801142547}
-  image_potionIcon: {fileID: 1495840250195983064}
   text_potionCount: {fileID: 7481784490366416458}
   image_manaStoneLost: {fileID: 4034565077410086683}
   image_potionLost: {fileID: 7052561747800267532}
   text_returnDialogue: {fileID: 447145983076103374}
-  Banner_Success: {fileID: 21300000, guid: 4e02c9e1f07b002469477ef272336c98, type: 3}
+  Banner_Success: {fileID: 21300000, guid: 706c148020f277049a3e04776b64de88, type: 3}
   Banner_Failed: {fileID: 21300000, guid: faab77ee407a7e041bbf4527bec04be9, type: 3}
 --- !u!1 &8040929695618051130
 GameObject:
@@ -2695,9 +2667,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: LinkRateLevel Lv0
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2305fed54108ef04f9feecdc2db6ed59, type: 2}
-  m_sharedMaterial: {fileID: -2044392198750055926, guid: 2305fed54108ef04f9feecdc2db6ed59,
-    type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

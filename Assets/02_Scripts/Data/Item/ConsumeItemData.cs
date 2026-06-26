@@ -6,7 +6,7 @@ using UnityEngine;
 public class ConsumeItemData : ItemData
 {
     [Header("소비 아이템 정보")]
-    public AreaType useType;                 // 발동 타입
+    public UseType useType;                 // 발동 타입
     public float useRange;                  // 사용 거리
     public float useDelay;                  // 발동 대기 시간
 
