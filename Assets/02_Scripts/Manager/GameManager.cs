@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 인게임 전반의 시스템을 관리하는 인스턴스 클래스
 /// [26.06.24_강다영] playerPrefab, EnemyPrefab: 캐릭터 및 적 프리팹은 생성 시 결정되도록 바꿀 것
 /// </summary>
@@ -69,37 +69,11 @@ public class GameManager : MonoBehaviour
             SpawnPlayer();
 
             // ResultManager에서 ResultServiceLocator 연결이 끊겨 있으면 다시 등록
-            StartCoroutine(EnsureResultServiceLocator());
+            //StartCoroutine(EnsureResultServiceLocator());
         }
         else
         {
             timeTrack = false;     //인게임 세션 신을 벗어나면 시간 기록 중단
-        }
-    }
-
-    private IEnumerator EnsureResultServiceLocator()
-    {
-        yield return null;                                          //1프레임 대기하여 ResultManager 시작
-        //이미 연결되어 있다면 추가 처리 없음
-        if (ResultServiceLocator.Instance != null)
-        {
-            Debug.Log("1. Already Connected");
-            yield break;
-        }
-        //ResultManager가 있다면 Locator 연결
-        if (ResultManager.Instance != null)
-        {
-            ResultServiceLocator.Instance = ResultManager.Instance;
-            Debug.Log("2. ResultManager Connected");
-            yield break;
-        }
-        //ResultManager가 없다면 폴백: 씬에서 ResultManager 컴포넌트 직접 검색
-        var foundManager = FindObjectOfType<ResultManager>();
-        if (foundManager != null)
-        {
-            ResultServiceLocator.Instance = foundManager;
-            Debug.Log("3. ResultManager Pooled back");
-            yield break;
         }
     }
 
@@ -140,43 +114,6 @@ public class GameManager : MonoBehaviour
         // 플레이어 오브젝트 생성
         Transform spawnPoint = playerSpawnPoint[spawnNum].transform;
         GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
-
-        // 생성한 플레이어를 ResultServiceLocator에 등록
-        if (spawnedPlayer != null)
-        {
-            var entityIdComp = spawnedPlayer.GetComponent<EntityIdentity>();
-            var statusComp = spawnedPlayer.GetComponent<PlayerStatus>();
-
-            if (entityIdComp != null && statusComp != null)
-            {
-                // ResultServiceLocator가 이미 세팅되어 있다면 바로 등록
-                if (ResultServiceLocator.Instance != null)
-                {
-                    ResultServiceLocator.Instance.Register(entityIdComp.entityID, statusComp);
-                    Debug.Log($"SpawnPlayer: Registered playerID={entityIdComp.entityID} to ResultServiceLocator.");
-                }
-                else
-                {
-                    // ResultManager 싱글턴이 이미 존재하면 로케이터에 연결 후 등록
-                    if (ResultManager.Instance != null)
-                    {
-                        ResultServiceLocator.Instance = ResultManager.Instance;
-                        ResultServiceLocator.Instance.Register(entityIdComp.entityID, statusComp);
-                        Debug.Log($"SpawnPlayer: ResultServiceLocator was null - set from ResultManager and registered playerID={entityIdComp.entityID}.");
-                    }
-                    else
-                    {
-                        Debug.LogWarning("SpawnPlayer: ResultServiceLocator 및 ResultManager가 모두 준비되지 않았습니다. Player 등록이 누락될 수 있습니다.");
-                    }
-                }
-            }
-        }
-
-        // 플레이어 오브젝트 세션 데이터에 등록 (이미 있는 경우에는 스킵)
-        if (!GlobalRuntimeData.ActivePlayers.Contains(spawnedPlayer))
-        {
-            GlobalRuntimeData.CountingEntityData(spawnedPlayer);
-        }
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))

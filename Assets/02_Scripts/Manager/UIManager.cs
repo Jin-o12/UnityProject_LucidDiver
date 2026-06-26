@@ -3,6 +3,7 @@
 /// </summary>
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class UIManager : MonoBehaviour
@@ -51,7 +52,15 @@ public class UIManager : MonoBehaviour
         // UI 비활성화, 스택에서 해당 UI 삭제
         ui.gameObject.SetActive(false);
         if(uiStack.Contains(ui)) RemoveFromStack(ui);
-;    }
+     }
+
+    /* 가장 최근에 열린 UI를 닫음 */
+    public void CLoseNowUI()
+    {
+        // 비어있다면 실행하지 않음
+        if(uiStack.Count==0) return;
+        uiStack.Pop();
+    }
 
     /* UI가 열릴 때, 이미 캐싱된 UI를 찾고 그렇지 않다면 새로 생성함 */
     private UiType GetOrCreate<UiType>() where UiType: MonoBehaviour
@@ -86,5 +95,11 @@ public class UIManager : MonoBehaviour
         uiStack.Clear();
         for(int i=0 ; i < temp.Count ; i++)
             uiStack.Push(temp[i]);        
+    }
+
+    /* UI 스택 클리어 */
+    public void UiStackCLear()
+    {
+        uiStack.Clear();
     }
 }

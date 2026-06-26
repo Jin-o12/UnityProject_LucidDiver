@@ -63,10 +63,6 @@ public class ResultUI : MonoBehaviour
     public void UpdateResultUI(bool _result)
     {
         extractionResult = _result;
-        /// 데이터 베이스에서 찾아 대입할 것이기 때문에 주석처리 
-        //potionCount = FindItemCount(301);
-        //manaStoneCount = FindItemCount(302);
-        //memoryFragmentCount = FindItemCount(401);
         RefreshResult();
     }
 

@@ -7,6 +7,10 @@ using UnityEngine;
 
 public class GlobalEventBus
 {
+    /// <summary>
+    /// 인게임 이벤트
+    /// </summary>
+
     /// 플레이어 행동에 의한 이벤트 ///
     public static Action<Vector2> OnPlayerMove;                     // 플레이어 이동 버튼 입력: Action<이동 버튼 입력 벡터>
     public static Action OnAttackInput;                             // 공격 버튼 입력
@@ -47,4 +51,13 @@ public class GlobalEventBus
     public static Action OnOpenRecordUI;                           // 다이버/기록 UI 오픈 
     public static Action<int, bool, bool> RecordDataLoad;           // 다이버 개인 심상 기록 데이터 전달 : Action<newLinkRateLevel, newMemoryLogUnlocked, newHasNewMemoryLog>
     public static Action OnRecordRead;                              // 다이버 개인 심상 기록 읽음
+
+    /// <summary>
+    /// 로비 씬 이벤트
+    /// </summary>
+    
+    /// UI 관리 이벤트 ///
+    public static Action OnOpenLobbyUI;                             // 로비 UI 실행
+    public static Action OnOpenPrepareUI;                           // 출격 준비 UI 실행
+    public static Action OnOpenRecordUI;                            // 다이버 기록 UI 실행
 }
