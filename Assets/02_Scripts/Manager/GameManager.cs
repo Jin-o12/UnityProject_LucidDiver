@@ -96,7 +96,7 @@ public class GameManager : MonoBehaviour
     private void SpawnPlayer()
     {
         // 플레이어 스폰 포인트 중 무작위로 하나 선정
-        int spawnNum = Random.Range(0, playerSpawnPoint.Count-1);
+        int spawnNum = Random.Range(0, playerSpawnPoint.Count);
 
         // 스폰 장소 오브젝트가 없을 경우 대비
         if (playerSpawnPoint[spawnNum] == null)
@@ -143,7 +143,7 @@ public class GameManager : MonoBehaviour
 
         // 적 스폰 포인트 중 무작위로 하나 선정
         // 플레이어 스폰 방식과 동일한 구조로 맞춘다.
-        int spawnNum = Random.Range(0, enemySpawnPoint.Count - 1);
+        int spawnNum = Random.Range(0, enemySpawnPoint.Count );
 
         // 스폰 장소 오브젝트가 없을 경우 대비
         if (enemySpawnPoint[spawnNum] == null)
