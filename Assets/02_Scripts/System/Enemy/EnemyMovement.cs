@@ -1,29 +1,27 @@
 /// <summary>
-/// 적의 이동과 상태에 따른 애니메이션을 관리하는 스크립트
-/// 거리 기반 탐지에 더해, 적이 바라보는 방향 기준의 부채꼴 시야 판정을 사용합니다.
+/// 적의 움직임과 상태에 따른 애니메이션을 관리하는 스크립트
 /// </summary>
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class EnemyMovement : MonoBehaviour
 {
     [Header("Enemy Movement Controll")]
-    [SerializeField] private float moveSpeed = 3.0f;              // 이동 속도
-    [SerializeField] private float sightLength = 7.0f;            // 시야 거리
-    [SerializeField] private float sightAngle = 120.0f;           // 시야 전체 각도
-    [SerializeField] private float eyeHeight = 1.4f;            // 시야 판정 시작 높이
+    [SerializeField] private float moveSpeed;                       // 이동 속도
+    private float sightLength;                                      // 시야 거리
+    private float sightAngle;                                       // 시야 각도
 
-    // 플레이어 탐지 계산용 캐시값
-    private Transform targetPlayer;                               // 현재 추적 중인 플레이어
-    private float sightLengthSqr;                                 // 시야 거리의 제곱값
-    private float halfSightAngle;                                 // 시야 반각
-    private WaitForSeconds checkingTime = new WaitForSeconds(0.2f); // 상태 확인 주기
+    /// 플레이어 위치 추적 계산 및 이를 최적화 하기 위한 변수 입니다 ///
+    private Transform targetPlayer;                                 // 추적하는 플레이어
+    private float sightLengthSqr;                                   // 시야 거리의 제곱 값
+    private WaitForSeconds checkingTime = new WaitForSeconds(0.2f); // 상태 확인 주기 시간
 
     [Header("Enemy Attack")]
-    private float attackLength;                                   // 공격 거리
-    private float attackLengthSqr;                                // 공격 거리의 제곱값
-    private float attackCooldown;                                 // 공격 쿨타임
+    private float attackLength;                                     // 공격 사거리
+    private float attackLengthSqr;                                  // 공격 사거리의 제곱 값
+    private float attackCooldown;                                   // 공격 쿨타임
 
     [Header("Enemy Animation Controll")]
     private Animator animator;
@@ -32,36 +30,29 @@ public class EnemyMovement : MonoBehaviour
     private EnemyStatus myStatus;
     private NavMeshAgent navAgent;
 
-    // VisionGizmo가 읽어갈 시야 정보입니다.
-    public float SightLength => sightLength;          // 시야 거리
-    public float SightAngle => sightAngle;            // 시야 전체 각도
-    public float EyeHeight => eyeHeight;              // 시야 판정 시작 높이
-    public Transform CurrentTarget => targetPlayer;   // 현재 인식 중인 타겟
-
     void Awake()
     {
         animator = GetComponent<Animator>();
         navAgent = GetComponent<NavMeshAgent>();
         myStatus = GetComponent<EnemyStatus>();
 
-        // 필수 컴포넌트가 하나라도 없으면 동작할 수 없다.
-        if (animator == null || myStatus == null || navAgent == null)
+        // 필수 컴포넌트가 존재하지 않을 시 스크립트 비활성화
+        if(animator==null || myStatus==null)
         {
-            enabled = false;
-            Debug.LogError("EnemyMovement: 필요한 컴포넌트가 없습니다.");
+            this.enabled = false;
+            Debug.LogError("PlayerMovement: 필요한 컴포넌트가 없습니다.");
             return;
         }
 
+        // 플레이어 추적 및 거리계산 관련 값 지정
         targetPlayer = null;
+        sightLength = 7;
         sightLengthSqr = sightLength * sightLength;
-        halfSightAngle = sightAngle * 0.5f;
-
-        attackLength = 3.0f;
+        attackLength = 3;
         attackLengthSqr = attackLength * attackLength;
         attackCooldown = 2.0f;
-
-        // NavMeshAgent가 인스펙터 속도값을 실제 이동에 사용하도록 맞춘다.
-        navAgent.speed = moveSpeed;
+        
+        moveSpeed = 3;
     }
 
     private void OnEnable()
@@ -77,10 +68,10 @@ public class EnemyMovement : MonoBehaviour
         myStatus.OnLocalDeath -= Die;
     }
 
-    /* 현재 상태를 주기적으로 점검 */
+    /* 현재 상태 확인 */
     private IEnumerator CheckRoutine()
     {
-        while (myStatus.nowState != EnemyStatus.EnemyState.Dead)
+        while(myStatus.nowState != EnemyStatus.EnemyState.Dead)
         {
             UpdateTarget();
             ChaseTarget();
@@ -88,112 +79,54 @@ public class EnemyMovement : MonoBehaviour
         }
     }
 
-    /* 시야 거리와 시야각, 벽 가림 조건을 모두 통과한 가장 가까운 플레이어를 추적 대상으로 지정 */
+    /* 현재 플레이어들의 위치와 자신의 위치를 계산하고 인식 범위 내에 있는지 확인합니다 */
     private void UpdateTarget()
     {
+        // 가장 가까운 타겟의 (제곱된)위치를 저장하여 누가 더 가까운지 판정합니다
         float moreCloser = sightLengthSqr;
         Transform bestTarget = null;
 
         // 현재 존재하는 모든 플레이어들 중 적에게 가장 가까운 대상을 추적합니다
         foreach(GameObject player in GlobalRuntimeData.GetActivePlayers())
         {
-            if (player == null)
-                continue;
+            if(player==null) continue;
 
-            // 1차로 거리 안에 들어왔는지 확인한다.
+            // 나(적)과 상대(플레이어) 사이의 거리 제곱을 계산하여 시야반경 내에 있는지 확인
             float sqrDist = (transform.position - player.transform.position).sqrMagnitude;
-            if (sqrDist > sightLengthSqr)
-                continue;
+            if(sqrDist > sightLengthSqr) continue;
 
-            // 거리 안에 있어도 시야각 밖이거나 벽에 가려져 있으면 인식하지 않는다.
-            if (!IsTargetInSight(player.transform))
-                continue;
-
-            if (sqrDist < moreCloser)
+            if(sqrDist<moreCloser)
             {
                 moreCloser = sqrDist;
                 bestTarget = player.transform;
             }
         }
-
+        // 가장 가까운 사람을 타겟으로 지정합니다
         targetPlayer = bestTarget;
-    }
-
-    /* 대상이 적의 전방 부채꼴 시야 안에 있고, 벽에 가려져 있지 않은지 확인 */
-    private bool IsTargetInSight(Transform target)
-    {
-        if (target == null)
-            return false;
-
-        // 수평 기준 시야각 판정을 위해 y값을 제거한 방향을 만든다.
-        Vector3 flatForward = transform.forward;
-        flatForward.y = 0.0f;
-
-        Vector3 flatDirectionToTarget = target.position - transform.position;
-        flatDirectionToTarget.y = 0.0f;
-
-        // 거의 같은 위치라면 각도 계산 없이 시야 안으로 본다.
-        if (flatDirectionToTarget.sqrMagnitude <= 0.001f)
-            return true;
-
-        // 적의 정면 기준으로 시야 반각 안에 들어왔는지 확인한다.
-        float angleToTarget = Vector3.Angle(flatForward.normalized, flatDirectionToTarget.normalized);
-        if (angleToTarget > halfSightAngle)
-            return false;
-
-        // 이제 실제로 벽에 가려져 있는지 레이캐스트로 확인한다.
-        Vector3 eyePosition = transform.position + Vector3.up * eyeHeight;
-        Vector3 targetPosition = target.position + Vector3.up * eyeHeight;
-        Vector3 directionToTarget = targetPosition - eyePosition;
-
-        float targetDistance = directionToTarget.magnitude;
-        if (targetDistance <= 0.001f)
-            return true;
-
-        // 플레이어보다 먼저 다른 콜라이더를 맞으면 시야가 막힌 것으로 본다.
-        if (Physics.Raycast(eyePosition, directionToTarget.normalized, out RaycastHit hit, targetDistance, ~0, QueryTriggerInteraction.Ignore))
-        {
-            // 첫 번째로 맞은 대상이 플레이어 본체 또는 플레이어 자식 오브젝트면 정상 인식이다.
-            if (hit.transform == target || hit.transform.IsChildOf(target))
-                return true;
-
-            // 플레이어보다 먼저 벽이나 다른 오브젝트를 맞았으면 인식 실패다.
-            return false;
-        }
-
-        return false;
     }
 
     /* 거리 계산을 통한 추적 및 공격 상태 지정 */
     private void ChaseTarget()
     {
-        if (targetPlayer == null)
+        if(targetPlayer==null)
         {
             myStatus.SetNowState(EnemyStatus.EnemyState.Idle);
-            myStatus.SetIsAttacking(false);
             animator.SetBool("isWalk", false);
             targetPlayer = null;
-            navAgent.isStopped = false;
             navAgent.ResetPath();
             return;
         }
 
+        // 적과 플레이어 사이 거리 계산
         float sqrDistToTarget = (transform.position - targetPlayer.position).sqrMagnitude;
-
-        // 이미 공격 중이면 공격 코루틴이 끝날 때까지 중복 실행하지 않는다.
-        if (myStatus.isAttacking)
-            return;
-
-        // 공격 거리 안에 있으면 공격 상태로 전환한다.
-        if (attackLengthSqr >= sqrDistToTarget)
+        // 공격 사거리 안에 있을 경우 공격
+        if(attackLengthSqr >= sqrDistToTarget)
         {
-            animator.SetBool("isWalk", false);
             StartCoroutine(Attack());
         }
-        // 공격 거리는 아니지만 시야 거리 안이면 추적한다.
-        else if (sqrDistToTarget <= sightLengthSqr)
+        // 공격 사거리 밖이지만 시야 안에 있을 경우 추적
+        else if(sqrDistToTarget <= sightLengthSqr)
         {
-            navAgent.isStopped = false;
             navAgent.SetDestination(targetPlayer.position);
             myStatus.SetNowState(EnemyStatus.EnemyState.Chase);
             animator.SetBool("isWalk", true);
@@ -209,39 +142,35 @@ public class EnemyMovement : MonoBehaviour
 
     private IEnumerator Attack()
     {
-        // 공격 시작 시 타겟이 사라졌으면 공격을 취소한다.
-        if (targetPlayer == null)
-            yield break;
-
-        // 공격 상태 진입 및 이동 정지
+        // 공격 상태 돌입 및 이동 정지
         myStatus.SetNowState(EnemyStatus.EnemyState.Attack);
         myStatus.SetIsAttacking(true);
 
-        navAgent.isStopped = true;
-        navAgent.velocity = Vector3.zero;
-        navAgent.ResetPath();
+        navAgent.isStopped = true;          // 적 이동 정지
+        navAgent.velocity = Vector3.zero;   // 관성에 의한 이동 방지
 
-        // 플레이어 방향으로 몸을 돌린다.
+        // 플레이어 방향으로 몸체 회전
         transform.LookAt(new Vector3(targetPlayer.position.x, transform.position.y, targetPlayer.position.z));
-
+        
+        // 애니메이션 실행
         animator.SetTrigger("isAttack");
-
-        // 공격 실행 후 쿨타임만큼 대기
+        
+        // 공격 수행 및 공격 쿨타임만큼 대기
         yield return new WaitForSeconds(attackCooldown);
 
+        // 공격 수행 후 다음 행동 실행
         myStatus.SetIsAttacking(false);
         navAgent.isStopped = false;
     }
 
     public void isPlayerTakeDamage()
     {
-        // 공격 중 플레이어가 범위를 벗어났으면 피해를 주지 않는다.
-        if (targetPlayer == null)
-            return;
-
+        // 공격 중 플레이어가 범위를 벗어났을 경우 피격당하지 않음
+        if(targetPlayer==null) return;
         float sqrDistToTarget = (transform.position - targetPlayer.position).sqrMagnitude;
-
-        if (attackLengthSqr >= sqrDistToTarget)
+        
+        // 공격 성공 여부 판정 시 타겟이 범위 내에 있을 경우
+        if(attackLengthSqr >= sqrDistToTarget)
         {
             targetPlayer.GetComponentInParent<IDamageable>().TakeDamage(myStatus.atkValue);
         }

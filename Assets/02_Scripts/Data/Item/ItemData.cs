@@ -1,10 +1,17 @@
+/// <summary>
+/// 아이템 데이터의 기본 틀이 되는 ScriptableObject 클래스
+/// 각 아이템은 N*101번대부터 시작하며, 1의 자리가 0인 경우의 TID는 비워놓습니다
+/// 
+/// * 현재 아이템 번호 규칙
+///  - 100번대: 무기
+///  - 200번대: 방어구 (추후 구현)
+///  - 300번대: 소모품
+///  - 400번대: 그 외 아이템
+/// 위 내용은 기획서의 변동에 따라 내용이 달라지거나 삭제될 수 있습니다.
+/// </summary>
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-/// <summary>
-/// 아이템 데이터의 기본 정보를 담는 ScriptableObject 클래스.
-/// 각 아이템 종류별 상세 데이터는 이 클래스를 상속해서 확장한다.
-/// </summary>
 public abstract class ItemData : ScriptableObject
 {
     [Header("아이템 기본 정보")]
@@ -15,8 +22,7 @@ public abstract class ItemData : ScriptableObject
     public int effectID;                                // 아이템 종류별 적용 효과 ID
     public int itemMultiple;                            // 중첩 용량
 
-    [Header("참조 리소스")]
-    public AssetReferenceSprite icon;             // UI 아이콘
-    public AssetReferenceGameObject itemPrefabRef;// 장착/사용에 쓰는 프리팹
-    public GameObject dropPrefab;                 // 바닥 드랍에 쓰는 프리팹
+    [Header("연관 파일 주소")]
+    public AssetReferenceSprite icon;                   // 아이템 아이콘
+    public AssetReferenceGameObject itemPrefabRef;      // 아이템 프리팹 주소
 }
