@@ -16,9 +16,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject EnemyPrefab;
     [SerializeField] private GameObject playerSpawnPool;
     [SerializeField] private GameObject enemySpawnPool;
+    private readonly string playerSpawnPoolTag = "PlayerSpawnPool"; //플레이어 스폰 풀 태그
+    private readonly string enemySpawnPoolTag = "EnemySpawnPool";   //적 스폰 풀 태그
     private List<Transform> playerSpawnPoint = new();
     private List<Transform> enemySpawnPoint = new();
-    CharacterData charData;                                     // 가져올 캐릭터 데이터
+    CharacterData charData;                                         // 가져올 캐릭터 데이터
 
     // 인벤토리 기록에 관한 필드
     private PlayerSaveData _playerSaveData;             //인벤토리 기록이 저장된 플레이어 세이브 데이터
@@ -36,6 +38,7 @@ public class GameManager : MonoBehaviour
     // 동조율 관련 코드
     public int linkRateLevel = 0;                       //동조율 상승 후 다이버와의 동조율 단계
     public int linkRateGain = 1;                        //세션 탈출 성공 시 가산되는 동조율 단계 증가치
+    private bool MemoryLogUnlocked;                     //세션 탈출 시 개인 심상 기록 해금 여부 저장
 
     private void Awake()
     {
@@ -49,6 +52,80 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneLoaded += OnSceneLoaded;              //신 로드 완료 시점에 실행하는 메소드 연결
         GlobalEventBus.OnEscapeRequest += QuitGame;             //탈출 판정 이벤트에 탈출 처리 메소드 연결
         GlobalEventBus.OnReturnToLobby += CloseResultPanel;     //로비로 돌아가기 버튼에 결과 창 닫기 연결
+        GlobalEventBus.OnSetRecordData += RenewLinkRateData;    //로비로 돌아가기 버튼에 동조율 데이터 갱신 연결
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        GlobalEventBus.OnEscapeRequest -= QuitGame;
+        GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
+        GlobalEventBus.OnSetRecordData -= RenewLinkRateData;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == playScene) //인게임 세션 신에서 실행
+        {
+            RefreshSpawnPoints();   //스폰 포인트 최신화
+
+            // ResultManager의 플레이어 캐시 새로고침 (씬 전환 후)
+            if (ResultManager.Instance != null) ResultManager.Instance.RefreshPlayerCache();
+
+            startTime = Time.time;  //시작 시점 등록
+            timeTrack = true;       //시간 기록 시작
+
+            // 캐릭터 데이터 가져오기
+            DataManager dataManager = DataManager.Instance;
+            _playerSaveData = dataManager.playerData;
+            charData = dataManager.GetCharacterData(dataManager.playerData.SelectCharID);
+
+            // 플레이어 1회 생성
+            SpawnPlayer();
+
+            // ResultManager에서 ResultServiceLocator 연결이 끊겨 있으면 다시 등록
+            StartCoroutine(EnsureResultServiceLocator());
+        }
+        else
+        {
+            timeTrack = false;     //인게임 세션 신을 벗어나면 시간 기록 중단
+        }
+    }
+
+    private IEnumerator EnsureResultServiceLocator()
+    {
+        yield return null;                                          //1프레임 대기하여 ResultManager 시작
+        //이미 연결되어 있다면 추가 처리 없음
+        if (ResultServiceLocator.Instance != null)
+        {
+            Debug.Log("1. Already Connected");
+            yield break;
+        }
+        //ResultManager가 있다면 Locator 연결
+        if (ResultManager.Instance != null)
+        {
+            ResultServiceLocator.Instance = ResultManager.Instance;
+            Debug.Log("2. ResultManager Connected");
+            yield break;
+        }
+        //ResultManager가 없다면 폴백: 씬에서 ResultManager 컴포넌트 직접 검색
+        var foundManager = FindObjectOfType<ResultManager>();
+        if (foundManager != null)
+        {
+            ResultServiceLocator.Instance = foundManager;
+            Debug.Log("3. ResultManager Pooled back");
+            yield break;
+        }
+    }
+
+    private void RefreshSpawnPoints()
+    {
+        playerSpawnPoint.Clear();
+        enemySpawnPoint.Clear();
+
+        //스폰 풀 불러오기 (풀 오브젝트에 전용 태그를 붙여 인식)
+        playerSpawnPool = GameObject.FindGameObjectWithTag(playerSpawnPoolTag);
+        enemySpawnPool = GameObject.FindGameObjectWithTag(enemySpawnPoolTag);
 
         // 플레이어와 적 스폰지점 불러오기
         foreach (Transform point in playerSpawnPool.transform)
@@ -59,39 +136,13 @@ public class GameManager : MonoBehaviour
         {
             enemySpawnPoint.Add(point);
         }
-
-    }
-
-    private void OnDestroy()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-        GlobalEventBus.OnEscapeRequest -= QuitGame;
-        GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
-    }
-
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        if(scene.name == playScene) //인게임 세션 신에서 실행
-        {
-            startTime = Time.time;  //시작 시점 등록
-            timeTrack = true;       //시간 기록 시작
-        }
-        else timeTrack = false;     //인게임 세션 신을 벗어나면 기록 중단
-    }
-
-    private void Start()
-    {
-        // 캐릭터 데이터 가져오기
-        DataManager dataManager = DataManager.Instance;
-        _playerSaveData = dataManager.playerData;
-        charData = dataManager.GetCharacterData(dataManager.playerData.SelectCharID);   
-
-        // 플레이어 1회 생성
-        SpawnPlayer();
     }
 
     private void SpawnPlayer()
     {
+        // 이미 플레이어가 있으면 스폰을 스킵
+        if (FindObjectOfType<PlayerStatus>() != null) return;
+
         // 플레이어 스폰 포인트 중 무작위로 하나 선정
         int spawnNum = Random.Range(0, playerSpawnPoint.Count-1);
 
@@ -104,9 +155,43 @@ public class GameManager : MonoBehaviour
         // 플레이어 오브젝트 생성
         Transform spawnPoint = playerSpawnPoint[spawnNum].transform;
         GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
-        
-        // 플레이어 오브젝트 세션 데이터에 등록
-        GlobalRuntimeData.CountingEntityData(spawnedPlayer);
+
+        // 생성한 플레이어를 ResultServiceLocator에 등록
+        if (spawnedPlayer != null)
+        {
+            var entityIdComp = spawnedPlayer.GetComponent<EntityIdentity>();
+            var statusComp = spawnedPlayer.GetComponent<PlayerStatus>();
+
+            if (entityIdComp != null && statusComp != null)
+            {
+                // ResultServiceLocator가 이미 세팅되어 있다면 바로 등록
+                if (ResultServiceLocator.Instance != null)
+                {
+                    ResultServiceLocator.Instance.Register(entityIdComp.entityID, statusComp);
+                    Debug.Log($"SpawnPlayer: Registered playerID={entityIdComp.entityID} to ResultServiceLocator.");
+                }
+                else
+                {
+                    // ResultManager 싱글턴이 이미 존재하면 로케이터에 연결 후 등록
+                    if (ResultManager.Instance != null)
+                    {
+                        ResultServiceLocator.Instance = ResultManager.Instance;
+                        ResultServiceLocator.Instance.Register(entityIdComp.entityID, statusComp);
+                        Debug.Log($"SpawnPlayer: ResultServiceLocator was null - set from ResultManager and registered playerID={entityIdComp.entityID}.");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("SpawnPlayer: ResultServiceLocator 및 ResultManager가 모두 준비되지 않았습니다. Player 등록이 누락될 수 있습니다.");
+                    }
+                }
+            }
+        }
+
+        // 플레이어 오브젝트 세션 데이터에 등록 (이미 있는 경우에는 스킵)
+        if (!GlobalRuntimeData.ActivePlayers.Contains(spawnedPlayer))
+        {
+            GlobalRuntimeData.CountingEntityData(spawnedPlayer);
+        }
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
@@ -156,9 +241,13 @@ public class GameManager : MonoBehaviour
 
     private void LinkRateUp()
     {
+        // 사용할 기억 파편이 있는지 체크
         bool memoryLogUnlocked = resultPanel.memoryFragmentCount > 0;
         resultPanel.memoryLogUnlocked = memoryLogUnlocked;
+
+        // 기억 파편을 인벤토리에서 제거
         RemoveFromInventory(401);
+        // 결과 창 UI 출력 갱신
         resultPanel.RefreshResult();
     }
 
@@ -173,9 +262,9 @@ public class GameManager : MonoBehaviour
         resultPanel.extractionResult = extractionResult;
         resultPanel.playTime = playTime;
         // 아이템 ID에 따라 개수 및 데이터 값 추출
-        FindItem(301, out resultPanel.potionCount, out potionData);
-        FindItem(302, out resultPanel.manaStoneCount, out manaStoneData);
-        FindItem(401, out resultPanel.memoryFragmentCount, out memoryFragmentData);
+        FindItemCountAndData(301, out resultPanel.potionCount, out potionData);
+        FindItemCountAndData(302, out resultPanel.manaStoneCount, out manaStoneData);
+        FindItemCountAndData(401, out resultPanel.memoryFragmentCount, out memoryFragmentData);
         resultPanel.potionData = potionData;
         resultPanel.manaStoneData = manaStoneData;
         resultPanel.memoryFragmentData = memoryFragmentData;
@@ -188,9 +277,16 @@ public class GameManager : MonoBehaviour
     }
 
     // 결과 창 패널 닫기
-    void CloseResultPanel()
+    private void CloseResultPanel()
     {
         UIManager.Instance.Close<ResultUI>();
+    }
+
+    // 로비로 이동 시 동조율 데이터 갱신
+    public void RenewLinkRateData(int a, bool b)
+    {
+        linkRateLevel = a;      //동조율 단계 갱신
+        MemoryLogUnlocked = b;  //심상 기록 해금 상태 갱신
     }
 
     private void RemoveFromInventory(int _tid)  //아이템 ID별로 인벤토리에서 제거
@@ -205,7 +301,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void FindItem(int _tid, out int count, out ItemData data)
+    public void FindItemCountAndData(int _tid, out int count, out ItemData data)
     {
         foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
         {

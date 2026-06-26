@@ -134,7 +134,6 @@ GameObject:
   - component: {fileID: 7398206}
   - component: {fileID: 7398205}
   - component: {fileID: 7398207}
-  - component: {fileID: 7398208}
   m_Layer: 0
   m_Name: Cylinder
   m_TagString: Untagged
@@ -229,18 +228,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &7398208
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7398202}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1b8452c99f907948bd8c0afc7d03345, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &22377260
 GameObject:
   m_ObjectHideFlags: 0
@@ -252,7 +239,7 @@ GameObject:
   - component: {fileID: 22377261}
   m_Layer: 0
   m_Name: PlayerSpawnPointPool
-  m_TagString: Untagged
+  m_TagString: PlayerSpawnPool
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -390,7 +377,7 @@ GameObject:
   - component: {fileID: 186051291}
   m_Layer: 0
   m_Name: Virtual Camera
-  m_TagString: Untagged
+  m_TagString: playerCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1094,7 +1081,7 @@ GameObject:
   - component: {fileID: 331859824}
   m_Layer: 0
   m_Name: ==Manager==
-  m_TagString: Untagged
+  m_TagString: Manager
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1142,7 +1129,9 @@ MonoBehaviour:
   uiPrefabs:
   - {fileID: 7265668968344406401, guid: 51b33faa5b2f4eb42b2d5d516dba5780, type: 3}
   - {fileID: 7265668968344406401, guid: 060ac2bbabbadfa4b9a189d7eebaa612, type: 3}
-  - {fileID: 1625286815563743019, guid: a49f6e1a3a95bb14f9c1e452bbdc1252, type: 3}
+  - {fileID: 2838638639429370787, guid: 11913553fbac33348b64af24ef6e3f2b, type: 3}
+  - {fileID: 6617218257314298997, guid: cb5d7151e5247ba46b2058892439fc6b, type: 3}
+  - {fileID: 7828075556213926546, guid: 3577809b906886c40bfad8731c78de43, type: 3}
 --- !u!114 &331859823
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2512,7 +2501,7 @@ GameObject:
   - component: {fileID: 864556064}
   m_Layer: 0
   m_Name: EnemySpawnPointPool
-  m_TagString: Untagged
+  m_TagString: EnemySpawnPool
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

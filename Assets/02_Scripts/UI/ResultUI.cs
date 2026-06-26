@@ -127,7 +127,7 @@ public class ResultUI : MonoBehaviour
             ? $"기억 파편 × {memoryFragmentCount}\n자동 사용"
             : $"기억 파편 유실\n(0개 사용)";
         //동조율 레벨 업 텍스트 출력
-        text_linkRate.text = memoryLogUnlocked
+        text_linkRate.text = extractionResult && memoryLogUnlocked
             ? $"동조율 Lv.{prevLinkRateLevel} → <color=#80ff00>Lv.{linkRateLevel}</color>"
             : $"동조율 변화 없음\n(Lv.{prevLinkRateLevel} 유지)";
         //개인 심상 기록 해금 텍스트 출력
@@ -162,6 +162,10 @@ public class ResultUI : MonoBehaviour
 
     public void OnReturnLobbyClick()  //로비로 돌아가기 버튼 터치 동작
     {
+        // 다이버/기록 UI에 동조율 단계 및 해금 여부 전달 이벤트 호출
+        int newLinkRateLevel = memoryLogUnlocked ? linkRateLevel : prevLinkRateLevel;
+        GlobalEventBus.OnSetRecordData.Invoke(newLinkRateLevel, memoryLogUnlocked);
+
         // 로비로 돌아가기 이벤트를 호출
         GlobalEventBus.OnReturnToLobby.Invoke();
         // LobbyScene으로 이동하기
