@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
+// 플레이어가 조작하는 다이버의 인게임 정보 데이터
 [CreateAssetMenu(fileName = "New Character", menuName = "GameData/Character")]
 public class CharacterData : ScriptableObject
 {

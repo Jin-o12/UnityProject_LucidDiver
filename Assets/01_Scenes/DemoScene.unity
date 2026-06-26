@@ -1142,6 +1142,7 @@ MonoBehaviour:
   uiPrefabs:
   - {fileID: 7265668968344406401, guid: 51b33faa5b2f4eb42b2d5d516dba5780, type: 3}
   - {fileID: 7265668968344406401, guid: 060ac2bbabbadfa4b9a189d7eebaa612, type: 3}
+  - {fileID: 1625286815563743019, guid: a49f6e1a3a95bb14f9c1e452bbdc1252, type: 3}
 --- !u!114 &331859823
 MonoBehaviour:
   m_ObjectHideFlags: 0
