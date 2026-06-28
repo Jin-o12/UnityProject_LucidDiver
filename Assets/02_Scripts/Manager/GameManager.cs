@@ -16,6 +16,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject EnemyPrefab;
     [SerializeField] private GameObject playerSpawnPool;
     [SerializeField] private GameObject enemySpawnPool;
+    private readonly string playerSpawnPoolTag = "PlayerSpawnPool"; //플레이어 스폰 풀 태그
+    private readonly string enemySpawnPoolTag = "EnemySpawnPool";   //적 스폰 풀 태그
     private List<Transform> playerSpawnPoint = new();
     private List<Transform> enemySpawnPoint = new();
     CharacterData charData;                                     // 가져올 캐릭터 데이터
@@ -47,8 +49,8 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         SceneManager.sceneLoaded += OnSceneLoaded;              //신 로드 완료 시점에 실행하는 메소드 연결
-        GlobalEventBus.OnEscapeRequest += QuitGame;             //탈출 판정 이벤트에 탈출 처리 메소드 연결
-        GlobalEventBus.OnReturnToLobby += CloseResultPanel;     //로비로 돌아가기 버튼에 결과 창 닫기 연결
+        // GlobalEventBus.OnEscapeRequest += QuitGame;             //탈출 판정 이벤트에 탈출 처리 메소드 연결
+        // GlobalEventBus.OnReturnToLobby += CloseResultPanel;     //로비로 돌아가기 버튼에 결과 창 닫기 연결
 
         // 플레이어와 적 스폰지점 불러오기
         foreach (Transform point in playerSpawnPool.transform)
@@ -65,8 +67,8 @@ public class GameManager : MonoBehaviour
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        GlobalEventBus.OnEscapeRequest -= QuitGame;
-        GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
+        // GlobalEventBus.OnEscapeRequest -= QuitGame;
+        // GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -88,7 +90,6 @@ public class GameManager : MonoBehaviour
         {
             timeTrack = false;     //인게임 세션 신을 벗어나면 시간 기록 중단
         }
-        else timeTrack = false;     //인게임 세션 신을 벗어나면 기록 중단
     }
 
     private void Start()
@@ -100,9 +101,9 @@ public class GameManager : MonoBehaviour
 
         // 플레이어 1회 생성
         SpawnPlayer();
-
         // 적 1회 생성
         SpawnEnemy();
+
         // 플레이어와 적 스폰지점 불러오기
         foreach (Transform point in playerSpawnPool.transform)
         {
@@ -130,7 +131,7 @@ public class GameManager : MonoBehaviour
         GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
         
         // 플레이어 오브젝트 세션 데이터에 등록
-        GlobalRuntimeData.CountingEntityData(spawnedPlayer);
+        GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
@@ -146,17 +147,52 @@ public class GameManager : MonoBehaviour
         GlobalEventBus.OnPlayerSpawned?.Invoke(spawnedPlayer);
     }
 
-    private void ResultTime(bool _extractionResult)
+    private void SpawnEnemy()
     {
-        foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
+        // 적 프리팹이 연결되지 않았을 경우 대비
+        if (EnemyPrefab == null)
         {
-            // 해당 아이템이 이미 창고에 존재한다면 보유 개수를 창고에 더함
-            if (slot.TID == _tid)
-            {
-                slot.amount = 0;
-            }
+            Debug.LogError("Enemy prefab not found");
+            return;
         }
+
+        // 적 스폰 포인트가 하나도 없을 경우 대비
+        if (enemySpawnPoint.Count == 0)
+        {
+            Debug.LogError("Enemy spawn point list is empty");
+            return;
+        }
+
+        // 적 스폰 포인트 중 무작위로 하나 선정
+        // 플레이어 스폰 방식과 동일한 구조로 맞춘다.
+        int spawnNum = Random.Range(0, enemySpawnPoint.Count );
+
+        // 스폰 장소 오브젝트가 없을 경우 대비
+        if (enemySpawnPoint[spawnNum] == null)
+        {
+            Debug.LogError("Enemy spawn point not found");
+            return;
+        }
+
+        // 적 오브젝트 생성
+        Transform spawnPoint = enemySpawnPoint[spawnNum].transform;
+        GameObject spawnedEnemy = Instantiate(EnemyPrefab, spawnPoint.position, spawnPoint.rotation);
+
+        // 생성된 적 오브젝트를 런타임 데이터에 등록
+        GlobalRuntimeData.CountingEnemyData(spawnedEnemy);
     }
+
+    // private void ResultTime(bool _extractionResult)
+    // {
+    //     foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
+    //     {
+    //         // 해당 아이템이 이미 창고에 존재한다면 보유 개수를 창고에 더함
+    //         if (slot.TID == _tid)
+    //         {
+    //             slot.amount = 0;
+    //         }
+    //     }
+    // }
 
     public void FindItem(int _tid, out int count, out ItemData data)
     {
@@ -199,9 +235,9 @@ public class GameManager : MonoBehaviour
                 });
             }
         }
-            //시간 기록을 중단하고 기록 고정
-        timeTrack = false;
-            //결과 계산 시작
-        ResultManager.Instance.GameResult(_extractionResult, startTime);
+        // //시간 기록을 중단하고 기록 고정
+        // timeTrack = false;
+        // //결과 계산 시작
+        // ResultManager.Instance.GameResult(_extractionResult, startTime);
     }
 }

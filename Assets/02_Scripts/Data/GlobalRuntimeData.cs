@@ -35,7 +35,18 @@ public class GlobalRuntimeData
     /* 번호로 플레이어 엔티티 가져오가 할당 */
     public static GameObject FindPlayerData(int _id)
     {
-        if (entityList.TryGetValue(_id, out GameObject obj))
+        if (playerList.TryGetValue(_id, out GameObject obj))
+        {
+            return obj;
+        }
+
+        return null;
+    }
+
+    /* 번호로 적 엔티티 가져오가 할당 */
+    public static GameObject FindEnemyData(int _id)
+    {
+        if (enemyList.TryGetValue(_id, out GameObject obj))
         {
             return obj;
         }

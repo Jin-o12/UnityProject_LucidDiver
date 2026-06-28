@@ -86,7 +86,7 @@ public class EnemyMovement : MonoBehaviour
         float moreCloser = sightLengthSqr;
         Transform bestTarget = null;
 
-        foreach (GameObject player in GlobalRuntimeData.ActivePlayers)
+        foreach (GameObject player in GlobalRuntimeData.GetPlayerList().Values)
         {
             if(player==null) continue;
 

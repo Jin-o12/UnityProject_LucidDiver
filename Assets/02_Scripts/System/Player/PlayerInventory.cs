@@ -16,6 +16,9 @@ public class PlayerInventory : MonoBehaviour
 
     // 특정 슬롯 UI를 갱신할 때 사용하는 이벤트
     public event Action<int> OnSlotChanged;
+    
+    // 어드레시블로 불러온 스프라이트 주소 가져오기
+    private AsyncOperationHandle<Sprite> loadHandle;
 
     void Awake()
     {
@@ -47,6 +50,13 @@ public class PlayerInventory : MonoBehaviour
         GlobalEventBus.OnSwapInventorySlot -= SwapSlotData;
         GlobalEventBus.OnDropItemQuickSlot -= AddItemToQuickslot;
         GlobalEventBus.OnSwapItemQuickSlot -= SwapItemQuickSlot;
+
+        // 핸들이 유효하다면 (이미 로드된 상태라면)
+        if (loadHandle.IsValid())
+        {
+            // 메모리에서 해당 스프라이트를 안전하게 해제
+            Addressables.Release(loadHandle);
+        }
     }
 
     /* 인벤토리에 아이템 추가 또는 더해짐 */

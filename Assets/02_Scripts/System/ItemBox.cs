@@ -268,12 +268,12 @@ public class ItemBox : MonoBehaviour, IInteractable
         if (pool.Count == 0)
             return;
 
-        int createCount = Random.Range(createMin, createMax + 1);
+        // int createCount = Random.Range(createMin, createMax + 1);
 
-        // �ߺ� �Ұ��� ���� �ĺ� �� / ���� ���� ���� �ʵ��� ����
-        if (!allowDuplicateLoot)
-            createCount = Mathf.Min(createCount, pool.Count);
-        items.Clear();
+        // // �ߺ� �Ұ��� ���� �ĺ� �� / ���� ���� ���� �ʵ��� ����
+        // if (!allowDuplicateLoot)
+        //     createCount = Mathf.Min(createCount, pool.Count);
+        // items.Clear();
 
         // �̹� ���ڿ� �� ������ �������� ������ ����
         int createCount = Random.Range(createMin, createMax + 1);

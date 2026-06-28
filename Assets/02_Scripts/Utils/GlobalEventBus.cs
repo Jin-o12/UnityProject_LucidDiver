@@ -23,7 +23,6 @@ public class GlobalEventBus
     /// 아이템 관련 이벤트
     /// </summary>
     public static Action<int, int, int> OnItemPickedUp;             // 아아템을 주웠을 시: Action<플레이어 식별자 코드, 아이템 코드, 아이템 갯수>
-    public static Action<IInteractable, int> OnItemBoxOpened;       // 상자 열기 요청
     public static Action<int, Sprite, int> OnQuickSlotChanged;      // 퀵슬롯 정보가 변경되었을 시: Action<퀵슬롯 번호, 이미지, 갯수>
     public static Action<int> OnQuickSlotUseRequested;              // 특정 퀵슬롯 번호가 눌렷을 시: Action<퀵슬롯 번호>
     public static Action<int, int> OnSwapInventorySlot;             // 인벤토리 슬롯이 바뀌었을 시: Action<1번 슬롯 번호, 2번 슬롯 번호>
@@ -54,8 +53,6 @@ public class GlobalEventBus
     /// <summary>
     /// 게임 시스템 관련 이벤트
     /// </summary>
-    public static Action<bool> OnEscapeRequest;                  // 탈출 판정 요청
-    public static Action OnReturnToLobby;                        // 로비 복귀 요청
 
     /// UI 관리 이벤트 ///
     public static Action OnOpenLobbyUI;                             // 로비 UI 실행

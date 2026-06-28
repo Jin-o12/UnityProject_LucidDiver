@@ -18,11 +18,17 @@ public class SortiePrepareUI : MonoBehaviour
     [SerializeField] private Image imageSlotIcon1;
     [SerializeField] private TextMeshProUGUI textSlotName1;
     [SerializeField] private TextMeshProUGUI textSlotCount1;
+    public int slotTID1;        //1번 슬롯 아이템의 ID값 데이터를 받아옴
+    public Sprite slotSprite1;  //1번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
+    public int slotCount1;      //1번 슬롯 아이템의 개수 데이터를 받아옴
 
     [Header("Slot 2")]
     [SerializeField] private Image imageSlotIcon2;
     [SerializeField] private TextMeshProUGUI textSlotName2;
     [SerializeField] private TextMeshProUGUI textSlotCount2;
+    public int slotTID2;        //2번 슬롯 아이템의 ID값 데이터를 받아옴
+    public Sprite slotSprite2;  //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
+    public int slotCount2;      //2번 슬롯 아이템의 개수 데이터를 받아옴
 
     [Header("Scene")]
     [SerializeField] private string gameSceneName = "GameScene";
@@ -64,6 +70,26 @@ public class SortiePrepareUI : MonoBehaviour
         // {오브젝트 파괴 시 출격 버튼 이벤트 해제}
         if (buttonStartSortie != null)
             buttonStartSortie.onClick.RemoveListener(OnClickStartSortie);
+    }
+
+    private void UpdateQuickSlot(int index, int tid, Sprite icon, int count)
+    {
+        if (!gameObject.activeInHierarchy) return;
+
+        if (index == 0)
+        {
+            slotTID1 = tid;
+            slotSprite1 = icon;
+            slotCount1 = count;
+        }
+        else if (index == 1)
+        {
+            slotTID2 = tid;
+            slotSprite2 = icon;
+            slotCount2 = count;
+        }
+
+        Refresh();
     }
 
     public void Refresh()

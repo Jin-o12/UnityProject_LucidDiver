@@ -10,7 +10,8 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 {
     // 플레이어 상태
     public enum livingState { idle, escape, gameover }      // 플레이어가 가질 수 있는 상태의 종류
-    public livingState nowState;                            // 현재 플레이어
+    public livingState nowState { get; private set; }       // 현재 플레이어
+    public void SetPlayerState(livingState _state) => nowState = _state;
     public bool isReloading { get; private set; }           // 재장전 실행 중 여부
 
     int playerID;                                           // 플레이어 고유 번호
@@ -38,12 +39,6 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
     private void OnEnable()
     {
-        // 플레이어 첫 생성시 전체 플레이어 명단에 본인 등록
-        if (!GlobalRuntimeData.ActivePlayers.Contains(this.gameObject))
-        {
-            GlobalRuntimeData.ActivePlayers.Add(this.gameObject);
-        }
-
         /// 이벤트 구독 ///
         GlobalEventBus.OnGainManaRequested += GainMana;
         GlobalEventBus.OnHealRequested += HealingHealth;
@@ -51,12 +46,6 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
     private void OnDisable()
     {
-        // 플레이어 디스폰시 현재 플레이어 목록에서 본인 제거
-        if (GlobalRuntimeData.ActivePlayers.Contains(this.gameObject))
-        {
-            GlobalRuntimeData.ActivePlayers.Remove(this.gameObject);
-        }
-
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnGainManaRequested -= GainMana;
         GlobalEventBus.OnHealRequested -= HealingHealth;
