@@ -589,7 +589,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: 30}
-  m_SizeDelta: {x: 280, y: 30}
+  m_SizeDelta: {x: 100, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7009504747639896119
 CanvasRenderer:
@@ -859,7 +859,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: 30}
-  m_SizeDelta: {x: 280, y: 30}
+  m_SizeDelta: {x: 100, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7465821048258839193
 CanvasRenderer:
@@ -3340,7 +3340,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7469706760161453476
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3445,6 +3445,9 @@ MonoBehaviour:
   imageSlotIcon1: {fileID: 1969267021942001645}
   textSlotName1: {fileID: 5939687267126509818}
   textSlotCount1: {fileID: 1166896368705155323}
+  imageSlotIcon2: {fileID: 8758090645972811707}
+  textSlotName2: {fileID: 2985133945277945678}
+  textSlotCount2: {fileID: 6979918404558329573}
   slotTID1: 0
   slotSprite1: {fileID: 0}
   slotCount1: 0

@@ -14,16 +14,12 @@ public class PlayerInventory : MonoBehaviour
     public int slotNum { get; private set; }
     public int quickSlotNum { get; private set; }
 
-    // 로컬 이벤트
-    public event Action<int> OnSlotChanged;             // 특정 칸의 정보 업데이트
-    
-    // Addressable Assets 불러오기
-    private AsyncOperationHandle<Sprite> loadHandle;    // 메모리 관리를 위해 로드 상태를 저장할 핸들
-    private List<AsyncOperationHandle<Sprite>> loadHandles = new();  // 메모리 누수 방지
+    // 특정 슬롯 UI를 갱신할 때 사용하는 이벤트
+    public event Action<int> OnSlotChanged;
 
     void Awake()
     {
-        slotNum = 20;
+        slotNum = 10;
         quickSlotNum = 3;
 
         // 모든 슬롯 데이터 초기화
@@ -35,19 +31,6 @@ public class PlayerInventory : MonoBehaviour
         {
             quickSlots.Add(new InventorySlotData(0, i, 0, null));
         }
-    }
-
-    private void OnDestroy()
-    {
-        // 모든 로드된 Addressable Assets 언로드
-        foreach (var handle in loadHandles)
-        {
-            if (handle.IsValid())
-            {
-                Addressables.Release(handle);
-            }
-        }
-        loadHandles.Clear();
     }
 
     private void OnEnable()
@@ -123,7 +106,6 @@ public class PlayerInventory : MonoBehaviour
     private void LoadSprite(AssetReferenceSprite iconRef, int slotIndex)
     {
         loadHandle = Addressables.LoadAssetAsync<Sprite>(iconRef);
-        loadHandles.Add(loadHandle);  // 핸들 추가
 
         loadHandle.Completed += (handle) =>
         {
@@ -177,10 +159,6 @@ public class PlayerInventory : MonoBehaviour
         // 변동사항 알림
         OnSlotChanged?.Invoke(_index1);
         OnSlotChanged?.Invoke(_index2);
-
-        // 퀵슬롯 변경 시 캐시 저장 이벤트
-        GlobalEventBus.QuickSlotLoad?.Invoke(_index1, slot1.TID, slot1.icon, slot1.amount);
-        GlobalEventBus.QuickSlotLoad?.Invoke(_index2, slot2.TID, slot2.icon, slot2.amount);
     }
 
     /* 퀵슬롯에 아이템 추가 */
@@ -207,9 +185,6 @@ public class PlayerInventory : MonoBehaviour
 
         OnSlotChanged?.Invoke(_slotIndex);
         GlobalEventBus.OnQuickSlotChanged?.Invoke(_quickIndex, qSlot.icon, qSlot.amount);
-
-        // 퀵슬롯 변경 시 캐시 저장 이벤트
-        GlobalEventBus.QuickSlotLoad?.Invoke(_quickIndex, qSlot.TID, qSlot.icon, qSlot.amount);
     }
 
     /* 퀵슬롯 아이템 사용 */
