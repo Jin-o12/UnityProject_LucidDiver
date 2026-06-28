@@ -2,33 +2,33 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// ÇÃ·¹ÀÌ¾î°¡ »óÈ£ÀÛ¿ëÇÒ ¼ö ÀÖ´Â ÄÁÅ×ÀÌ³Ê ¹Ú½º
-/// »óÀÚ´Â °íÁ¤µÈ ½½·Ô °³¼ö¸¦ °¡Áö¸ç,
-/// ¾ÆÀÌÅÛÀÌ ºüÁ®µµ ½½·Ô ÀÚÃ¼´Â »èÁ¦µÇÁö ¾Ê°í ºó Ä­À¸·Î À¯ÁöµÈ´Ù.
+/// ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½È£ï¿½Û¿ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì³ï¿½ ï¿½Ú½ï¿½
+/// ï¿½ï¿½ï¿½Ú´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+/// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê°ï¿½ ï¿½ï¿½ Ä­ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½.
 /// </summary>
 public class ItemBox : MonoBehaviour, IInteractable
 {
     [Header("Container Settings")]
-    [SerializeField] private int slotCapacity = 8;                 // »óÀÚ°¡ °¡Áú °íÁ¤ ½½·Ô °³¼ö
-    [SerializeField] private List<BoxItemEntry> items = new();     // ½ÇÁ¦ ½½·Ô µ¥ÀÌÅÍ ¸ñ·Ï
+    [SerializeField] private int slotCapacity = 8;                 // ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    [SerializeField] private List<BoxItemEntry> items = new();     // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 
     [Header("Random Loot Settings")]
-    [SerializeField] private bool useRandomLoot = true;               // ½ÃÀÛ ½Ã ·£´ý ¾ÆÀÌÅÛ »ý¼º »ç¿ë ¿©ºÎ
-    [SerializeField] private int minCreateCount = 1;                  // ÃÖ¼Ò »ý¼º ¾ÆÀÌÅÛ Á¾·ù ¼ö
-    [SerializeField] private int maxCreateCount = 2;                  // ÃÖ´ë »ý¼º ¾ÆÀÌÅÛ Á¾·ù ¼ö
-    [SerializeField] private bool allowDuplicateLoot = false;         // °°Àº ¾ÆÀÌÅÛ Áßº¹ »ý¼º Çã¿ë ¿©ºÎ
-    [SerializeField] private List<BoxLootOption> lootOptions = new(); // ·£´ý ÈÄº¸ ¾ÆÀÌÅÛ ¸ñ·Ï
+    [SerializeField] private bool useRandomLoot = true;               // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    [SerializeField] private int minCreateCount = 1;                  // ï¿½Ö¼ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
+    [SerializeField] private int maxCreateCount = 2;                  // ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
+    [SerializeField] private bool allowDuplicateLoot = false;         // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ßºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    [SerializeField] private List<BoxLootOption> lootOptions = new(); // ï¿½ï¿½ï¿½ï¿½ ï¿½Äºï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 
-    private bool isOpened = false;                                    // ÇöÀç »óÀÚ°¡ ¿­·Á ÀÖ´ÂÁö ¿©ºÎ
+    private bool isOpened = false;                                    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     /// <summary>
-    /// Ã¼½ºÆ® UI°¡ ÀÐ¾î°¥ ½½·Ô ¸ñ·Ï
-    /// ½½·Ô ¼ö´Â Ç×»ó slotCapacity¿Í µ¿ÀÏÇÏ°Ô À¯ÁöµÈ´Ù.
+    /// Ã¼ï¿½ï¿½Æ® UIï¿½ï¿½ ï¿½Ð¾î°¥ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½×»ï¿½ slotCapacityï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½.
     /// </summary>
     public IReadOnlyList<BoxItemEntry> Items => items;
 
     /// <summary>
-    /// ÇöÀç »óÀÚ°¡ °¡Áö´Â ÃÑ ½½·Ô °³¼ö
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public int SlotCount => items.Count;
 
@@ -36,47 +36,48 @@ public class ItemBox : MonoBehaviour, IInteractable
     {
         EnsureSlotCapacity();
 
-        // ·£´ý »ý¼º ¸ðµå¸¦ »ç¿ëÇÏ°í,
-        // ¾ÆÁ÷ »óÀÚ ¾ÈÀÌ ¿ÏÀüÈ÷ ºñ¾î ÀÖÀ» ¶§¸¸ ½ÃÀÛ ½Ã ÇÑ ¹ø Ã¤¿î´Ù.
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½å¸¦ ï¿½ï¿½ï¿½ï¿½Ï°ï¿½,
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ Ã¤ï¿½ï¿½ï¿½.
         if (useRandomLoot && IsEmpty())
             GenerateRandomItems();
     }
 
-    private void OnValidate()
-    {
-        EnsureSlotCapacity();
-    }
-
     /// <summary>
-    /// ÀÎ½ºÆåÅÍ ¿ìÅ¬¸¯ ¸Þ´º¿¡¼­ ·£´ý ¾ÆÀÌÅÛÀ» ´Ù½Ã »ý¼ºÇÒ ¶§ »ç¿ë
+    /// ï¿½Î½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¬ï¿½ï¿½ ï¿½Þ´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½
+    /// ï¿½Î½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¬ï¿½ï¿½ ï¿½Þ´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
+    /// ï¿½×½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ï°ï¿½ È®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Öµï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½Õ´Ï´ï¿½.
     /// </summary>
     [ContextMenu("Generate Random Items")]
     private void GenerateRandomItemsFromContextMenu()
     {
-        EnsureSlotCapacity();
         GenerateRandomItems();
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î°¡ »óÀÚ¿Í »óÈ£ÀÛ¿ëÇßÀ» ¶§ È£Ãâ
-    /// ÀÌ¹Ì ¿­·Á ÀÖÀ¸¸é Áßº¹À¸·Î ¿­Áö ¾Ê´Â´Ù.
+    /// ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½Ú¿ï¿½ ï¿½ï¿½È£ï¿½Û¿ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ È£ï¿½ï¿½
+    /// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ßºï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½.
+    /// ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½Ú¿ï¿½ ï¿½ï¿½È£ï¿½Û¿ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ È£ï¿½ï¿½Ë´Ï´ï¿½.
+    /// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ßºï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê½ï¿½ï¿½Ï´ï¿½.
     /// </summary>
     public bool Interact(int playerID)
     {
+        // ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (isOpened)
             return false;
 
         isOpened = true;
 
-        // Presenter°¡ Ã¼½ºÆ® UI¸¦ ¿­ ¼ö ÀÖµµ·Ï ÀÌº¥Æ® Àü´Þ
+        // Presenterï¿½ï¿½ Ã¼ï¿½ï¿½Æ® UIï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½Öµï¿½ï¿½ï¿½ ï¿½Ìºï¿½Æ® ï¿½ï¿½ï¿½ï¿½
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìºï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ Presenterï¿½ï¿½ UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã»
         GlobalEventBus.OnItemBoxOpened?.Invoke(this, playerID);
 
-        // »óÀÚ´Â »ç¶óÁöÁö ¾ÊÀ¸¹Ç·Î false ¹ÝÈ¯
+        // ï¿½ï¿½ï¿½Ú´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ false ï¿½ï¿½È¯
         return false;
     }
 
     /// <summary>
-    /// ÁöÁ¤ÇÑ ½½·Ô ÀÎµ¦½ºÀÇ µ¥ÀÌÅÍ¸¦ ¹ÝÈ¯
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½È¯
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½È¯ï¿½Õ´Ï´ï¿½.
     /// </summary>
     public BoxItemEntry GetItem(int index)
     {
@@ -87,7 +88,7 @@ public class ItemBox : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// ÁöÁ¤ÇÑ ½½·ÔÀÌ ºñ¾î ÀÖ´ÂÁö È®ÀÎ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
     /// </summary>
     public bool IsSlotEmpty(int index)
     {
@@ -102,8 +103,8 @@ public class ItemBox : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// ½½·Ô ÇÏ³ª¸¦ ¿ÏÀüÈ÷ ºñ¿ò
-    /// ½½·Ô ÀÚÃ¼´Â »èÁ¦ÇÏÁö ¾Ê´Â´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½.
     /// </summary>
     public void ClearSlot(int index)
     {
@@ -118,40 +119,35 @@ public class ItemBox : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// ½½·Ô ÇÏ³ª¿¡¼­ ¼ö·®À» °¨¼Ò½ÃÅ´
-    /// ¼ö·®ÀÌ 0 ÀÌÇÏ°¡ µÇ¸é ºó ½½·ÔÀ¸·Î ¸¸µç´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ò½ï¿½Å´
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0 ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Ç¸ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Æ¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ò½ï¿½Åµï¿½Ï´ï¿½.
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0 ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Ç¸ï¿½ ï¿½Ø´ï¿½ ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     /// </summary>
     public void RemoveAmount(int index, int amount)
     {
         if (index < 0 || index >= items.Count)
             return;
 
-        if (IsSlotEmpty(index))
-            return;
-
         items[index].amount -= amount;
 
         if (items[index].amount <= 0)
-            ClearSlot(index);
+            items.RemoveAt(index);
     }
 
     /// <summary>
-    /// »óÀÚ ÀüÃ¼°¡ ºñ¾î ÀÖ´ÂÁö È®ÀÎ
-    /// ½½·Ô °³¼ö°¡ 0ÀÎÁö°¡ ¾Æ´Ï¶ó, ¸ðµç ½½·ÔÀÌ ºñ¾ú´ÂÁö¸¦ º»´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Æ´Ï¶ï¿½, ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½ï¿½ ï¿½Ì»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     /// </summary>
     public bool IsEmpty()
     {
-        for (int i = 0; i < items.Count; i++)
-        {
-            if (!IsSlotEmpty(i))
-                return false;
-        }
-
-        return true;
+        return items.Count == 0;
     }
 
     /// <summary>
-    /// »óÀÚ UI¸¦ ´ÝÀ» ¶§ ´Ù½Ã ¿­ ¼ö ÀÖµµ·Ï »óÅÂ¸¦ ÇØÁ¦
+    /// ï¿½ï¿½ï¿½ï¿½ UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½Öµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½Öµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     /// </summary>
     public void CloseBox()
     {
@@ -159,8 +155,8 @@ public class ItemBox : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// ¾ÆÀÌÅÛÀ» »óÀÚ ¾È¿¡ ³Ö°í, ´Ù ¸ø ³ÖÀº ¼ö·®À» ¹ÝÈ¯
-    /// ¸ÕÀú °°Àº ¾ÆÀÌÅÛ ½ºÅÃÀ» Ã¤¿ì°í, ±× ´ÙÀ½ ºó Ä­¿¡ ³Ö´Â´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½Ö°ï¿½, ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¤ï¿½ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ä­ï¿½ï¿½ ï¿½Ö´Â´ï¿½.
     /// </summary>
     public int TryAddItem(ItemData itemData, int count)
     {
@@ -169,7 +165,7 @@ public class ItemBox : MonoBehaviour, IInteractable
 
         int remain = count;
 
-        // 1. ¸ÕÀú °°Àº ¾ÆÀÌÅÛÀÌ ÀÖ´Â ½½·Ô¿¡ ´©Àû
+        // 1. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½Ô¿ï¿½ ï¿½ï¿½ï¿½ï¿½
         for (int i = 0; i < items.Count; i++)
         {
             if (IsSlotEmpty(i))
@@ -184,7 +180,7 @@ public class ItemBox : MonoBehaviour, IInteractable
                 return 0;
         }
 
-        // 2. ³²Àº ¼ö·®À» ºó ½½·Ô¿¡ Ãß°¡
+        // 2. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ô¿ï¿½ ï¿½ß°ï¿½
         for (int i = 0; i < items.Count; i++)
         {
             if (!IsSlotEmpty(i))
@@ -200,7 +196,7 @@ public class ItemBox : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// Æ¯Á¤ ½½·Ô¿¡ ¾ÆÀÌÅÛÀ» ³Ö°í, ´Ù ¸ø ³ÖÀº ¼ö·®À» ¹ÝÈ¯
+    /// Æ¯ï¿½ï¿½ ï¿½ï¿½ï¿½Ô¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö°ï¿½, ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
     /// </summary>
     public int TryAddToSlot(int slotIndex, ItemData itemData, int count)
     {
@@ -216,7 +212,7 @@ public class ItemBox : MonoBehaviour, IInteractable
         BoxItemEntry slot = items[slotIndex];
         int maxStack = Mathf.Max(1, itemData.itemMultiple);
 
-        // ºó ½½·ÔÀÌ¸é »õ·Î ¹èÄ¡
+        // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
         if (IsSlotEmpty(slotIndex))
         {
             int addAmount = Mathf.Min(count, maxStack);
@@ -227,7 +223,7 @@ public class ItemBox : MonoBehaviour, IInteractable
             return count - addAmount;
         }
 
-        // °°Àº ¾ÆÀÌÅÛÀÌ¸é ½ºÅÃ ´©Àû
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (slot.itemData.TID == itemData.TID)
         {
             int canAdd = maxStack - slot.amount;
@@ -241,22 +237,23 @@ public class ItemBox : MonoBehaviour, IInteractable
             return count - addAmount;
         }
 
-        // ´Ù¸¥ ¾ÆÀÌÅÛÀÌ ÀÌ¹Ì ÀÖÀ¸¸é ³ÖÁö ¸øÇÔ
+        // ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         return count;
     }
 
     /// <summary>
-    /// ·£´ý ÈÄº¸ ¸ñ·Ï¿¡¼­ ¾ÆÀÌÅÛÀ» »Ì¾Æ »óÀÚ ¾È ½½·Ô¿¡ Ã¤¿ò
-    /// ±âÁ¸ ½½·ÔÀº »èÁ¦ÇÏÁö ¾Ê°í ³»¿ë¸¸ ºñ¿î µÚ ´Ù½Ã Ã¤¿î´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½Äºï¿½ ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ô¿ï¿½ Ã¤ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê°ï¿½ ï¿½ï¿½ï¿½ë¸¸ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù½ï¿½ Ã¤ï¿½ï¿½ï¿½.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½Äºï¿½ ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½ 1~2ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¤ï¿½ï¿½Ï´ï¿½.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     /// </summary>
     private void GenerateRandomItems()
     {
-        EnsureSlotCapacity();
-        ClearAllSlots();
-
+        // ï¿½ß¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         int createMin = Mathf.Max(1, minCreateCount);
         int createMax = Mathf.Max(createMin, maxCreateCount);
 
+        // ï¿½ï¿½È¿ï¿½ï¿½ ï¿½Äºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
         List<BoxLootOption> pool = new List<BoxLootOption>();
 
         for (int i = 0; i < lootOptions.Count; i++)
@@ -267,19 +264,23 @@ public class ItemBox : MonoBehaviour, IInteractable
             pool.Add(lootOptions[i]);
         }
 
+        // ï¿½Äºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (pool.Count == 0)
             return;
 
         int createCount = Random.Range(createMin, createMax + 1);
 
-        // Áßº¹ ºÒ°¡ÀÏ ¶§´Â ÈÄº¸ ¼ö / ½½·Ô ¼ö¸¦ ³ÑÁö ¾Êµµ·Ï Á¦ÇÑ
+        // ï¿½ßºï¿½ ï¿½Ò°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Äºï¿½ ï¿½ï¿½ / ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Êµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (!allowDuplicateLoot)
             createCount = Mathf.Min(createCount, pool.Count);
+        items.Clear();
 
-        createCount = Mathf.Min(createCount, items.Count);
+        // ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½Ú¿ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        int createCount = Random.Range(createMin, createMax + 1);
 
         for (int i = 0; i < createCount; i++)
         {
+            // ï¿½ßºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¿ï¿½ï¿½ï¿½ ï¿½Äºï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½
             if (pool.Count == 0)
                 break;
 
@@ -288,20 +289,30 @@ public class ItemBox : MonoBehaviour, IInteractable
             if (selectedOption == null || selectedOption.itemData == null)
                 continue;
 
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß¸ï¿½ ï¿½ï¿½ï¿½Íµï¿½ ï¿½Ö¼ï¿½ 1ï¿½ï¿½ ï¿½Ì»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             int minAmount = Mathf.Max(1, selectedOption.minAmount);
             int maxAmount = Mathf.Max(minAmount, selectedOption.maxAmount);
             int amount = Random.Range(minAmount, maxAmount + 1);
 
-            // »óÀÚ ¾È¿¡ ½ÇÁ¦·Î ¾ÆÀÌÅÛ ³Ö±â
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö±ï¿½
             TryAddItem(selectedOption.itemData, amount);
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ß°ï¿½
+            items.Add(new BoxItemEntry
+            {
+                itemData = selectedOption.itemData,
+                amount = amount
+            });
 
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ ï¿½ßºï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             if (!allowDuplicateLoot)
                 pool.Remove(selectedOption);
         }
     }
 
     /// <summary>
-    /// °¡ÁßÄ¡ ±âÁØÀ¸·Î ·£´ý ÈÄº¸ ÇÏ³ª¸¦ ¼±ÅÃ
+    /// ï¿½ï¿½ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Äºï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½Ä¡(weight)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Äºï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
+    /// weight ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ãµï¿½ È®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
     /// </summary>
     private BoxLootOption PickRandomOption(List<BoxLootOption> options)
     {
@@ -323,12 +334,13 @@ public class ItemBox : MonoBehaviour, IInteractable
                 return options[i];
         }
 
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È² ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
         return options[options.Count - 1];
     }
 
     /// <summary>
-    /// »óÀÚÀÇ ½½·Ô °³¼ö¸¦ slotCapacity¿Í ¸ÂÃã
-    /// ºó ½½·Ôµµ ½ÇÁ¦ ¿£Æ®¸®·Î À¯ÁöÇÑ´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ slotCapacityï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ ï¿½ï¿½ï¿½Ôµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
     /// </summary>
     private void EnsureSlotCapacity()
     {
@@ -356,8 +368,8 @@ public class ItemBox : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// »óÀÚ ¾ÈÀÇ ¸ðµç ½½·ÔÀ» ºó Ä­À¸·Î ÃÊ±âÈ­
-    /// ½½·Ô ÀÚÃ¼´Â »èÁ¦ÇÏÁö ¾Ê´Â´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ä­ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½.
     /// </summary>
     private void ClearAllSlots()
     {
@@ -368,7 +380,7 @@ public class ItemBox : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// ºó ½½·Ô ¿£Æ®¸®¸¦ »ý¼º
+    /// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     private BoxItemEntry CreateEmptyEntry()
     {

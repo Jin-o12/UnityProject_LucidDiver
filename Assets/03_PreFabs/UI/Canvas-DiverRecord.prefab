@@ -2132,8 +2132,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4000877850758581658}
   m_HandleRect: {fileID: 1827577779152477458}
   m_Direction: 2
-  m_Value: 0.9999939
-  m_Size: 0.99009895
+  m_Value: 0.9999878
+  m_Size: 0.990099
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3033,6 +3033,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canvasLobby: {fileID: 0}
+  buttonBack0: {fileID: 1939409139904881956}
   buttonBack: {fileID: 1799066949802147963}
   buttonRecordCard01: {fileID: 8809157018538943356}
   buttonRecordCard02: {fileID: 2439919637050390718}
@@ -3057,10 +3058,6 @@ MonoBehaviour:
   popupMemoryLog01: {fileID: 0}
   textMemoryLogTitle: {fileID: 0}
   textMemoryLogBody: {fileID: 0}
-  useTestData: 1
-  testLinkRateLevel: 1
-  testMemoryLogUnlocked: 1
-  testHasNewMemoryLog: 1
 --- !u!1 &8422506964769485412
 GameObject:
   m_ObjectHideFlags: 0

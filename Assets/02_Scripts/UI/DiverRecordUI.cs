@@ -8,7 +8,8 @@ public class DiverRecordUI : MonoBehaviour
     [SerializeField] private GameObject canvasLobby;
 
     [Header("Buttons")]
-    [SerializeField] private Button buttonBack;
+    [SerializeField] private Button buttonBack0;            //상단 왼쪽 뒤로가기 버튼
+    [SerializeField] private Button buttonBack;             //하단 버튼 그룹의 뒤로가기 버튼
     [SerializeField] private Button buttonRecordCard01;
     [SerializeField] private Button buttonRecordCard02;
     [SerializeField] private Button buttonCloseMemoryLog;
@@ -78,6 +79,10 @@ public class DiverRecordUI : MonoBehaviour
     private void Awake()
     {
         // {뒤로가기 버튼 이벤트 등록}
+        if (buttonBack0 != null)
+            buttonBack0.onClick.AddListener(OnClickBack);
+
+        // {뒤로가기 버튼 이벤트 등록}
         if (buttonBack != null)
             buttonBack.onClick.AddListener(OnClickBack);
 
@@ -108,12 +113,20 @@ public class DiverRecordUI : MonoBehaviour
             hasNewMemoryLog = testHasNewMemoryLog;
         }
 
+        // ResultManager에서 SetData 값을 이벤트로 받아옴
+        GlobalEventBus.RecordDataLoad += SetData;
+        // 다이버/기록 UI 오픈 이벤트 발생
+        GlobalEventBus.RecordUIOpen?.Invoke();
         // {UI가 열릴 때마다 최신 상태로 갱신}
         Refresh();
     }
 
     private void OnDestroy()
     {
+        // {뒤로가기 버튼 이벤트 해제}
+        if (buttonBack0 != null)
+            buttonBack0.onClick.RemoveListener(OnClickBack);
+
         // {뒤로가기 버튼 이벤트 해제}
         if (buttonBack != null)
             buttonBack.onClick.RemoveListener(OnClickBack);
@@ -269,6 +282,8 @@ public class DiverRecordUI : MonoBehaviour
     private void OnClickBack()
     {
         // {로비 Canvas를 다시 활성화}
+        GlobalEventBus.OnOpenLobbyUI?.Invoke();
+
         if (canvasLobby != null)
             canvasLobby.SetActive(true);
 

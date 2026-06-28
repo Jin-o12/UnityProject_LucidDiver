@@ -16,12 +16,43 @@ public class ResultManager : MonoBehaviour, IResultService
         // ResultServiceLocator에 자신을 등록
         ResultServiceLocator.Instance = this;
         Debug.Log("ResultManager Awake - registered to ResultServiceLocator");
+
+        // 씬에 이미 존재하는 PlayerStatus를 찾아 등록 (타이밍 안전성 보장)
+        foreach (var p in FindObjectsOfType<PlayerStatus>())
+        {
+            if (p == null) continue;
+            var idComp = p.GetComponent<EntityIdentity>();
+            if (idComp == null)
+            {
+                Debug.LogWarning($"ResultManager Awake: EntityIdentity 없음 - gameObject={p.gameObject.name}");
+                continue;
+            }
+            // Register는 내부적으로 동일 key를 덮어쓰므로 중복 걱정 없음
+            Register(idComp.entityID, p);
+            Debug.Log($"ResultManager Awake: Registered existing playerID={idComp.entityID} (gameObject={p.gameObject.name})");
+        }
+
+        //로비로 돌아가기 버튼에 동조율 데이터 갱신 연결
+        GlobalEventBus.OnSetRecordData += RenewLinkRateData;
+        //로비로 돌아가기 버튼에 결과 창 닫기 연결
+        GlobalEventBus.OnReturnToLobby += CloseResultPanel;
+        //출격 준비 UI 오픈 이벤트 연결
+        GlobalEventBus.PrepareUIOpen += SendQuickSlotCacheEvent;
+        //다이버/기록 UI 오픈 이벤트 연결
+        GlobalEventBus.RecordUIOpen += SendLinkRecordData;
+        //다이버/기록 UI 읽음 이벤트 연결
+        GlobalEventBus.OnRecordRead += NewMemoryRead;
     }
 
     private void OnDestroy()  //IResultService 구현체 (로케이터에 등록)
     {
         if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
         if (Instance == this) Instance = null;
+        GlobalEventBus.OnSetRecordData -= RenewLinkRateData;
+        GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
+        GlobalEventBus.PrepareUIOpen -= SendQuickSlotCacheEvent;
+        GlobalEventBus.RecordUIOpen -= SendLinkRecordData;
+        GlobalEventBus.OnRecordRead -= NewMemoryRead;
     }
 
     // 플레이어 등록
@@ -34,6 +65,19 @@ public class ResultManager : MonoBehaviour, IResultService
         if (idComp == null) return;
         // EntityIdentity에서 ID 값을 불러옴
         _players[playerID] = (PlayerStatus)ps;
+    }
+
+    // 플레이어 등록
+    public void Register(int playerID, Component ps)
+    {
+        // 플레이어 상태 값 null 체크를 먼저 실행
+        if (ps == null) return;
+        // 플레이어 EntityIdentity 컴포넌트를 가져오고 null 체크
+        var idComp = ps.GetComponent<EntityIdentity>();
+        if (idComp == null) return;
+        // EntityIdentity에서 ID 값을 불러옴
+        _players[playerID] = (PlayerStatus)ps;
+        Debug.Log($"ResultManager.Register: playerID={playerID} registered (obj={ps.gameObject.name})");
     }
 
     // 플레이어 등록 해제

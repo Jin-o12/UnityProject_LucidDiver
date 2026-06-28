@@ -6,7 +6,8 @@ using UnityEngine.UI;
 public class SortiePrepareUI : MonoBehaviour
 {
     [Header("Buttons")]
-    [SerializeField] private Button buttonStartSortie;
+    [SerializeField] private Button buttonBack0;            //상단 왼쪽 뒤로가기 버튼
+    [SerializeField] private Button buttonStartSortie;      //출격 버튼
 
     [Header("Diver Info")]
     [SerializeField] private TextMeshProUGUI textDiverName;
@@ -33,6 +34,10 @@ public class SortiePrepareUI : MonoBehaviour
 
     private void Awake()
     {
+        // {뒤로가기 버튼 이벤트 등록}
+        if (buttonBack0 != null)
+            buttonBack0.onClick.AddListener(OnClickBack);
+
         // {출격 버튼 클릭 이벤트 등록}
         if (buttonStartSortie != null)
             buttonStartSortie.onClick.AddListener(OnClickStartSortie);
@@ -40,12 +45,22 @@ public class SortiePrepareUI : MonoBehaviour
 
     private void OnEnable()
     {
+        // (퀵슬롯 데이터 업데이트 이벤트 등록)
+        GlobalEventBus.QuickSlotLoad += UpdateQuickSlot;
+
+        // 출격 준비 UI 오픈 이벤트 발생
+        GlobalEventBus.PrepareUIOpen?.Invoke();
+
         // {출격 준비 UI가 열릴 때마다 표시 정보 갱신}
         Refresh();
     }
 
     private void OnDestroy()
     {
+        // {오브젝트 파괴 시 뒤로가기 버튼 이벤트 해제}
+        if (buttonBack0 != null)
+            buttonBack0.onClick.RemoveListener(OnClickBack);
+
         // {오브젝트 파괴 시 출격 버튼 이벤트 해제}
         if (buttonStartSortie != null)
             buttonStartSortie.onClick.RemoveListener(OnClickStartSortie);
@@ -134,7 +149,19 @@ public class SortiePrepareUI : MonoBehaviour
 
     private void OnClickStartSortie()
     {
+        // {현재 Canvas 비활성화}
+        gameObject.SetActive(false);
+
         // {출격 확정 시 GameScene으로 이동}
         SceneManager.LoadScene(gameSceneName);
+    }
+
+    private void OnClickBack()
+    {
+        // {로비 Canvas를 다시 활성화}
+        GlobalEventBus.OnOpenLobbyUI?.Invoke();
+
+        // {현재 Canvas 비활성화}
+        gameObject.SetActive(false);
     }
 }

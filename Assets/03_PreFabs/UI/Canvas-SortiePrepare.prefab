@@ -3437,6 +3437,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fab1669f8476744eb005a8d34aa313b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  buttonBack0: {fileID: 314152668807710786}
   buttonStartSortie: {fileID: 5081502777150265307}
   textDiverName: {fileID: 4302065023887187593}
   textDiverRole: {fileID: 8319592335210829563}
@@ -3447,6 +3448,15 @@ MonoBehaviour:
   imageSlotIcon2: {fileID: 8758090645972811707}
   textSlotName2: {fileID: 2985133945277945678}
   textSlotCount2: {fileID: 6979918404558329573}
+  slotTID1: 0
+  slotSprite1: {fileID: 0}
+  slotCount1: 0
+  imageSlotIcon2: {fileID: 8758090645972811707}
+  textSlotName2: {fileID: 2985133945277945678}
+  textSlotCount2: {fileID: 6979918404558329573}
+  slotTID2: 0
+  slotSprite2: {fileID: 0}
+  slotCount2: 0
   gameSceneName: DemoScene
   testLinkRateLevel: 0
   testEquippedItemSlot1: 
