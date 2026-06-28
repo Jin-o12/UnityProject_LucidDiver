@@ -69,10 +69,6 @@ public class ResultManager : MonoBehaviour, IResultService
         GlobalEventBus.OnSetRecordData += RenewLinkRateData;
         //로비로 돌아가기 버튼에 결과 창 닫기 연결
         GlobalEventBus.OnReturnToLobby += CloseResultPanel;
-        //출격 준비 UI 오픈 이벤트 연결
-        GlobalEventBus.PrepareUIOpen += SendQuickSlotCacheEvent;
-        //다이버/기록 UI 오픈 이벤트 연결
-        GlobalEventBus.RecordUIOpen += SendLinkRecordData;
         //다이버/기록 UI 읽음 이벤트 연결
         GlobalEventBus.OnRecordRead += NewMemoryRead;
     }
@@ -83,8 +79,6 @@ public class ResultManager : MonoBehaviour, IResultService
         if (Instance == this) Instance = null;
         GlobalEventBus.OnSetRecordData -= RenewLinkRateData;
         GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
-        GlobalEventBus.PrepareUIOpen -= SendQuickSlotCacheEvent;
-        GlobalEventBus.RecordUIOpen -= SendLinkRecordData;
         GlobalEventBus.OnRecordRead -= NewMemoryRead;
     }
 

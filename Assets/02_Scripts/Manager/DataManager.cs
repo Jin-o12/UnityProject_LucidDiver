@@ -11,10 +11,11 @@ public class DataManager : MonoBehaviour
     public static DataManager Instance { get; private set; }
     
     private Dictionary<int, ItemData> itemDataDictionary;           // 아이템 데이터 사전
-    private Dictionary<int, CharacterData> CharDataDictionary;      // 캐릭터 데이터 사전
+    
 
     public PlayerSaveData playerData { get; private set; }          // 계정 데이터
-    [SerializeField] private string saveFilePath;
+    [SerializeField] private string saveFilePath;                   // 세이브 파일 경로
+
 
     private void Awake()
     {
@@ -22,7 +23,6 @@ public class DataManager : MonoBehaviour
         {
             Instance = this;
             itemDataDictionary = new Dictionary<int, ItemData>();
-            CharDataDictionary = new Dictionary<int, CharacterData>();
         }
         else
         {
@@ -80,12 +80,7 @@ public class DataManager : MonoBehaviour
             itemDataDictionary[data.TID] = data;
         }
 
-        // 캐릭터 데이터
-        CharacterData[] charDatas = Resources.LoadAll<CharacterData>("ScriptableObjects/Character");
-        foreach(CharacterData data in charDatas)
-        {
-            CharDataDictionary[data.TID] = data;
-        }
+        
     }
 
     /* 아이템 데이터 가져오기 */
@@ -102,17 +97,5 @@ public class DataManager : MonoBehaviour
         }
     }
 
-    /* 캐릭터 데이터 가져오기 */
-    public CharacterData GetCharacterData(int charTID)
-    {
-        if(CharDataDictionary.TryGetValue(charTID, out CharacterData data))
-        {
-            return data;
-        }
-        else
-        {
-            Debug.LogWarning("char TID " + charTID + " not found!");
-            return null;
-        }
-    }
+    
 }

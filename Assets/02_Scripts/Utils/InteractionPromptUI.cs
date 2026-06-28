@@ -1,20 +1,20 @@
 using UnityEngine;
 
 /// <summary>
-/// »óÈ£ÀÛ¿ë ÇÁ·ÒÇÁÆ® UI¸¦ ÄÑ°í ²ô´Â Àü¿ë ½ºÅ©¸³Æ®
-/// ItemBox °°Àº »óÈ£ÀÛ¿ë ¿ÀºêÁ§Æ®ÀÇ ·çÆ®¿¡ ºÙÀÌ°í
-/// ½ÇÁ¦·Î º¸¿©ÁÙ UI ¿ÀºêÁ§Æ®¸¦ promptRoot·Î ¿¬°áÇØ¼­ »ç¿ëÇÔ
+/// ìƒí˜¸ìž‘ìš© í”„ë¡¬í”„íŠ¸ UIë¥¼ ì¼œê³  ë„ëŠ” ì „ìš© ìŠ¤í¬ë¦½íŠ¸
+/// ItemBoxì™€ ê°™ì€ ìƒí˜¸ìž‘ìš© ì˜¤ë¸Œì íŠ¸ì˜ ë£¨íŠ¸ì— ë¶™ì´ê³ 
+/// ì‹¤ì œë¡œ ë³´ì—¬ì¤„ UI ì˜¤ë¸Œì íŠ¸ë¥¼ promptRootë¡œ ì—°ê²°í•´ì„œ ì‚¬ìš©í•¨
 /// </summary>
 public class InteractionPromptUI : MonoBehaviour
 {
-    [SerializeField] private GameObject promptRoot;   // ¿ùµå ½ºÆäÀÌ½º UI ·çÆ® ¿ÀºêÁ§Æ®
+    [SerializeField] private GameObject promptRoot;   // ì›”ë“œ ìŠ¤íŽ˜ì´ìŠ¤ UI ë£¨íŠ¸ ì˜¤ë¸Œì íŠ¸
 
     private void Awake()
     {
-        // ½ÃÀÛ ½Ã¿¡´Â ÇÁ·ÒÇÁÆ®¸¦ ²¨µÒ
+        // ì‹œìž‘ ì‹œì—ëŠ” í”„ë¡¬í”„íŠ¸ë¥¼ êº¼ë‘ 
         if (promptRoot == null)
         {
-            Debug.LogWarning("InteractionPromptUI: promptRoot°¡ ¿¬°áµÇÁö ¾Ê¾ÒÀ½.", this);
+            Debug.LogWarning("InteractionPromptUI: promptRootï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾ï¿½ï¿½ï¿½.", this);
             return;
         }
 
@@ -22,7 +22,7 @@ public class InteractionPromptUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î°¡ »óÈ£ÀÛ¿ë ¹üÀ§ ¾È¿¡ µé¾î¿ÔÀ» ¶§ ÇÁ·ÒÇÁÆ® Ç¥½Ã
+    /// í”Œë ˆì´ì–´ê°€ ìƒí˜¸ìž‘ìš© ë²”ìœ„ ì•ˆì— ë“¤ì–´ì™”ì„ ë•Œ í”„ë¡¬í”„íŠ¸ í‘œì‹œ
     /// </summary>
     public void Show()
     {
@@ -33,7 +33,7 @@ public class InteractionPromptUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î°¡ »óÈ£ÀÛ¿ë ¹üÀ§ ¹ÛÀ¸·Î ³ª°¬À» ¶§ ÇÁ·ÒÇÁÆ® ¼û±è
+    /// í”Œë ˆì´ì–´ê°€ ìƒí˜¸ìž‘ìš© ë²”ìœ„ ë°–ìœ¼ë¡œ ë‚˜ê°”ì„ ë–„ í”„ë¡¬í”„íŠ¸ ìˆ¨ê¹€
     /// </summary>
     public void Hide()
     {

@@ -3033,8 +3033,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canvasLobby: {fileID: 0}
-  buttonBack0: {fileID: 1939409139904881956}
-  buttonBack: {fileID: 1799066949802147963}
+  buttonBackTop: {fileID: 1939409139904881956}
+  buttonBackBottom: {fileID: 1799066949802147963}
   buttonRecordCard01: {fileID: 8809157018538943356}
   buttonRecordCard02: {fileID: 2439919637050390718}
   buttonCloseMemoryLog: {fileID: 0}
@@ -3058,6 +3058,10 @@ MonoBehaviour:
   popupMemoryLog01: {fileID: 0}
   textMemoryLogTitle: {fileID: 0}
   textMemoryLogBody: {fileID: 0}
+  useTestData: 1
+  testLinkRateLevel: 0
+  testMemoryLogUnlocked: 0
+  testHasNewMemoryLog: 0
 --- !u!1 &8422506964769485412
 GameObject:
   m_ObjectHideFlags: 0
