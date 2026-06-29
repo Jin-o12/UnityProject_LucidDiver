@@ -15,15 +15,12 @@ public class LobbyMainUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textLinkRateLevel;         // 동조율 수치 텍스트 
     [SerializeField] private TextMeshProUGUI textSpeakerName;           // 로비 대사 화자 이름 텍스트
     [SerializeField] private TextMeshProUGUI textDialogue;              // 로비 대사 텍스트
+    [SerializeField] private Image CharacterStandingImage;              // 캐릭터 스텐딩 일러스트
 
     [Header("Notification")]
-    [SerializeField] private GameObject newMemoryLogMark;               
+    [SerializeField] private GameObject newMemoryLogMark;               // 새로운 메모리 알림 마크
 
     [Header("Temporary Test Data")]
-    [SerializeField] private string testDiverName = "유안";
-    [SerializeField] private int testLinkRateLevel = 0;
-    [TextArea]
-    [SerializeField] private string testLobbyDialogue = "누군지도 모르는 너를 믿고 따라야 한다니...기분이 별로야.";
     [SerializeField] private bool testHasNewMemoryLog = false;
 
     // 대사 출력 인터페이스
@@ -79,7 +76,7 @@ public class LobbyMainUI : MonoBehaviour
 
         // {다이버 이름을 표시한다}
         if (textDiverName != null)
-            textDiverName.text = charData.name;
+            textDiverName.text = charData.charName;
     
         int link = saveRepo.GetLinkRateLevel();
         // {현재 동조율 단계를 표시한다}
@@ -88,16 +85,16 @@ public class LobbyMainUI : MonoBehaviour
         
         // {로비 기본 대사 화자 이름을 표시한다}
         if (textSpeakerName != null)
-            textSpeakerName.text = charData.name;
+            textSpeakerName.text = charData.charName;
         
         string log = dialogueRepo.GetRandomDialogue((int)CharacterTID.Yuan, DialogueType.lobbyEnter);
         // {로비 기본 대사를 표시한다}
         if (textDialogue != null)
             textDialogue.text = log;
 
-        // // {신규 심상 기록 알림 표시 여부를 갱신한다}
-        // if (newMemoryLogMark != null)
-        //     newMemoryLogMark.SetActive(testHasNewMemoryLog);
+        // {신규 심상 기록 알림 표시 여부를 갱신한다}
+        if (newMemoryLogMark != null)
+            newMemoryLogMark.SetActive(testHasNewMemoryLog);
     }
 
     /* 출전 준비 씬 열기 */
