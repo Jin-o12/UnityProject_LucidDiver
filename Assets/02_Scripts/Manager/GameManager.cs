@@ -4,6 +4,7 @@
 /// </summary>
 using System.Collections;
 using System.Collections.Generic;
+using Codice.Client.Commands.WkTree;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -30,10 +31,9 @@ public class GameManager : MonoBehaviour
     public int linkRateGain = 1;                        //세션 탈출 성공 시 가산되는 동조
 
     // 저장 데이터 인터페이스
-    private ISaveRepository saveRepo;                                // 플레이어 데이터 저장 인터페이스
-    public PlayerSaveData playerData { get; private set; }           // 실질적인 플레이어 데이터
-    private ICharDataRepository charRepo;
-    public CharacterData charData { get; private set; }
+    private ISaveRepository saveRepo;                   // 플레이어 데이터 접근 인터페이스
+    private ICharDataRepository charRepo;               // 캐릭터 데이터 접근 인터페이스
+    private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
 
     private void Awake()
     {
@@ -41,8 +41,10 @@ public class GameManager : MonoBehaviour
         if(Instance==null)
             Instance = this;
 
+        // 인터페이스 구현부 연결
         saveRepo = new LocalSaveRepository();
         charRepo = new SOCharacterRepository();
+        itemRepo = new SOItemRepository();
 
         SceneManager.sceneLoaded += OnSceneLoaded;                  //신 로드 완료 시점에 실행하는 메소드 연결
         //GlobalEventBus.OnEscapeRequest += QuitGame;              //탈출 판정 이벤트에 탈출 처리 메소드 연결
@@ -64,9 +66,9 @@ public class GameManager : MonoBehaviour
             timeTrack = true;       //시간 기록 시작
 
             // 캐릭터 데이터 가져오기
-            playerData = saveRepo.LoadSaveData();
+            PlayerSaveData playerData = saveRepo.LoadSaveData();
             _playerSaveData = playerData;
-            charData = charRepo.GetCharacterData(playerData.SelectCharID);
+            CharacterData charData = charRepo.GetCharacterData(playerData.SelectCharID);
 
             // 플레이어 1회 생성
             if (SpawnManager.Instance != null)
@@ -105,7 +107,7 @@ public class GameManager : MonoBehaviour
             if (slot.TID == _tid)
             {
                 count = slot.amount;
-                data = DataManager.Instance.GetItemData(_tid);
+                data = itemRepo.GetItemData(_tid);
                 return;
             }
         }
