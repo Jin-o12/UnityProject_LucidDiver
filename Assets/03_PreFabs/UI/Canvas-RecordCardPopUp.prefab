@@ -169,6 +169,7 @@ GameObject:
   - component: {fileID: 6391763341660234006}
   - component: {fileID: 2708263237017507218}
   - component: {fileID: 5780046150501060440}
+  - component: {fileID: 5773138438211908827}
   m_Layer: 5
   m_Name: Canvas-RecordCardPopUp
   m_TagString: Untagged
@@ -259,6 +260,21 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &5773138438211908827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4337375261074865489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28b90336a59591543a8c6887b8ec6106, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textMemoryLogTitle: {fileID: 4700298957262092073}
+  textMemoryLogBody: {fileID: 1072949847010738341}
+  buttonClose: {fileID: 6598520344948412414}
 --- !u!1 &5555803974722552854
 GameObject:
   m_ObjectHideFlags: 0
@@ -664,7 +680,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 1
+  m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &9212612843285708798
@@ -799,6 +815,6 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 1
+  m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}

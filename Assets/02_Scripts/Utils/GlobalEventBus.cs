@@ -64,6 +64,7 @@ public class GlobalEventBus
     public static Action OnOpenRecordUI;                            // 다이버/기록 UI 오픈  (LobbyMainUI → LobbyPresenter)
     public static Action RecordUIOpen;                              // 다이버/기록 UI 오픈  (DiverRecordUI → ResultManager)
     public static Action OnOpenStorageUI;                           // 개인 창고 UI 오픈
+    public static Action<string, string> OnOpenRecordCardPopUpUI;   // 기록 카드 팝업 열기 요청: Action<기록 제목, 기록 본문>
     public static Action<int, bool, bool> RecordDataLoad;           // 다이버 개인 심상 기록 데이터 전달 : Action<newLinkRateLevel, newMemoryLogUnlocked, newHasNewMemoryLog>
     public static Action OnRecordRead;                              // 다이버 개인 심상 기록 읽음
 

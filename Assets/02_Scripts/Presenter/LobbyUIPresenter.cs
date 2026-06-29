@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,6 +13,7 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenPrepareUI += OpenSortiePrepare;
         GlobalEventBus.OnOpenRecordUI += OpenDiverRecord;
         GlobalEventBus.OnOpenStorageUI += OpenStorageInventory;
+        GlobalEventBus.OnOpenRecordCardPopUpUI += OpenRecordCardPopUp;
     }
 
     private void OnDisable()
@@ -22,6 +23,7 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenPrepareUI -= OpenSortiePrepare;
         GlobalEventBus.OnOpenRecordUI -= OpenDiverRecord;
         GlobalEventBus.OnOpenStorageUI -= OpenStorageInventory;
+        GlobalEventBus.OnOpenRecordCardPopUpUI -= OpenRecordCardPopUp;
     }
 
     private void Start()
@@ -60,5 +62,15 @@ public class LobbyUIPresenter : MonoBehaviour
         // 현재 열려있는 캔버스를 닫고 다음 UI로 전환
         uiManager.CloseNowUI();
         uiManager.Open<StorageInventoryUI>();
+    }
+
+    /* 기록 카드 팝업 UI 전환 */
+    public void OpenRecordCardPopUp(string title, string body)
+    {
+        // 팝업은 뒤의 DiverRecordUI를 닫지 않고 위에만 올린다
+        RecordCardPopUpUI popup = uiManager.Open<RecordCardPopUpUI>();
+
+        // 기록 제목과 본문을 팝업에 전달한다
+        popup.SetData(title, body);
     }
 }

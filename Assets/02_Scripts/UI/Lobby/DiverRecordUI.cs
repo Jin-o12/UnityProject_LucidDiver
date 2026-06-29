@@ -4,15 +4,11 @@ using UnityEngine.UI;
 
 public class DiverRecordUI : MonoBehaviour
 {
-    [Header("Canvas")]
-    [SerializeField] private GameObject canvasLobby;
-
     [Header("Buttons")]
     [SerializeField] private Button buttonBackTop;                          //상단 왼쪽 뒤로가기 버튼
     [SerializeField] private Button buttonBackBottom;                       //하단 버튼 그룹의 뒤로가기 버튼
     [SerializeField] private Button buttonRecordCard01;
     [SerializeField] private Button buttonRecordCard02;
-    [SerializeField] private Button buttonCloseMemoryLog;
 
     [Header("Diver Info")]
     [SerializeField] private TextMeshProUGUI textDiverName;
@@ -110,6 +106,7 @@ public class DiverRecordUI : MonoBehaviour
         buttonBackTop.onClick.AddListener(OnClickBack);
         buttonBackBottom.onClick.AddListener(OnClickBack);
         //buttonCloseMemoryLog.onClick.AddListener(OnClickCloseMemoryLog);
+        buttonRecordCard01.onClick.AddListener(OnClickRecord01);
 
         // {테스트 데이터 사용 시 임시 값 적용}
         if (useTestData)
@@ -130,11 +127,12 @@ public class DiverRecordUI : MonoBehaviour
         Refresh();
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
         buttonRecordCard01.onClick.RemoveListener(OnClickRecord01);
         buttonRecordCard02.onClick.RemoveListener(OnClickRecord02);
         //buttonCloseMemoryLog.onClick.RemoveListener(OnClickCloseMemoryLog);
+        buttonRecordCard01.onClick.RemoveListener(OnClickRecord01);
     }
 
     public void SetData(int newLinkRateLevel, bool newMemoryLogUnlocked, bool newHasNewMemoryLog)
@@ -158,7 +156,7 @@ public class DiverRecordUI : MonoBehaviour
         RefreshRecordList();
 
         // {기록 01 카드 갱신}
-        //RefreshRecord01();
+        RefreshRecord01();
 
         // {기록 02 카드 갱신}
         //RefreshRecord02();
@@ -280,22 +278,25 @@ public class DiverRecordUI : MonoBehaviour
 
     private void OnClickRecord01()
     {
-        // {기록 01이 잠겨 있으면 열지 않음}
+        // {기록 01이 잠겨 있으면 팝업을 열지 않는다}
         if (!memoryLogUnlocked)
         {
             Debug.Log("DiverRecordUI: 기록 01은 아직 잠겨 있습니다.");
             return;
         }
 
-        // {기록 01 팝업 열기}
-        if (popupMemoryLog01 != null)
-            popupMemoryLog01.SetActive(true);
+        // {기록 카드 팝업 열기 이벤트를 호출한다}
+        GlobalEventBus.OnOpenRecordCardPopUpUI?.Invoke(Record01Title, Record01Body);
 
-        // {기록을 열람했으므로 NEW 배지 제거}
+        // {기록을 열람했으므로 NEW 배지를 제거한다}
         hasNewMemoryLog = false;
 
+        // {NEW 배지 오브젝트를 비활성화한다}
         if (textNewBadge01 != null)
             textNewBadge01.gameObject.SetActive(false);
+
+        // {기록 읽음 이벤트를 호출한다}
+        GlobalEventBus.OnRecordRead?.Invoke();
     }
 
     private void OnClickRecord02()
