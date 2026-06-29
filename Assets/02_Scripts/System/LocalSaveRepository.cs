@@ -1,5 +1,5 @@
-/// <summary>
-/// Reads and writes local save data.
+﻿/// <summary>
+/// 세이브를 읽고 쓰는 클래스 (ISaveRepository 인터페이스 상속)
 /// </summary>
 using System.IO;
 using UnityEngine;

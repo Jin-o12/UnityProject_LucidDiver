@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 게임 데이터들을 불러오고 관리하는 인스턴스 클래스
 /// </summary>
 using System.Collections;
@@ -36,7 +36,7 @@ public class DataManager : MonoBehaviour
         LoadGame();
 
         // 캐릭터를 고르는 로비 씬과 연결이 되지 않았으므로 캐릭터 데이터를 코드에서 설정
-        playerData.SelectCharID = 1;
+        // playerData.SelectCharID = 1;
 
         LoadGameData();
     }

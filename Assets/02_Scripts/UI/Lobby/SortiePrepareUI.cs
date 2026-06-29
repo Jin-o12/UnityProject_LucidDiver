@@ -60,9 +60,16 @@ public class SortiePrepareUI : MonoBehaviour
 
     private void OnEnable()
     {
-        GlobalEventBus.QuickSlotLoad += UpdateQuickSlot; // {퀵슬롯 UI 갱신 이벤트 등록}
-        GlobalEventBus.OnRequestQuickSlotCache?.Invoke(); // {퀵슬롯 캐시 재전송 요청}
-        Refresh(); // {UI 갱신}
+        // {퀵슬롯 캐시 재전송 요청}
+        GlobalEventBus.OnRequestQuickSlotCache?.Invoke();
+        // (퀵슬롯 데이터 업데이트 이벤트 등록)
+        GlobalEventBus.QuickSlotLoad += UpdateQuickSlot;
+
+        // 출격 준비 UI 오픈 이벤트 발생
+        GlobalEventBus.PrepareUIOpen?.Invoke();
+
+        // {출격 준비 UI가 열릴 때마다 표시 정보 갱신}
+        Refresh();
     }
 
     private void OnDestroy()
