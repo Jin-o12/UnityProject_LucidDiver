@@ -43,9 +43,9 @@ GameObject:
   - component: {fileID: 8181820164850218138}
   - component: {fileID: 8379933475469959545}
   - component: {fileID: 8231862850697718748}
-  - component: {fileID: 5510190801238468239}
+  - component: {fileID: 3570556423017487055}
   m_Layer: 0
-  m_Name: ItermBox
+  m_Name: ItemBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -83,6 +83,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 839e0a0136526b74e951173198bc184e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  slotCapacity: 8
   items: []
   useRandomLoot: 1
   minCreateCount: 1
@@ -91,16 +92,16 @@ MonoBehaviour:
   lootOptions:
   - itemData: {fileID: 11400000, guid: e1f045e6d1c51e143a76ad1a32e8bf41, type: 2}
     weight: 0
-    minAmount: 0
-    maxAmount: 0
+    minAmount: 1
+    maxAmount: 5
   - itemData: {fileID: 11400000, guid: 36f1d5fb5ed6737499dc5a46fa2f09cd, type: 2}
     weight: 0
-    minAmount: 0
-    maxAmount: 0
+    minAmount: 1
+    maxAmount: 5
   - itemData: {fileID: 11400000, guid: 6864ad3bfd9a78b4fb3eedba4599fb5f, type: 2}
     weight: 0
-    minAmount: 0
-    maxAmount: 0
+    minAmount: 1
+    maxAmount: 5
 --- !u!65 &8379933475469959545
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -149,7 +150,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &5510190801238468239
+--- !u!114 &3570556423017487055
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -158,7 +159,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 864261442559763118}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00a7f4805e68a8b44b4f0aaeea0e6e44, type: 3}
+  m_Script: {fileID: 11500000, guid: 140b61ec47c1f5c45bebf94c694fab89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   promptRoot: {fileID: 4753328075908462758}
@@ -280,6 +281,7 @@ GameObject:
   - component: {fileID: 918130049809873551}
   - component: {fileID: 6074610025044318516}
   - component: {fileID: 594055938415195041}
+  - component: {fileID: 1004823104237884155}
   m_Layer: 0
   m_Name: Canvas
   m_TagString: Untagged
@@ -371,6 +373,18 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
 --- !u!114 &594055938415195041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2919856179126655751}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30c6080eb018a9d4ca19dfd435a06df9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1004823104237884155
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
