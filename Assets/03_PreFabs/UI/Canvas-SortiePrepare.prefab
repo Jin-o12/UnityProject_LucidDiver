@@ -3439,6 +3439,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonBackTop: {fileID: 314152668807710786}
   buttonStartSortie: {fileID: 5081502777150265307}
+  buttonChangeFromStorage: {fileID: 3616947384108498475}
   textDiverName: {fileID: 4302065023887187593}
   textDiverRole: {fileID: 8319592335210829563}
   textLinkRate: {fileID: 1557701807971332124}
