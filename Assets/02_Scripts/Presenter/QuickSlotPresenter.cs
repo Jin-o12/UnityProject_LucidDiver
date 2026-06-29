@@ -11,6 +11,9 @@ public class QuickSlotPresenter : MonoBehaviour
     [Header("참조 컴포넌트")]
     public PlayerInventory inventory;
 
+    // 저장 데이터 인터페이스
+    private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
+
     private void Awake()
     {
         inventory = GetComponent<PlayerInventory>();
@@ -21,6 +24,9 @@ public class QuickSlotPresenter : MonoBehaviour
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
             return;
         }
+
+        // 인터페이스 구현부 연결
+        itemRepo = new SOItemRepository();
     }
 
     public void OnEnable()
@@ -45,7 +51,7 @@ public class QuickSlotPresenter : MonoBehaviour
         if(slot == null || slot.amount <= 0) return;
 
         // 아이템 고유 번호로 아이템 데이터를 가져옴
-        ItemData itemData = DataManager.Instance.GetItemData(slot.TID);
+        ItemData itemData = itemRepo.GetItemData(slot.TID);
 
         // 플리이어 인벤토리에서 아이템 사용 처리
         inventory.UseQuickSlotItem(slotIndex);

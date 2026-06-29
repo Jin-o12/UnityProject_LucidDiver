@@ -10,19 +10,17 @@ public class DataManager : MonoBehaviour
 {
     public static DataManager Instance { get; private set; }
     
-    private Dictionary<int, ItemData> itemDataDictionary;           // 아이템 데이터 사전
-    
-
-    public PlayerSaveData playerData { get; private set; }          // 계정 데이터
+    public PlayerSaveData playerData { get; private set; }          // 계정 데이터 보관소
     [SerializeField] private string saveFilePath;                   // 세이브 파일 경로
 
+    // 저장 데이터 인터페이스
+    private ISaveRepository saveRepo;   
 
     private void Awake()
     {
         if(Instance == null)
         {
             Instance = this;
-            itemDataDictionary = new Dictionary<int, ItemData>();
         }
         else
         {
@@ -38,7 +36,10 @@ public class DataManager : MonoBehaviour
         // 캐릭터를 고르는 로비 씬과 연결이 되지 않았으므로 캐릭터 데이터를 코드에서 설정
         // playerData.SelectCharID = 1;
 
-        LoadGameData();
+        // 인터페이스 구현부 연결
+        saveRepo = new LocalSaveRepository();
+        // 플레이어 데이터 불러오기
+        playerData = saveRepo.LoadSaveData();
     }
 
     /* 플레이어 게임 데이터 저장하기 */
@@ -69,33 +70,4 @@ public class DataManager : MonoBehaviour
             SaveGame();
         }
     }
-
-    /* 모든 게임 데이터 로드 */
-    private void LoadGameData()
-    {
-        // 아이템 데이터
-        ItemData[] itemDatas = Resources.LoadAll<ItemData>("ScriptableObjects/Item");
-        foreach(ItemData data in itemDatas)
-        {
-            itemDataDictionary[data.TID] = data;
-        }
-
-        
-    }
-
-    /* 아이템 데이터 가져오기 */
-    public ItemData GetItemData(int itemTID)
-    {
-        if(itemDataDictionary.TryGetValue(itemTID, out ItemData data))
-        {
-            return data;
-        }
-        else
-        {
-            Debug.LogWarning("Item TID " + itemTID + " not found!");
-            return null;
-        }
-    }
-
-    
 }

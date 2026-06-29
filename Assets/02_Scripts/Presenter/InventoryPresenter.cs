@@ -23,6 +23,9 @@ public class InventoryPresenter : MonoBehaviour
     private ResultUI resultUI;                          // 결과창 UI 캐시
     private ChestUI chestUI;                            // 상자 UI 캐시
 
+    // 저장 데이터 인터페이스
+    private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
+
     private void Awake()
     {
         playerWeapon = GetComponent<PlayerWeapon>();
@@ -37,6 +40,9 @@ public class InventoryPresenter : MonoBehaviour
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
             return;
         }
+        
+        // 인터페이스 구현부 연결
+        itemRepo = new SOItemRepository();
     }
 
     private void OnEnable()
@@ -82,7 +88,7 @@ public class InventoryPresenter : MonoBehaviour
     private void HandleItemPickUp(int pickerID, int pickedItemTID, int count)
     {
         // DataManager를 통해 ID로 아이템 원본 데이터를 찾음
-        ItemData data = DataManager.Instance.GetItemData(pickedItemTID);
+        ItemData data = itemRepo.GetItemData(pickedItemTID);
         if (data == null) return;
 
         // 주운 아이템을 인벤토리에 먼저 추가 후 하위 작업 진행(이후 구현)

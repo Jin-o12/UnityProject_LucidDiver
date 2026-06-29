@@ -38,9 +38,14 @@ public class ResultManager : MonoBehaviour, IResultService
     public int slotTID2;                                //2번 슬롯 아이템의 ID값 데이터를 받아옴
     public Sprite slotSprite2;                          //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
     public int slotCount2;                              //2번 슬롯 아이템의 개수 데이터를 받아옴
+
+    // 저장 데이터 인터페이스
+    private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
+
     public int slotTID3;                                //3번 슬롯 아이템의 ID값 데이터를 받아옴
     public Sprite slotSprite3;                          //3번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
     public int slotCount3;                              //3번 슬롯 아이템의 개수 데이터를 받아옴
+    
     private void Awake()
     {
         // 싱글톤 인스턴스 중복 방지 설정
@@ -51,6 +56,8 @@ public class ResultManager : MonoBehaviour, IResultService
         DontDestroyOnLoad(gameObject);
         // ResultServiceLocator에 자신을 등록
         ResultServiceLocator.Instance = this;
+        // 인터페이스 구현부 연결
+        itemRepo = new SOItemRepository();
 
         // 씬에 이미 존재하는 PlayerStatus를 찾아 등록 (타이밍 안전성 보장)
         foreach (var p in FindObjectsOfType<PlayerStatus>())
@@ -319,7 +326,7 @@ public class ResultManager : MonoBehaviour, IResultService
             if (slot.TID == _tid)
             {
                 count += slot.amount;
-                if (data == null) data = DataManager.Instance.GetItemData(_tid);
+                if (data == null) data = itemRepo.GetItemData(_tid);
             }
         }
     }

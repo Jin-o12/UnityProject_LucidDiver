@@ -22,8 +22,6 @@ public class SessionManager : MonoBehaviour
         
         runtimeData = new GlobalRuntimeData();
         saveRepo = new LocalSaveRepository();
-
-        playerData = saveRepo.LoadSaveData();
     }
 
     public void SaveGame()
