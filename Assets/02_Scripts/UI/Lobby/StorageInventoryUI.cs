@@ -98,6 +98,8 @@ public class StorageInventoryUI : MonoBehaviour
         // {하단 뒤로가기 버튼이 있을 경우 클릭 이벤트를 등록한다}
         if (buttonBackBottom != null)
             buttonBackBottom.onClick.AddListener(OnClickBack);
+
+        LoadFromPlayerData();
     }
 
     private void OnDisable()
@@ -115,11 +117,6 @@ public class StorageInventoryUI : MonoBehaviour
     {
         // {로비 메인 UI 열기 이벤트를 호출한다}
         GlobalEventBus.OnOpenLobbyUI?.Invoke();
-    }
-
-    public int GetStoredItemCount(int tid)
-    {
-        LoadFromPlayerData();
     }
 
     private void LoadFromPlayerData()
@@ -238,6 +235,7 @@ public class StorageInventoryUI : MonoBehaviour
     {
         return inventoryData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
     }
+
     public int GetStoredItemCount(int tid)
     {
         // {특정 TID 아이템의 창고 총수량을 반환}
