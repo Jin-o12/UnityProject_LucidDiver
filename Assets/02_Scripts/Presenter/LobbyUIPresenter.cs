@@ -18,7 +18,7 @@ public class LobbyUIPresenter : MonoBehaviour
     private void OnDisable()
     {
         /// 이벤트 구독 해제 ///
-        GlobalEventBus.OnOpenLobbyUI += OpenLobby;
+        GlobalEventBus.OnOpenLobbyUI -= OpenLobby;
         GlobalEventBus.OnOpenPrepareUI -= OpenSortiePrepare;
         GlobalEventBus.OnOpenRecordUI -= OpenDiverRecord;
         GlobalEventBus.OnOpenStorageUI -= OpenStorageInventory;

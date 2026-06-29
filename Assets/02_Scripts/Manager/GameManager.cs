@@ -68,6 +68,12 @@ public class GameManager : MonoBehaviour
                 SpawnManager.Instance.SpawnPlayer(charData);
             }
 
+            PlayerInventory playerInventory = FindObjectOfType<PlayerInventory>();
+            if (playerInventory != null)
+            {
+                playerInventory.RestoreFromSave(playerData);
+            }
+
             // 적 1회 생성
             if (SpawnManager.Instance != null)
             {

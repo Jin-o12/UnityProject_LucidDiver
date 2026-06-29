@@ -174,25 +174,33 @@ public class PlayerInventory : MonoBehaviour
     /* 퀵슬롯에 아이템 추가 */
     public void AddItemToQuickslot(int _quickIndex, int _slotIndex)
     {
+        // 퀵슬롯/인벤토리 인덱스 유효성 검사
+        if (_quickIndex < 0 || _quickIndex >= quickSlotNum) return;
+        if (_slotIndex < 0 || _slotIndex >= slotNum) return;
+
         InventorySlotData slot = slots[_slotIndex];
-        InventorySlotData qSlot = quickSlots[_quickIndex];
 
         // 소모품이 아닐 경우에는 퀵슬롯에 등록하지 않음
-        if(slot.TID<=300 || slot.TID>=400) return;
+        if (slot.TID <= 300 || slot.TID >= 400) return;
 
-        // 이미 퀵슬롯에 있다면 기존의 퀵슬롯 내용을 삭제
+        // 이미 다른 퀵슬롯에 있다면 기존 슬롯을 비움
         for (int i = 0; i < quickSlotNum; i++)
         {
-            if(quickSlots[i].TID==slot.TID)
-            {
-                GlobalEventBus.OnQuickSlotChanged?.Invoke(i, null, 0);
-            }
+            if (i == _quickIndex) continue;
+            if (quickSlots[i].TID != slot.TID) continue;
+
+            quickSlots[i].TID = 0;
+            quickSlots[i].amount = 0;
+            quickSlots[i].icon = null;
+            GlobalEventBus.OnQuickSlotChanged?.Invoke(i, null, 0);
         }
 
+        InventorySlotData qSlot = quickSlots[_quickIndex];
         qSlot.TID = slot.TID;
-        qSlot.amount = slot.amount;
+        qSlot.amount = GetInventoryItemCount(slot.TID);
         qSlot.icon = slot.icon;
 
+        // 변동사항 알림
         OnSlotChanged?.Invoke(_slotIndex);
         GlobalEventBus.OnQuickSlotChanged?.Invoke(_quickIndex, qSlot.icon, qSlot.amount);
     }
@@ -200,13 +208,72 @@ public class PlayerInventory : MonoBehaviour
     /* 퀵슬롯 아이템 사용 */
     public void UseQuickSlotItem(int _index)
     {
-        if(quickSlots[_index]==null || _index>quickSlotNum) return;
+        // 퀵슬롯 범위 및 데이터 유효성 검사
+        if (_index < 0 || _index >= quickSlotNum) return;
 
         InventorySlotData slot = quickSlots[_index];
-        // 아이템 사용으로 갯수 감소
-        slot.amount--;
-        // 사용에 따른 퀵슬롯 변화
+        if (slot == null || slot.TID == 0 || slot.amount <= 0) return;
+
+        int tid = slot.TID;
+
+        // 실제 인벤토리 수량을 먼저 차감
+        ConsumeInventoryItemByTID(tid);
+
+        // 차감 후 남은 수량을 퀵슬롯에 다시 반영
+        int remain = GetInventoryItemCount(tid);
+        slot.amount = remain;
+
+        if (remain <= 0)
+        {
+            slot.TID = 0;
+            slot.amount = 0;
+            slot.icon = null;
+            GlobalEventBus.OnQuickSlotChanged?.Invoke(_index, null, 0);
+            return;
+        }
+
         GlobalEventBus.OnQuickSlotChanged?.Invoke(_index, slot.icon, slot.amount);
+    }
+
+    /* 인벤토리에서 특정 TID 아이템의 총 수량 계산 */
+    private int GetInventoryItemCount(int tid)
+    {
+        int count = 0;
+
+        for (int i = 0; i < slotNum; i++)
+        {
+            if (slots[i].TID == tid)
+            {
+                count += slots[i].amount;
+            }
+        }
+
+        return count;
+    }
+
+    /* 인벤토리에서 특정 TID 아이템 1개를 차감 */
+    private void ConsumeInventoryItemByTID(int tid)
+    {
+        for (int i = 0; i < slotNum; i++)
+        {
+            if (slots[i].TID != tid || slots[i].amount <= 0)
+            {
+                continue;
+            }
+
+            slots[i].amount--;
+
+            if (slots[i].amount <= 0)
+            {
+                slots[i].TID = 0;
+                slots[i].amount = 0;
+                slots[i].icon = null;
+            }
+
+            // 수량 변화가 생긴 인벤토리 슬롯 UI를 갱신
+            OnSlotChanged?.Invoke(i);
+            return;
+        }
     }
 
     /* 퀵슬롯간에 아이템 교환 */
@@ -223,5 +290,114 @@ public class PlayerInventory : MonoBehaviour
         // 변동사항 알림
         GlobalEventBus.OnQuickSlotChanged?.Invoke(_index1, slot1.icon, slot1.amount);
         GlobalEventBus.OnQuickSlotChanged?.Invoke(_index2, slot2.icon, slot2.amount);
+    }
+
+    /* 저장된 인벤토리/퀵슬롯 데이터를 런타임 슬롯에 복원 */
+    public void RestoreFromSave(PlayerSaveData saveData)
+    {
+        if (saveData == null) return;
+
+        // 현재 런타임 슬롯 데이터를 모두 초기화
+        ClearRuntimeSlots();
+
+        // 저장된 인벤토리 슬롯 데이터를 순서대로 복원
+        foreach (var savedSlot in saveData.inventorySlots)
+        {
+            if (savedSlot.index < 0 || savedSlot.index >= slotNum) continue;
+
+            slots[savedSlot.index].TID = savedSlot.TID;
+            slots[savedSlot.index].amount = savedSlot.amount;
+
+            ItemData itemData = GetItemDataByTID(savedSlot.TID);
+            if (itemData != null) LoadSprite(itemData.icon, savedSlot.index);
+
+            OnSlotChanged?.Invoke(savedSlot.index);
+        }
+
+        // 저장된 퀵슬롯 TID를 기준으로 퀵슬롯 데이터를 복원
+        for (int i = 0; i < quickSlotNum; i++)
+        {
+            int tid = i < saveData.quickSlots.Count ? saveData.quickSlots[i] : 0;
+
+            if (tid == 0)
+            {
+                quickSlots[i].TID = 0;
+                quickSlots[i].amount = 0;
+                quickSlots[i].icon = null;
+                GlobalEventBus.OnQuickSlotChanged?.Invoke(i, null, 0);
+                continue;
+            }
+
+            quickSlots[i].TID = tid;
+            quickSlots[i].amount = GetSavedItemCount(saveData, tid);
+
+            ItemData itemData = GetItemDataByTID(tid);
+            if (itemData != null)
+            {
+                LoadQuickSlotSprite(itemData.icon, i);
+            }
+        }
+    }
+
+    /* 아이템 TID로 ScriptableObject 원본 데이터 찾기 */
+    private ItemData GetItemDataByTID(int tid)
+    {
+        if (tid == 0) return null;
+
+        ItemData[] itemDatas = Resources.LoadAll<ItemData>("ScriptableObjects/Item");
+        foreach (ItemData itemData in itemDatas)
+        {
+            if (itemData != null && itemData.TID == tid)
+            {
+                return itemData;
+            }
+        }
+
+        return null;
+    }
+
+    /* 퀵슬롯 아이콘 Addressable 주소 해석 및 스프라이트 이미지 가져오기 */
+    private void LoadQuickSlotSprite(AssetReferenceSprite iconRef, int quickIndex)
+    {
+        loadHandle = Addressables.LoadAssetAsync<Sprite>(iconRef);
+
+        loadHandle.Completed += handle =>
+        {
+            if (handle.Status != AsyncOperationStatus.Succeeded) return;
+
+            quickSlots[quickIndex].icon = handle.Result;
+            GlobalEventBus.OnQuickSlotChanged?.Invoke(quickIndex, handle.Result, quickSlots[quickIndex].amount);
+        };
+    }
+
+    /* 런타임 인벤토리/퀵슬롯 데이터를 모두 초기화 */
+    private void ClearRuntimeSlots()
+    {
+        for (int i = 0; i < slotNum; i++)
+        {
+            slots[i].TID = 0;
+            slots[i].amount = 0;
+            slots[i].icon = null;
+            OnSlotChanged?.Invoke(i);
+        }
+
+        for (int i = 0; i < quickSlotNum; i++)
+        {
+            quickSlots[i].TID = 0;
+            quickSlots[i].amount = 0;
+            quickSlots[i].icon = null;
+            GlobalEventBus.OnQuickSlotChanged?.Invoke(i, null, 0);
+        }
+    }
+
+    /* 저장 데이터 기준 특정 TID 아이템 총 수량 계산 */
+    private int GetSavedItemCount(PlayerSaveData saveData, int tid)
+    {
+        int count = 0;
+        foreach (var slot in saveData.inventorySlots)
+        {
+            if (slot.TID == tid) count += slot.amount;
+        }
+        return count;
     }
 }

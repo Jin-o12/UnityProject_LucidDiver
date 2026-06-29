@@ -58,6 +58,7 @@ public class GlobalEventBus
     /// UI 관리 이벤트
     /// </summary>
     public static Action OnOpenLobbyUI;                             // 로비 UI 실행
+    public static Action OnRequestQuickSlotCache;                   // 출격 준비 UI에서 퀵슬롯 캐시 재전송 요청
     public static Action OnOpenPrepareUI;                           // 출격 준비 UI 오픈 (LobbyMainUI → LobbyPresenter)
     public static Action PrepareUIOpen;                             // 출격 준비 UI 오픈 (SortiePrepareUI → ResultManager)
     public static Action OnOpenRecordUI;                            // 다이버/기록 UI 오픈  (LobbyMainUI → LobbyPresenter)
