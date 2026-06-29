@@ -425,6 +425,9 @@ MonoBehaviour:
   slotTID2: 0
   slotSprite2: {fileID: 0}
   slotCount2: 0
+  slotTID3: 0
+  slotSprite3: {fileID: 0}
+  slotCount3: 0
 --- !u!114 &5681787268241960130
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -448,6 +451,7 @@ MonoBehaviour:
   - {fileID: 6617218257314298997, guid: cb5d7151e5247ba46b2058892439fc6b, type: 3}
   - {fileID: 5112121294421879094, guid: c5bf2558b448f314b93deec6475703cf, type: 3}
   - {fileID: 2838638639429370787, guid: 11913553fbac33348b64af24ef6e3f2b, type: 3}
+  - {fileID: 1625286815563743019, guid: a49f6e1a3a95bb14f9c1e452bbdc1252, type: 3}
 --- !u!114 &8254926602543662880
 MonoBehaviour:
   m_ObjectHideFlags: 0

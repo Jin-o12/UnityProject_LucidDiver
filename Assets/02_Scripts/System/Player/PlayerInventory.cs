@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 플레이어의 인벤토리 데이터와 내부의 슬롯, 아이템을 관리하는 클래스
 /// </summary>
 using System;
@@ -69,60 +69,52 @@ public class PlayerInventory : MonoBehaviour
 
         int remain = _count;
 
-        //** 병합 후 이슈 발생 여부 확인 **//
+        // 1. 이미 인벤토리에 해당 아이템이 있는지 먼저 확인
         for (int i = 0; i < slotNum; i++)
         {
-            if (slots[i].TID != _itemData.TID) continue;
-            if (slots[i].amount >= _itemData.itemMultiple) continue;
-
-            remain = TryAddToSlot(i, _itemData, remain);
-            if (remain <= 0) return 0;
-            // 동일 아이템이 이미 있으면 먼저 해당 슬롯에 누적 시도
             if (slots[i].TID == _itemData.TID)
             {
-                // 동일 아이템의 보유 개수가 해당 아이템의 최대 중첩 개수 미만이면...
-                if (slots[i].amount < _itemData.itemMultiple)
+                // 동일 아이템이 있는 슬롯을 찾음 (규칙: 같은 아이템은 1개의 슬롯만 사용)
+                int beforeAmount = slots[i].amount;
+                remain = TryAddToSlot(i, _itemData, remain);
+
+                if (beforeAmount != slots[i].amount)
                 {
-                    // 현재 수량 + 추가 수량을 합친 뒤 최대 스택 수를 넘는지 계산
-                    int totalAmount = slots[i].amount + _count;
-
-                    // 슬롯에는 최대 스택 수까지만 저장
-                    slots[i].amount = totalAmount >= _itemData.itemMultiple ? _itemData.itemMultiple : totalAmount;
-
-                    // 퀵슬롯 갱신 메소드 호출
                     QuickSlotRenew(_itemData);
-
-                    // UI 갱신 이벤트 호출
-                    OnSlotChanged?.Invoke(i);
-
-                    // 초과 수량 반환
-                    int remain = totalAmount - _itemData.itemMultiple;
-                    return remain > 0 ? remain : 0;
                 }
 
-                // 아니라면... (이미 최대 중첩 개수만큼 보유 중)
-                else
+                if (remain > 0)
                 {
-                    Debug.Log($"{_itemData.name}은 최대 중첩 개수({_itemData.itemMultiple}개)만큼 보유 중입니다.");
-
-                    // UI 갱신 이벤트 호출
-                    OnSlotChanged?.Invoke(i);
-
-                    return _count;  //전부 반환
+                    // 슬롯이 가득 차서 남은 수량이 있다면, 규칙에 의해 더 이상 빈 슬롯에 넣을 수 없음
+                    Debug.Log($"{_itemData.name}은 최대 중첩 개수({_itemData.itemMultiple}개)만큼 보유 중이거나 한도를 초과했습니다.");
                 }
+                
+                return remain; // 남은 수량만 반환
             }
         }
 
-        // 빈 슬롯이 있으면 새 슬롯에 아이템 추가
+        // 2. 인벤토리에 해당 아이템이 아예 없는 경우 빈 슬롯에 새롭게 추가
         for (int i = 0; i < slotNum; i++)
         {
             if (!IsSlotEmpty(i)) continue;
 
+            int beforeAmount = slots[i].amount;
             remain = TryAddToSlot(i, _itemData, remain);
-            if (remain <= 0) return 0;
+
+            if (beforeAmount != slots[i].amount)
+            {
+                QuickSlotRenew(_itemData);
+            }
+
+            if (remain > 0)
+            {
+                Debug.Log($"{_itemData.name}은 한 슬롯의 최대 중첩 개수({_itemData.itemMultiple}개)를 초과하여 더 넣을 수 없습니다.");
+            }
+
+            return remain;
         }
 
-        // 인벤토리가 가득 차서 넣지 못한 경우 남은 수량 그대로 반환
+        // 3. 빈 슬롯조차 없는 경우
         Debug.Log("인벤토리가 가득차서 아이템을 주울 수 없습니다.");
         return remain;
     }

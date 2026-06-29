@@ -94,7 +94,7 @@ public class InventoryPresenter : MonoBehaviour
         if (identity.entityID != pickerID)
             return;
 
-        ItemData data = DataManager.Instance.GetItemData(pickedItemTID);
+        ItemData data = itemRepo.GetItemData(pickedItemTID);
         if (data == null)
             return;
 
