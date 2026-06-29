@@ -57,6 +57,9 @@ public class SortiePrepareUI : MonoBehaviour
         // (퀵슬롯 데이터 업데이트 이벤트 등록)
         GlobalEventBus.QuickSlotLoad += UpdateQuickSlot;
 
+        // 출격 준비 UI 오픈 이벤트 발생
+        GlobalEventBus.PrepareUIOpen?.Invoke();
+
         // {출격 준비 UI가 열릴 때마다 표시 정보 갱신}
         Refresh();
     }

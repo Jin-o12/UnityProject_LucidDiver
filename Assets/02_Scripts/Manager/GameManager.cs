@@ -45,14 +45,14 @@ public class GameManager : MonoBehaviour
         charRepo = new SOCharacterRepository();
 
         SceneManager.sceneLoaded += OnSceneLoaded;                  //신 로드 완료 시점에 실행하는 메소드 연결
-        //GlobalEventBus.OnEscapeRequest += QuitGame;              //탈출 판정 이벤트에 탈출 처리 메소드 연결
-        //GlobalEventBus.OnReturnToLobby += CloseResultPanel;      //로비로 돌아가기 버튼에 결과 창 닫기 연결
+        GlobalEventBus.OnEscapeRequest += ResultTime;               //탈출 판정 이벤트에 경과 시간 기록 메소드 연결
+        //GlobalEventBus.OnReturnToLobby += CloseResultPanel;       //로비로 돌아가기 버튼에 결과 창 닫기 연결
     }
 
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        //GlobalEventBus.OnEscapeRequest -= QuitGame;
+        GlobalEventBus.OnEscapeRequest -= ResultTime;
         //GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
     }
 
@@ -86,17 +86,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // private void ResultTime(bool _extractionResult)
-    // {
-    //     foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
-    //     {
-    //         // 해당 아이템이 이미 창고에 존재한다면 보유 개수를 창고에 더함
-    //         if (slot.TID == _tid)
-    //         {
-    //             slot.amount = 0;
-    //         }
-    //     }
-    // }
+    private void ResultTime(bool _extractionResult)
+    {
+        //시간 기록을 중단하고 기록 고정
+        timeTrack = false;
+        //결과 계산 시작
+        ResultManager.Instance.GameResult(_extractionResult, startTime);
+    }
 
     public void FindItem(int _tid, out int count, out ItemData data)
     {
@@ -139,9 +135,5 @@ public class GameManager : MonoBehaviour
                 });
             }
         }
-        // //시간 기록을 중단하고 기록 고정
-        // timeTrack = false;
-        // //결과 계산 시작
-        // ResultManager.Instance.GameResult(_extractionResult, startTime);
     }
 }
