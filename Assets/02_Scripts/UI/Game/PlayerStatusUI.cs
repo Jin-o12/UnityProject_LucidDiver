@@ -37,13 +37,13 @@ public class PlayerStatusUI : MonoBehaviour
 
     private void UpdateHealthBar(float _currentHp, float _maxHp)
     {
-        hpBar.fillAmount = _currentHp/_maxHp;
+        hpBar.fillAmount = _maxHp > 0f ? Mathf.Clamp01(_currentHp / _maxHp) : 0f;
         hpText.text = $"{_currentHp}/{_maxHp}";
     }
 
     private void UpdateManaBar(float _currentMp, float _maxMp)
     {
-        mpBar.fillAmount = _currentMp/_maxMp;
+        mpBar.fillAmount = _maxMp > 0f ? Mathf.Clamp01(_currentMp / _maxMp) : 0f;
         mpText.text = $"{_currentMp}/{_maxMp}";
     }
 }

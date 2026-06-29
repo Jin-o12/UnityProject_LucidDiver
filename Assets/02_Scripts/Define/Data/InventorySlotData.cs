@@ -13,13 +13,15 @@ public class InventorySlotData
     public int order;       // 인벤토리상의 순서
     public int amount;      // 현재 가지고 있는 수량
     public Sprite icon;     // 아이템 이미지
+    public ItemData itemData; // 아이템 데이터
 
     // 생성자
-    public InventorySlotData(int _id, int _order, int _amount, Sprite _icon)
+    public InventorySlotData(int _id, int _order, int _amount, Sprite _icon, ItemData _itemData = null)
     {
         TID = _id;
         order = _order;
         amount = _amount;
         icon = _icon;
+        itemData = _itemData;
     }
 }

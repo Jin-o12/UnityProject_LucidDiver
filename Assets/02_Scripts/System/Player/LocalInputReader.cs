@@ -12,6 +12,7 @@ public class LocalInputReader : MonoBehaviour
     PlayerInput playerInput;
     public event Action OnInventoryOpenRequested;
     public event Action OnInventoryCloseRequested;
+    private bool isInventoryOpen;
 
     private void Awake()
     {
@@ -39,6 +40,9 @@ public class LocalInputReader : MonoBehaviour
     /* 플레이어 공격 입력 처리 */
     public void OnAttack(InputAction.CallbackContext context)
     {
+        if (isInventoryOpen)
+            return;
+
         if (context.performed)
         {
             GlobalEventBus.OnAttackInput?.Invoke();
@@ -65,8 +69,10 @@ public class LocalInputReader : MonoBehaviour
     {
         if (context.performed)
         {
-            SwitchToUIMap();
-            OnInventoryOpenRequested?.Invoke();
+            if (isInventoryOpen)
+                OnInventoryCloseRequested?.Invoke();
+            else
+                OnInventoryOpenRequested?.Invoke();
         }
     }
 
@@ -80,6 +86,9 @@ public class LocalInputReader : MonoBehaviour
 
     public void OnUseQuickSlot(InputAction.CallbackContext context)
     {
+        if (isInventoryOpen)
+            return;
+
         if(context.performed)
         {
             // Scale값을 float로 읽어옴
@@ -100,5 +109,10 @@ public class LocalInputReader : MonoBehaviour
     public void SwitchToPlayerMap()
     {
         playerInput.SwitchCurrentActionMap("Player");
+    }
+
+    public void SetInventoryOpenState(bool isOpen)
+    {
+        isInventoryOpen = isOpen;
     }
 }

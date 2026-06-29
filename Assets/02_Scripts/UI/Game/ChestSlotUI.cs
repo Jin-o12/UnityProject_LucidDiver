@@ -3,13 +3,35 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ChestSlotUI : MonoBehaviour, IPointerClickHandler
+/// <summary>
+/// 체스트 슬롯 1칸의 표시와 입력을 담당한다.
+/// 우클릭으로 인벤토리 이동, 드래그 앤 드롭으로 슬롯 지정 이동을 처리한다.
+/// </summary>
+public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
 {
     [SerializeField] private Image itemImg;
     [SerializeField] private TMP_Text itemStack;
+    [SerializeField] private Transform itemInfo;
 
     private ChestUI chestUI;
     private int slotIndex;
+    private CanvasGroup canvasGroup;
+    private Canvas mainCanvas;
+
+    public int SlotIndex => slotIndex;
+    public ChestUI OwnerUI => chestUI;
+
+    private void Awake()
+    {
+        mainCanvas = GetComponentInParent<Canvas>();
+
+        // 프리팹에 수동 연결이 빠졌을 때를 대비해 같은 이름의 자식을 자동으로 찾는다.
+        if (itemInfo == null)
+            itemInfo = transform.Find("ItemInfo");
+
+        if (itemInfo != null)
+            canvasGroup = itemInfo.GetComponent<CanvasGroup>();
+    }
 
     public void Initialize(ChestUI owner, int index)
     {
@@ -36,5 +58,47 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler
     {
         if (eventData.button == PointerEventData.InputButton.Right)
             chestUI.TryMoveToInventory(slotIndex);
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (mainCanvas == null || itemInfo == null || !itemImg.enabled)
+            return;
+
+        itemInfo.SetParent(mainCanvas.transform);
+        itemInfo.SetAsLastSibling();
+
+        if (canvasGroup != null)
+            canvasGroup.blocksRaycasts = false;
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (itemInfo == null)
+            return;
+
+        itemInfo.position = eventData.position;
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (canvasGroup != null)
+            canvasGroup.blocksRaycasts = true;
+
+        if (mainCanvas != null && itemInfo != null && itemInfo.parent == mainCanvas.transform)
+        {
+            itemInfo.SetParent(transform);
+            itemInfo.localPosition = Vector3.zero;
+        }
+    }
+
+    public void OnDrop(PointerEventData eventData)
+    {
+        GameObject droppedObj = eventData.pointerDrag;
+        if (droppedObj == null)
+            return;
+
+        if (droppedObj.TryGetComponent<InventorySlotUI>(out var inventorySlot))
+            chestUI.TryMoveFromInventorySlot(inventorySlot.slotIndex, slotIndex);
     }
 }
