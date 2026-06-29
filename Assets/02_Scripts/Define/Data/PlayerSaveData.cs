@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -37,6 +37,7 @@ public class SaveSlotData
     public int amount;  // 수량
 }
 
+[System.Serializable]
 public class SaveCharacterData
 {
     public int TID;                     // 캐릭터 고유 번호
