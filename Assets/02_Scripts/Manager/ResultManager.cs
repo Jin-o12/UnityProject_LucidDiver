@@ -262,7 +262,6 @@ public class ResultManager : MonoBehaviour, IResultService
     {
         foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
         {
-            // 해당 아이템이 이미 창고에 존재한다면 보유 개수를 창고에 더함
             if (slot.TID == _tid)
             {
                 slot.amount = 0;
