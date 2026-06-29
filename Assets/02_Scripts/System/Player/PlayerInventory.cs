@@ -3,6 +3,8 @@
 /// </summary>
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using UnityEditor.Graphs;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -65,23 +67,41 @@ public class PlayerInventory : MonoBehaviour
     {
         if (_itemData == null) return 0;
 
-        // 동일 아이템이 이미 있으면 먼저 해당 슬롯에 누적 시도
         for (int i = 0; i < slotNum; i++)
         {
-            if (slots[i].TID == _itemData.TID && slots[i].amount < _itemData.itemMultiple)
+            // 동일 아이템이 이미 있으면 먼저 해당 슬롯에 누적 시도
+            if (slots[i].TID == _itemData.TID)
             {
-                // 현재 수량 + 추가 수량을 합친 뒤 최대 스택 수를 넘는지 계산
-                int totalAmount = slots[i].amount + _count;
+                // 동일 아이템의 보유 개수가 해당 아이템의 최대 중첩 개수 미만이면...
+                if (slots[i].amount < _itemData.itemMultiple)
+                {
+                    // 현재 수량 + 추가 수량을 합친 뒤 최대 스택 수를 넘는지 계산
+                    int totalAmount = slots[i].amount + _count;
 
-                // 슬롯에는 최대 스택 수까지만 저장
-                slots[i].amount = totalAmount >= _itemData.itemMultiple ? _itemData.itemMultiple : totalAmount;
+                    // 슬롯에는 최대 스택 수까지만 저장
+                    slots[i].amount = totalAmount >= _itemData.itemMultiple ? _itemData.itemMultiple : totalAmount;
 
-                // UI 갱신 이벤트 호출
-                OnSlotChanged?.Invoke(i);
+                    // 퀵슬롯 갱신 메소드 호출
+                    QuickSlotRenew(_itemData);
 
-                // 초과 수량 반환
-                int remain = totalAmount - _itemData.itemMultiple;
-                return remain > 0 ? remain : 0;
+                    // UI 갱신 이벤트 호출
+                    OnSlotChanged?.Invoke(i);
+
+                    // 초과 수량 반환
+                    int remain = totalAmount - _itemData.itemMultiple;
+                    return remain > 0 ? remain : 0;
+                }
+
+                // 아니라면... (이미 최대 중첩 개수만큼 보유 중)
+                else
+                {
+                    Debug.Log($"{_itemData.name}은 최대 중첩 개수({_itemData.itemMultiple}개)만큼 보유 중입니다.");
+
+                    // UI 갱신 이벤트 호출
+                    OnSlotChanged?.Invoke(i);
+
+                    return _count;  //전부 반환
+                }
             }
         }
 
@@ -110,6 +130,18 @@ public class PlayerInventory : MonoBehaviour
         // 인벤토리가 가득 차서 넣지 못한 경우 남은 수량 그대로 반환
         Debug.Log("인벤토리가 가득차서 아이템을 주울 수 없습니다.");
         return _count;
+    }
+
+    /* 획득한 아이템을 퀵슬롯에서 찾아 개수 변동 반영 */
+    private void QuickSlotRenew(ItemData _itemData)
+    {
+        foreach (InventorySlotData qslot in quickSlots)
+        {
+            if (qslot.TID == _itemData.TID)
+            {
+                GlobalEventBus.OnQuickSlotChanged?.Invoke(qslot.order, qslot.icon, GetInventoryItemCount(qslot.TID));
+            }
+        }
     }
 
     /* 아이템의 아이콘 Addressable 주소 해석 및 스프라이트 이미지 가져오기 */
