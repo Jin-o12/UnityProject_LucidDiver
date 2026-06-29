@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 세이브를 읽고 쓰는 클래스 (ISaveRepository 인터페이스 상속)
 /// </summary>
 using UnityEngine;
@@ -23,7 +23,8 @@ public class LocalSaveRepository : ISaveRepository
         {
             // 지정 경로에서 저장 데이터 가져오기
             string json = File.ReadAllText(saveFilePath);
-            return JsonUtility.FromJson<PlayerSaveData>(json);
+            playerSaveData = JsonUtility.FromJson<PlayerSaveData>(json);
+            return playerSaveData;
         }
         else
         {

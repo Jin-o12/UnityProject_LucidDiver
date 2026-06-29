@@ -13,13 +13,13 @@ public class ResultManager : MonoBehaviour, IResultService
     // 플레이 타임 기록 필드
     private float playTime;                             //이번 세션 플레이 시간
     private float startTime;                            //플레이 시작 시점
-    private readonly string playScene = "DemoScene";    //플레이 시간을 측정할 신
     // 탈출 여부 및 결과 창 필드
     private bool extractionResult;                      //탈출 성공 여부 판정
     private ResultUI resultPanel;                       //결과 창 UI 
     // 동조율 저장 필드
     public int linkRateLevel = 0;                       //동조율 상승 후 다이버와의 동조율 단계
     public int linkRateGain = 1;                        //세션 탈출 성공 시 가산되는 동조율 단계 증가치
+    private bool linkRateUp = false;                    //동조율 단계 상승 여부 전달
     private bool MemoryLogUnlocked = false;             //세션 탈출 시 개인 심상 기록 해금 여부 저장
     private bool hasNewMemoryLog = true;                //개인 심상 기록 확인 여부 저장
     // 인벤토리 기록에 관한 필드
@@ -70,19 +70,21 @@ public class ResultManager : MonoBehaviour, IResultService
         //로비로 돌아가기 버튼에 결과 창 닫기 연결
         GlobalEventBus.OnReturnToLobby += CloseResultPanel;
         //출격 준비 UI 오픈 이벤트 연결
-        GlobalEventBus.OnOpenPrepareUI += SendQuickSlotCacheEvent;
+        GlobalEventBus.PrepareUIOpen += SendQuickSlotCacheEvent;
         //다이버/기록 UI 오픈 이벤트 연결
-        GlobalEventBus.OnOpenRecordUI += SendLinkRecordData;
+        GlobalEventBus.RecordUIOpen += SendLinkRecordData;
         //다이버/기록 UI 읽음 이벤트 연결
         GlobalEventBus.OnRecordRead += NewMemoryRead;
     }
 
     private void OnDestroy()  //IResultService 구현체 (로케이터에 등록)
     {
-        if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
-        if (Instance == this) Instance = null;
+        //if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
+        //if (Instance == this) Instance = null;
         GlobalEventBus.OnSetRecordData -= RenewLinkRateData;
         GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
+        GlobalEventBus.PrepareUIOpen -= SendQuickSlotCacheEvent;
+        GlobalEventBus.RecordUIOpen -= SendLinkRecordData;
         GlobalEventBus.OnRecordRead -= NewMemoryRead;
     }
 
@@ -189,21 +191,16 @@ public class ResultManager : MonoBehaviour, IResultService
         FindItemCountAndData(401, out memoryFragmentCount, out memoryFragmentData);
         // 결과 창 패널 출력 메소드
         OpenResultPanel();
-        // 탈출 실패 시 각 아이템을 인벤토리에서 제거
+        // 기억 파편을 사용해 동조율 상승 → 심상 기록 해금 처리를 실행
+        LinkRateUp(_extractionResult);
+        // 심상 기록 읽기 상태 저장
+        // _playerSaveData.hasNewMemoryLog = hasNewMemoryLog;
+        // 탈출 실패 시 소비 기물 아이템을 인벤토리에서 제거
         if (!_extractionResult)
         {
             RemoveFromInventory(301);
             RemoveFromInventory(302);
-            RemoveFromInventory(401);
         }
-        // 탈출 성공 시에는 기억 파편을 사용해 동조율 상승 → 심상 기록 해금 처리를 실행
-        else
-        {
-            LinkRateUp();
-        }
-        // // 심상 기록 해금 상태 저장 (P0에서는 동조율 단계가 1 이상이면 개인 심상 기록 해금)
-        // _playerSaveData.memoryLogUnlocked = linkRateLevel > 0;
-        // _playerSaveData.hasNewMemoryLog = hasNewMemoryLog;
         // 모든 처리 완료 후 후 DataManager에서 playerData를 저장
         DataManager.Instance.SaveGame();
     }
@@ -246,13 +243,16 @@ public class ResultManager : MonoBehaviour, IResultService
         slotCount2 = _extractionResult ? _inven.quickSlots[1].amount : 0;
     }
 
-    private void LinkRateUp()
+    // 탈출 성공 여부에 따라 동조율 상승 → 심상 기록 해금을 실행하는 메소드
+    private void LinkRateUp(bool _extractionResult)
     {
-        resultPanel.linkRateUp = memoryFragmentCount > 0;
-        // 기억 파편을 사용했거나 이미 해금 상태(기억 동조율 단계 > 0)라면 '해금됨=true' 전달
-        MemoryLogUnlocked = resultPanel.linkRateUp || linkRateLevel > 0;
+        // 기억 파편 획득 AND 탈출 성공이면 '동조율 단계 상승=true' 전달
+        linkRateUp = memoryFragmentCount > 0 && _extractionResult;
+        resultPanel.linkRateUp = linkRateUp;
+        // 기억 파편을 사용해 동조율 단계가 상승했거나 이미 해금 상태(기억 동조율 단계 > 0)라면 '해금됨=true' 전달
+        MemoryLogUnlocked = linkRateUp || linkRateLevel > 0;
         resultPanel.memoryLogUnlocked = MemoryLogUnlocked;
-        // 기억 파편을 인벤토리에서 제거
+        // 기억 파편을 인벤토리에서 제거 (성공/실패 양쪽 모두 제거 처리는 실행함)
         RemoveFromInventory(401);
         // 결과 창 UI 출력 갱신
         resultPanel.RefreshResult();
@@ -262,7 +262,6 @@ public class ResultManager : MonoBehaviour, IResultService
     {
         foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
         {
-            // 해당 아이템이 이미 창고에 존재한다면 보유 개수를 창고에 더함
             if (slot.TID == _tid)
             {
                 slot.amount = 0;
@@ -286,7 +285,7 @@ public class ResultManager : MonoBehaviour, IResultService
         resultPanel.manaStoneData = manaStoneData;
         resultPanel.memoryFragmentCount = memoryFragmentCount;
         resultPanel.memoryFragmentData = memoryFragmentData;
-        // 동조율 단계 데이터를 결과 창에 전달
+        // 동조율 단계 데이터를 결과 창에 전달 (상승 전 / 상승 후)
         int prevLinkRateLevel = linkRateLevel;
         resultPanel.prevLinkRateLevel = prevLinkRateLevel;
         int nextLinkRateLevel = linkRateLevel + linkRateGain;
