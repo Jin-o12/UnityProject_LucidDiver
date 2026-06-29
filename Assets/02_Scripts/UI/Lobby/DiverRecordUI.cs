@@ -105,7 +105,6 @@ public class DiverRecordUI : MonoBehaviour
         /// 버튼 클릭 이벤트를 등록 ///
         buttonBackTop.onClick.AddListener(OnClickBack);
         buttonBackBottom.onClick.AddListener(OnClickBack);
-        //buttonCloseMemoryLog.onClick.AddListener(OnClickCloseMemoryLog);
         buttonRecordCard01.onClick.AddListener(OnClickRecord01);
 
         // {테스트 데이터 사용 시 임시 값 적용}
@@ -131,8 +130,6 @@ public class DiverRecordUI : MonoBehaviour
     {
         buttonRecordCard01.onClick.RemoveListener(OnClickRecord01);
         buttonRecordCard02.onClick.RemoveListener(OnClickRecord02);
-        //buttonCloseMemoryLog.onClick.RemoveListener(OnClickCloseMemoryLog);
-        buttonRecordCard01.onClick.RemoveListener(OnClickRecord01);
     }
 
     public void SetData(int newLinkRateLevel, bool newMemoryLogUnlocked, bool newHasNewMemoryLog)
@@ -160,9 +157,6 @@ public class DiverRecordUI : MonoBehaviour
 
         // {기록 02 카드 갱신}
         //RefreshRecord02();
-
-        // {팝업 텍스트 갱신}
-        RefreshMemoryLogPopup();
     }
 
     private void RefreshDiverInfo()
@@ -259,17 +253,6 @@ public class DiverRecordUI : MonoBehaviour
             textNewBadge02.gameObject.SetActive(false);
     }
 
-    private void RefreshMemoryLogPopup()
-    {
-        // {기록 팝업 제목 표시}
-        if (textMemoryLogTitle != null)
-            textMemoryLogTitle.text = Record01Title;
-
-        // {기록 팝업 본문 표시}
-        if (textMemoryLogBody != null)
-            textMemoryLogBody.text = Record01Body;
-    }
-
     private void OnClickBack()
     {
         // {로비 Canvas를 다시 활성화}
@@ -286,7 +269,7 @@ public class DiverRecordUI : MonoBehaviour
         }
 
         // {기록 카드 팝업 열기 이벤트를 호출한다}
-        GlobalEventBus.OnOpenRecordCardPopUpUI?.Invoke(Record01Title, Record01Body);
+        GlobalEventBus.OnOpenRecordCardPopUpUI?.Invoke(Record01Title, CharacterTID.Yuan);
 
         // {기록을 열람했으므로 NEW 배지를 제거한다}
         hasNewMemoryLog = false;
@@ -303,12 +286,5 @@ public class DiverRecordUI : MonoBehaviour
     {
         // {기록 02는 P0에서 잠금 더미}
         Debug.Log("DiverRecordUI: 기록 02는 P0에서 잠금 상태입니다.");
-    }
-
-    private void OnClickCloseMemoryLog()
-    {
-        // {기록 01 팝업 닫기}
-        if (popupMemoryLog01 != null)
-            popupMemoryLog01.SetActive(false);
     }
 }
