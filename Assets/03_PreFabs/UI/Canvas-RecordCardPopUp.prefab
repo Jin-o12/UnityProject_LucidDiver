@@ -1155,10 +1155,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: RecordTitle
+  m_text: Record Title
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: fc5cb442c1892f54fa8d8e729a021064, type: 2}
-  m_sharedMaterial: {fileID: -3726878681740355075, guid: fc5cb442c1892f54fa8d8e729a021064,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1290,7 +1290,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC720\uC548\uC740 \uC5B4\uCA4C\uAD6C \uC800\uCA4C\uAD6C"
+  m_text: Record Body
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
   m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
@@ -1324,7 +1324,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 2
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
