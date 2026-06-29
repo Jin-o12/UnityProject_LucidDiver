@@ -101,8 +101,7 @@ public class StorageInventoryUI : MonoBehaviour
         if (buttonBackBottom != null)
             buttonBackBottom.onClick.AddListener(OnClickBack);
 
-        // {창고 UI가 열릴 때마다 최신 저장 데이터를 불러온다}
-        LoadCurrentData();
+        LoadFromPlayerData();
     }
 
 
@@ -141,23 +140,6 @@ public class StorageInventoryUI : MonoBehaviour
 
         // {초기화된 빈 데이터를 UI에 반영한다}
         RefreshAll();
-    }
-
-    private void LoadCurrentData()
-    {
-        if (useDebugData)
-        {
-            // {디버그 모드에서는 테스트 데이터를 구성한다}
-            BuildDebugData();
-
-            // {테스트 데이터를 UI에 반영한다}
-            RefreshAll();
-
-            return;
-        }
-
-        // {실제 모드에서는 저장 데이터에서 창고/인벤토리 데이터를 불러온다}
-        LoadFromPlayerData();
     }
 
     private void EnsureItemDataLoaded()
@@ -326,6 +308,7 @@ public class StorageInventoryUI : MonoBehaviour
     {
         return inventoryData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
     }
+
     public int GetStoredItemCount(int tid)
     {
         // {저장 데이터를 먼저 불러와 창고 데이터를 최신 상태로 갱신한다}

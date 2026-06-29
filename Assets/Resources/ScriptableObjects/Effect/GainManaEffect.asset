@@ -9,10 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4351d13ec99562d4c8e3ddfe4b599e9e, type: 3}
+  m_Script: {fileID: 11500000, guid: a79d04db8cd68e34cba770c72064a633, type: 3}
   m_Name: GainManaEffect
   m_EditorClassIdentifier: 
   effectTarget: 0
   effectType: 1
   effectRange: 0
-  effectValue: 5
+  effectValue: 10

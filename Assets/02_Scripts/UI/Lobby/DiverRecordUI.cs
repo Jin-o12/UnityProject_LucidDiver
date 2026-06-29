@@ -117,7 +117,6 @@ public class DiverRecordUI : MonoBehaviour
     {
         buttonRecordCard01.onClick.RemoveListener(OnClickRecord01);
         buttonRecordCard02.onClick.RemoveListener(OnClickRecord02);
-        buttonRecordCard01.onClick.RemoveListener(OnClickRecord01);
     }
 
     public void SetData(int newLinkRateLevel, bool newMemoryLogUnlocked, bool newHasNewMemoryLog)
@@ -225,7 +224,7 @@ public class DiverRecordUI : MonoBehaviour
         }
 
         // {기록 카드 팝업 열기 이벤트를 호출한다}
-        GlobalEventBus.OnOpenRecordCardPopUpUI?.Invoke(Record01Title, Record01Body);
+        GlobalEventBus.OnOpenRecordCardPopUpUI?.Invoke(Record01Title, CharacterTID.Yuan);
 
         // {기록을 열람했으므로 NEW 배지를 제거한다}
         hasNewMemoryLog = false;

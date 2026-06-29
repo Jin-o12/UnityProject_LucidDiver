@@ -65,13 +65,14 @@ public class LobbyUIPresenter : MonoBehaviour
     }
 
     /* 기록 카드 팝업 UI 전환 */
-    public void OpenRecordCardPopUp(string title, string body)
+    public void OpenRecordCardPopUp(string title, CharacterTID tid)
     {
         // 현재 열려있는 캔버스를 닫고 다음 UI로 전환
         uiManager.CloseNowUI();
         // {기록 카드 팝업 UI를 연다}
         RecordCardPopUpUI popup = uiManager.Open<RecordCardPopUpUI>();
-        // {선택한 기록의 제목과 본문을 팝업에 전달한다}
-        popup.SetData(title, body);
+
+        // 기록 제목과 캐릭터 ID를 팝업에 전달한다
+        popup.SetData(title, tid);
     }
 }

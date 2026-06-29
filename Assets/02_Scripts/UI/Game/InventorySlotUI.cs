@@ -1,117 +1,135 @@
 ﻿/// <summary>
 /// 아이템 슬롯 하나의 역할을 수행합니다
+/// 인벤토리 슬롯 1칸의 표시와 입력을 담당한다.
+/// 인벤토리 슬롯끼리의 위치 교환, 체스트와의 우클릭 이동, 드래그 앤 드롭 이동을 처리한다.
 /// </summary>
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
 
-public class InventorySlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
 {
-    [Header("슬롯 내 요소")]
+    [Header("슬롯 UI 요소")]
     [SerializeField] private Image itemImg;
     [SerializeField] private TMP_Text itemStack;
     [SerializeField] private Transform itemInfo;
 
+    private InventoryUI inventoryUI;
+
     public int slotIndex { get; set; }
 
-    // 드래그 기능 관련 변수
-    private CanvasGroup canvasGroup;    
-    private InventoryUI inventoryUI;
+    private CanvasGroup canvasGroup;
     private Canvas mainCanvas;
-    public event Action<int, int> OnSlotDrop;             // 슬롯이 드롭 되었을 때 이벤트
 
     private void Awake()
     {
-        mainCanvas = GetComponentInParent<Canvas>();
+
         inventoryUI = GetComponentInParent<InventoryUI>();
+        mainCanvas = GetComponentInParent<Canvas>();
 
-        if(mainCanvas==null)
-        {
-            this.enabled = false;
-            Debug.LogError("InventorySlotUI: 필요한 컴포넌트가 없습니다.");
-            return;
-        }
+        // 프리팹에 수동 연결이 빠졌을 때를 대비해 같은 이름의 자식을 자동으로 찾는다.
+        if (itemInfo == null)
+            itemInfo = transform.Find("ItemInfo");
 
-        if(itemInfo!=null)
+        if (itemInfo != null)
             canvasGroup = itemInfo.GetComponent<CanvasGroup>();
+
+        if (mainCanvas == null)
+        {
+            enabled = false;
+            Debug.LogError("InventorySlotUI: Canvas를 찾을 수 없습니다.");
+        }
     }
 
-    /* 슬롯 초기화 */
     public void Initialize(int index)
     {
-        itemImg.enabled = false;
-        itemStack.text = "";
         slotIndex = index;
+        UpdateSlot(0, null);
     }
 
-    /* 해당 슬롯의 UI를 변경하는 함수 (아이템 갯수, 스프라이트 이미지) */
-    public void UpdateSlot(int _stack, Sprite _sprite)
+    public void UpdateSlot(int stack, Sprite sprite)
     {
-        // 들어있는 아이템이 없을 경우 빈 공간으로 초기화
-        if(_stack==0 || _sprite==null)
+        if (stack <= 0 || sprite == null)
         {
             itemImg.enabled = false;
             itemStack.text = "";
             return;
         }
-        
-        itemStack.text = $"{_stack}";
-        itemImg.sprite = _sprite;
+
         itemImg.enabled = true;
+        itemImg.sprite = sprite;
+        itemStack.text = stack.ToString();
     }
 
-    /* 드래그 시작 시 호출 */
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Right)
+            return;
+
+        if (!itemImg.enabled)
+            return;
+
+        // 체스트가 열려 있을 때만 인벤토리 -> 체스트 우클릭 이동을 허용한다.
+        if (ChestUI.ActiveUI != null)
+            ChestUI.ActiveUI.TryMoveFromInventory(slotIndex);
+    }
+
     public void OnBeginDrag(PointerEventData eventData)
     {
-        // 빈 슬롯이여서 옮길 아이콘이 없다면 드래그 취소
-        if(itemInfo==null || !itemImg.enabled) return;
+        if (mainCanvas == null || itemInfo == null || !itemImg.enabled)
+            return;
 
-        // 캔버스 최상단으로 올려 가장 위에 보이게 함
         itemInfo.SetParent(mainCanvas.transform);
         itemInfo.SetAsLastSibling();
 
-        // 아이콘의 마우스 방해 끄기
         if (canvasGroup != null)
             canvasGroup.blocksRaycasts = false;
+        inventoryUI?.ShowDropZone();
     }
 
-    /* 드래그 중 지속적으로 호출 */
     public void OnDrag(PointerEventData eventData)
     {
+        if (itemInfo == null)
+            return;
+
         itemInfo.position = eventData.position;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        // 아이콘의 마우스 방해 다시 켜기
         if (canvasGroup != null)
             canvasGroup.blocksRaycasts = true;
 
-        // 만약 자식이 다른 슬롯에 드래그되지 못했다면 원위치로 복귀
-        if (itemInfo.parent == mainCanvas.transform)
+        if (mainCanvas != null && itemInfo != null && itemInfo.parent == mainCanvas.transform)
         {
-            itemInfo.SetParent(this.transform);
-            itemInfo.localPosition = Vector3.zero; // 한가운데로 정렬
+            itemInfo.SetParent(transform);
+            itemInfo.localPosition = Vector3.zero;
         }
+        inventoryUI?.HideDropZone();
     }
 
-    /* 자신의 위에 무언가 드롭 되었을 떄 호출 */
     public void OnDrop(PointerEventData eventData)
     {
-        // 직전까지 유저가 드래그하던 오브젝트
         GameObject droppedObj = eventData.pointerDrag;
+        if (droppedObj == null)
+            return;
 
-        if(droppedObj!=null)
+        if (droppedObj.TryGetComponent<InventorySlotUI>(out var originSlot))
         {
-            if(droppedObj.TryGetComponent<InventorySlotUI>(out var originSlot))
-            {
-                if(originSlot == this) return;
+            if (originSlot == this)
+                return;
 
-                // 두 슬롯간에 교환이 있었음을 방송
-                GlobalEventBus.OnSwapInventorySlot(slotIndex, originSlot.slotIndex);
-            }
+            GlobalEventBus.OnSwapInventorySlot?.Invoke(slotIndex, originSlot.slotIndex);
+            return;
+        }
+
+        if (droppedObj.TryGetComponent<ChestSlotUI>(out var chestSlot))
+        {
+            if (chestSlot.OwnerUI == null)
+                return;
+
+            chestSlot.OwnerUI.TryMoveToInventorySlot(chestSlot.SlotIndex, slotIndex);
         }
     }
 }

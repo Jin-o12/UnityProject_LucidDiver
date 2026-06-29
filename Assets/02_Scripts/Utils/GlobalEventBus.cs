@@ -26,6 +26,7 @@ public class GlobalEventBus
     public static Action<int, Sprite, int> OnQuickSlotChanged;      // 퀵슬롯 정보가 변경되었을 시: Action<퀵슬롯 번호, 이미지, 갯수>
     public static Action<int> OnQuickSlotUseRequested;              // 특정 퀵슬롯 번호가 눌렷을 시: Action<퀵슬롯 번호>
     public static Action<int, int> OnSwapInventorySlot;             // 인벤토리 슬롯이 바뀌었을 시: Action<1번 슬롯 번호, 2번 슬롯 번호>
+    public static Action<int> OnInventoryDropRequested;             // 인벤토리 아이템을 바닥에 버리기 요청할 시: Action<인벤토리 슬롯 번호>
     public static Action<int, int> OnDropItemQuickSlot;             // 인벤토리에서 퀵슬롯에 아이템을 드래그 앤 드롭 할 시: Action<퀵슬롯 번호, 인벤토리 번호> | 인벤토리->퀵슬롯
     public static Action<int, int> OnSwapItemQuickSlot;             // 퀵슬롯에서 퀵슬롯으로 아이템을 드래그 앤 드롭 할 시: Action<1번 퀵슬롯 번호, 2번 퀵슬롯 번호)> | 2번슬롯->1번슬롯
     public static Action<int, int, Sprite, int> QuickSlotLoad;      // 퀵슬롯 데이터 불러오기 시: Action<퀵슬롯 번호, 아이템 TID, 아이템 아이콘, 아이템 개수)>
@@ -57,16 +58,16 @@ public class GlobalEventBus
     /// <summary>
     /// UI 관리 이벤트
     /// </summary>
-    public static Action OnOpenLobbyUI;                             // 로비 UI 실행
-    public static Action OnRequestQuickSlotCache;                   // 출격 준비 UI에서 퀵슬롯 캐시 재전송 요청
-    public static Action OnOpenPrepareUI;                           // 출격 준비 UI 오픈 (LobbyMainUI → LobbyPresenter)
-    public static Action PrepareUIOpen;                             // 출격 준비 UI 오픈 (SortiePrepareUI → ResultManager)
-    public static Action OnOpenRecordUI;                            // 다이버/기록 UI 오픈  (LobbyMainUI → LobbyPresenter)
-    public static Action RecordUIOpen;                              // 다이버/기록 UI 오픈  (DiverRecordUI → ResultManager)
-    public static Action OnOpenStorageUI;                           // 개인 창고 UI 오픈
-    public static Action<string, string> OnOpenRecordCardPopUpUI;   // 기록 카드 팝업 열기 요청: Action<기록 제목, 기록 본문>
-    public static Action<int, bool, bool> RecordDataLoad;           // 다이버 개인 심상 기록 데이터 전달 : Action<newLinkRateLevel, newMemoryLogUnlocked, newHasNewMemoryLog>
-    public static Action OnRecordRead;                              // 다이버 개인 심상 기록 읽음
+    public static Action OnOpenLobbyUI;                                     // 로비 UI 실행
+    public static Action OnRequestQuickSlotCache;                           // 출격 준비 UI에서 퀵슬롯 캐시 재전송 요청
+    public static Action OnOpenPrepareUI;                                   // 출격 준비 UI 오픈 (LobbyMainUI → LobbyPresenter)
+    public static Action PrepareUIOpen;                                     // 출격 준비 UI 오픈 (SortiePrepareUI → ResultManager)
+    public static Action OnOpenRecordUI;                                    // 다이버/기록 UI 오픈  (LobbyMainUI → LobbyPresenter)
+    public static Action RecordUIOpen;                                      // 다이버/기록 UI 오픈  (DiverRecordUI → ResultManager)
+    public static Action OnOpenStorageUI;                                   // 개인 창고 UI 오픈
+    public static Action<string, CharacterTID> OnOpenRecordCardPopUpUI;     // 기록 카드 팝업 열기 요청: Action<기록 제목, 기록을 열 캐릭터의 ID>
+    public static Action<int, bool, bool> RecordDataLoad;                   // 다이버 개인 심상 기록 데이터 전달 : Action<newLinkRateLevel, newMemoryLogUnlocked, newHasNewMemoryLog>
+    public static Action OnRecordRead;                                      // 다이버 개인 심상 기록 읽음
 
 
 }
