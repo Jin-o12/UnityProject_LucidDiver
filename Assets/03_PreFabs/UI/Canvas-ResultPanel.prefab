@@ -335,8 +335,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: '[BACK TO LOBBY]'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}

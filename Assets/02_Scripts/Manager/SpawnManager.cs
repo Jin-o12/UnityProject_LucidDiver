@@ -11,8 +11,6 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private GameObject EnemyPrefab;
     [SerializeField] private GameObject playerSpawnPool;
     [SerializeField] private GameObject enemySpawnPool;
-    private readonly string playerSpawnPoolTag = "PlayerSpawnPool"; //플레이어 스폰 풀 태그
-    private readonly string enemySpawnPoolTag = "EnemySpawnPool";   //적 스폰 풀 태그
     private List<Transform> playerSpawnPoint = new();
     private List<Transform> enemySpawnPoint = new();
 

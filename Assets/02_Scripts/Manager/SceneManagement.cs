@@ -18,4 +18,6 @@ public class SceneManagement : MonoBehaviour
             Instance = this;
         DontDestroyOnLoad(gameObject);
     }
+
+    
 }

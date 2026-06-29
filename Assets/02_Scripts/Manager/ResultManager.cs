@@ -40,6 +40,7 @@ public class ResultManager : MonoBehaviour, IResultService
     public int slotCount2;                              //2번 슬롯 아이템의 개수 데이터를 받아옴
 
     // 저장 데이터 인터페이스
+    private ISaveRepository saveRepo;                   // 플레이어 데이터 접근 인터페이스
     private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
 
     public int slotTID3;                                //3번 슬롯 아이템의 ID값 데이터를 받아옴
@@ -54,9 +55,11 @@ public class ResultManager : MonoBehaviour, IResultService
         else
             Instance = this;
         DontDestroyOnLoad(gameObject);
+        
         // ResultServiceLocator에 자신을 등록
         ResultServiceLocator.Instance = this;
         // 인터페이스 구현부 연결
+        saveRepo = new LocalSaveRepository();
         itemRepo = new SOItemRepository();
 
         // 씬에 이미 존재하는 PlayerStatus를 찾아 등록 (타이밍 안전성 보장)
