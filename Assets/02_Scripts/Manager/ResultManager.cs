@@ -13,7 +13,6 @@ public class ResultManager : MonoBehaviour, IResultService
     // 플레이 타임 기록 필드
     private float playTime;                             //이번 세션 플레이 시간
     private float startTime;                            //플레이 시작 시점
-    private readonly string playScene = "DemoScene";    //플레이 시간을 측정할 신
     // 탈출 여부 및 결과 창 필드
     private bool extractionResult;                      //탈출 성공 여부 판정
     private ResultUI resultPanel;                       //결과 창 UI 
