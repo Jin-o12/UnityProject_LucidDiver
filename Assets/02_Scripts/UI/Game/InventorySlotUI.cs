@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 아이템 슬롯 하나의 역할을 수행합니다
 /// </summary>
 using System;
@@ -27,7 +27,7 @@ public class InventorySlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         mainCanvas = GetComponentInParent<Canvas>();
         inventoryUI = GetComponentInParent<InventoryUI>();
 
-        if(mainCanvas==null || inventoryUI==null)
+        if(mainCanvas==null)
         {
             this.enabled = false;
             Debug.LogError("InventorySlotUI: 필요한 컴포넌트가 없습니다.");

@@ -36,11 +36,6 @@ public class DiverRecordUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textOpenRecord02;
     [SerializeField] private TextMeshProUGUI textNewBadge02;
 
-    [Header("Memory Log Popup")]
-    [SerializeField] private GameObject popupMemoryLog01;
-    [SerializeField] private TextMeshProUGUI textMemoryLogTitle;
-    [SerializeField] private TextMeshProUGUI textMemoryLogBody;
-
     [Header("Temporary Test Data")]
     [SerializeField] private bool useTestData = true;
     [SerializeField] private int testLinkRateLevel = 0;
@@ -84,14 +79,6 @@ public class DiverRecordUI : MonoBehaviour
             Debug.Log("필수 오브젝트가 등록되지 않았습니다");
             return;
         }
-
-        // // {기록 01 카드 클릭 이벤트 등록}
-        // if ()
-        //     buttonRecordCard01.onClick.AddListener(OnClickRecord01);
-
-        // // {기록 02 카드 클릭 이벤트 등록}
-        // if (buttonRecordCard02 != null)
-        //     buttonRecordCard02.onClick.AddListener(OnClickRecord02);
     }
 
     private void Start()
@@ -105,7 +92,6 @@ public class DiverRecordUI : MonoBehaviour
         /// 버튼 클릭 이벤트를 등록 ///
         buttonBackTop.onClick.AddListener(OnClickBack);
         buttonBackBottom.onClick.AddListener(OnClickBack);
-        //buttonCloseMemoryLog.onClick.AddListener(OnClickCloseMemoryLog);
         buttonRecordCard01.onClick.AddListener(OnClickRecord01);
 
         // {테스트 데이터 사용 시 임시 값 적용}
@@ -131,7 +117,6 @@ public class DiverRecordUI : MonoBehaviour
     {
         buttonRecordCard01.onClick.RemoveListener(OnClickRecord01);
         buttonRecordCard02.onClick.RemoveListener(OnClickRecord02);
-        //buttonCloseMemoryLog.onClick.RemoveListener(OnClickCloseMemoryLog);
         buttonRecordCard01.onClick.RemoveListener(OnClickRecord01);
     }
 
@@ -157,12 +142,6 @@ public class DiverRecordUI : MonoBehaviour
 
         // {기록 01 카드 갱신}
         RefreshRecord01();
-
-        // {기록 02 카드 갱신}
-        //RefreshRecord02();
-
-        // {팝업 텍스트 갱신}
-        RefreshMemoryLogPopup();
     }
 
     private void RefreshDiverInfo()
@@ -230,46 +209,6 @@ public class DiverRecordUI : MonoBehaviour
             textNewBadge01.gameObject.SetActive(memoryLogUnlocked && hasNewMemoryLog);
     }
 
-    private void RefreshRecord02()
-    {
-        // {기록 02는 P0에서 잠금 더미로 고정}
-        if (textRecordState02 != null)
-            textRecordState02.text = "[LOCK] 기록 02";
-
-        if (textRecordTitle02 != null)
-            textRecordTitle02.text = "???";
-
-        if (textRecordDesc02 != null)
-            textRecordDesc02.text = "동조율 Lv.2 달성 시 해금";
-
-        if (textOpenRecord02 != null)
-            textOpenRecord02.text = "잠김";
-
-        if (buttonRecordCard02 != null)
-            buttonRecordCard02.interactable = false;
-
-        if (recordCard02CanvasGroup != null)
-        {
-            recordCard02CanvasGroup.alpha = 0.45f;
-            recordCard02CanvasGroup.interactable = false;
-            recordCard02CanvasGroup.blocksRaycasts = false;
-        }
-
-        if (textNewBadge02 != null)
-            textNewBadge02.gameObject.SetActive(false);
-    }
-
-    private void RefreshMemoryLogPopup()
-    {
-        // {기록 팝업 제목 표시}
-        if (textMemoryLogTitle != null)
-            textMemoryLogTitle.text = Record01Title;
-
-        // {기록 팝업 본문 표시}
-        if (textMemoryLogBody != null)
-            textMemoryLogBody.text = Record01Body;
-    }
-
     private void OnClickBack()
     {
         // {로비 Canvas를 다시 활성화}
@@ -303,12 +242,5 @@ public class DiverRecordUI : MonoBehaviour
     {
         // {기록 02는 P0에서 잠금 더미}
         Debug.Log("DiverRecordUI: 기록 02는 P0에서 잠금 상태입니다.");
-    }
-
-    private void OnClickCloseMemoryLog()
-    {
-        // {기록 01 팝업 닫기}
-        if (popupMemoryLog01 != null)
-            popupMemoryLog01.SetActive(false);
     }
 }

@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 아이템과 인벤토리에 관한 모든 상호작용의 중재자 역할을 수행합니다.
 /// 아이템 습득 시 상황에 따라 즉시 장착하거나 인벤토리에 수납합니다.
 /// 인벤토리 UI와 상자 UI의 열기/닫기 흐름도 함께 관리합니다.
@@ -123,8 +123,9 @@ public class InventoryPresenter : MonoBehaviour
             Debug.LogWarning("Unknown item TID: " + pickedItemTID);
         }
 
-        // DataManager의 playerData 저장
-        DataManager.Instance.SaveGame();
+        // {아이템 획득 직후에는 저장하지 않는다}
+        // {획득 아이템은 PlayerInventory에만 보관하고, 세션 종료 시 ResultManager가 성공/실패에 따라 저장한다}
+        // DataManager.Instance.SaveGame();
     }
 
     /* 상자와 상호작용 했을 때 상자 UI와 인벤토리 UI를 함께 오픈 */
