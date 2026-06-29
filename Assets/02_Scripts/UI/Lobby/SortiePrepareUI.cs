@@ -8,6 +8,7 @@ public class SortiePrepareUI : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button buttonBackTop;                  // 상단 왼쪽 뒤로가기 버튼
     [SerializeField] private Button buttonStartSortie;              // 출격 버튼
+    [SerializeField] private Button buttonChangeFromStorage;        // {창고에서 변경 버튼}
 
     [Header("Diver Info")]
     [SerializeField] private TextMeshProUGUI textDiverName;         // 다이버 이름
@@ -47,7 +48,7 @@ public class SortiePrepareUI : MonoBehaviour
     private void Awake()
     {
         // {뒤로가기 버튼 이벤트 등록}
-        if (buttonBackTop == null || buttonStartSortie == null)
+        if (buttonBackTop == null || buttonStartSortie == null || buttonChangeFromStorage == null)
         {
             this.enabled = false;
             Debug.Log("필수 오브젝트가 등록되지 않았습니다");
@@ -56,6 +57,7 @@ public class SortiePrepareUI : MonoBehaviour
 
         buttonBackTop.onClick.AddListener(OnClickBack);
         buttonStartSortie.onClick.AddListener(OnClickStartSortie);
+        buttonChangeFromStorage.onClick.AddListener(OnClickChangeFromStorage);
     }
 
     private void OnEnable()
@@ -75,7 +77,7 @@ public class SortiePrepareUI : MonoBehaviour
     private void OnDestroy()
     {
         // {오브젝트 파괴 시 뒤로가기 버튼 이벤트 해제}
-        if (buttonBackTop == null || buttonStartSortie == null)
+        if (buttonBackTop == null || buttonStartSortie == null || buttonChangeFromStorage == null)
         {
             this.enabled = false;
             Debug.Log("필수 오브젝트가 등록되지 않았습니다");
@@ -84,6 +86,7 @@ public class SortiePrepareUI : MonoBehaviour
 
         buttonBackTop.onClick.RemoveListener(OnClickBack);
         buttonStartSortie.onClick.RemoveListener(OnClickStartSortie);
+        buttonChangeFromStorage.onClick.RemoveListener(OnClickChangeFromStorage);
     }
 
     private void UpdateQuickSlot(int index, int tid, Sprite icon, int count)
@@ -181,5 +184,11 @@ public class SortiePrepareUI : MonoBehaviour
 
         // {현재 Canvas 비활성화}
         gameObject.SetActive(false);
+    }
+
+    private void OnClickChangeFromStorage()
+    {
+        // {창고 인벤토리 UI 열기 이벤트를 호출한다}
+        GlobalEventBus.OnOpenStorageUI?.Invoke();
     }
 }

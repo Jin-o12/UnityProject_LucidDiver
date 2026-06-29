@@ -2132,8 +2132,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4000877850758581658}
   m_HandleRect: {fileID: 1827577779152477458}
   m_Direction: 2
-  m_Value: 0.9999878
-  m_Size: 0.990099
+  m_Value: 0.9999817
+  m_Size: 0.99009895
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3055,7 +3055,8 @@ MonoBehaviour:
   textRecordDesc02: {fileID: 1060258758352272642}
   textOpenRecord02: {fileID: 7337617405100913081}
   textNewBadge02: {fileID: 5738831016626708841}
-  popupMemoryLog01: {fileID: 0}
+  popupMemoryLog01: {fileID: 4337375261074865489, guid: c1f13161693f33947bd9862d789625db,
+    type: 3}
   textMemoryLogTitle: {fileID: 0}
   textMemoryLogBody: {fileID: 0}
   useTestData: 1

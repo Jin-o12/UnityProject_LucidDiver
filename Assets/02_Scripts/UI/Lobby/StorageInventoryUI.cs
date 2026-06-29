@@ -31,6 +31,10 @@ public class StorageInventoryUI : MonoBehaviour
     [SerializeField] private Transform inventorySlotRoot;
     [SerializeField] private Transform quickSlotRoot;
 
+    [Header("Buttons")]
+    [SerializeField] private Button buttonBackTop;      // 상단 뒤로가기 버튼 참조
+    [SerializeField] private Button buttonBackBottom;   // 하단 뒤로가기 버튼 참조
+
     [Header("Capacity Text")]
     [SerializeField] private TMP_Text storageCapacityText;
     [SerializeField] private TMP_Text inventoryCapacityText;
@@ -87,7 +91,32 @@ public class StorageInventoryUI : MonoBehaviour
 
     private void OnEnable()
     {
+        // {뒤로가기 버튼 클릭 이벤트를 등록한다}
+        if (buttonBackTop != null)
+            buttonBackTop.onClick.AddListener(OnClickBack);
+
+        // {하단 뒤로가기 버튼이 있을 경우 클릭 이벤트를 등록한다}
+        if (buttonBackBottom != null)
+            buttonBackBottom.onClick.AddListener(OnClickBack);
+
         LoadFromPlayerData();
+    }
+
+    private void OnDisable()
+    {
+        // {뒤로가기 버튼 클릭 이벤트를 해제하여 중복 등록을 방지한다}
+        if (buttonBackTop != null)
+            buttonBackTop.onClick.RemoveListener(OnClickBack);
+
+        // {하단 뒤로가기 버튼 클릭 이벤트를 해제한다}
+        if (buttonBackBottom != null)
+            buttonBackBottom.onClick.RemoveListener(OnClickBack);
+    }
+
+    private void OnClickBack()
+    {
+        // {로비 메인 UI 열기 이벤트를 호출한다}
+        GlobalEventBus.OnOpenLobbyUI?.Invoke();
     }
 
     private void LoadFromPlayerData()
@@ -206,6 +235,7 @@ public class StorageInventoryUI : MonoBehaviour
     {
         return inventoryData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
     }
+
     public int GetStoredItemCount(int tid)
     {
         // {특정 TID 아이템의 창고 총수량을 반환}

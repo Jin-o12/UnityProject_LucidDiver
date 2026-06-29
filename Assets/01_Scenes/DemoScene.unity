@@ -1275,6 +1275,12 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 335469027}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &366956578 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 864261442559763118, guid: 06362a3faed268841a55bd0693f1f026,
+    type: 3}
+  m_PrefabInstance: {fileID: 6887825598066574539}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -2112,6 +2118,25 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 6887825598066574539}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &728449686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 366956578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 839e0a0136526b74e951173198bc184e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  slotCapacity: 8
+  items: []
+  useRandomLoot: 1
+  minCreateCount: 1
+  maxCreateCount: 2
+  allowDuplicateLoot: 0
+  lootOptions: []
 --- !u!1 &759063587
 GameObject:
   m_ObjectHideFlags: 0
@@ -4500,10 +4525,19 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 5510190801238468239, guid: 06362a3faed268841a55bd0693f1f026, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 864261442559763118, guid: 06362a3faed268841a55bd0693f1f026,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 728449686}
+    - targetCorrespondingSourceObject: {fileID: 2919856179126655751, guid: 06362a3faed268841a55bd0693f1f026,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1516240878}
   m_SourcePrefab: {fileID: 100100000, guid: 06362a3faed268841a55bd0693f1f026, type: 3}
 --- !u!224 &6963854496912646730 stripped
 RectTransform:

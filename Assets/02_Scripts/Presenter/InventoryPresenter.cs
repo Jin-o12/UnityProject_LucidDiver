@@ -24,6 +24,9 @@ public class InventoryPresenter : MonoBehaviour
     private ResultUI resultUI;                          // 결과 UI 캐시
     private ChestUI chestUI;                            // 상자 UI 캐시
 
+    // 저장 데이터 인터페이스
+    private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
+
     private void Awake()
     {
         playerWeapon = GetComponent<PlayerWeapon>();
@@ -38,6 +41,9 @@ public class InventoryPresenter : MonoBehaviour
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
             return;
         }
+        
+        // 인터페이스 구현부 연결
+        itemRepo = new SOItemRepository();
     }
 
     private void OnEnable()

@@ -1,6 +1,6 @@
-using UnityEngine;
+﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using UnityEngine;
 
 public class LocalJsonDialogueRepository : IDialogueRepository
 {
@@ -54,6 +54,59 @@ public class LocalJsonDialogueRepository : IDialogueRepository
             Debug.LogWarning($"[TID: {charTID}] 캐릭터의 대사 데이터가 없습니다");
         }
         return string.Empty; // 에러 시 빈 문자열 반환
+    }
+
+    /* 특정 상황에 맞는 대사 중 원하는 순서의 대사에서 TID 값을 뽑아오는 함수 */
+    public int GetTIDByIndex(int charTID, DialogueType type, int index)
+    {
+        if (dialogueDataDictionary.TryGetValue(charTID, out CharacterDialogueData data))
+        {
+            // 캐릭터 데이터 안에 요청한 상황의 대사 리스트가 있는지 확인
+            if (data.Dialogues.TryGetValue(type, out List<DialogueLine> lines))
+            {
+                // 요청한 순서가 실제 대사 개수 범위를 벗어나지 않는지 확인
+                if (index >= 0 && index < lines.Count)
+                {
+                    return lines[index].ID; // 원하는 순서의 대사에서 ID 값을 반환
+                }
+                else
+                {
+                    Debug.LogWarning($"[TID: {charTID}] [{type}] 상황의 {index}번째 대사가 없습니다 (현재 총 대사 수: {lines.Count}개)");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[TID: {charTID}] 캐릭터에게 [{type}] 상황의 대사가 없습니다");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[TID: {charTID}] 캐릭터의 대사 데이터가 없습니다");
+        }
+        return 0; // 에러 시 0 값을 반환
+    }
+
+    /* 특정 상황에서 출력 가능한 대사의 개수를 뽑아오는 함수 */
+    public int GetDialogueCount(int charTID, DialogueType type)
+    {
+        if (dialogueDataDictionary.TryGetValue(charTID, out CharacterDialogueData data))
+        {
+            // 캐릭터 데이터 안에 요청한 상황의 대사 리스트가 있는지 확인
+            if (data.Dialogues.TryGetValue(type, out List<DialogueLine> lines))
+            {
+                // 요청한 상황의 실제 대사 개수를 반환
+                return lines.Count;
+            }
+            else
+            {
+                Debug.LogWarning($"[TID: {charTID}] 캐릭터에게 [{type}] 상황의 대사가 없습니다");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[TID: {charTID}] 캐릭터의 대사 데이터가 없습니다");
+        }
+        return 0; // 에러 시 0개 반환
     }
 
     /* 특정 상황의 캐릭터 대사 데이터 랜덤하게 가져오기 */
