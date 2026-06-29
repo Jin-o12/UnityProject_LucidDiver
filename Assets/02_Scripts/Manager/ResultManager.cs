@@ -185,6 +185,8 @@ public class ResultManager : MonoBehaviour, IResultService
         // 이번 세션에서의 플레이 시간을 계산
         startTime = beginTime;
         playTime = Time.time - startTime;
+        // {StorageInventoryUI가 저장한 최신 창고 데이터를 파일에서 다시 불러온다}
+        DataManager.Instance.LoadGame();
         // 플레이어 세이브 데이터를 가져옴
         _playerSaveData = DataManager.Instance.playerData;
         // 플레이어 오브젝트에서 PlayerInventory 컴포넌트를 찾아 데이터 동기화
@@ -242,7 +244,7 @@ public class ResultManager : MonoBehaviour, IResultService
         _playerSaveData.quickSlots.Add(_inven.quickSlots[2].TID);
 
         // 갱신 후 DataManager에서 playerData를 저장
-        DataManager.Instance.SaveGame();
+        //DataManager.Instance.SaveGame();
     }
 
     // 퀵슬롯 데이터 캐싱 (탈출 실패 시 전부 소실됨)
@@ -276,13 +278,21 @@ public class ResultManager : MonoBehaviour, IResultService
 
     private void RemoveFromInventory(int _tid)  //아이템 ID별로 인벤토리에서 제거
     {
-        foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
+        //foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
+        //{
+        //    if (slot.TID == _tid)
+        //    {
+        //        slot.amount = 0;
+        //    }
+        //}
+        // {저장 데이터나 인벤토리 슬롯 리스트가 없으면 중단한다}
+        if (_playerSaveData == null || _playerSaveData.inventorySlots == null)
         {
-            if (slot.TID == _tid)
-            {
-                slot.amount = 0;
-            }
+            return;
         }
+
+        // {지정한 TID의 아이템을 인벤토리 저장 슬롯에서 제거한다}
+        _playerSaveData.inventorySlots.RemoveAll(slot => slot != null && slot.TID == _tid);
     }
 
     // 결과 창 패널 출력 메소드

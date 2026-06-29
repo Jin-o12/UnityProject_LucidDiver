@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class StorageInventoryUI : MonoBehaviour
 {
@@ -16,15 +17,19 @@ public class StorageInventoryUI : MonoBehaviour
         InventoryPanel
     }
 
-    [System.Serializable]
-    private class ItemMeta
-    {
-        public int TID;
-        public string itemName;
-        [TextArea] public string description;
-        public Sprite icon;
-        public int maxStack = 5;
-    }
+    //[System.Serializable]
+    //private class ItemMeta
+    //{
+    //    public int TID;
+    //    public string itemName;
+    //    [TextArea] public string description;
+    //    public Sprite icon;
+    //    public int maxStack = 5;
+    //}
+    private readonly Dictionary<int, ItemData> itemDataCache = new();    // {TID별 ItemData 캐시}
+    private readonly Dictionary<int, Sprite> iconCache = new();          // {TID별 로드 완료 아이콘 캐시}
+    private readonly HashSet<int> loadingIconTIDs = new();               // {아이콘 로드 중복 요청 방지}
+    private bool itemDataLoaded = false;                                 // 아이템 데이터 로드 여부를 저장한다
 
     [Header("Slot Roots")]
     [SerializeField] private Transform storageSlotRoot;
@@ -50,8 +55,8 @@ public class StorageInventoryUI : MonoBehaviour
     [Header("Existing UI")]
     [SerializeField] private QuickSlotGroupUI quickSlotGroupUI;
 
-    [Header("Item Meta")]
-    [SerializeField] private List<ItemMeta> itemMetaList = new();
+    //[Header("Item Meta")]
+    //[SerializeField] private List<ItemMeta> itemMetaList = new();
 
     [Header("Debug Test")]
     [SerializeField] private bool useDebugData = true;
@@ -82,11 +87,8 @@ public class StorageInventoryUI : MonoBehaviour
         // {기존 슬롯 UI 컴포넌트를 수집하고 입력 이벤트를 새 창고 UI에 연결}
         BindSlots();
 
-        // {테스트용 초기 데이터를 구성}
-        BuildDebugData();
-
-        // {전체 UI 표시 갱신}
-        RefreshAll();
+        // {초기 상태는 빈 슬롯 데이터로 구성한다}
+        InitializeEmptyData();
     }
 
     private void OnEnable()
@@ -101,6 +103,7 @@ public class StorageInventoryUI : MonoBehaviour
 
         LoadFromPlayerData();
     }
+
 
     private void OnDisable()
     {
@@ -118,41 +121,111 @@ public class StorageInventoryUI : MonoBehaviour
         // {로비 메인 UI 열기 이벤트를 호출한다}
         GlobalEventBus.OnOpenLobbyUI?.Invoke();
     }
+    private void InitializeEmptyData()
+    {
+        // {창고 데이터를 빈 슬롯으로 초기화한다}
+        ClearData(storageData, storageSlotUIs.Count);
+
+        // {인벤토리 데이터를 빈 슬롯으로 초기화한다}
+        ClearData(inventoryData, inventorySlotUIs.Count);
+
+        // {퀵슬롯 데이터를 빈 상태로 초기화한다}
+        quickSlotTIDs.Clear();
+
+        for (int i = 0; i < quickSlotUIs.Count; i++)
+        {
+            // {빈 퀵슬롯 TID를 추가한다}
+            quickSlotTIDs.Add(0);
+        }
+
+        // {초기화된 빈 데이터를 UI에 반영한다}
+        RefreshAll();
+    }
+
+    private void EnsureItemDataLoaded()
+    {
+        // {이미 아이템 데이터를 로드했다면 다시 로드하지 않는다}
+        if (itemDataLoaded)
+        {
+            return;
+        }
+
+        // {Resources 폴더에서 ItemData ScriptableObject를 모두 로드한다}
+        ItemData[] itemDatas = Resources.LoadAll<ItemData>("ScriptableObjects/Item");
+
+        // {로드한 ItemData를 TID 기준으로 캐싱한다}
+        foreach (ItemData data in itemDatas)
+        {
+            if (data == null)
+            {
+                continue;
+            }
+
+            itemDataCache[data.TID] = data;
+        }
+
+        // {아이템 데이터 로드 완료 상태로 변경한다}
+        itemDataLoaded = true;
+
+        // {로드 결과를 콘솔에 출력한다}
+        Debug.Log($"StorageInventoryUI: ItemData {itemDataCache.Count}개 로드 완료");
+    }
 
     private void LoadFromPlayerData()
     {
+        // {세이브 저장소가 없으면 새로 생성한다}
         if (saveRepo == null)
         {
             saveRepo = new LocalSaveRepository();
         }
 
+        // {플레이어 저장 데이터를 불러온다}
         PlayerSaveData saveData = saveRepo.LoadSaveData();
+
         if (saveData == null)
         {
-            RefreshAll();
+            // {저장 데이터가 없으면 빈 슬롯 상태로 초기화한다}
+            InitializeEmptyData();
             return;
         }
 
+        // {현재 저장 데이터를 캐싱한다}
         currentSaveData = saveData;
 
-        if (saveData.storageSlots == null) saveData.storageSlots = new List<SaveSlotData>();
-        if (saveData.inventorySlots == null) saveData.inventorySlots = new List<SaveSlotData>();
-        if (saveData.quickSlots == null) saveData.quickSlots = new List<int>();
+        // {저장 데이터 리스트가 비어 있으면 새 리스트로 보정한다}
+        if (saveData.storageSlots == null)
+            saveData.storageSlots = new List<SaveSlotData>();
 
+        if (saveData.inventorySlots == null)
+            saveData.inventorySlots = new List<SaveSlotData>();
+
+        if (saveData.quickSlots == null)
+            saveData.quickSlots = new List<int>();
+
+        // {창고/인벤토리 런타임 데이터를 빈 슬롯으로 초기화한다}
         ClearData(storageData, storageSlotUIs.Count);
         ClearData(inventoryData, inventorySlotUIs.Count);
 
+        // {저장된 창고 슬롯 데이터를 런타임 창고 데이터로 복원한다}
         CopyFromSaveSlots(saveData.storageSlots, storageData, storageSlotUIs.Count);
+
+        // {저장된 인벤토리 슬롯 데이터를 런타임 인벤토리 데이터로 복원한다}
         CopyFromSaveSlots(saveData.inventorySlots, inventoryData, inventorySlotUIs.Count);
 
+        // {저장된 퀵슬롯 데이터를 복원한다}
         quickSlotTIDs.Clear();
+
         for (int i = 0; i < quickSlotUIs.Count; i++)
         {
+            // {저장된 퀵슬롯 TID가 있으면 사용하고, 없으면 빈 값으로 처리한다}
             int tid = i < saveData.quickSlots.Count ? saveData.quickSlots[i] : 0;
             quickSlotTIDs.Add(tid);
         }
 
+        // {인벤토리에 없는 아이템이 퀵슬롯에 남아 있으면 제거한다}
         ValidateQuickSlots();
+
+        // {복원된 데이터를 UI에 반영한다}
         RefreshAll();
     }
 
@@ -238,6 +311,9 @@ public class StorageInventoryUI : MonoBehaviour
 
     public int GetStoredItemCount(int tid)
     {
+        // {저장 데이터를 먼저 불러와 창고 데이터를 최신 상태로 갱신한다}
+        LoadFromPlayerData();
+
         // {특정 TID 아이템의 창고 총수량을 반환}
         return storageData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
     }
@@ -368,13 +444,26 @@ public class StorageInventoryUI : MonoBehaviour
 
     private void FillDebugSlots(List<InventorySlotData> targetData, int tid, int fillCount)
     {
-        ItemMeta meta = GetMeta(tid);
+        // {아이템 원본 데이터를 확인한다}
+        ItemData itemData = GetItemData(tid);
+
+        // {아이템 데이터가 없으면 테스트 슬롯 생성을 중단한다}
+        if (itemData == null)
+        {
+            Debug.LogWarning($"StorageInventoryUI: 테스트 아이템 TID {tid} 데이터를 찾을 수 없습니다.");
+            return;
+        }
+
+        // {슬롯 개수와 채울 개수 중 작은 값을 사용한다}
         int count = Mathf.Min(fillCount, targetData.Count);
+
+        // {최대 중첩 수를 넘지 않도록 테스트 수량을 보정한다}
+        int stackAmount = Mathf.Clamp(debugStackAmount, 1, GetMaxStack(tid));
 
         for (int i = 0; i < count; i++)
         {
             // {테스트 아이템 데이터 배치}
-            targetData[i] = new InventorySlotData(tid, i, debugStackAmount, meta != null ? meta.icon : null);
+            targetData[i] = new InventorySlotData(tid, i, stackAmount, GetIcon(tid));
         }
     }
 
@@ -768,29 +857,33 @@ public class StorageInventoryUI : MonoBehaviour
 
         if (area == AreaType.Storage && IsValid(storageData, index))
         {
+            // {창고 슬롯의 TID를 가져온다}
             tid = storageData[index].TID;
         }
         else if (area == AreaType.Inventory && IsValid(inventoryData, index))
         {
+            // {인벤토리 슬롯의 TID를 가져온다}
             tid = inventoryData[index].TID;
         }
         else if (area == AreaType.QuickSlot && index >= 0 && index < quickSlotTIDs.Count)
         {
+            // {퀵슬롯의 TID를 가져온다}
             tid = quickSlotTIDs[index];
         }
 
-        ItemMeta meta = GetMeta(tid);
+        // {TID로 아이템 원본 데이터를 가져온다}
+        ItemData itemData = GetItemData(tid);
 
         if (itemNameText != null)
         {
-            // {아이템 이름 표시}
-            itemNameText.text = meta != null ? meta.itemName : "";
+            // {아이템 이름을 표시한다}
+            itemNameText.text = itemData != null ? itemData.itemName : "";
         }
 
         if (itemDescriptionText != null)
         {
-            // {아이템 설명 표시}
-            itemDescriptionText.text = meta != null ? meta.description : "선택한 아이템이 없습니다.";
+            // {아이템 설명을 표시한다}
+            itemDescriptionText.text = itemData != null ? itemData.desc : "선택한 아이템이 없습니다.";
         }
     }
 
@@ -827,26 +920,99 @@ public class StorageInventoryUI : MonoBehaviour
              + inventoryData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
     }
 
-    private Sprite GetIcon(int tid)
+    private ItemData GetItemData(int tid)
     {
-        ItemMeta meta = GetMeta(tid);
-        return meta != null ? meta.icon : null;
-    }
-
-    private int GetMaxStack(int tid)
-    {
-        ItemMeta meta = GetMeta(tid);
-        return meta != null ? Mathf.Max(1, meta.maxStack) : 1;
-    }
-
-    private ItemMeta GetMeta(int tid)
-    {
+        // {빈 슬롯이면 아이템 데이터를 반환하지 않는다}
         if (tid == 0)
         {
             return null;
         }
 
-        return itemMetaList.FirstOrDefault(meta => meta.TID == tid);
+        // {ItemData가 아직 로드되지 않았으면 Resources에서 로드한다}
+        EnsureItemDataLoaded();
+
+        // {캐시에서 TID에 해당하는 아이템 데이터를 찾는다}
+        if (itemDataCache.TryGetValue(tid, out ItemData itemData))
+        {
+            return itemData;
+        }
+
+        // {해당 TID의 아이템 데이터가 없으면 경고를 출력한다}
+        Debug.LogWarning($"StorageInventoryUI: ItemData TID {tid}를 찾을 수 없습니다.");
+        return null;
+    }
+
+    private Sprite GetIcon(int tid)
+    {
+        // {빈 슬롯이면 아이콘을 반환하지 않는다}
+        if (tid == 0)
+        {
+            return null;
+        }
+
+        // {이미 로드된 아이콘이 있으면 재사용한다}
+        if (iconCache.TryGetValue(tid, out Sprite cachedIcon))
+        {
+            return cachedIcon;
+        }
+
+        // {아이템 데이터를 가져온다}
+        ItemData itemData = GetItemData(tid);
+
+        // {아이템 데이터나 아이콘 참조가 없으면 아이콘을 반환하지 않는다}
+        if (itemData == null || itemData.icon == null || !itemData.icon.RuntimeKeyIsValid())
+        {
+            return null;
+        }
+
+        // {이미 로드 중인 아이콘이면 중복 로드하지 않는다}
+        if (loadingIconTIDs.Contains(tid))
+        {
+            return null;
+        }
+
+        // {아이콘 로드 중 상태를 기록한다}
+        loadingIconTIDs.Add(tid);
+
+        // {Addressables 아이콘 로드를 시작한다}
+        AsyncOperationHandle<Sprite> handle = itemData.icon.LoadAssetAsync();
+
+        handle.Completed += operation =>
+        {
+            // {아이콘 로드 중 상태를 해제한다}
+            loadingIconTIDs.Remove(tid);
+
+            // {아이콘 로드 성공 시 캐시에 저장한다}
+            if (operation.Status == AsyncOperationStatus.Succeeded)
+            {
+                iconCache[tid] = operation.Result;
+
+                // {아이콘 로드 후 슬롯 UI를 다시 갱신한다}
+                RefreshAll();
+            }
+            else
+            {
+                Debug.LogWarning($"StorageInventoryUI: 아이콘 로드 실패 TID {tid}");
+            }
+        };
+
+        // {로드 완료 전에는 임시로 빈 아이콘을 반환한다}
+        return null;
+    }
+
+    private int GetMaxStack(int tid)
+    {
+        // {아이템 데이터를 가져온다}
+        ItemData itemData = GetItemData(tid);
+
+        // {아이템 데이터가 없거나 중첩 수가 0 이하이면 기본값 1을 사용한다}
+        if (itemData == null || itemData.itemMultiple <= 0)
+        {
+            return 1;
+        }
+
+        // {아이템 데이터의 최대 중첩 수를 반환한다}
+        return itemData.itemMultiple;
     }
 
     private bool IsValid(List<InventorySlotData> list, int index)

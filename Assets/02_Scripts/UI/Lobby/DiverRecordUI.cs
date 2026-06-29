@@ -36,11 +36,6 @@ public class DiverRecordUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textOpenRecord02;
     [SerializeField] private TextMeshProUGUI textNewBadge02;
 
-    [Header("Memory Log Popup")]
-    [SerializeField] private GameObject popupMemoryLog01;
-    [SerializeField] private TextMeshProUGUI textMemoryLogTitle;
-    [SerializeField] private TextMeshProUGUI textMemoryLogBody;
-
     [Header("Temporary Test Data")]
     [SerializeField] private bool useTestData = true;
     [SerializeField] private int testLinkRateLevel = 0;
@@ -84,14 +79,6 @@ public class DiverRecordUI : MonoBehaviour
             Debug.Log("필수 오브젝트가 등록되지 않았습니다");
             return;
         }
-
-        // // {기록 01 카드 클릭 이벤트 등록}
-        // if ()
-        //     buttonRecordCard01.onClick.AddListener(OnClickRecord01);
-
-        // // {기록 02 카드 클릭 이벤트 등록}
-        // if (buttonRecordCard02 != null)
-        //     buttonRecordCard02.onClick.AddListener(OnClickRecord02);
     }
 
     private void Start()
@@ -154,9 +141,6 @@ public class DiverRecordUI : MonoBehaviour
 
         // {기록 01 카드 갱신}
         RefreshRecord01();
-
-        // {기록 02 카드 갱신}
-        //RefreshRecord02();
     }
 
     private void RefreshDiverInfo()
@@ -222,35 +206,6 @@ public class DiverRecordUI : MonoBehaviour
         // {NEW 배지 표시}
         if (textNewBadge01 != null)
             textNewBadge01.gameObject.SetActive(memoryLogUnlocked && hasNewMemoryLog);
-    }
-
-    private void RefreshRecord02()
-    {
-        // {기록 02는 P0에서 잠금 더미로 고정}
-        if (textRecordState02 != null)
-            textRecordState02.text = "[LOCK] 기록 02";
-
-        if (textRecordTitle02 != null)
-            textRecordTitle02.text = "???";
-
-        if (textRecordDesc02 != null)
-            textRecordDesc02.text = "동조율 Lv.2 달성 시 해금";
-
-        if (textOpenRecord02 != null)
-            textOpenRecord02.text = "잠김";
-
-        if (buttonRecordCard02 != null)
-            buttonRecordCard02.interactable = false;
-
-        if (recordCard02CanvasGroup != null)
-        {
-            recordCard02CanvasGroup.alpha = 0.45f;
-            recordCard02CanvasGroup.interactable = false;
-            recordCard02CanvasGroup.blocksRaycasts = false;
-        }
-
-        if (textNewBadge02 != null)
-            textNewBadge02.gameObject.SetActive(false);
     }
 
     private void OnClickBack()
