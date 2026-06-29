@@ -38,7 +38,9 @@ public class ResultManager : MonoBehaviour, IResultService
     public int slotTID2;                                //2번 슬롯 아이템의 ID값 데이터를 받아옴
     public Sprite slotSprite2;                          //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
     public int slotCount2;                              //2번 슬롯 아이템의 개수 데이터를 받아옴
-
+    public int slotTID3;                                //3번 슬롯 아이템의 ID값 데이터를 받아옴
+    public Sprite slotSprite3;                          //3번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
+    public int slotCount3;                              //3번 슬롯 아이템의 개수 데이터를 받아옴
     private void Awake()
     {
         // 싱글톤 인스턴스 중복 방지 설정
@@ -69,8 +71,8 @@ public class ResultManager : MonoBehaviour, IResultService
         GlobalEventBus.OnSetRecordData += RenewLinkRateData;
         //로비로 돌아가기 버튼에 결과 창 닫기 연결
         GlobalEventBus.OnReturnToLobby += CloseResultPanel;
-        //출격 준비 UI 오픈 이벤트 연결
-        GlobalEventBus.OnOpenPrepareUI += SendQuickSlotCacheEvent;
+        //출격 준비 UI의 퀵슬롯 캐시 재전송 요청 이벤트 연결
+        GlobalEventBus.OnRequestQuickSlotCache += SendQuickSlotCacheEvent;
         //다이버/기록 UI 오픈 이벤트 연결
         GlobalEventBus.OnOpenRecordUI += SendLinkRecordData;
         //다이버/기록 UI 읽음 이벤트 연결
@@ -83,6 +85,8 @@ public class ResultManager : MonoBehaviour, IResultService
         if (Instance == this) Instance = null;
         GlobalEventBus.OnSetRecordData -= RenewLinkRateData;
         GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
+        GlobalEventBus.OnRequestQuickSlotCache -= SendQuickSlotCacheEvent;
+        GlobalEventBus.OnOpenRecordUI -= SendLinkRecordData;
         GlobalEventBus.OnRecordRead -= NewMemoryRead;
     }
 
@@ -230,6 +234,7 @@ public class ResultManager : MonoBehaviour, IResultService
         _playerSaveData.quickSlots.Clear();
         _playerSaveData.quickSlots.Add(_inven.quickSlots[0].TID);
         _playerSaveData.quickSlots.Add(_inven.quickSlots[1].TID);
+        _playerSaveData.quickSlots.Add(_inven.quickSlots[2].TID);
 
         // 갱신 후 DataManager에서 playerData를 저장
         DataManager.Instance.SaveGame();
@@ -244,6 +249,9 @@ public class ResultManager : MonoBehaviour, IResultService
         slotTID2 = _extractionResult ? _inven.quickSlots[1].TID : 0;
         slotSprite2 = _extractionResult ? _inven.quickSlots[1].icon : null;
         slotCount2 = _extractionResult ? _inven.quickSlots[1].amount : 0;
+        slotTID3 = _extractionResult ? _inven.quickSlots[2].TID : 0;
+        slotSprite3 = _extractionResult ? _inven.quickSlots[2].icon : null;
+        slotCount3 = _extractionResult ? _inven.quickSlots[2].amount : 0;
     }
 
     private void LinkRateUp()
@@ -335,6 +343,7 @@ public class ResultManager : MonoBehaviour, IResultService
         // 캐싱한 퀵슬롯 정보 저장 이벤트를 전송
         GlobalEventBus.QuickSlotLoad?.Invoke(0, slotTID1, slotSprite1, slotCount1);
         GlobalEventBus.QuickSlotLoad?.Invoke(1, slotTID2, slotSprite2, slotCount2);
+        GlobalEventBus.QuickSlotLoad?.Invoke(2, slotTID3, slotSprite3, slotCount3);
     }
 
     // 다이버/기록 패널 오픈 시 심상 기록 해금 상태 전달 이벤트를 발송
