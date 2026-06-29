@@ -54,6 +54,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     void Start()
     {
         ResultServiceLocator.Instance.Register(playerID, this);
+
         // UI 초기 업데이트
         UpdateHp();
         UpdateMp();
@@ -126,18 +127,24 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     public static bool IsPlayerIdle(int playerID)
     {
         var svc = ResultServiceLocator.Instance;
+        // ResltServiceLocator가 제대로 로드되었는지 체크
         if (svc == null)
         {
-            Debug.LogWarning("IsPlayerIdle: ResultServiceLocator.Instance is null");
+            Debug.LogWarning($"IsPlayerIdle: ResultServiceLocator.Instance {svc} is null");
             return false;
         }
+        else
+        {
+            Debug.Log($"IsPlayerIdle: ResultServiceLocator.Instance {svc} is loaded");
+        }
+
         var comp = svc.GetPlayerComponent(playerID) as PlayerStatus;
         if (comp == null)
         {
             Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {playerID}");
             return false;
         }
-        return comp.nowState == PlayerStatus.livingState.idle;
+        return comp.nowState == livingState.idle;
     }
 
     /* 마나 변화 */

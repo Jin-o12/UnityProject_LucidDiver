@@ -82,8 +82,8 @@ public class ResultUI : MonoBehaviour
         InventoryUpdate();  //인벤토리에 파밍한 마나석과 회복약을 창고에 누적하는 메소드
         //말풍선에 귀환 대사를 출력하는 메소드
         if (text_returnDialogue != null) text_returnDialogue.text = Dialogue_Return();
-        // 아이템 아이콘을 호출
-        PrintItemIcons();
+        
+        PrintItemIcons();  // 아이템 아이콘을 호출
     }
 
     private void PrintItemIcons()  // 아이템 아이콘 스프라이트 가져오기 메소드
@@ -127,8 +127,8 @@ public class ResultUI : MonoBehaviour
         text_getMemoryFragment.text = extractionResult
             ? $"기억 파편 × {memoryFragmentCount}\n자동 사용"
             : $"기억 파편 유실\n(0개 사용)";
-        //동조율 레벨 업 텍스트 출력
-        text_linkRate.text = memoryLogUnlocked
+        //동조율 레벨 업 텍스트 출력 ( "기억 파편 사용 AND 탈출 성공" 시 동조율 단계 상승)
+        text_linkRate.text = linkRateUp
             ? $"동조율 Lv.{prevLinkRateLevel} → <color=#80ff00>Lv.{linkRateLevel}</color>"
             : $"동조율 변화 없음\n(Lv.{prevLinkRateLevel} 유지)";
         //개인 심상 기록 해금 텍스트 출력
