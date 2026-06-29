@@ -1,5 +1,5 @@
 CommonSettingSaved:FALSE
-ColorSpaceGamma:FALSE
+ColorSpaceGamma:TRUE
 UseSRP:TRUE
 BakeScale:0.01
 BakeZSize:1
