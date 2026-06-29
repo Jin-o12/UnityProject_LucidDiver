@@ -14,16 +14,10 @@ public class GameManager : MonoBehaviour
 
     // 인벤토리 기록에 관한 필드
     private PlayerSaveData _playerSaveData;             //인벤토리 기록이 저장된 플레이어 세이브 데이터
-    private ItemData potionData;                        //변질된 붕대 아이템 데이터
-    private ItemData manaStoneData;                     //기묘한 사탕 아이템 데이터
-    private ItemData memoryFragmentData;                //기억 파편 아이템 데이터
     // 플레이 타임 기록에 관한 필드
-    private float playTime;                             //이번 세션 플레이 시간
     private bool timeTrack = false;                     //플레이 시간 측정 중
     private float startTime;                            //플레이 시작 시점
     private readonly string playScene = "DemoScene";    //플레이 시간을 측정할 신
-    // 탈출에 관한 필드
-    private bool extractionResult;                      //탈출 성공 여부 판정
     //private ResultUI resultPanel;                       //결과 창 UI 캐시
     // 동조율 관련 코드
     public int linkRateLevel = 0;                       //동조율 상승 후 다이버와의 동조율 단계
@@ -45,14 +39,14 @@ public class GameManager : MonoBehaviour
         charRepo = new SOCharacterRepository();
 
         SceneManager.sceneLoaded += OnSceneLoaded;                  //신 로드 완료 시점에 실행하는 메소드 연결
-        //GlobalEventBus.OnEscapeRequest += QuitGame;              //탈출 판정 이벤트에 탈출 처리 메소드 연결
-        //GlobalEventBus.OnReturnToLobby += CloseResultPanel;      //로비로 돌아가기 버튼에 결과 창 닫기 연결
+        GlobalEventBus.OnEscapeRequest += ResultTime;               //탈출 판정 이벤트에 경과 시간 기록 메소드 연결
+        //GlobalEventBus.OnReturnToLobby += CloseResultPanel;       //로비로 돌아가기 버튼에 결과 창 닫기 연결
     }
 
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        //GlobalEventBus.OnEscapeRequest -= QuitGame;
+        GlobalEventBus.OnEscapeRequest -= ResultTime;
         //GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
     }
 
@@ -74,6 +68,12 @@ public class GameManager : MonoBehaviour
                 SpawnManager.Instance.SpawnPlayer(charData);
             }
 
+            PlayerInventory playerInventory = FindObjectOfType<PlayerInventory>();
+            if (playerInventory != null)
+            {
+                playerInventory.RestoreFromSave(playerData);
+            }
+
             // 적 1회 생성
             if (SpawnManager.Instance != null)
             {
@@ -86,17 +86,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // private void ResultTime(bool _extractionResult)
-    // {
-    //     foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
-    //     {
-    //         // 해당 아이템이 이미 창고에 존재한다면 보유 개수를 창고에 더함
-    //         if (slot.TID == _tid)
-    //         {
-    //             slot.amount = 0;
-    //         }
-    //     }
-    // }
+    private void ResultTime(bool _extractionResult)
+    {
+        //시간 기록을 중단하고 기록 고정
+        timeTrack = false;
+        //결과 계산 시작
+        ResultManager.Instance.GameResult(_extractionResult, startTime);
+    }
 
     public void FindItem(int _tid, out int count, out ItemData data)
     {
@@ -112,36 +108,5 @@ public class GameManager : MonoBehaviour
         count = 0;
         data = null;
         return;
-    }
-
-    private void InventorySync()
-    {
-        // 플레이어 오브젝트에서 PlayerInventory 컴포넌트를 찾아 데이터 동기화
-        var playerInventory = FindObjectOfType<PlayerInventory>();
-        if (playerInventory == null)
-        {
-            Debug.LogWarning("PlayerInventory를 찾을 수 없습니다.");
-            return;
-        }
-
-        // PlayerSaveData의 인벤토리 슬롯을 비우고 현재 플레이어 인벤토리 데이터로 채우기
-        _playerSaveData.inventorySlots.Clear();
-        foreach (var slot in playerInventory.slots)
-        {
-            // TID가 0이 아닌 슬롯만 저장 (빈 슬롯 제외)
-            if (slot.TID != 0)
-            {
-                _playerSaveData.inventorySlots.Add(new SaveSlotData
-                {
-                    index = slot.order,
-                    TID = slot.TID,
-                    amount = slot.amount
-                });
-            }
-        }
-        // //시간 기록을 중단하고 기록 고정
-        // timeTrack = false;
-        // //결과 계산 시작
-        // ResultManager.Instance.GameResult(_extractionResult, startTime);
     }
 }

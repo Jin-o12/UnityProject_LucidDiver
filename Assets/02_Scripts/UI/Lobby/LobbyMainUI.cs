@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,7 +15,6 @@ public class LobbyMainUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textLinkRateLevel;         // 동조율 수치 텍스트 
     [SerializeField] private TextMeshProUGUI textSpeakerName;           // 로비 대사 화자 이름 텍스트
     [SerializeField] private TextMeshProUGUI textDialogue;              // 로비 대사 텍스트
-    
 
     [Header("Notification")]
     [SerializeField] private GameObject newMemoryLogMark;               
@@ -38,6 +37,10 @@ public class LobbyMainUI : MonoBehaviour
     {
         // 대사 출력 인터페이스 연결
         dialogueRepo = new LocalJsonDialogueRepository();
+        // 플레이어 정보 인터페이스 연결
+        saveRepo = new LocalSaveRepository();
+        // 캐릭터 정보 인터페이스 연결
+        charRepo = new SOCharacterRepository();
         // 로비 UI가 켜질 때마다 표시 정보를 갱신
         Refresh();
     }

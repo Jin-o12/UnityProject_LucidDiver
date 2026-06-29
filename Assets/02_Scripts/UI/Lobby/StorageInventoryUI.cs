@@ -68,11 +68,17 @@ public class StorageInventoryUI : MonoBehaviour
     private readonly List<InventorySlotData> inventoryData = new();
     private readonly List<int> quickSlotTIDs = new();
 
+    private LocalSaveRepository saveRepo;
+    private PlayerSaveData currentSaveData;
+
     private AreaType draggingArea;
     private int draggingIndex = -1;
 
     private void Awake()
     {
+        // {로컬 세이브 저장소 연결}
+        saveRepo = new LocalSaveRepository();
+
         // {기존 슬롯 UI 컴포넌트를 수집하고 입력 이벤트를 새 창고 UI에 연결}
         BindSlots();
 
@@ -113,6 +119,127 @@ public class StorageInventoryUI : MonoBehaviour
 
     public int GetStoredItemCount(int tid)
     {
+        LoadFromPlayerData();
+    }
+
+    private void LoadFromPlayerData()
+    {
+        if (saveRepo == null)
+        {
+            saveRepo = new LocalSaveRepository();
+        }
+
+        PlayerSaveData saveData = saveRepo.LoadSaveData();
+        if (saveData == null)
+        {
+            RefreshAll();
+            return;
+        }
+
+        currentSaveData = saveData;
+
+        if (saveData.storageSlots == null) saveData.storageSlots = new List<SaveSlotData>();
+        if (saveData.inventorySlots == null) saveData.inventorySlots = new List<SaveSlotData>();
+        if (saveData.quickSlots == null) saveData.quickSlots = new List<int>();
+
+        ClearData(storageData, storageSlotUIs.Count);
+        ClearData(inventoryData, inventorySlotUIs.Count);
+
+        CopyFromSaveSlots(saveData.storageSlots, storageData, storageSlotUIs.Count);
+        CopyFromSaveSlots(saveData.inventorySlots, inventoryData, inventorySlotUIs.Count);
+
+        quickSlotTIDs.Clear();
+        for (int i = 0; i < quickSlotUIs.Count; i++)
+        {
+            int tid = i < saveData.quickSlots.Count ? saveData.quickSlots[i] : 0;
+            quickSlotTIDs.Add(tid);
+        }
+
+        ValidateQuickSlots();
+        RefreshAll();
+    }
+
+    private void CopyFromSaveSlots(List<SaveSlotData> source, List<InventorySlotData> target, int maxSize)
+    {
+        for (int i = 0; i < maxSize; i++)
+        {
+            target[i] = new InventorySlotData(0, i, 0, null);
+        }
+
+        if (source == null)
+        {
+            return;
+        }
+
+        foreach (SaveSlotData slot in source)
+        {
+            if (slot.index < 0 || slot.index >= maxSize)
+            {
+                continue;
+            }
+
+            target[slot.index] = new InventorySlotData(slot.TID, slot.index, slot.amount, GetIcon(slot.TID));
+        }
+    }
+
+    private void SaveToPlayerData()
+    {
+        if (saveRepo == null)
+        {
+            saveRepo = new LocalSaveRepository();
+        }
+
+        PlayerSaveData saveData = currentSaveData ?? saveRepo.LoadSaveData();
+        if (saveData == null)
+        {
+            return;
+        }
+
+        currentSaveData = saveData;
+
+        if (saveData.storageSlots == null) saveData.storageSlots = new List<SaveSlotData>();
+        if (saveData.inventorySlots == null) saveData.inventorySlots = new List<SaveSlotData>();
+        if (saveData.quickSlots == null) saveData.quickSlots = new List<int>();
+
+        WriteSaveSlots(storageData, saveData.storageSlots);
+        WriteSaveSlots(inventoryData, saveData.inventorySlots);
+
+        saveData.quickSlots.Clear();
+        for (int i = 0; i < quickSlotUIs.Count; i++)
+        {
+            saveData.quickSlots.Add(i < quickSlotTIDs.Count ? quickSlotTIDs[i] : 0);
+        }
+
+        saveRepo.SaveGameData(saveData);
+    }
+
+    private void WriteSaveSlots(List<InventorySlotData> source, List<SaveSlotData> target)
+    {
+        target.Clear();
+
+        for (int i = 0; i < source.Count; i++)
+        {
+            InventorySlotData slot = source[i];
+            if (slot == null || slot.TID == 0 || slot.amount <= 0)
+            {
+                continue;
+            }
+
+            target.Add(new SaveSlotData
+            {
+                index = i,
+                TID = slot.TID,
+                amount = slot.amount
+            });
+        }
+    }
+
+    private int CountInventoryItem(int tid)
+    {
+        return inventoryData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
+    }
+    public int GetStoredItemCount(int tid)
+    {
         // {특정 TID 아이템의 창고 총수량을 반환}
         return storageData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
     }
@@ -126,21 +253,6 @@ public class StorageInventoryUI : MonoBehaviour
         }
 
         return quickSlotTIDs[index];
-    }
-
-    public void LoadStorageData(List<InventorySlotData> newStorageData, int quickSlot1TID, int quickSlot2TID)
-    {
-        // {저장 데이터에서 창고 데이터와 퀵슬롯 장착 정보를 불러옴}
-        ClearData(storageData, storageSlotUIs.Count);
-        ClearData(inventoryData, inventorySlotUIs.Count);
-
-        CopyData(newStorageData, storageData, storageSlotUIs.Count);
-
-        quickSlotTIDs.Clear();
-        quickSlotTIDs.Add(quickSlot1TID);
-        quickSlotTIDs.Add(quickSlot2TID);
-
-        RefreshAll();
     }
 
     private void BindSlots()
@@ -304,7 +416,6 @@ public class StorageInventoryUI : MonoBehaviour
             return;
         }
 
-        // {클릭한 아이템 설명 표시}
         ShowDescription(area, index);
 
         if (eventData.clickCount < 2)
@@ -312,7 +423,6 @@ public class StorageInventoryUI : MonoBehaviour
             return;
         }
 
-        // {더블클릭 이동 처리}
         if (area == AreaType.Storage)
         {
             MoveToArea(storageData, index, inventoryData);
@@ -326,6 +436,8 @@ public class StorageInventoryUI : MonoBehaviour
             quickSlotTIDs[index] = 0;
         }
 
+        ValidateQuickSlots();
+        SaveToPlayerData();
         RefreshAll();
     }
 
@@ -352,7 +464,6 @@ public class StorageInventoryUI : MonoBehaviour
 
         AreaType targetArea = (AreaType)areaValue;
 
-        // {드래그 도착 위치에 따라 이동 처리}
         if (targetArea == AreaType.Storage)
         {
             DropToSlot(storageData, index);
@@ -374,6 +485,8 @@ public class StorageInventoryUI : MonoBehaviour
             EquipQuickSlot(index);
         }
 
+        ValidateQuickSlots();
+        SaveToPlayerData();
         draggingIndex = -1;
         RefreshAll();
     }
@@ -518,14 +631,30 @@ public class StorageInventoryUI : MonoBehaviour
             return;
         }
 
-        int tid = GetDraggingTID();
+        if (draggingArea != AreaType.Inventory || !IsValid(inventoryData, draggingIndex))
+        {
+            return;
+        }
 
+        int tid = inventoryData[draggingIndex].TID;
         if (tid == 0)
         {
             return;
         }
 
-        // {퀵슬롯은 아이템을 이동시키지 않고 장착 TID만 저장}
+        for (int i = 0; i < quickSlotTIDs.Count; i++)
+        {
+            if (i == quickSlotIndex)
+            {
+                continue;
+            }
+
+            if (quickSlotTIDs[i] == tid)
+            {
+                quickSlotTIDs[i] = 0;
+            }
+        }
+
         quickSlotTIDs[quickSlotIndex] = tid;
     }
 
@@ -569,9 +698,8 @@ public class StorageInventoryUI : MonoBehaviour
                 continue;
             }
 
-            if (CountTotalItem(quickSlotTIDs[i]) <= 0)
+            if (CountInventoryItem(quickSlotTIDs[i]) <= 0)
             {
-                // {창고/인벤토리에 없는 아이템은 퀵슬롯에서 자동 해제}
                 quickSlotTIDs[i] = 0;
             }
         }
@@ -609,16 +737,14 @@ public class StorageInventoryUI : MonoBehaviour
     private void RefreshQuickSlot(int index, int tid)
     {
         Sprite icon = GetIcon(tid);
-        int count = tid == 0 ? 0 : 1;
+        int count = tid == 0 ? 0 : CountInventoryItem(tid);
 
         if (quickSlotGroupUI != null)
         {
-            // {기존 QuickSlotGroupUI의 표시 함수 재사용}
             quickSlotGroupUI.UpdateSlot(index, icon, count);
         }
         else if (index < quickSlotUIs.Count)
         {
-            // {QuickSlotGroupUI가 없을 경우 QuickSlotUI 직접 갱신}
             quickSlotUIs[index].UpdateSlot(count, icon);
         }
     }
