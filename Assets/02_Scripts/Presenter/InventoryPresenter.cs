@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 아이템과 인벤토리에 관한 모든 상호작용의 중재자 역할을 수행합니다.
 /// 아이템 습득 시 상황에 따라 즉시 장착하거나 인벤토리에 수납합니다.
 /// 인벤토리 UI와 상자 UI의 열기/닫기 흐름도 함께 관리합니다.
@@ -29,6 +29,7 @@ public class InventoryPresenter : MonoBehaviour
         playerInventory = GetComponent<PlayerInventory>();
         localInputReader = GetComponent<LocalInputReader>();
         identity = GetComponent<EntityIdentity>();
+        playerStatus = GetComponent<PlayerStatus>();
 
         if (playerWeapon == null || playerInventory == null || playerStatus==null || localInputReader == null || identity == null)
         {

@@ -131,7 +131,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
             Debug.LogWarning("IsPlayerIdle: ResultServiceLocator.Instance is null");
             return false;
         }
-        var comp = svc.GetPlayerComponent<PlayerStatus>(playerID) as PlayerStatus;
+        var comp = svc.GetPlayerComponent(playerID) as PlayerStatus;
         if (comp == null)
         {
             Debug.LogWarning($"PlayerStatus를 찾을 수 없습니다. playerID: {playerID}");

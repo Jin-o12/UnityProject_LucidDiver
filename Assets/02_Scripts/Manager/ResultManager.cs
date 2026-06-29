@@ -64,11 +64,15 @@ public class ResultManager : MonoBehaviour, IResultService
             Register(idComp.entityID, p);
             Debug.Log($"ResultManager Awake: Registered existing playerID={idComp.entityID} (gameObject={p.gameObject.name})");
         }
-
+        
         //로비로 돌아가기 버튼에 동조율 데이터 갱신 연결
         GlobalEventBus.OnSetRecordData += RenewLinkRateData;
         //로비로 돌아가기 버튼에 결과 창 닫기 연결
         GlobalEventBus.OnReturnToLobby += CloseResultPanel;
+        //출격 준비 UI 오픈 이벤트 연결
+        GlobalEventBus.OnOpenPrepareUI += SendQuickSlotCacheEvent;
+        //다이버/기록 UI 오픈 이벤트 연결
+        GlobalEventBus.OnOpenRecordUI += SendLinkRecordData;
         //다이버/기록 UI 읽음 이벤트 연결
         GlobalEventBus.OnRecordRead += NewMemoryRead;
     }
@@ -140,7 +144,7 @@ public class ResultManager : MonoBehaviour, IResultService
     }
 
     // 조회 유틸
-    public Component GetPlayerComponent<PlayerStatue>(int playerID)
+    public Component GetPlayerComponent(int playerID)
     {
         // playerID에 매핑된 PlayerStatus를 가져옴
         if (_players.TryGetValue(playerID, out var ps)) return ps;

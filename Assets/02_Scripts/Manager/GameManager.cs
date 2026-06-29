@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 인게임 전반의 시스템을 관리하는 인스턴스 클래스
 /// [26.06.24_강다영] playerPrefab, EnemyPrefab: 캐릭터 및 적 프리팹은 생성 시 결정되도록 바꿀 것
 /// </summary>
@@ -47,15 +47,13 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneLoaded += OnSceneLoaded;                  //신 로드 완료 시점에 실행하는 메소드 연결
         //GlobalEventBus.OnEscapeRequest += QuitGame;              //탈출 판정 이벤트에 탈출 처리 메소드 연결
         //GlobalEventBus.OnReturnToLobby += CloseResultPanel;      //로비로 돌아가기 버튼에 결과 창 닫기 연결
-
-
     }
 
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        // GlobalEventBus.OnEscapeRequest -= QuitGame;
-        // GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
+        //GlobalEventBus.OnEscapeRequest -= QuitGame;
+        //GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -87,27 +85,6 @@ public class GameManager : MonoBehaviour
             timeTrack = false;     //인게임 세션 신을 벗어나면 시간 기록 중단
         }
     }
-
-    private void Start()
-    {
-        // 캐릭터 데이터 가져오기
-        playerData = saveRepo.LoadSaveData();
-        _playerSaveData = playerData;
-        charData = charRepo.GetCharacterData(playerData.SelectCharID);
-
-        // 플레이어 1회 생성
-        if (SpawnManager.Instance != null)
-        {
-            SpawnManager.Instance.SpawnPlayer(charData);
-        }
-        // 적 1회 생성
-        if (SpawnManager.Instance != null)
-        {
-            SpawnManager.Instance.SpawnEnemy();
-        }
-    }
-
-
 
     // private void ResultTime(bool _extractionResult)
     // {
