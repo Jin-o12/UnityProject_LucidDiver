@@ -277,14 +277,14 @@ public class ResultManager : MonoBehaviour, IResultService
         }
         // 다음 동조율 단계 값 계산 (P0: 탈출 성공 시 일괄 증가)
         int nextLinkRateLevel = prevLinkRateLevel + linkRateGain;
-        // 기억 파편 획득 AND 탈출 성공이면 '동조율 단계 상승=true' 전달
+        // '동조율 단계 상승=true' 조건 계산 (P0: 기억 파편 획득 AND 탈출 성공)
         linkRateUp = memoryFragmentCount > 0 && _extractionResult;
+        // 동조율 단계 값 갱신
+        linkRateLevel = linkRateUp ? nextLinkRateLevel : prevLinkRateLevel;
         // 기억 파편을 사용해 동조율 단계가 상승했거나 이미 해금 상태(이전 동조율 단계 > 0)라면 '해금됨=true' 전달
         MemoryLogUnlocked = linkRateUp || prevLinkRateLevel > 0;
         // 기억 파편을 인벤토리에서 제거 (성공/실패 양쪽 모두 제거 처리는 실행함)
         RemoveFromInventory(401);
-        // 동조율 단계 값을 세이브 데이터에 전달
-        RenewLinkRateData(prevLinkRateLevel, nextLinkRateLevel, _extractionResult, MemoryLogUnlocked);
         charData.linkRateLevel = linkRateLevel;
     }
 
@@ -347,15 +347,6 @@ public class ResultManager : MonoBehaviour, IResultService
                 if (data == null) data = itemRepo.GetItemData(_tid);
             }
         }
-    }
-
-    // 로비로 이동 시 동조율 데이터 갱신
-    public void RenewLinkRateData(int _prevLinkRateLevel, int _nextLinkRateLevel, bool _extractionResult, bool _memoryLogUnlocked)
-    {
-        //탈출 성공 시 다음 동조율 단계 값으로 vs 탈출 실패 시 이전 동조율 단계 값으로
-        linkRateLevel = _extractionResult ? _nextLinkRateLevel : _prevLinkRateLevel;
-        //심상 기록 해금 상태 갱신
-        MemoryLogUnlocked = _memoryLogUnlocked;
     }
 
     // 결과 창 패널 닫기
