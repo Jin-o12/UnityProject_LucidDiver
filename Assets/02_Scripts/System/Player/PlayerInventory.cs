@@ -194,6 +194,7 @@ public class PlayerInventory : MonoBehaviour
         if (_slotIndex < 0 || _slotIndex >= slotNum) return;
         if (IsSlotEmpty(_slotIndex)) return;
 
+        int tid = slots[_slotIndex].TID;
         slots[_slotIndex].amount -= _count;
 
         if (slots[_slotIndex].amount <= 0)
@@ -203,6 +204,7 @@ public class PlayerInventory : MonoBehaviour
         }
 
         OnSlotChanged?.Invoke(_slotIndex);
+        SyncQuickSlotsByTID(tid);
     }
 
     /* 특정 슬롯 완전 초기화 */
@@ -210,12 +212,18 @@ public class PlayerInventory : MonoBehaviour
     {
         if (_slotIndex < 0 || _slotIndex >= slotNum) return;
 
+        int tid = slots[_slotIndex].TID;
         slots[_slotIndex].TID = 0;
         slots[_slotIndex].amount = 0;
         slots[_slotIndex].icon = null;
         slots[_slotIndex].itemData = null;
 
         OnSlotChanged?.Invoke(_slotIndex);
+
+        if (tid != 0)
+        {
+            SyncQuickSlotsByTID(tid);
+        }
     }
 
     /* 특정 슬롯 아이템을 월드에 드롭하고, 성공 시 후처리 콜백을 실행 */
@@ -266,12 +274,32 @@ public class PlayerInventory : MonoBehaviour
     /* 획득한 아이템을 퀵슬롯에서 찾아 개수 변동 반영 */
     private void QuickSlotRenew(ItemData _itemData)
     {
-        foreach (InventorySlotData qslot in quickSlots)
+        if (_itemData == null) return;
+        SyncQuickSlotsByTID(_itemData.TID);
+    }
+
+    /* 특정 아이템 TID를 등록한 모든 퀵슬롯의 수량과 UI를 다시 동기화 */
+    private void SyncQuickSlotsByTID(int tid)
+    {
+        if (tid == 0) return;
+
+        int totalCount = GetInventoryItemCount(tid);
+
+        for (int i = 0; i < quickSlotNum; i++)
         {
-            if (qslot.TID == _itemData.TID)
+            InventorySlotData quickSlot = quickSlots[i];
+            if (quickSlot.TID != tid) continue;
+
+            quickSlot.amount = totalCount;
+
+            // 등록은 유지하되 아이콘이 아직 없으면 다시 로드를 시도합니다.
+            if (quickSlot.icon == null && quickSlot.itemData != null)
             {
-                GlobalEventBus.OnQuickSlotChanged?.Invoke(qslot.order, qslot.icon, GetInventoryItemCount(qslot.TID));
+                LoadQuickSlotSprite(quickSlot.itemData.icon, i);
+                continue;
             }
+
+            GlobalEventBus.OnQuickSlotChanged?.Invoke(i, quickSlot.icon, quickSlot.amount);
         }
     }
 
@@ -366,38 +394,32 @@ public class PlayerInventory : MonoBehaviour
 
         // 변동사항 알림
         OnSlotChanged?.Invoke(_slotIndex);
-        GlobalEventBus.OnQuickSlotChanged?.Invoke(_quickIndex, qSlot.icon, qSlot.amount);
+
+        if (qSlot.icon != null)
+        {
+            GlobalEventBus.OnQuickSlotChanged?.Invoke(_quickIndex, qSlot.icon, qSlot.amount);
+        }
+        else if (qSlot.itemData != null)
+        {
+            LoadQuickSlotSprite(qSlot.itemData.icon, _quickIndex);
+        }
+        else
+        {
+            GlobalEventBus.OnQuickSlotChanged?.Invoke(_quickIndex, null, qSlot.amount);
+        }
     }
 
     /* 퀵슬롯 아이템 사용 */
-    public void UseQuickSlotItem(int _index)
+    public bool UseQuickSlotItem(int _index)
     {
         // 퀵슬롯 범위 및 데이터 유효성 검사
-        if (_index < 0 || _index >= quickSlotNum) return;
+        if (_index < 0 || _index >= quickSlotNum) return false;
 
         InventorySlotData slot = quickSlots[_index];
-        if (slot == null || slot.TID == 0 || slot.amount <= 0) return;
+        if (slot == null || slot.TID == 0 || slot.amount <= 0) return false;
 
-        int tid = slot.TID;
-
-        // 실제 인벤토리 수량을 먼저 차감
-        ConsumeInventoryItemByTID(tid);
-
-        // 차감 후 남은 수량을 퀵슬롯에 다시 반영
-        int remain = GetInventoryItemCount(tid);
-        slot.amount = remain;
-
-        if (remain <= 0)
-        {
-            slot.TID = 0;
-            slot.amount = 0;
-            slot.icon = null;
-            slot.itemData = null;
-            GlobalEventBus.OnQuickSlotChanged?.Invoke(_index, null, 0);
-            return;
-        }
-
-        GlobalEventBus.OnQuickSlotChanged?.Invoke(_index, slot.icon, slot.amount);
+        // 등록된 슬롯 정보는 유지하고, 실제 인벤토리 수량만 차감합니다.
+        return ConsumeInventoryItemByTID(slot.TID);
     }
 
     /* 인벤토리에서 특정 TID 아이템의 총 수량 계산 */
@@ -417,7 +439,7 @@ public class PlayerInventory : MonoBehaviour
     }
 
     /* 인벤토리에서 특정 TID 아이템 1개를 차감 */
-    private void ConsumeInventoryItemByTID(int tid)
+    private bool ConsumeInventoryItemByTID(int tid)
     {
         for (int i = 0; i < slotNum; i++)
         {
@@ -431,13 +453,18 @@ public class PlayerInventory : MonoBehaviour
             if (slots[i].amount <= 0)
             {
                 ClearSlot(i);
-                return;
+                return true;
             }
 
             // 수량 변화가 생긴 인벤토리 슬롯 UI를 갱신
             OnSlotChanged?.Invoke(i);
-            return;
+            SyncQuickSlotsByTID(tid);
+            return true;
         }
+
+        // 인벤토리에는 없지만 퀵슬롯에는 등록된 상태일 수 있으므로 한 번 더 정리합니다.
+        SyncQuickSlotsByTID(tid);
+        return false;
     }
 
     /* 퀵슬롯간에 아이템 교환 */

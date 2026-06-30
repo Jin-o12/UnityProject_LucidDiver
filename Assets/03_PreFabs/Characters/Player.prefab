@@ -559,12 +559,14 @@ MonoBehaviour:
   firePoint: {fileID: 8382430463272926332}
   hitMask:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 1088
   showShotTrace: 1
   shotTraceRenderer: {fileID: 6010873089034782203}
   shotTraceDuration: 0.08
   hitTraceColor: {r: 1, g: 1, b: 1, a: 1}
   missTraceColor: {r: 1, g: 0, b: 0, a: 1}
+  aimOriginHeight: 1
+  muzzleBackstepDistance: 0.3
 --- !u!114 &5086360448170119213
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -591,7 +593,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d5c59c17171d6548afa42dcd987ecb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nowState: 0
   hpMax: 0
   hpCurrent: 0
   mpMax: 0
