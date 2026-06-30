@@ -174,7 +174,7 @@ public class SortiePrepareUI : MonoBehaviour
         gameObject.SetActive(false);
 
         // {출격 확정 시 GameScene으로 이동}
-        SceneManager.LoadScene(gameSceneName);
+        GlobalEventBus.OnGoToGameScene?.Invoke();
     }
 
     private void OnClickBack()
