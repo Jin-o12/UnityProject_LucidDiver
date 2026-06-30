@@ -38,7 +38,6 @@ public class StorageInventoryUI : MonoBehaviour
 
     [Header("Buttons")]
     [SerializeField] private Button buttonBackTop;      // 상단 뒤로가기 버튼 참조
-    [SerializeField] private Button buttonBackBottom;   // 하단 뒤로가기 버튼 참조
 
     [Header("Capacity Text")]
     [SerializeField] private TMP_Text storageCapacityText;
@@ -55,15 +54,13 @@ public class StorageInventoryUI : MonoBehaviour
     [Header("Existing UI")]
     [SerializeField] private QuickSlotGroupUI quickSlotGroupUI;
 
-    //[Header("Item Meta")]
-    //[SerializeField] private List<ItemMeta> itemMetaList = new();
+    [Header("Drag Preview")]
+    [SerializeField] private Vector2 dragPreviewSize = new Vector2(80f, 80f);
 
-    [Header("Debug Test")]
-    [SerializeField] private bool useDebugData = true;
-    [SerializeField] private int debugPotionTID = 2;
-    [SerializeField] private int debugStorageFillCount = 19;
-    [SerializeField] private int debugInventoryFillCount = 19;
-    [SerializeField] private int debugStackAmount = 5;
+    private Canvas mainCanvas;
+    private RectTransform dragPreviewRect;
+    private Image dragPreviewImage;
+    private CanvasGroup dragPreviewCanvasGroup;
 
     private readonly List<InventorySlotUI> storageSlotUIs = new();
     private readonly List<InventorySlotUI> inventorySlotUIs = new();
@@ -84,6 +81,9 @@ public class StorageInventoryUI : MonoBehaviour
         // {로컬 세이브 저장소 연결}
         saveRepo = new LocalSaveRepository();
 
+        // {드래그 미리보기 아이콘을 띄울 최상위 Canvas를 찾음}
+        mainCanvas = GetComponentInParent<Canvas>();
+
         // {기존 슬롯 UI 컴포넌트를 수집하고 입력 이벤트를 새 창고 UI에 연결}
         BindSlots();
 
@@ -97,10 +97,6 @@ public class StorageInventoryUI : MonoBehaviour
         if (buttonBackTop != null)
             buttonBackTop.onClick.AddListener(OnClickBack);
 
-        // {하단 뒤로가기 버튼이 있을 경우 클릭 이벤트를 등록한다}
-        if (buttonBackBottom != null)
-            buttonBackBottom.onClick.AddListener(OnClickBack);
-
         LoadFromPlayerData();
     }
 
@@ -110,10 +106,6 @@ public class StorageInventoryUI : MonoBehaviour
         // {뒤로가기 버튼 클릭 이벤트를 해제하여 중복 등록을 방지한다}
         if (buttonBackTop != null)
             buttonBackTop.onClick.RemoveListener(OnClickBack);
-
-        // {하단 뒤로가기 버튼 클릭 이벤트를 해제한다}
-        if (buttonBackBottom != null)
-            buttonBackBottom.onClick.RemoveListener(OnClickBack);
     }
 
     private void OnClickBack()
@@ -420,53 +412,6 @@ public class StorageInventoryUI : MonoBehaviour
         AddInputReceiver(panelGraphic.gameObject, area, -1);
     }
 
-    private void BuildDebugData()
-    {
-        // {슬롯 데이터 리스트 크기를 UI 슬롯 개수와 맞춤}
-        ClearData(storageData, storageSlotUIs.Count);
-        ClearData(inventoryData, inventorySlotUIs.Count);
-
-        quickSlotTIDs.Clear();
-        for (int i = 0; i < quickSlotUIs.Count; i++)
-        {
-            quickSlotTIDs.Add(0);
-        }
-
-        if (!useDebugData)
-        {
-            return;
-        }
-
-        // {시안 테스트용으로 창고/인벤토리를 19칸 채움}
-        FillDebugSlots(storageData, debugPotionTID, debugStorageFillCount);
-        FillDebugSlots(inventoryData, debugPotionTID, debugInventoryFillCount);
-    }
-
-    private void FillDebugSlots(List<InventorySlotData> targetData, int tid, int fillCount)
-    {
-        // {아이템 원본 데이터를 확인한다}
-        ItemData itemData = GetItemData(tid);
-
-        // {아이템 데이터가 없으면 테스트 슬롯 생성을 중단한다}
-        if (itemData == null)
-        {
-            Debug.LogWarning($"StorageInventoryUI: 테스트 아이템 TID {tid} 데이터를 찾을 수 없습니다.");
-            return;
-        }
-
-        // {슬롯 개수와 채울 개수 중 작은 값을 사용한다}
-        int count = Mathf.Min(fillCount, targetData.Count);
-
-        // {최대 중첩 수를 넘지 않도록 테스트 수량을 보정한다}
-        int stackAmount = Mathf.Clamp(debugStackAmount, 1, GetMaxStack(tid));
-
-        for (int i = 0; i < count; i++)
-        {
-            // {테스트 아이템 데이터 배치}
-            targetData[i] = new InventorySlotData(tid, i, stackAmount, GetIcon(tid));
-        }
-    }
-
     private void ClearData(List<InventorySlotData> targetData, int size)
     {
         targetData.Clear();
@@ -475,22 +420,6 @@ public class StorageInventoryUI : MonoBehaviour
         {
             // {빈 슬롯 데이터 생성}
             targetData.Add(new InventorySlotData(0, i, 0, null));
-        }
-    }
-
-    private void CopyData(List<InventorySlotData> source, List<InventorySlotData> target, int maxSize)
-    {
-        for (int i = 0; i < maxSize; i++)
-        {
-            if (source != null && i < source.Count)
-            {
-                InventorySlotData slot = source[i];
-                target[i] = new InventorySlotData(slot.TID, i, slot.amount, GetIcon(slot.TID));
-            }
-            else
-            {
-                target[i] = new InventorySlotData(0, i, 0, null);
-            }
         }
     }
 
@@ -528,7 +457,7 @@ public class StorageInventoryUI : MonoBehaviour
         RefreshAll();
     }
 
-    public void OnBeginDrag(int areaValue, int index)
+    public void OnBeginDrag(int areaValue, int index, PointerEventData eventData)
     {
         AreaType area = (AreaType)areaValue;
 
@@ -540,6 +469,9 @@ public class StorageInventoryUI : MonoBehaviour
         // {드래그 출발 슬롯 기록}
         draggingArea = area;
         draggingIndex = index;
+
+        // {드래그 중 마우스를 따라오는 아이콘 생성}
+        ShowDragPreview(area, index, eventData.position);
     }
 
     public void OnDrop(int areaValue, int index)
@@ -1020,6 +952,132 @@ public class StorageInventoryUI : MonoBehaviour
         // {리스트 인덱스 유효성 검사}
         return list != null && index >= 0 && index < list.Count;
     }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        // {드래그 미리보기 아이콘이 없으면 처리하지 않음}
+        if (dragPreviewRect == null)
+        {
+            return;
+        }
+
+        // {마우스 위치로 드래그 미리보기 아이콘 이동}
+        dragPreviewRect.position = eventData.position;
+    }
+
+    public void OnEndDrag()
+    {
+        // {드래그 종료 시 미리보기 아이콘 제거}
+        HideDragPreview();
+
+        // {드롭 대상이 없었던 경우를 대비해 드래그 상태 초기화}
+        draggingIndex = -1;
+    }
+
+    private void ShowDragPreview(AreaType area, int index, Vector2 screenPosition)
+    {
+        // {드래그할 아이템 아이콘 가져오기}
+        Sprite icon = GetDragPreviewIcon(area, index);
+
+        if (icon == null || mainCanvas == null)
+        {
+            return;
+        }
+
+        // {이전 드래그 미리보기 아이콘이 남아 있으면 제거}
+        HideDragPreview();
+
+        // {드래그 미리보기 오브젝트 생성}
+        GameObject previewObject = new GameObject("DragPreviewIcon", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+        previewObject.transform.SetParent(mainCanvas.transform, false);
+        previewObject.transform.SetAsLastSibling();
+
+        // {드래그 미리보기 RectTransform 설정}
+        dragPreviewRect = previewObject.GetComponent<RectTransform>();
+        dragPreviewRect.sizeDelta = dragPreviewSize;
+        dragPreviewRect.position = screenPosition;
+
+        // {드래그 미리보기 Image 설정}
+        dragPreviewImage = previewObject.GetComponent<Image>();
+        dragPreviewImage.sprite = icon;
+        dragPreviewImage.raycastTarget = false;
+        dragPreviewImage.preserveAspect = true;
+
+        // {드래그 미리보기 아이콘이 드롭 판정을 막지 않도록 Raycast 차단}
+        dragPreviewCanvasGroup = previewObject.GetComponent<CanvasGroup>();
+        dragPreviewCanvasGroup.blocksRaycasts = false;
+        dragPreviewCanvasGroup.interactable = false;
+        dragPreviewCanvasGroup.alpha = 0.85f;
+    }
+
+    private void HideDragPreview()
+    {
+        // {드래그 미리보기 오브젝트 제거}
+        if (dragPreviewRect != null)
+        {
+            Destroy(dragPreviewRect.gameObject);
+        }
+
+        // {드래그 미리보기 참조 초기화}
+        dragPreviewRect = null;
+        dragPreviewImage = null;
+        dragPreviewCanvasGroup = null;
+    }
+
+    private Sprite GetDragPreviewIcon(AreaType area, int index)
+    {
+        if (area == AreaType.Storage)
+        {
+            // {창고 슬롯의 아이콘 반환}
+            return GetSlotIcon(storageData, index);
+        }
+
+        if (area == AreaType.Inventory)
+        {
+            // {인벤토리 슬롯의 아이콘 반환}
+            return GetSlotIcon(inventoryData, index);
+        }
+
+        if (area == AreaType.QuickSlot)
+        {
+            // {퀵슬롯 인덱스 범위 검사}
+            if (index < 0 || index >= quickSlotTIDs.Count)
+            {
+                return null;
+            }
+
+            // {퀵슬롯에 장착된 아이템 아이콘 반환}
+            return GetIcon(quickSlotTIDs[index]);
+        }
+
+        return null;
+    }
+
+    private Sprite GetSlotIcon(List<InventorySlotData> sourceList, int index)
+    {
+        // {슬롯 인덱스 유효성 검사}
+        if (!IsValid(sourceList, index))
+        {
+            return null;
+        }
+
+        InventorySlotData slot = sourceList[index];
+
+        // {빈 슬롯이면 아이콘을 반환하지 않음}
+        if (slot == null || slot.TID == 0 || slot.amount <= 0)
+        {
+            return null;
+        }
+
+        // {슬롯에 캐싱된 아이콘이 있으면 우선 사용}
+        if (slot.icon != null)
+        {
+            return slot.icon;
+        }
+
+        // {캐싱된 아이콘이 없으면 TID로 아이콘 조회}
+        return GetIcon(slot.TID);
+    }
 }
 
 public class StorageInventoryInputReceiver : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
@@ -1044,18 +1102,20 @@ public class StorageInventoryInputReceiver : MonoBehaviour, IPointerClickHandler
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        // {드래그 시작 이벤트 전달}
-        owner.OnBeginDrag(areaValue, index);
+        // {드래그 시작 이벤트와 마우스 위치 전달}
+        owner.OnBeginDrag(areaValue, index, eventData);
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        // {기존 InventorySlotUI를 비활성화했으므로 별도 드래그 아이콘은 사용하지 않음}
+        // {드래그 중 마우스 위치 전달}
+        owner.OnDrag(eventData);
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        // {드래그 종료 후 별도 처리 없음}
+        // {드래그 종료 이벤트 전달}
+        owner.OnEndDrag();
     }
 
     public void OnDrop(PointerEventData eventData)
