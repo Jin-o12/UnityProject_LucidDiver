@@ -62,15 +62,27 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         itemStack.text = stack.ToString();
     }
 
+    // 왼쪽 버튼 더블클릭으로 인벤토리 이동을 처리
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Right)
+        // 왼쪽 버튼 클릭이 아니면 처리하지 않기
+        if (eventData.button != PointerEventData.InputButton.Left)
+        {
             return;
+        }
+
+        // 1번만 클릭한 경우에는 처리하지 않기
+        if (eventData.clickCount < 2)
+        {
+            return;
+        }
 
         if (!itemImg.enabled)
+        {
             return;
+        }
 
-        // 체스트가 열려 있을 때만 인벤토리 -> 체스트 우클릭 이동을 허용한다.
+        // 체스트가 열려 있을 때만 인벤토리 -> 체스트 이동을 허용한다.
         if (ChestUI.ActiveUI != null)
             ChestUI.ActiveUI.TryMoveFromInventory(slotIndex);
     }
