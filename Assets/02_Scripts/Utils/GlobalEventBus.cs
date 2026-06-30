@@ -69,5 +69,9 @@ public class GlobalEventBus
     public static Action<int, bool, bool> RecordDataLoad;                   // 다이버 개인 심상 기록 데이터 전달 : Action<newLinkRateLevel, newMemoryLogUnlocked, newHasNewMemoryLog>
     public static Action OnRecordRead;                                      // 다이버 개인 심상 기록 읽음
 
-
+    /// <summary>
+    /// 씬 전환 이벤트
+    /// </summary>
+    public static Action OnGoToLobbyScene;                                  // 로비 씬으로 이동
+    public static Action OnGoToGameScene;                                   // 게임 씬으로 이동
 }

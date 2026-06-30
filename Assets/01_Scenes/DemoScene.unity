@@ -96,7 +96,8 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 0}
+  m_LightingDataAsset: {fileID: 112000000, guid: a02ef6cfd33019f45a88e013c37c9560,
+    type: 2}
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -4183,6 +4184,7 @@ GameObject:
   - component: {fileID: 8254926602438052758}
   - component: {fileID: 5681787268198670452}
   - component: {fileID: 5466022800813604381}
+  - component: {fileID: 8254926602438052759}
   m_Layer: 0
   m_Name: ==Manager==
   m_TagString: Untagged
@@ -4670,6 +4672,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   saveFilePath: 
+--- !u!114 &8254926602438052759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 566869833765836583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43e1600a75fe4ec4c92997721d2ce85b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lobbyScene:
+    sceneAsset: {fileID: 102900000, guid: c67beebbfb6b5ad47b3fa2ef3f658b3d, type: 3}
+    sceneName: LobbyScene
+  gameScene:
+    sceneAsset: {fileID: 102900000, guid: 99c9720ab356a0642a771bea13969a05, type: 3}
+    sceneName: DemoScene
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
