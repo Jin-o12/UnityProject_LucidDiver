@@ -47,6 +47,9 @@ public class PlayerInventory : MonoBehaviour
     /* 인벤토리 UI 초기화 */
     public void Initialize(int _slotNum, int _quickSlotNum)
     {
+        slotNum = _slotNum;
+        quickSlotNum = _quickSlotNum;
+        
         // 모든 슬롯 데이터 초기화
         for (int i = 0; i < _slotNum; i++)
         {
