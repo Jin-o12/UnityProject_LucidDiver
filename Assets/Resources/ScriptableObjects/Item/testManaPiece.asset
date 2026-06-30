@@ -32,4 +32,4 @@ MonoBehaviour:
   useRange: 0
   useDelay: 0
   useEffect:
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 40c2460df4e28a44181198c5d964259d, type: 2}

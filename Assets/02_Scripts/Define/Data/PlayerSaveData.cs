@@ -12,6 +12,7 @@ public class PlayerSaveData
     // 아이템 데이터
     public List<SaveSlotData> storageSlots = new();         // 창고
     public List<SaveSlotData> inventorySlots = new();       // 인벤토리
+    public List<SaveSlotData> QuickSlots = new();           // 퀵슬롯
     public List<int> quickSlots = new();                    // 퀵슬롯 (아이템 코드만 기억하고 인벤토리에서 갯수를 셈)
 
     /* 세이브 데이터 첫 생성 시 초기화 */
