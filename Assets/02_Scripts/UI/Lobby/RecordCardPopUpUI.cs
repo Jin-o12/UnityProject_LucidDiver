@@ -53,6 +53,9 @@ public class RecordCardPopUpUI : MonoBehaviour
             Debug.LogError("Dialogue Repository Load Failed");
         }
 
+        // {팝업을 새로 열 때 항상 첫 페이지부터 시작하도록 현재 대사 인덱스를 초기화한다}
+        nowDialogueIndex = 0;
+
         // {캐릭터 ID를 받아와 대사 개수와 맨 앞(0번) 대사를 받아온다}
         nowCharacterID = (int)tid;
         dialogueCount = dialogueRepo.GetDialogueCount(nowCharacterID, DialogueType.storyOpen);
@@ -68,8 +71,8 @@ public class RecordCardPopUpUI : MonoBehaviour
     // 다음 텍스트 보기 버튼 터치 시 ID를 1칸 뒤로
     public void ReadNextStory()
     {
-        // {인덱스 값 변경}
-        nowDialogueIndex++;
+        // {마지막 페이지를 넘지 않도록 현재 인덱스를 제한한다}
+        nowDialogueIndex = Mathf.Min(nowDialogueIndex + 1, dialogueCount - 1);
 
         // {변경한 인덱스 값에 맞추어 제목 및 본문 텍스트 갱신}
         PrintDialogue(charData.charName, nowDialogueIndex);
@@ -78,8 +81,8 @@ public class RecordCardPopUpUI : MonoBehaviour
     // 이전 텍스트 보기 버튼 터치 시 ID를 1칸 앞으로
     public void ReadPrevStory()
     {
-        // {인덱스 값 변경}
-        nowDialogueIndex--;
+        // {첫 페이지보다 앞으로 가지 않도록 현재 인덱스를 제한한다}
+        nowDialogueIndex = Mathf.Max(nowDialogueIndex - 1, 0);
 
         // {변경한 인덱스 값에 맞추어 제목 및 본문 텍스트 갱신}
         PrintDialogue(charData.charName, nowDialogueIndex);
@@ -133,6 +136,9 @@ public class RecordCardPopUpUI : MonoBehaviour
     // {심상 기록 보기 UI를 닫고 다이버/기록 UI를 출력 }
     public void CloseUI()
     {
+        // {팝업을 닫을 때 다음 열람을 위해 페이지 인덱스를 첫 페이지로 되돌린다}
+        nowDialogueIndex = 0;
+
         GlobalEventBus.OnOpenRecordUI?.Invoke();
     }
 }
