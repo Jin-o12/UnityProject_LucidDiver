@@ -20,22 +20,6 @@ public class PlayerInventory : MonoBehaviour
     // 어드레시블로 불러온 스프라이트 주소 가져오기
     private AsyncOperationHandle<Sprite> loadHandle;
 
-    private void Awake()
-    {
-        slotNum = 10;
-        quickSlotNum = 3;
-
-        // 모든 슬롯 데이터 초기화
-        for (int i = 0; i < slotNum; i++)
-        {
-            slots.Add(new InventorySlotData(0, i, 0, null));
-        }
-
-        for (int i = 0; i < quickSlotNum; i++)
-        {
-            quickSlots.Add(new InventorySlotData(0, i, 0, null));
-        }
-    }
 
     private void OnEnable()
     {
@@ -57,6 +41,21 @@ public class PlayerInventory : MonoBehaviour
         {
             // 메모리에서 해당 스프라이트를 안전하게 해제
             Addressables.Release(loadHandle);
+        }
+    }
+
+    /* 인벤토리 UI 초기화 */
+    public void Initialize(int _slotNum, int _quickSlotNum)
+    {
+        // 모든 슬롯 데이터 초기화
+        for (int i = 0; i < _slotNum; i++)
+        {
+            slots.Add(new InventorySlotData(0, i, 0, null));
+        }
+
+        for (int i = 0; i < _quickSlotNum; i++)
+        {
+            quickSlots.Add(new InventorySlotData(0, i, 0, null));
         }
     }
 

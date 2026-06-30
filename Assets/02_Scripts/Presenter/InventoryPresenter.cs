@@ -44,6 +44,10 @@ public class InventoryPresenter : MonoBehaviour
         
         // 인터페이스 구현부 연결
         itemRepo = new SOItemRepository();
+
+        // 인벤토리 슬롯 초기화
+        PlayerSaveData playerData = DataManager.Instance.playerData;
+        playerInventory.Initialize(playerData.invenSlotNum, playerData.quickSlotsNum);
     }
 
     private void OnEnable()
@@ -221,7 +225,7 @@ public class InventoryPresenter : MonoBehaviour
         inventoryUI.SetDropZoneAvailable(!isChestOpen);
 
         // 슬롯 개수에 맞춰 UI를 생성한다.
-        inventoryUI.CreatSlots(playerInventory.slotNum);
+        inventoryUI.CreatSlots(playerInventory.slots.Count);
 
         // 현재 인벤토리 데이터를 슬롯 UI에 반영한다.
         for (int i = 0; i < playerInventory.slotNum; i++)
