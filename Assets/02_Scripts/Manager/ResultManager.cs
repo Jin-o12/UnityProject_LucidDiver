@@ -17,8 +17,10 @@ public class ResultManager : MonoBehaviour, IResultService
     private bool extractionResult;                      //탈출 성공 여부 판정
     private ResultUI resultPanel;                       //결과 창 UI 
     // 동조율 저장 필드
-    public int linkRateLevel = 0;                       //동조율 상승 후 다이버와의 동조율 단계
-    public int linkRateGain = 1;                        //세션 탈출 성공 시 가산되는 동조율 단계 증가치
+    private int prevLinkRateLevel;                      //동조율 상승 전 다이버와의 동조율 단계 값을 저장
+    public int linkRateLevel;                           //동조율 상승 후 다이버와의 동조율 단계
+    private int linkRateGain = 1;                       //P0: 세션 탈출 성공 시 가산되는 동조율 단계 증가치
+    public float linkRatePoint = 1.0f;                  //세션 탈출 성공 시 기억 파편이 전환되는 동조율 경험치 값
     private bool linkRateUp = false;                    //동조율 단계 상승 여부 전달
     private bool MemoryLogUnlocked = false;             //세션 탈출 시 개인 심상 기록 해금 여부 저장
     private bool hasNewMemoryLog = true;                //개인 심상 기록 확인 여부 저장
@@ -38,14 +40,13 @@ public class ResultManager : MonoBehaviour, IResultService
     public int slotTID2;                                //2번 슬롯 아이템의 ID값 데이터를 받아옴
     public Sprite slotSprite2;                          //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
     public int slotCount2;                              //2번 슬롯 아이템의 개수 데이터를 받아옴
+    public int slotTID3;                                //3번 슬롯 아이템의 ID값 데이터를 받아옴
+    public Sprite slotSprite3;                          //3번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
+    public int slotCount3;                              //3번 슬롯 아이템의 개수 데이터를 받아옴
 
     // 저장 데이터 인터페이스
     private ISaveRepository saveRepo;                   // 플레이어 데이터 접근 인터페이스
     private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
-
-    public int slotTID3;                                //3번 슬롯 아이템의 ID값 데이터를 받아옴
-    public Sprite slotSprite3;                          //3번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
-    public int slotCount3;                              //3번 슬롯 아이템의 개수 데이터를 받아옴
     
     private void Awake()
     {
@@ -77,8 +78,6 @@ public class ResultManager : MonoBehaviour, IResultService
             Debug.Log($"ResultManager Awake: Registered existing playerID={idComp.entityID} (gameObject={p.gameObject.name})");
         }
         
-        //로비로 돌아가기 버튼에 동조율 데이터 갱신 연결
-        GlobalEventBus.OnSetRecordData += RenewLinkRateData;
         //로비로 돌아가기 버튼에 결과 창 닫기 연결
         GlobalEventBus.OnReturnToLobby += CloseResultPanel;
         //출격 준비 UI의 퀵슬롯 캐시 재전송 요청 이벤트 연결
@@ -95,7 +94,6 @@ public class ResultManager : MonoBehaviour, IResultService
     {
         //if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
         //if (Instance == this) Instance = null;
-        GlobalEventBus.OnSetRecordData -= RenewLinkRateData;
         GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
         GlobalEventBus.OnRequestQuickSlotCache -= SendQuickSlotCacheEvent;
         GlobalEventBus.PrepareUIOpen -= SendQuickSlotCacheEvent;
@@ -206,10 +204,10 @@ public class ResultManager : MonoBehaviour, IResultService
         FindItemCountAndData(301, out potionCount, out potionData);
         FindItemCountAndData(302, out mpStoneCount, out manaStoneData);
         FindItemCountAndData(401, out memoryFragmentCount, out memoryFragmentData);
-        // 결과 창 패널 출력 메소드
-        OpenResultPanel();
         // 기억 파편을 사용해 동조율 상승 → 심상 기록 해금 처리를 실행
         LinkRateUp(_extractionResult);
+        // 결과 창 패널 출력 메소드
+        OpenResultPanel();
         // 심상 기록 읽기 상태 저장
         // _playerSaveData.hasNewMemoryLog = hasNewMemoryLog;
         // 탈출 실패 시 소비 기물 아이템을 인벤토리에서 제거
@@ -267,16 +265,27 @@ public class ResultManager : MonoBehaviour, IResultService
     // 탈출 성공 여부에 따라 동조율 상승 → 심상 기록 해금을 실행하는 메소드
     private void LinkRateUp(bool _extractionResult)
     {
+        // 현재 선택한 캐릭터의 세이브 데이터를 가져옴
+        SaveCharacterData charData = _playerSaveData.myCharacters.Find(x => x.TID == _playerSaveData.SelectCharID);
+        // 세이브 데이터에서 이전 동조율 단계 값을 불러와 저장
+        prevLinkRateLevel = charData.linkRateLevel;
+        // 탈출 성공 시 기억 파편 개수만큼 동조율 경험치 값 증가
+        if (_extractionResult)
+        {
+            float linkRatePointAdd = memoryFragmentCount * linkRatePoint;
+            charData.TotallinkRateValue += linkRatePointAdd;
+        }
+        // 다음 동조율 단계 값 계산 (P0: 탈출 성공 시 일괄 증가)
+        int nextLinkRateLevel = prevLinkRateLevel + linkRateGain;
         // 기억 파편 획득 AND 탈출 성공이면 '동조율 단계 상승=true' 전달
         linkRateUp = memoryFragmentCount > 0 && _extractionResult;
-        resultPanel.linkRateUp = linkRateUp;
-        // 기억 파편을 사용해 동조율 단계가 상승했거나 이미 해금 상태(기억 동조율 단계 > 0)라면 '해금됨=true' 전달
-        MemoryLogUnlocked = linkRateUp || linkRateLevel > 0;
-        resultPanel.memoryLogUnlocked = MemoryLogUnlocked;
+        // 기억 파편을 사용해 동조율 단계가 상승했거나 이미 해금 상태(이전 동조율 단계 > 0)라면 '해금됨=true' 전달
+        MemoryLogUnlocked = linkRateUp || prevLinkRateLevel > 0;
         // 기억 파편을 인벤토리에서 제거 (성공/실패 양쪽 모두 제거 처리는 실행함)
         RemoveFromInventory(401);
-        // 결과 창 UI 출력 갱신
-        resultPanel.RefreshResult();
+        // 동조율 단계 값을 세이브 데이터에 전달
+        RenewLinkRateData(prevLinkRateLevel, nextLinkRateLevel, _extractionResult, MemoryLogUnlocked);
+        charData.linkRateLevel = linkRateLevel;
     }
 
     private void RemoveFromInventory(int _tid)  //아이템 ID별로 인벤토리에서 제거
@@ -314,15 +323,11 @@ public class ResultManager : MonoBehaviour, IResultService
         resultPanel.manaStoneData = manaStoneData;
         resultPanel.memoryFragmentCount = memoryFragmentCount;
         resultPanel.memoryFragmentData = memoryFragmentData;
-        // 동조율 단계 데이터를 결과 창에 전달 (상승 전 / 상승 후)
-        int prevLinkRateLevel = linkRateLevel;
         resultPanel.prevLinkRateLevel = prevLinkRateLevel;
-        int nextLinkRateLevel = linkRateLevel + linkRateGain;
-        resultPanel.linkRateLevel = nextLinkRateLevel;
+        resultPanel.memoryLogUnlocked = MemoryLogUnlocked;
+        resultPanel.linkRateLevel = linkRateLevel;
         resultPanel.linkRateGain = linkRateGain;
-        // 동조율 단계 데이터 갱신
-        linkRateLevel = extractionResult ? nextLinkRateLevel : prevLinkRateLevel;
-        RenewLinkRateData(linkRateLevel, linkRateLevel > 0);
+        resultPanel.linkRateUp = linkRateUp;
         // 결과 창 UI 출력 갱신
         resultPanel.RefreshResult();
     }
@@ -345,10 +350,12 @@ public class ResultManager : MonoBehaviour, IResultService
     }
 
     // 로비로 이동 시 동조율 데이터 갱신
-    public void RenewLinkRateData(int a, bool b)
+    public void RenewLinkRateData(int _prevLinkRateLevel, int _nextLinkRateLevel, bool _extractionResult, bool _memoryLogUnlocked)
     {
-        linkRateLevel = a;      //동조율 단계 갱신
-        MemoryLogUnlocked = b;  //심상 기록 해금 상태 갱신
+        //탈출 성공 시 다음 동조율 단계 값으로 vs 탈출 실패 시 이전 동조율 단계 값으로
+        linkRateLevel = _extractionResult ? _nextLinkRateLevel : _prevLinkRateLevel;
+        //심상 기록 해금 상태 갱신
+        MemoryLogUnlocked = _memoryLogUnlocked;
     }
 
     // 결과 창 패널 닫기
