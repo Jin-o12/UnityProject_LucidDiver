@@ -17,7 +17,6 @@ public class ResultManager : MonoBehaviour, IResultService
     private bool extractionResult;                      //탈출 성공 여부 판정
     private ResultUI resultPanel;                       //결과 창 UI 
     // 동조율 저장 필드
-    public int linkRateLevel = 0;                       //동조율 상승 후 다이버와의 동조율 단계
     private int prevLinkRateLevel;                      //동조율 상승 전 다이버와의 동조율 단계 값을 저장
     public int linkRateLevel;                           //동조율 상승 후 다이버와의 동조율 단계
     private int linkRateGain = 1;                       //P0: 세션 탈출 성공 시 가산되는 동조율 단계 증가치
