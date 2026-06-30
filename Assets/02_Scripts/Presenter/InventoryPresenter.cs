@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 아이템과 인벤토리에 관한 상호작용을 중재하는 Presenter.
 /// 아이템 습득, 인벤토리 UI 열기/닫기, 체스트 UI 연결, 월드 드랍을 담당한다.
 /// </summary>
@@ -156,9 +156,10 @@ public class InventoryPresenter : MonoBehaviour
             return count;
         }
 
-        // 실제로 데이터 변화가 있었을 때만 저장한다.
-        if (remain < count)
-            DataManager.Instance.SaveGame();
+        // 아이템 획득 직후에는 저장하지 않는다
+        // 획득 아이템은 GameScene의 PlayerInventory에만 보관하고, 결과 정산 시 ResultManager가 저장한다
+        // if (remain < count)
+        //     DataManager.Instance.SaveGame();
 
         return remain;
     }
@@ -313,6 +314,9 @@ public class InventoryPresenter : MonoBehaviour
             + transform.forward * dropForwardDistance
             + Vector3.up * dropUpOffset;
 
-        playerInventory.TryDropSlotToWorld(slotIndex, dropPosition, () => DataManager.Instance.SaveGame());
+        //playerInventory.TryDropSlotToWorld(slotIndex, dropPosition, () => DataManager.Instance.SaveGame());
+        // {인게임 드롭 후에는 즉시 저장하지 않는다}
+        // {최종 저장은 결과 정산 시점에 처리한다}
+        playerInventory.TryDropSlotToWorld(slotIndex, dropPosition);
     }
 }

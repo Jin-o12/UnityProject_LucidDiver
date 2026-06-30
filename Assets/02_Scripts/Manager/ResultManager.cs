@@ -190,6 +190,8 @@ public class ResultManager : MonoBehaviour, IResultService
         DataManager.Instance.LoadGame();
         // 플레이어 세이브 데이터를 가져옴
         _playerSaveData = DataManager.Instance.playerData;
+        // {저장 리스트가 null이면 보정한다}
+        EnsureSaveLists();
         // 플레이어 오브젝트에서 PlayerInventory 컴포넌트를 찾아 데이터 동기화
         _inven = FindObjectOfType<PlayerInventory>();
         if (_inven == null)
@@ -378,5 +380,26 @@ public class ResultManager : MonoBehaviour, IResultService
         _playerSaveData = DataManager.Instance.playerData;
         //_playerSaveData.hasNewMemoryLog = false;
         DataManager.Instance.SaveGame();
+    }
+    private void EnsureSaveLists()
+    {
+        // {플레이어 저장 데이터가 없으면 중단한다}
+        if (_playerSaveData == null)
+        {
+            Debug.LogWarning("ResultManager: PlayerSaveData가 없습니다.");
+            return;
+        }
+
+        // {창고 슬롯 리스트가 없으면 새로 만든다. 기존 창고 데이터는 지우지 않는다}
+        if (_playerSaveData.storageSlots == null)
+            _playerSaveData.storageSlots = new List<SaveSlotData>();
+
+        // {인벤토리 슬롯 리스트가 없으면 새로 만든다}
+        if (_playerSaveData.inventorySlots == null)
+            _playerSaveData.inventorySlots = new List<SaveSlotData>();
+
+        // {퀵슬롯 리스트가 없으면 새로 만든다}
+        if (_playerSaveData.quickSlots == null)
+            _playerSaveData.quickSlots = new List<int>();
     }
 }
