@@ -1,11 +1,11 @@
-using TMPro;
+ï»¿using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// Ã¼½ºÆ® ½½·Ô 1Ä­ÀÇ Ç¥½Ã¿Í ÀÔ·ÂÀ» ´ã´çÇÑ´Ù.
-/// ¿ìÅ¬¸¯À¸·Î ÀÎº¥Åä¸® ÀÌµ¿, µå·¡±× ¾Ø µå·ÓÀ¸·Î ½½·Ô ÁöÁ¤ ÀÌµ¿À» Ã³¸®ÇÑ´Ù.
+/// ì²´ìŠ¤íŠ¸ ìŠ¬ë¡¯ 1ì¹¸ì˜ í‘œì‹œì™€ ì…ë ¥ì„ ë‹´ë‹¹í•œë‹¤.
+/// ë”ë¸”í´ë¦­ìœ¼ë¡œ ì¸ë²¤í† ë¦¬ ì´ë™, ë“œë˜ê·¸ ì•¤ ë“œë¡­ìœ¼ë¡œ ìŠ¬ë¡¯ ì§€ì • ì´ë™ì„ ì²˜ë¦¬í•œë‹¤.
 /// </summary>
 public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
 {
@@ -25,7 +25,7 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandle
     {
         mainCanvas = GetComponentInParent<Canvas>();
 
-        // ÇÁ¸®ÆÕ¿¡ ¼öµ¿ ¿¬°áÀÌ ºüÁ³À» ¶§¸¦ ´ëºñÇØ °°Àº ÀÌ¸§ÀÇ ÀÚ½ÄÀ» ÀÚµ¿À¸·Î Ã£´Â´Ù.
+        // í”„ë¦¬íŒ¹ì— ìˆ˜ë™ ì—°ê²°ì´ ë¹ ì¡Œì„ ë•Œë¥¼ ëŒ€ë¹„í•´ ê°™ì€ ì´ë¦„ì˜ ìì‹ì„ ìë™ìœ¼ë¡œ ì°¾ëŠ”ë‹¤.
         if (itemInfo == null)
             itemInfo = transform.Find("ItemInfo");
 
@@ -54,10 +54,23 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandle
         itemStack.text = stack.ToString();
     }
 
+    // ì™¼ìª½ ë²„íŠ¼ ë”ë¸”í´ë¦­ìœ¼ë¡œ ì¸ë²¤í† ë¦¬ ì´ë™ì„ ì²˜ë¦¬
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (eventData.button == PointerEventData.InputButton.Right)
-            chestUI.TryMoveToInventory(slotIndex);
+        // ì™¼ìª½ ë²„íŠ¼ í´ë¦­ì´ ì•„ë‹ˆë©´ ì²˜ë¦¬í•˜ì§€ ì•Šê¸°
+        if (eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
+        // 1ë²ˆë§Œ í´ë¦­í•œ ê²½ìš°ì—ëŠ” ì²˜ë¦¬í•˜ì§€ ì•Šê¸°
+        if (eventData.clickCount < 2)
+        {
+            return;
+        }
+
+        // ìƒì UIì—ì„œ ì¸ë²¤í† ë¦¬ë¡œ ì´ë™ ì²˜ë¦¬ë¥¼ ì‹¤í–‰
+        chestUI.TryMoveToInventory(slotIndex);
     }
 
     public void OnBeginDrag(PointerEventData eventData)

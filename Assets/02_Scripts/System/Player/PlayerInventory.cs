@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 플레이어의 인벤토리 데이터와 내부의 슬롯, 아이템을 관리하는 클래스
 /// </summary>
 using System;
@@ -68,52 +68,57 @@ public class PlayerInventory : MonoBehaviour
         int remain = _count;
 
         // 1. 이미 인벤토리에 해당 아이템이 있는지 먼저 확인
-        for (int i = 0; i < slotNum; i++)
+        // (순서 관계 없이 모든 슬롯을 탐색)
+        foreach (InventorySlotData slot in slots)
         {
-            if (slots[i].TID == _itemData.TID)
+            // 가득 차지 않은 슬롯에 각각 채움
+            if (slot.TID == _itemData.TID)
             {
-                // 동일 아이템이 있는 슬롯을 찾음 (규칙: 같은 아이템은 1개의 슬롯만 사용)
-                int beforeAmount = slots[i].amount;
-                remain = TryAddToSlot(i, _itemData, remain);
+                // 동일 아이템이 있는 슬롯을 찾아 채움
+                int beforeAmount = slot.amount;
+                remain = TryAddToSlot(slot.order, _itemData, remain);
 
-                if (beforeAmount != slots[i].amount)
+                // 획득 후 수량을 퀵슬롯에 반영
+                if (beforeAmount != slot.amount)
                 {
                     QuickSlotRenew(_itemData);
                 }
-
-                if (remain > 0)
-                {
-                    // 슬롯이 가득 차서 남은 수량이 있다면, 규칙에 의해 더 이상 빈 슬롯에 넣을 수 없음
-                    Debug.Log($"{_itemData.name}은 최대 중첩 개수({_itemData.itemMultiple}개)만큼 보유 중이거나 한도를 초과했습니다.");
-                }
-                
-                return remain; // 남은 수량만 반환
             }
         }
 
         // 2. 인벤토리에 해당 아이템이 아예 없는 경우 빈 슬롯에 새롭게 추가
-        for (int i = 0; i < slotNum; i++)
+        // (모든 슬롯을 가득 채운 후 남은 아이템에 대해서도 동일한 처리를 실행)
+        while (remain > 0)
         {
-            if (!IsSlotEmpty(i)) continue;
-
-            int beforeAmount = slots[i].amount;
-            remain = TryAddToSlot(i, _itemData, remain);
-
-            if (beforeAmount != slots[i].amount)
+            //빈 슬롯을 찾았는지 확인
+            bool foundEmptySlot = false;
+            for (int i = 0; i < slotNum; i++)
             {
-                QuickSlotRenew(_itemData);
+                // 이미 아이템이 있는 슬롯은 넘김
+                if (!IsSlotEmpty(i)) continue;
+
+                // 새 슬롯에 아이템을 추가
+                int beforeAmount = slots[i].amount;
+                remain = TryAddToSlot(i, _itemData, remain);
+                foundEmptySlot = true;
+
+                // 추가 후 총 보유 수량을 퀵슬롯에 반영
+                if (beforeAmount != slots[i].amount)
+                {
+                    QuickSlotRenew(_itemData);
+                }
             }
 
-            if (remain > 0)
-            {
-                Debug.Log($"{_itemData.name}은 한 슬롯의 최대 중첩 개수({_itemData.itemMultiple}개)를 초과하여 더 넣을 수 없습니다.");
-            }
-
-            return remain;
+            // 빈 슬롯이 없으면 루프 탈출
+            if (!foundEmptySlot) break;
         }
 
-        // 3. 빈 슬롯조차 없는 경우
-        Debug.Log("인벤토리가 가득차서 아이템을 주울 수 없습니다.");
+        // 3. 빈 슬롯을 찾을 수 없는 경우 처리 종료
+        if (remain > 0)
+        {
+            Debug.Log("인벤토리가 가득차서 아이템을 주울 수 없습니다.");
+        }
+
         return remain;
     }
 
