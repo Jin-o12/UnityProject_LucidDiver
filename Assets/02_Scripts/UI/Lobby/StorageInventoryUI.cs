@@ -1,0 +1,1126 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using UnityEngine.ResourceManagement.AsyncOperations;
+
+public class StorageInventoryUI : MonoBehaviour
+{
+    private enum AreaType
+    {
+        Storage,
+        Inventory,
+        QuickSlot,
+        StoragePanel,
+        InventoryPanel
+    }
+
+    //[System.Serializable]
+    //private class ItemMeta
+    //{
+    //    public int TID;
+    //    public string itemName;
+    //    [TextArea] public string description;
+    //    public Sprite icon;
+    //    public int maxStack = 5;
+    //}
+    private readonly Dictionary<int, ItemData> itemDataCache = new();    // {TID별 ItemData 캐시}
+    private readonly Dictionary<int, Sprite> iconCache = new();          // {TID별 로드 완료 아이콘 캐시}
+    private readonly HashSet<int> loadingIconTIDs = new();               // {아이콘 로드 중복 요청 방지}
+    private bool itemDataLoaded = false;                                 // 아이템 데이터 로드 여부를 저장한다
+
+    [Header("Slot Roots")]
+    [SerializeField] private Transform storageSlotRoot;
+    [SerializeField] private Transform inventorySlotRoot;
+    [SerializeField] private Transform quickSlotRoot;
+
+    [Header("Buttons")]
+    [SerializeField] private Button buttonBackTop;      // 상단 뒤로가기 버튼 참조
+
+    [Header("Capacity Text")]
+    [SerializeField] private TMP_Text storageCapacityText;
+    [SerializeField] private TMP_Text inventoryCapacityText;
+
+    [Header("Description")]
+    [SerializeField] private TMP_Text itemNameText;
+    [SerializeField] private TMP_Text itemDescriptionText;
+
+    [Header("Panel Drop Zones")]
+    [SerializeField] private Graphic storagePanelRaycastTarget;
+    [SerializeField] private Graphic inventoryPanelRaycastTarget;
+
+    [Header("Existing UI")]
+    [SerializeField] private QuickSlotGroupUI quickSlotGroupUI;
+
+    [Header("Drag Preview")]
+    [SerializeField] private Vector2 dragPreviewSize = new Vector2(80f, 80f);
+
+    private Canvas mainCanvas;
+    private RectTransform dragPreviewRect;
+    private Image dragPreviewImage;
+    private CanvasGroup dragPreviewCanvasGroup;
+
+    private readonly List<InventorySlotUI> storageSlotUIs = new();
+    private readonly List<InventorySlotUI> inventorySlotUIs = new();
+    private readonly List<QuickSlotUI> quickSlotUIs = new();
+
+    private readonly List<InventorySlotData> storageData = new();
+    private readonly List<InventorySlotData> inventoryData = new();
+    private readonly List<int> quickSlotTIDs = new();
+
+    private LocalSaveRepository saveRepo;
+    private PlayerSaveData currentSaveData;
+
+    private AreaType draggingArea;
+    private int draggingIndex = -1;
+
+    private void Awake()
+    {
+        // {로컬 세이브 저장소 연결}
+        saveRepo = new LocalSaveRepository();
+
+        // {드래그 미리보기 아이콘을 띄울 최상위 Canvas를 찾음}
+        mainCanvas = GetComponentInParent<Canvas>();
+
+        // {기존 슬롯 UI 컴포넌트를 수집하고 입력 이벤트를 새 창고 UI에 연결}
+        BindSlots();
+
+        // {초기 상태는 빈 슬롯 데이터로 구성한다}
+        InitializeEmptyData();
+    }
+
+    private void OnEnable()
+    {
+        // {뒤로가기 버튼 클릭 이벤트를 등록한다}
+        if (buttonBackTop != null)
+            buttonBackTop.onClick.AddListener(OnClickBack);
+
+        LoadFromPlayerData();
+    }
+
+
+    private void OnDisable()
+    {
+        // {뒤로가기 버튼 클릭 이벤트를 해제하여 중복 등록을 방지한다}
+        if (buttonBackTop != null)
+            buttonBackTop.onClick.RemoveListener(OnClickBack);
+    }
+
+    private void OnClickBack()
+    {
+        // {로비 메인 UI 열기 이벤트를 호출한다}
+        GlobalEventBus.OnOpenLobbyUI?.Invoke();
+    }
+    private void InitializeEmptyData()
+    {
+        // {창고 데이터를 빈 슬롯으로 초기화한다}
+        ClearData(storageData, storageSlotUIs.Count);
+
+        // {인벤토리 데이터를 빈 슬롯으로 초기화한다}
+        ClearData(inventoryData, inventorySlotUIs.Count);
+
+        // {퀵슬롯 데이터를 빈 상태로 초기화한다}
+        quickSlotTIDs.Clear();
+
+        for (int i = 0; i < quickSlotUIs.Count; i++)
+        {
+            // {빈 퀵슬롯 TID를 추가한다}
+            quickSlotTIDs.Add(0);
+        }
+
+        // {초기화된 빈 데이터를 UI에 반영한다}
+        RefreshAll();
+    }
+
+    private void EnsureItemDataLoaded()
+    {
+        // {이미 아이템 데이터를 로드했다면 다시 로드하지 않는다}
+        if (itemDataLoaded)
+        {
+            return;
+        }
+
+        // {Resources 폴더에서 ItemData ScriptableObject를 모두 로드한다}
+        ItemData[] itemDatas = Resources.LoadAll<ItemData>("ScriptableObjects/Item");
+
+        // {로드한 ItemData를 TID 기준으로 캐싱한다}
+        foreach (ItemData data in itemDatas)
+        {
+            if (data == null)
+            {
+                continue;
+            }
+
+            itemDataCache[data.TID] = data;
+        }
+
+        // {아이템 데이터 로드 완료 상태로 변경한다}
+        itemDataLoaded = true;
+
+        // {로드 결과를 콘솔에 출력한다}
+        Debug.Log($"StorageInventoryUI: ItemData {itemDataCache.Count}개 로드 완료");
+    }
+
+    private void LoadFromPlayerData()
+    {
+        // {세이브 저장소가 없으면 새로 생성한다}
+        if (saveRepo == null)
+        {
+            saveRepo = new LocalSaveRepository();
+        }
+
+        // {플레이어 저장 데이터를 불러온다}
+        PlayerSaveData saveData = saveRepo.LoadSaveData();
+
+        if (saveData == null)
+        {
+            // {저장 데이터가 없으면 빈 슬롯 상태로 초기화한다}
+            InitializeEmptyData();
+            return;
+        }
+
+        // {현재 저장 데이터를 캐싱한다}
+        currentSaveData = saveData;
+
+        // {저장 데이터 리스트가 비어 있으면 새 리스트로 보정한다}
+        if (saveData.storageSlots == null)
+            saveData.storageSlots = new List<SaveSlotData>();
+
+        if (saveData.inventorySlots == null)
+            saveData.inventorySlots = new List<SaveSlotData>();
+
+        if (saveData.quickSlots == null)
+            saveData.quickSlots = new List<int>();
+
+        // {창고/인벤토리 런타임 데이터를 빈 슬롯으로 초기화한다}
+        ClearData(storageData, storageSlotUIs.Count);
+        ClearData(inventoryData, inventorySlotUIs.Count);
+
+        // {저장된 창고 슬롯 데이터를 런타임 창고 데이터로 복원한다}
+        CopyFromSaveSlots(saveData.storageSlots, storageData, storageSlotUIs.Count);
+
+        // {저장된 인벤토리 슬롯 데이터를 런타임 인벤토리 데이터로 복원한다}
+        CopyFromSaveSlots(saveData.inventorySlots, inventoryData, inventorySlotUIs.Count);
+
+        // {저장된 퀵슬롯 데이터를 복원한다}
+        quickSlotTIDs.Clear();
+
+        for (int i = 0; i < quickSlotUIs.Count; i++)
+        {
+            // {저장된 퀵슬롯 TID가 있으면 사용하고, 없으면 빈 값으로 처리한다}
+            int tid = i < saveData.quickSlots.Count ? saveData.quickSlots[i] : 0;
+            quickSlotTIDs.Add(tid);
+        }
+
+        // {인벤토리에 없는 아이템이 퀵슬롯에 남아 있으면 제거한다}
+        ValidateQuickSlots();
+
+        // {복원된 데이터를 UI에 반영한다}
+        RefreshAll();
+    }
+
+    private void CopyFromSaveSlots(List<SaveSlotData> source, List<InventorySlotData> target, int maxSize)
+    {
+        for (int i = 0; i < maxSize; i++)
+        {
+            target[i] = new InventorySlotData(0, i, 0, null);
+        }
+
+        if (source == null)
+        {
+            return;
+        }
+
+        foreach (SaveSlotData slot in source)
+        {
+            if (slot.index < 0 || slot.index >= maxSize)
+            {
+                continue;
+            }
+
+            target[slot.index] = new InventorySlotData(slot.TID, slot.index, slot.amount, GetIcon(slot.TID));
+        }
+    }
+
+    private void SaveToPlayerData()
+    {
+        if (saveRepo == null)
+        {
+            saveRepo = new LocalSaveRepository();
+        }
+
+        PlayerSaveData saveData = currentSaveData ?? saveRepo.LoadSaveData();
+        if (saveData == null)
+        {
+            return;
+        }
+
+        currentSaveData = saveData;
+
+        if (saveData.storageSlots == null) saveData.storageSlots = new List<SaveSlotData>();
+        if (saveData.inventorySlots == null) saveData.inventorySlots = new List<SaveSlotData>();
+        if (saveData.quickSlots == null) saveData.quickSlots = new List<int>();
+
+        WriteSaveSlots(storageData, saveData.storageSlots);
+        WriteSaveSlots(inventoryData, saveData.inventorySlots);
+
+        saveData.quickSlots.Clear();
+        for (int i = 0; i < quickSlotUIs.Count; i++)
+        {
+            saveData.quickSlots.Add(i < quickSlotTIDs.Count ? quickSlotTIDs[i] : 0);
+        }
+
+        saveRepo.SaveGameData(saveData);
+    }
+
+    private void WriteSaveSlots(List<InventorySlotData> source, List<SaveSlotData> target)
+    {
+        target.Clear();
+
+        for (int i = 0; i < source.Count; i++)
+        {
+            InventorySlotData slot = source[i];
+            if (slot == null || slot.TID == 0 || slot.amount <= 0)
+            {
+                continue;
+            }
+
+            target.Add(new SaveSlotData
+            {
+                index = i,
+                TID = slot.TID,
+                amount = slot.amount
+            });
+        }
+    }
+
+    private int CountInventoryItem(int tid)
+    {
+        return inventoryData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
+    }
+
+    public int GetStoredItemCount(int tid)
+    {
+        // {저장 데이터를 먼저 불러와 창고 데이터를 최신 상태로 갱신한다}
+        LoadFromPlayerData();
+
+        // {특정 TID 아이템의 창고 총수량을 반환}
+        return storageData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
+    }
+
+    public int GetEquippedQuickSlotTID(int index)
+    {
+        // {출격 준비/인게임에서 사용할 퀵슬롯 TID 반환}
+        if (index < 0 || index >= quickSlotTIDs.Count)
+        {
+            return 0;
+        }
+
+        return quickSlotTIDs[index];
+    }
+
+    private void BindSlots()
+    {
+        // {창고 슬롯 수집}
+        storageSlotUIs.Clear();
+        storageSlotUIs.AddRange(storageSlotRoot.GetComponentsInChildren<InventorySlotUI>(true));
+
+        // {인벤토리 슬롯 수집}
+        inventorySlotUIs.Clear();
+        inventorySlotUIs.AddRange(inventorySlotRoot.GetComponentsInChildren<InventorySlotUI>(true));
+
+        // {퀵슬롯 수집}
+        quickSlotUIs.Clear();
+        quickSlotUIs.AddRange(quickSlotRoot.GetComponentsInChildren<QuickSlotUI>(true));
+
+        if (quickSlotGroupUI == null)
+        {
+            quickSlotGroupUI = quickSlotRoot.GetComponentInParent<QuickSlotGroupUI>();
+        }
+
+        BindInventorySlotEvents(storageSlotUIs, AreaType.Storage);
+        BindInventorySlotEvents(inventorySlotUIs, AreaType.Inventory);
+        BindQuickSlotEvents();
+
+        AddPanelDropReceiver(storagePanelRaycastTarget, AreaType.StoragePanel);
+        AddPanelDropReceiver(inventoryPanelRaycastTarget, AreaType.InventoryPanel);
+    }
+
+    private void BindInventorySlotEvents(List<InventorySlotUI> slotUIs, AreaType area)
+    {
+        for (int i = 0; i < slotUIs.Count; i++)
+        {
+            // {기존 InventorySlotUI의 slotIndex를 현재 목록 순서와 맞춤}
+            slotUIs[i].slotIndex = i;
+
+            // {기존 드래그 이벤트 중복을 막고, UpdateSlot 함수만 재사용}
+            slotUIs[i].enabled = false;
+
+            AddInputReceiver(slotUIs[i].gameObject, area, i);
+        }
+    }
+
+    private void BindQuickSlotEvents()
+    {
+        for (int i = 0; i < quickSlotUIs.Count; i++)
+        {
+            // {기존 QuickSlotUI의 slotIndex를 현재 목록 순서와 맞춤}
+            quickSlotUIs[i].slotIndex = i;
+
+            // {기존 드래그 이벤트 중복을 막고, UpdateSlot 함수만 재사용}
+            quickSlotUIs[i].enabled = false;
+
+            AddInputReceiver(quickSlotUIs[i].gameObject, AreaType.QuickSlot, i);
+        }
+    }
+
+    private void AddInputReceiver(GameObject target, AreaType area, int index)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        // {슬롯 클릭/더블클릭/드롭 이벤트를 StorageInventoryUI로 전달하는 컴포넌트 추가}
+        StorageInventoryInputReceiver receiver = target.GetComponent<StorageInventoryInputReceiver>();
+        if (receiver == null)
+        {
+            receiver = target.AddComponent<StorageInventoryInputReceiver>();
+        }
+
+        receiver.Initialize(this, (int)area, index);
+
+        Graphic graphic = target.GetComponent<Graphic>();
+        if (graphic != null)
+        {
+            // {슬롯이 마우스 입력을 받을 수 있도록 설정}
+            graphic.raycastTarget = true;
+        }
+    }
+
+    private void AddPanelDropReceiver(Graphic panelGraphic, AreaType area)
+    {
+        if (panelGraphic == null)
+        {
+            return;
+        }
+
+        // {패널 빈 공간에 드롭할 수 있도록 설정}
+        panelGraphic.raycastTarget = true;
+        AddInputReceiver(panelGraphic.gameObject, area, -1);
+    }
+
+    private void ClearData(List<InventorySlotData> targetData, int size)
+    {
+        targetData.Clear();
+
+        for (int i = 0; i < size; i++)
+        {
+            // {빈 슬롯 데이터 생성}
+            targetData.Add(new InventorySlotData(0, i, 0, null));
+        }
+    }
+
+    public void OnSlotClick(int areaValue, int index, PointerEventData eventData)
+    {
+        AreaType area = (AreaType)areaValue;
+
+        if (eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
+        ShowDescription(area, index);
+
+        if (eventData.clickCount < 2)
+        {
+            return;
+        }
+
+        if (area == AreaType.Storage)
+        {
+            MoveToArea(storageData, index, inventoryData);
+        }
+        else if (area == AreaType.Inventory)
+        {
+            MoveToArea(inventoryData, index, storageData);
+        }
+        else if (area == AreaType.QuickSlot)
+        {
+            quickSlotTIDs[index] = 0;
+        }
+
+        ValidateQuickSlots();
+        SaveToPlayerData();
+        RefreshAll();
+    }
+
+    public void OnBeginDrag(int areaValue, int index, PointerEventData eventData)
+    {
+        AreaType area = (AreaType)areaValue;
+
+        if (!HasItem(area, index))
+        {
+            return;
+        }
+
+        // {드래그 출발 슬롯 기록}
+        draggingArea = area;
+        draggingIndex = index;
+
+        // {드래그 중 마우스를 따라오는 아이콘 생성}
+        ShowDragPreview(area, index, eventData.position);
+    }
+
+    public void OnDrop(int areaValue, int index)
+    {
+        if (draggingIndex < 0)
+        {
+            return;
+        }
+
+        AreaType targetArea = (AreaType)areaValue;
+
+        if (targetArea == AreaType.Storage)
+        {
+            DropToSlot(storageData, index);
+        }
+        else if (targetArea == AreaType.Inventory)
+        {
+            DropToSlot(inventoryData, index);
+        }
+        else if (targetArea == AreaType.StoragePanel)
+        {
+            DropToArea(storageData);
+        }
+        else if (targetArea == AreaType.InventoryPanel)
+        {
+            DropToArea(inventoryData);
+        }
+        else if (targetArea == AreaType.QuickSlot)
+        {
+            EquipQuickSlot(index);
+        }
+
+        ValidateQuickSlots();
+        SaveToPlayerData();
+        draggingIndex = -1;
+        RefreshAll();
+    }
+
+    private void MoveToArea(List<InventorySlotData> sourceList, int sourceIndex, List<InventorySlotData> targetList)
+    {
+        if (!IsValid(sourceList, sourceIndex) || sourceList[sourceIndex].TID == 0)
+        {
+            return;
+        }
+
+        InventorySlotData source = sourceList[sourceIndex];
+        int remain = source.amount;
+        int maxStack = GetMaxStack(source.TID);
+
+        // {같은 아이템 슬롯에 먼저 중첩}
+        for (int i = 0; i < targetList.Count; i++)
+        {
+            if (remain <= 0)
+            {
+                break;
+            }
+
+            if (targetList[i].TID != source.TID)
+            {
+                continue;
+            }
+
+            int moveAmount = Mathf.Min(maxStack - targetList[i].amount, remain);
+            targetList[i].amount += moveAmount;
+            remain -= moveAmount;
+        }
+
+        // {남은 수량은 빈 슬롯으로 이동}
+        for (int i = 0; i < targetList.Count; i++)
+        {
+            if (remain <= 0)
+            {
+                break;
+            }
+
+            if (targetList[i].TID != 0)
+            {
+                continue;
+            }
+
+            int moveAmount = Mathf.Min(maxStack, remain);
+            targetList[i] = new InventorySlotData(source.TID, i, moveAmount, GetIcon(source.TID));
+            remain -= moveAmount;
+        }
+
+        // {원본 슬롯 수량 갱신}
+        sourceList[sourceIndex].amount = remain;
+
+        if (sourceList[sourceIndex].amount <= 0)
+        {
+            sourceList[sourceIndex] = new InventorySlotData(0, sourceIndex, 0, null);
+        }
+
+        ValidateQuickSlots();
+    }
+
+    private void DropToArea(List<InventorySlotData> targetList)
+    {
+        if (draggingArea == AreaType.Storage && targetList == storageData)
+        {
+            return;
+        }
+
+        if (draggingArea == AreaType.Inventory && targetList == inventoryData)
+        {
+            return;
+        }
+
+        if (!TryGetDraggingSource(out List<InventorySlotData> sourceList))
+        {
+            return;
+        }
+
+        MoveToArea(sourceList, draggingIndex, targetList);
+    }
+
+    private void DropToSlot(List<InventorySlotData> targetList, int targetIndex)
+    {
+        if (!TryGetDraggingSource(out List<InventorySlotData> sourceList))
+        {
+            return;
+        }
+
+        if (!IsValid(sourceList, draggingIndex) || !IsValid(targetList, targetIndex))
+        {
+            return;
+        }
+
+        if (sourceList == targetList && draggingIndex == targetIndex)
+        {
+            return;
+        }
+
+        InventorySlotData source = sourceList[draggingIndex];
+        InventorySlotData target = targetList[targetIndex];
+
+        if (source.TID == 0)
+        {
+            return;
+        }
+
+        if (target.TID == 0)
+        {
+            // {빈 슬롯에 드롭하면 이동}
+            targetList[targetIndex] = new InventorySlotData(source.TID, targetIndex, source.amount, GetIcon(source.TID));
+            sourceList[draggingIndex] = new InventorySlotData(0, draggingIndex, 0, null);
+        }
+        else if (target.TID == source.TID)
+        {
+            // {같은 아이템이면 중첩}
+            int maxStack = GetMaxStack(source.TID);
+            int moveAmount = Mathf.Min(maxStack - target.amount, source.amount);
+
+            targetList[targetIndex].amount += moveAmount;
+            sourceList[draggingIndex].amount -= moveAmount;
+
+            if (sourceList[draggingIndex].amount <= 0)
+            {
+                sourceList[draggingIndex] = new InventorySlotData(0, draggingIndex, 0, null);
+            }
+        }
+        else
+        {
+            // {다른 아이템이면 교환}
+            targetList[targetIndex] = new InventorySlotData(source.TID, targetIndex, source.amount, GetIcon(source.TID));
+            sourceList[draggingIndex] = new InventorySlotData(target.TID, draggingIndex, target.amount, GetIcon(target.TID));
+        }
+
+        ValidateQuickSlots();
+    }
+
+    private void EquipQuickSlot(int quickSlotIndex)
+    {
+        if (quickSlotIndex < 0 || quickSlotIndex >= quickSlotTIDs.Count)
+        {
+            return;
+        }
+
+        if (draggingArea != AreaType.Inventory || !IsValid(inventoryData, draggingIndex))
+        {
+            return;
+        }
+
+        int tid = inventoryData[draggingIndex].TID;
+        if (tid == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < quickSlotTIDs.Count; i++)
+        {
+            if (i == quickSlotIndex)
+            {
+                continue;
+            }
+
+            if (quickSlotTIDs[i] == tid)
+            {
+                quickSlotTIDs[i] = 0;
+            }
+        }
+
+        quickSlotTIDs[quickSlotIndex] = tid;
+    }
+
+    private bool TryGetDraggingSource(out List<InventorySlotData> sourceList)
+    {
+        sourceList = null;
+
+        if (draggingArea == AreaType.Storage)
+        {
+            sourceList = storageData;
+        }
+        else if (draggingArea == AreaType.Inventory)
+        {
+            sourceList = inventoryData;
+        }
+
+        return sourceList != null;
+    }
+
+    private int GetDraggingTID()
+    {
+        if (draggingArea == AreaType.Storage && IsValid(storageData, draggingIndex))
+        {
+            return storageData[draggingIndex].TID;
+        }
+
+        if (draggingArea == AreaType.Inventory && IsValid(inventoryData, draggingIndex))
+        {
+            return inventoryData[draggingIndex].TID;
+        }
+
+        return 0;
+    }
+
+    private void ValidateQuickSlots()
+    {
+        for (int i = 0; i < quickSlotTIDs.Count; i++)
+        {
+            if (quickSlotTIDs[i] == 0)
+            {
+                continue;
+            }
+
+            if (CountInventoryItem(quickSlotTIDs[i]) <= 0)
+            {
+                quickSlotTIDs[i] = 0;
+            }
+        }
+    }
+
+    private void RefreshAll()
+    {
+        // {창고 슬롯 UI 갱신}
+        for (int i = 0; i < storageSlotUIs.Count; i++)
+        {
+            RefreshInventorySlot(storageSlotUIs[i], storageData[i]);
+        }
+
+        // {인벤토리 슬롯 UI 갱신}
+        for (int i = 0; i < inventorySlotUIs.Count; i++)
+        {
+            RefreshInventorySlot(inventorySlotUIs[i], inventoryData[i]);
+        }
+
+        // {퀵슬롯 UI 갱신}
+        for (int i = 0; i < quickSlotTIDs.Count; i++)
+        {
+            RefreshQuickSlot(i, quickSlotTIDs[i]);
+        }
+
+        RefreshCapacity();
+    }
+
+    private void RefreshInventorySlot(InventorySlotUI slotUI, InventorySlotData slotData)
+    {
+        // {기존 InventorySlotUI의 표시 함수 재사용}
+        slotUI.UpdateSlot(slotData.amount, GetIcon(slotData.TID));
+    }
+
+    private void RefreshQuickSlot(int index, int tid)
+    {
+        Sprite icon = GetIcon(tid);
+        int count = tid == 0 ? 0 : CountInventoryItem(tid);
+
+        if (quickSlotGroupUI != null)
+        {
+            quickSlotGroupUI.UpdateSlot(index, icon, count);
+        }
+        else if (index < quickSlotUIs.Count)
+        {
+            quickSlotUIs[index].UpdateSlot(count, icon);
+        }
+    }
+
+    private void RefreshCapacity()
+    {
+        if (storageCapacityText != null)
+        {
+            // {창고 소지칸 수 갱신}
+            storageCapacityText.text = $"{CountOccupied(storageData)} / {storageData.Count}";
+        }
+
+        if (inventoryCapacityText != null)
+        {
+            // {인벤토리 소지칸 수 갱신}
+            inventoryCapacityText.text = $"{CountOccupied(inventoryData)} / {inventoryData.Count}";
+        }
+    }
+
+    private void ShowDescription(AreaType area, int index)
+    {
+        int tid = 0;
+
+        if (area == AreaType.Storage && IsValid(storageData, index))
+        {
+            // {창고 슬롯의 TID를 가져온다}
+            tid = storageData[index].TID;
+        }
+        else if (area == AreaType.Inventory && IsValid(inventoryData, index))
+        {
+            // {인벤토리 슬롯의 TID를 가져온다}
+            tid = inventoryData[index].TID;
+        }
+        else if (area == AreaType.QuickSlot && index >= 0 && index < quickSlotTIDs.Count)
+        {
+            // {퀵슬롯의 TID를 가져온다}
+            tid = quickSlotTIDs[index];
+        }
+
+        // {TID로 아이템 원본 데이터를 가져온다}
+        ItemData itemData = GetItemData(tid);
+
+        if (itemNameText != null)
+        {
+            // {아이템 이름을 표시한다}
+            itemNameText.text = itemData != null ? itemData.itemName : "";
+        }
+
+        if (itemDescriptionText != null)
+        {
+            // {아이템 설명을 표시한다}
+            itemDescriptionText.text = itemData != null ? itemData.desc : "선택한 아이템이 없습니다.";
+        }
+    }
+
+    private bool HasItem(AreaType area, int index)
+    {
+        if (area == AreaType.Storage && IsValid(storageData, index))
+        {
+            return storageData[index].TID != 0;
+        }
+
+        if (area == AreaType.Inventory && IsValid(inventoryData, index))
+        {
+            return inventoryData[index].TID != 0;
+        }
+
+        if (area == AreaType.QuickSlot && index >= 0 && index < quickSlotTIDs.Count)
+        {
+            return quickSlotTIDs[index] != 0;
+        }
+
+        return false;
+    }
+
+    private int CountOccupied(List<InventorySlotData> list)
+    {
+        // {아이템이 들어있는 슬롯 개수 계산}
+        return list.Count(slot => slot.TID != 0 && slot.amount > 0);
+    }
+
+    private int CountTotalItem(int tid)
+    {
+        // {창고와 인벤토리의 특정 아이템 총량 계산}
+        return storageData.Where(slot => slot.TID == tid).Sum(slot => slot.amount)
+             + inventoryData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
+    }
+
+    private ItemData GetItemData(int tid)
+    {
+        // {빈 슬롯이면 아이템 데이터를 반환하지 않는다}
+        if (tid == 0)
+        {
+            return null;
+        }
+
+        // {ItemData가 아직 로드되지 않았으면 Resources에서 로드한다}
+        EnsureItemDataLoaded();
+
+        // {캐시에서 TID에 해당하는 아이템 데이터를 찾는다}
+        if (itemDataCache.TryGetValue(tid, out ItemData itemData))
+        {
+            return itemData;
+        }
+
+        // {해당 TID의 아이템 데이터가 없으면 경고를 출력한다}
+        Debug.LogWarning($"StorageInventoryUI: ItemData TID {tid}를 찾을 수 없습니다.");
+        return null;
+    }
+
+    private Sprite GetIcon(int tid)
+    {
+        // {빈 슬롯이면 아이콘을 반환하지 않는다}
+        if (tid == 0)
+        {
+            return null;
+        }
+
+        // {이미 로드된 아이콘이 있으면 재사용한다}
+        if (iconCache.TryGetValue(tid, out Sprite cachedIcon))
+        {
+            return cachedIcon;
+        }
+
+        // {아이템 데이터를 가져온다}
+        ItemData itemData = GetItemData(tid);
+
+        // {아이템 데이터나 아이콘 참조가 없으면 아이콘을 반환하지 않는다}
+        if (itemData == null || itemData.icon == null || !itemData.icon.RuntimeKeyIsValid())
+        {
+            return null;
+        }
+
+        // {이미 로드 중인 아이콘이면 중복 로드하지 않는다}
+        if (loadingIconTIDs.Contains(tid))
+        {
+            return null;
+        }
+
+        // {아이콘 로드 중 상태를 기록한다}
+        loadingIconTIDs.Add(tid);
+
+        // {Addressables 아이콘 로드를 시작한다}
+        AsyncOperationHandle<Sprite> handle = itemData.icon.LoadAssetAsync();
+
+        handle.Completed += operation =>
+        {
+            // {아이콘 로드 중 상태를 해제한다}
+            loadingIconTIDs.Remove(tid);
+
+            // {아이콘 로드 성공 시 캐시에 저장한다}
+            if (operation.Status == AsyncOperationStatus.Succeeded)
+            {
+                iconCache[tid] = operation.Result;
+
+                // {아이콘 로드 후 슬롯 UI를 다시 갱신한다}
+                RefreshAll();
+            }
+            else
+            {
+                Debug.LogWarning($"StorageInventoryUI: 아이콘 로드 실패 TID {tid}");
+            }
+        };
+
+        // {로드 완료 전에는 임시로 빈 아이콘을 반환한다}
+        return null;
+    }
+
+    private int GetMaxStack(int tid)
+    {
+        // {아이템 데이터를 가져온다}
+        ItemData itemData = GetItemData(tid);
+
+        // {아이템 데이터가 없거나 중첩 수가 0 이하이면 기본값 1을 사용한다}
+        if (itemData == null || itemData.itemMultiple <= 0)
+        {
+            return 1;
+        }
+
+        // {아이템 데이터의 최대 중첩 수를 반환한다}
+        return itemData.itemMultiple;
+    }
+
+    private bool IsValid(List<InventorySlotData> list, int index)
+    {
+        // {리스트 인덱스 유효성 검사}
+        return list != null && index >= 0 && index < list.Count;
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        // {드래그 미리보기 아이콘이 없으면 처리하지 않음}
+        if (dragPreviewRect == null)
+        {
+            return;
+        }
+
+        // {마우스 위치로 드래그 미리보기 아이콘 이동}
+        dragPreviewRect.position = eventData.position;
+    }
+
+    public void OnEndDrag()
+    {
+        // {드래그 종료 시 미리보기 아이콘 제거}
+        HideDragPreview();
+
+        // {드롭 대상이 없었던 경우를 대비해 드래그 상태 초기화}
+        draggingIndex = -1;
+    }
+
+    private void ShowDragPreview(AreaType area, int index, Vector2 screenPosition)
+    {
+        // {드래그할 아이템 아이콘 가져오기}
+        Sprite icon = GetDragPreviewIcon(area, index);
+
+        if (icon == null || mainCanvas == null)
+        {
+            return;
+        }
+
+        // {이전 드래그 미리보기 아이콘이 남아 있으면 제거}
+        HideDragPreview();
+
+        // {드래그 미리보기 오브젝트 생성}
+        GameObject previewObject = new GameObject("DragPreviewIcon", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+        previewObject.transform.SetParent(mainCanvas.transform, false);
+        previewObject.transform.SetAsLastSibling();
+
+        // {드래그 미리보기 RectTransform 설정}
+        dragPreviewRect = previewObject.GetComponent<RectTransform>();
+        dragPreviewRect.sizeDelta = dragPreviewSize;
+        dragPreviewRect.position = screenPosition;
+
+        // {드래그 미리보기 Image 설정}
+        dragPreviewImage = previewObject.GetComponent<Image>();
+        dragPreviewImage.sprite = icon;
+        dragPreviewImage.raycastTarget = false;
+        dragPreviewImage.preserveAspect = true;
+
+        // {드래그 미리보기 아이콘이 드롭 판정을 막지 않도록 Raycast 차단}
+        dragPreviewCanvasGroup = previewObject.GetComponent<CanvasGroup>();
+        dragPreviewCanvasGroup.blocksRaycasts = false;
+        dragPreviewCanvasGroup.interactable = false;
+        dragPreviewCanvasGroup.alpha = 0.85f;
+    }
+
+    private void HideDragPreview()
+    {
+        // {드래그 미리보기 오브젝트 제거}
+        if (dragPreviewRect != null)
+        {
+            Destroy(dragPreviewRect.gameObject);
+        }
+
+        // {드래그 미리보기 참조 초기화}
+        dragPreviewRect = null;
+        dragPreviewImage = null;
+        dragPreviewCanvasGroup = null;
+    }
+
+    private Sprite GetDragPreviewIcon(AreaType area, int index)
+    {
+        if (area == AreaType.Storage)
+        {
+            // {창고 슬롯의 아이콘 반환}
+            return GetSlotIcon(storageData, index);
+        }
+
+        if (area == AreaType.Inventory)
+        {
+            // {인벤토리 슬롯의 아이콘 반환}
+            return GetSlotIcon(inventoryData, index);
+        }
+
+        if (area == AreaType.QuickSlot)
+        {
+            // {퀵슬롯 인덱스 범위 검사}
+            if (index < 0 || index >= quickSlotTIDs.Count)
+            {
+                return null;
+            }
+
+            // {퀵슬롯에 장착된 아이템 아이콘 반환}
+            return GetIcon(quickSlotTIDs[index]);
+        }
+
+        return null;
+    }
+
+    private Sprite GetSlotIcon(List<InventorySlotData> sourceList, int index)
+    {
+        // {슬롯 인덱스 유효성 검사}
+        if (!IsValid(sourceList, index))
+        {
+            return null;
+        }
+
+        InventorySlotData slot = sourceList[index];
+
+        // {빈 슬롯이면 아이콘을 반환하지 않음}
+        if (slot == null || slot.TID == 0 || slot.amount <= 0)
+        {
+            return null;
+        }
+
+        // {슬롯에 캐싱된 아이콘이 있으면 우선 사용}
+        if (slot.icon != null)
+        {
+            return slot.icon;
+        }
+
+        // {캐싱된 아이콘이 없으면 TID로 아이콘 조회}
+        return GetIcon(slot.TID);
+    }
+}
+
+public class StorageInventoryInputReceiver : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+{
+    private StorageInventoryUI owner;
+    private int areaValue;
+    private int index;
+
+    public void Initialize(StorageInventoryUI newOwner, int newAreaValue, int newIndex)
+    {
+        // {StorageInventoryUI에 입력 이벤트를 전달하기 위한 초기화}
+        owner = newOwner;
+        areaValue = newAreaValue;
+        index = newIndex;
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        // {클릭/더블클릭 이벤트 전달}
+        owner.OnSlotClick(areaValue, index, eventData);
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        // {드래그 시작 이벤트와 마우스 위치 전달}
+        owner.OnBeginDrag(areaValue, index, eventData);
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        // {드래그 중 마우스 위치 전달}
+        owner.OnDrag(eventData);
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        // {드래그 종료 이벤트 전달}
+        owner.OnEndDrag();
+    }
+
+    public void OnDrop(PointerEventData eventData)
+    {
+        // {드롭 이벤트 전달}
+        owner.OnDrop(areaValue, index);
+    }
+}

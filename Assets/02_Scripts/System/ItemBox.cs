@@ -2,41 +2,48 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// ÇÃ·¹ÀÌ¾î°¡ »óÈ£ÀÛ¿ëÇÒ ¼ö ÀÖ´Â ÄÁÅ×ÀÌ³Ê ¹Ú½ºÀÔ´Ï´Ù.
-/// »óÀÚ ¾È¿¡´Â ½ÇÁ¦·Î ¿Å±æ ¼ö ÀÖ´Â ¾ÆÀÌÅÛ µ¥ÀÌÅÍ°¡ µé¾î ÀÖÀ¸¸ç,
-/// ÇÊ¿ä ½Ã ½ÃÀÛ ½ÃÁ¡¿¡ ·£´ıÀ¸·Î ¾ÆÀÌÅÛÀ» »ı¼ºÇØ Ã¤¿ö ³Ö½À´Ï´Ù.
+/// í”Œë ˆì´ì–´ê°€ ìƒí˜¸ì‘ìš©í•  ìˆ˜ ìˆëŠ” ì•„ì´í…œ ìƒì í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+/// ë‚´ë¶€ ì•„ì´í…œì€ ê³ ì • ìŠ¬ë¡¯ ë°©ì‹ìœ¼ë¡œ ê´€ë¦¬í•˜ë©°,
+/// ì²´ìŠ¤íŠ¸ UIì™€ ì—°ê²°ë  ë•Œ ìŠ¬ë¡¯ ì¸ë±ìŠ¤ê°€ ìœ ì§€ë˜ë„ë¡ ì„¤ê³„í•©ë‹ˆë‹¤.
 /// </summary>
 public class ItemBox : MonoBehaviour, IInteractable
 {
-    [Header("Container Contents")]
-    [SerializeField] private List<BoxItemEntry> items = new();
+    [Header("Container Settings")]
+    [SerializeField] private int slotCapacity = 8;                 // ìƒìê°€ ê°€ì§ˆ ìˆ˜ ìˆëŠ” ìµœëŒ€ ìŠ¬ë¡¯ ìˆ˜
+    [SerializeField] private List<BoxItemEntry> items = new();     // ì‹¤ì œ ìŠ¬ë¡¯ ë°ì´í„° ëª©ë¡
 
     [Header("Random Loot Settings")]
-    [SerializeField] private bool useRandomLoot = true;              // ½ÃÀÛ ½Ã ·£´ı ¾ÆÀÌÅÛ »ı¼º »ç¿ë ¿©ºÎ
-    [SerializeField] private int minCreateCount = 1;                // ÃÖ¼Ò »ı¼º ¾ÆÀÌÅÛ Á¾·ù ¼ö
-    [SerializeField] private int maxCreateCount = 2;                // ÃÖ´ë »ı¼º ¾ÆÀÌÅÛ Á¾·ù ¼ö
-    [SerializeField] private bool allowDuplicateLoot = false;       // °°Àº ¾ÆÀÌÅÛ Áßº¹ »ı¼º Çã¿ë ¿©ºÎ
-    [SerializeField] private List<BoxLootOption> lootOptions = new(); // ·£´ı ÈÄº¸ ¾ÆÀÌÅÛ ¸ñ·Ï
+    [SerializeField] private bool useRandomLoot = true;               // ì‹œì‘ ì‹œ ëœë¤ ì•„ì´í…œì„ ìƒì„±í• ì§€ ì—¬ë¶€
+    [SerializeField] private int minCreateCount = 1;                  // ìµœì†Œ ìƒì„± ì•„ì´í…œ ì¢…ë¥˜ ìˆ˜
+    [SerializeField] private int maxCreateCount = 2;                  // ìµœëŒ€ ìƒì„± ì•„ì´í…œ ì¢…ë¥˜ ìˆ˜
+    [SerializeField] private bool allowDuplicateLoot = false;         // ê°™ì€ í›„ë³´ ì•„ì´í…œì˜ ì¤‘ë³µ ìƒì„± í—ˆìš© ì—¬ë¶€
+    [SerializeField] private List<BoxLootOption> lootOptions = new(); // ëœë¤ ìƒì„± í›„ë³´ ëª©ë¡
 
-    private bool isOpened = false;
+    private bool isOpened = false;                                    // í˜„ì¬ ë‹¤ë¥¸ í”Œë ˆì´ì–´ê°€ ì—´ì–´ ë‘” ìƒíƒœì¸ì§€ ì—¬ë¶€
 
     /// <summary>
-    /// ÇöÀç »óÀÚ ¾È¿¡ µé¾î ÀÖ´Â ¾ÆÀÌÅÛ ¸ñ·ÏÀÔ´Ï´Ù.
-    /// ChestUI°¡ ÀÌ µ¥ÀÌÅÍ¸¦ ÀĞ¾î¼­ ½½·ÔÀ» »ı¼ºÇÕ´Ï´Ù.
+    /// ì²´ìŠ¤íŠ¸ UIì—ì„œ ì½ì–´ê°ˆ ìŠ¬ë¡¯ ë°ì´í„° ëª©ë¡ì…ë‹ˆë‹¤.
+    /// í•­ìƒ slotCapacity ê°œìˆ˜ì— ë§ì¶° ìœ ì§€ë©ë‹ˆë‹¤.
     /// </summary>
     public IReadOnlyList<BoxItemEntry> Items => items;
 
+    /// <summary>
+    /// í˜„ì¬ ìƒìê°€ ê°€ì§€ëŠ” ìŠ¬ë¡¯ ìˆ˜ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+    /// </summary>
+    public int SlotCount => items.Count;
+
     private void Awake()
     {
-        // ·£´ı »ı¼º ¸ğµå¸¦ »ç¿ëÇÏ°í,
-        // ¾ÆÁ÷ »óÀÚ ³»¿ëÀÌ ºñ¾î ÀÖÀ» ¶§¸¸ ½ÃÀÛ ½Ã ÇÑ ¹ø ¾ÆÀÌÅÛÀ» Ã¤¿ó´Ï´Ù.
-        if (useRandomLoot && items.Count == 0)
+        EnsureSlotCapacity();
+
+        // ëœë¤ ë£¨íŠ¸ ì‚¬ìš©ì´ ì¼œì ¸ ìˆê³ , ì•„ì§ ìƒìê°€ ë¹„ì–´ ìˆë‹¤ë©´ ì‹œì‘ ì‹œ ì•„ì´í…œì„ ìƒì„±í•©ë‹ˆë‹¤.
+        if (useRandomLoot && IsEmpty())
             GenerateRandomItems();
     }
 
     /// <summary>
-    /// ÀÎ½ºÆåÅÍ ¿ìÅ¬¸¯ ¸Ş´º¿¡¼­ ¼öµ¿À¸·Î ·£´ı ¾ÆÀÌÅÛÀ» ´Ù½Ã »ı¼ºÇÒ ¶§ »ç¿ëÇÕ´Ï´Ù.
-    /// Å×½ºÆ®ÇÒ ¶§ ÆíÇÏ°Ô È®ÀÎÇÒ ¼ö ÀÖµµ·Ï Ãß°¡ÇÕ´Ï´Ù.
+    /// ì¸ìŠ¤í™í„° ìš°í´ë¦­ ë©”ë‰´ì—ì„œ ëœë¤ ì•„ì´í…œ ìƒì„±ì„ ìˆ˜ë™ ì‹¤í–‰í•©ë‹ˆë‹¤.
+    /// í…ŒìŠ¤íŠ¸ìš© ê¸°ëŠ¥ì´ë©° í˜„ì¬ ìŠ¬ë¡¯ êµ¬ì¡°ì— ë§ê²Œ ë‹¤ì‹œ ìƒì„±í•©ë‹ˆë‹¤.
     /// </summary>
     [ContextMenu("Generate Random Items")]
     private void GenerateRandomItemsFromContextMenu()
@@ -45,26 +52,27 @@ public class ItemBox : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î°¡ »óÀÚ¿Í »óÈ£ÀÛ¿ëÇßÀ» ¶§ È£ÃâµË´Ï´Ù.
-    /// ÀÌ¹Ì ¿­·Á ÀÖÀ¸¸é Áßº¹À¸·Î ¿­Áö ¾Ê½À´Ï´Ù.
+    /// í”Œë ˆì´ì–´ê°€ ìƒìì™€ ìƒí˜¸ì‘ìš©í–ˆì„ ë•Œ í˜¸ì¶œë©ë‹ˆë‹¤.
+    /// ì´ë¯¸ ë‹¤ë¥¸ ìª½ì—ì„œ ì—´ë ¤ ìˆë‹¤ë©´ ë¬´ì‹œí•˜ê³ ,
+    /// ì²˜ìŒ ì—´ë¦¬ëŠ” ê²½ìš° ì²´ìŠ¤íŠ¸ UI ì˜¤í”ˆ ì´ë²¤íŠ¸ë¥¼ ì „ë‹¬í•©ë‹ˆë‹¤.
     /// </summary>
     public bool Interact(int playerID)
     {
-        // ÀÌ¹Ì ¿­·Á ÀÖÀ¸¸é ´Ù½Ã ¿­Áö ¾ÊÀ½
         if (isOpened)
             return false;
 
         isOpened = true;
 
-        // »óÀÚ ¿­¸² ÀÌº¥Æ®¸¦ ¹ßÇàÇÏ¿© Presenter°¡ UI¸¦ ¿­µµ·Ï ¿äÃ»
+        // Presenterê°€ ì´ ì´ë²¤íŠ¸ë¥¼ ë°›ì•„ ì²´ìŠ¤íŠ¸ UIë¥¼ ì—´ê³  ë°ì´í„°ë¥¼ ë°”ì¸ë”©í•©ë‹ˆë‹¤.
         GlobalEventBus.OnItemBoxOpened?.Invoke(this, playerID);
 
-        // »óÀÚ´Â »ç¶óÁöÁö ¾ÊÀ¸¹Ç·Î false ¹İÈ¯
+        // í˜„ì¬ í”„ë¡œì íŠ¸ êµ¬ì¡°ì—ì„œëŠ” ìƒí˜¸ì‘ìš© í›„ ë³„ë„ ê¸°ë³¸ ë™ì‘ì„ ë§‰ê¸° ìœ„í•´ falseë¥¼ ìœ ì§€í•©ë‹ˆë‹¤.
         return false;
     }
 
     /// <summary>
-    /// ÁöÁ¤ÇÑ ÀÎµ¦½ºÀÇ »óÀÚ ¾ÆÀÌÅÛ µ¥ÀÌÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+    /// íŠ¹ì • ìŠ¬ë¡¯ì˜ ì•„ì´í…œ ë°ì´í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+    /// ë²”ìœ„ë¥¼ ë²—ì–´ë‚˜ë©´ nullì„ ë°˜í™˜í•©ë‹ˆë‹¤.
     /// </summary>
     public BoxItemEntry GetItem(int index)
     {
@@ -75,30 +83,72 @@ public class ItemBox : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// »óÀÚ ¾È Æ¯Á¤ ¾ÆÀÌÅÛÀÇ ¼ö·®À» °¨¼Ò½ÃÅµ´Ï´Ù.
-    /// ¼ö·®ÀÌ 0 ÀÌÇÏ°¡ µÇ¸é ÇØ´ç ¿£Æ®¸®¸¦ Á¦°ÅÇÕ´Ï´Ù.
+    /// íŠ¹ì • ìŠ¬ë¡¯ì´ ë¹„ì–´ ìˆëŠ”ì§€ í™•ì¸í•©ë‹ˆë‹¤.
+    /// ìŠ¬ë¡¯ ìì²´ê°€ ì—†ê±°ë‚˜, itemDataê°€ ì—†ê±°ë‚˜, ìˆ˜ëŸ‰ì´ 0 ì´í•˜ì´ë©´ ë¹ˆ ìŠ¬ë¡¯ìœ¼ë¡œ ë´…ë‹ˆë‹¤.
+    /// </summary>
+    public bool IsSlotEmpty(int index)
+    {
+        if (index < 0 || index >= items.Count)
+            return true;
+
+        BoxItemEntry entry = items[index];
+        if (entry == null)
+            return true;
+
+        return entry.itemData == null || entry.amount <= 0;
+    }
+
+    /// <summary>
+    /// íŠ¹ì • ìŠ¬ë¡¯ì„ ë¹ˆ ìƒíƒœë¡œ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
+    /// ê³ ì • ìŠ¬ë¡¯ êµ¬ì¡°ë¥¼ ìœ ì§€í•˜ê¸° ìœ„í•´ ìŠ¬ë¡¯ ìì²´ëŠ” ì‚­ì œí•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+    /// </summary>
+    public void ClearSlot(int index)
+    {
+        if (index < 0 || index >= items.Count)
+            return;
+
+        if (items[index] == null)
+            items[index] = CreateEmptyEntry();
+
+        items[index].itemData = null;
+        items[index].amount = 0;
+    }
+
+    /// <summary>
+    /// íŠ¹ì • ìŠ¬ë¡¯ì˜ ìˆ˜ëŸ‰ì„ ì°¨ê°í•©ë‹ˆë‹¤.
+    /// ìˆ˜ëŸ‰ì´ 0 ì´í•˜ê°€ ë˜ë©´ ìŠ¬ë¡¯ì„ ì œê±°í•˜ì§€ ì•Šê³  ë¹ˆ ìŠ¬ë¡¯ìœ¼ë¡œ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
     /// </summary>
     public void RemoveAmount(int index, int amount)
     {
         if (index < 0 || index >= items.Count)
             return;
 
+        if (amount <= 0 || IsSlotEmpty(index))
+            return;
+
         items[index].amount -= amount;
 
         if (items[index].amount <= 0)
-            items.RemoveAt(index);
+            ClearSlot(index);
     }
 
     /// <summary>
-    /// »óÀÚ ¾È¿¡ ´õ ÀÌ»ó ¾ÆÀÌÅÛÀÌ ¾ø´ÂÁö È®ÀÎÇÕ´Ï´Ù.
+    /// ìƒì ì „ì²´ê°€ ë¹„ì–´ ìˆëŠ”ì§€ í™•ì¸í•©ë‹ˆë‹¤.
+    /// ê³ ì • ìŠ¬ë¡¯ êµ¬ì¡°ì´ë¯€ë¡œ items.Countê°€ ì•„ë‹ˆë¼ ëª¨ë“  ìŠ¬ë¡¯ì´ ë¹„ì—ˆëŠ”ì§€ë¥¼ ê²€ì‚¬í•©ë‹ˆë‹¤.
     /// </summary>
     public bool IsEmpty()
     {
-        return items.Count == 0;
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (!IsSlotEmpty(i))
+                return false;
+        }
+
+        return true;
     }
 
     /// <summary>
-    /// »óÀÚ UI¸¦ ´İÀ» ¶§ ´Ù½Ã ¿­ ¼ö ÀÖµµ·Ï »óÅÂ¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
+    /// ì²´ìŠ¤íŠ¸ UIê°€ ë‹«í ë•Œ í˜¸ì¶œë˜ì–´ ìƒìì˜ ì—´ë¦° ìƒíƒœë¥¼ í•´ì œí•©ë‹ˆë‹¤.
     /// </summary>
     public void CloseBox()
     {
@@ -106,16 +156,103 @@ public class ItemBox : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// ·£´ı ÈÄº¸ ¸ñ·Ï¿¡¼­ 1~2°³ÀÇ ¾ÆÀÌÅÛÀ» »Ì¾Æ »óÀÚ ³»¿ëÀ¸·Î Ã¤¿ó´Ï´Ù.
-    /// ±âÁ¸ ³»¿ëÀº Áö¿ì°í »õ·Î »ı¼ºÇÕ´Ï´Ù.
+    /// ì•„ì´í…œì„ ìƒì ì•ˆì— ë„£ê³ , ë‹¤ ë„£ì§€ ëª»í•œ ë‚¨ì€ ìˆ˜ëŸ‰ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+    /// ë¨¼ì € ê°™ì€ ì•„ì´í…œ ìŠ¤íƒì„ ì±„ìš°ê³ , ë‚¨ëŠ” ìˆ˜ëŸ‰ì€ ë¹ˆ ìŠ¬ë¡¯ì— ë„£ìŠµë‹ˆë‹¤.
+    /// </summary>
+    public int TryAddItem(ItemData itemData, int count)
+    {
+        if (itemData == null || count <= 0)
+            return count;
+
+        int remain = count;
+
+        // 1. ê°™ì€ ì•„ì´í…œì´ ìˆëŠ” ìŠ¬ë¡¯ì— ë¨¼ì € ëˆ„ì 
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (IsSlotEmpty(i))
+                continue;
+
+            if (items[i].itemData.TID != itemData.TID)
+                continue;
+
+            remain = TryAddToSlot(i, itemData, remain);
+
+            if (remain <= 0)
+                return 0;
+        }
+
+        // 2. ë‚¨ì€ ìˆ˜ëŸ‰ì„ ë¹ˆ ìŠ¬ë¡¯ì— ë°°ì¹˜
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (!IsSlotEmpty(i))
+                continue;
+
+            remain = TryAddToSlot(i, itemData, remain);
+
+            if (remain <= 0)
+                return 0;
+        }
+
+        return remain;
+    }
+
+    /// <summary>
+    /// íŠ¹ì • ìŠ¬ë¡¯ í•˜ë‚˜ì— ì•„ì´í…œì„ ë„£ê³ , ë„£ì§€ ëª»í•œ ë‚¨ì€ ìˆ˜ëŸ‰ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+    /// ë¹„ì–´ ìˆëŠ” ìŠ¬ë¡¯ì´ê±°ë‚˜ ê°™ì€ ì•„ì´í…œ ìŠ¤íƒì¼ ë•Œë§Œ ì‹¤ì œë¡œ ì¶”ê°€ë©ë‹ˆë‹¤.
+    /// </summary>
+    public int TryAddToSlot(int slotIndex, ItemData itemData, int count)
+    {
+        if (slotIndex < 0 || slotIndex >= items.Count)
+            return count;
+
+        if (itemData == null || count <= 0)
+            return count;
+
+        if (items[slotIndex] == null)
+            items[slotIndex] = CreateEmptyEntry();
+
+        BoxItemEntry slot = items[slotIndex];
+        int maxStack = Mathf.Max(1, itemData.itemMultiple);
+
+        // ë¹ˆ ìŠ¬ë¡¯ì´ë©´ ìƒˆë¡œ ë°°ì¹˜
+        if (IsSlotEmpty(slotIndex))
+        {
+            int addAmount = Mathf.Min(count, maxStack);
+
+            slot.itemData = itemData;
+            slot.amount = addAmount;
+
+            return count - addAmount;
+        }
+
+        // ë‹¤ë¥¸ ì•„ì´í…œì´ ë“¤ì–´ ìˆìœ¼ë©´ ì¶”ê°€ ë¶ˆê°€
+        if (slot.itemData.TID != itemData.TID)
+            return count;
+
+        // ê°™ì€ ì•„ì´í…œì´ë©´ ìŠ¤íƒ ê°€ëŠ¥í•œ ë§Œí¼ë§Œ ì¶”ê°€
+        int canAdd = maxStack - slot.amount;
+
+        if (canAdd <= 0)
+            return count;
+
+        int realAdd = Mathf.Min(count, canAdd);
+        slot.amount += realAdd;
+
+        return count - realAdd;
+    }
+
+    /// <summary>
+    /// ëœë¤ ë£¨íŠ¸ í›„ë³´ ëª©ë¡ì—ì„œ ì•„ì´í…œì„ ë½‘ì•„ ìƒì ìŠ¬ë¡¯ì— ì±„ì›ë‹ˆë‹¤.
+    /// í˜„ì¬ êµ¬ì¡°ëŠ” ê³ ì • ìŠ¬ë¡¯ ë°©ì‹ì´ë¯€ë¡œ ê¸°ì¡´ ìŠ¬ë¡¯ì„ ëª¨ë‘ ë¹„ìš´ ë’¤ ë‹¤ì‹œ ì±„ì›ë‹ˆë‹¤.
     /// </summary>
     private void GenerateRandomItems()
     {
-        // Àß¸øµÈ ¼³Á¤ ¹æÁö
+        EnsureSlotCapacity();
+
         int createMin = Mathf.Max(1, minCreateCount);
         int createMax = Mathf.Max(createMin, maxCreateCount);
 
-        // À¯È¿ÇÑ ÈÄº¸¸¸ µû·Î ¸ğÀ¾´Ï´Ù.
+        // ìœ íš¨í•œ í›„ë³´ë§Œ ë”°ë¡œ í’€ì— ë‹´ìŠµë‹ˆë‹¤.
         List<BoxLootOption> pool = new List<BoxLootOption>();
 
         for (int i = 0; i < lootOptions.Count; i++)
@@ -126,18 +263,20 @@ public class ItemBox : MonoBehaviour, IInteractable
             pool.Add(lootOptions[i]);
         }
 
-        // ÈÄº¸°¡ ¾øÀ¸¸é »ı¼ºÇÏÁö ¾ÊÀ½
         if (pool.Count == 0)
             return;
 
-        items.Clear();
-
-        // ÀÌ¹ø »óÀÚ¿¡ ¸î Á¾·ùÀÇ ¾ÆÀÌÅÛÀ» ³ÖÀ»Áö °áÁ¤
         int createCount = Random.Range(createMin, createMax + 1);
+
+        // ì¤‘ë³µ ë¶ˆê°€ì¼ ë•ŒëŠ” í›„ë³´ ìˆ˜ë³´ë‹¤ ë§ì´ ë§Œë“¤ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.
+        if (!allowDuplicateLoot)
+            createCount = Mathf.Min(createCount, pool.Count);
+
+        // ê³ ì • ìŠ¬ë¡¯ êµ¬ì¡°ì´ë¯€ë¡œ ë¨¼ì € ëª¨ë“  ìŠ¬ë¡¯ì„ ë¹„ì›ë‹ˆë‹¤.
+        ClearAllSlots();
 
         for (int i = 0; i < createCount; i++)
         {
-            // Áßº¹ ±İÁö »óÅÂ¿¡¼­ ÈÄº¸¸¦ ´Ù ¼ÒÁøÇÏ¸é Á¾·á
             if (pool.Count == 0)
                 break;
 
@@ -146,27 +285,22 @@ public class ItemBox : MonoBehaviour, IInteractable
             if (selectedOption == null || selectedOption.itemData == null)
                 continue;
 
-            // ¼ö·® ¹üÀ§°¡ Àß¸ø µé¾î¿Íµµ ÃÖ¼Ò 1°³ ÀÌ»ó »ı¼ºµÇµµ·Ï º¸Á¤
             int minAmount = Mathf.Max(1, selectedOption.minAmount);
             int maxAmount = Mathf.Max(minAmount, selectedOption.maxAmount);
             int amount = Random.Range(minAmount, maxAmount + 1);
 
-            // ½ÇÁ¦ »óÀÚ ³»¿ë ¸®½ºÆ®¿¡ Ãß°¡
-            items.Add(new BoxItemEntry
-            {
-                itemData = selectedOption.itemData,
-                amount = amount
-            });
+            // ê³ ì • ìŠ¬ë¡¯ ë°©ì‹ì— ë§ê²Œ ìŠ¬ë¡¯ì—ë§Œ ì¶”ê°€í•©ë‹ˆë‹¤.
+            TryAddItem(selectedOption.itemData, amount);
 
-            // °°Àº ¾ÆÀÌÅÛÀ» ÇÑ »óÀÚ¿¡¼­ Áßº¹ »ı¼ºÇÏÁö ¾ÊÀ¸·Á¸é Á¦°Å
+            // ì¤‘ë³µ ìƒì„±ì´ êº¼ì ¸ ìˆìœ¼ë©´ ê°™ì€ í›„ë³´ë¥¼ í’€ì—ì„œ ì œê±°í•©ë‹ˆë‹¤.
             if (!allowDuplicateLoot)
                 pool.Remove(selectedOption);
         }
     }
 
     /// <summary>
-    /// °¡ÁßÄ¡(weight)¸¦ ±âÁØÀ¸·Î ÈÄº¸ ¾ÆÀÌÅÛ ÇÏ³ª¸¦ ·£´ı ¼±ÅÃÇÕ´Ï´Ù.
-    /// weight °ªÀÌ Å¬¼ö·Ï ¼±ÅÃµÉ È®·üÀÌ ³ô¾ÆÁı´Ï´Ù.
+    /// í›„ë³´ ëª©ë¡ì—ì„œ weight ê°’ì„ ê¸°ì¤€ìœ¼ë¡œ ëœë¤ ì•„ì´í…œ í•˜ë‚˜ë¥¼ ì„ íƒí•©ë‹ˆë‹¤.
+    /// weightê°€ í´ìˆ˜ë¡ ì„ íƒë  í™•ë¥ ì´ ë†’ìŠµë‹ˆë‹¤.
     /// </summary>
     private BoxLootOption PickRandomOption(List<BoxLootOption> options)
     {
@@ -188,7 +322,60 @@ public class ItemBox : MonoBehaviour, IInteractable
                 return options[i];
         }
 
-        // ¿¹¿Ü »óÈ² ¹æÁö¿ë ¸¶Áö¸· ¹İÈ¯
+        // ì˜ˆì™¸ ìƒí™©ì´ë”ë¼ë„ ë§ˆì§€ë§‰ í›„ë³´ë¥¼ ë°˜í™˜í•´ nullì„ í”¼í•©ë‹ˆë‹¤.
         return options[options.Count - 1];
+    }
+
+    /// <summary>
+    /// ë‚´ë¶€ ìŠ¬ë¡¯ ë¦¬ìŠ¤íŠ¸ë¥¼ slotCapacity í¬ê¸°ì— ë§ê²Œ ë³´ì •í•©ë‹ˆë‹¤.
+    /// ë¶€ì¡±í•˜ë©´ ë¹ˆ ìŠ¬ë¡¯ì„ ì¶”ê°€í•˜ê³ , ë„˜ì¹˜ë©´ ë’¤ì—ì„œë¶€í„° ì œê±°í•©ë‹ˆë‹¤.
+    /// </summary>
+    private void EnsureSlotCapacity()
+    {
+        if (slotCapacity < 1)
+            slotCapacity = 1;
+
+        if (items == null)
+            items = new List<BoxItemEntry>();
+
+        while (items.Count < slotCapacity)
+        {
+            items.Add(CreateEmptyEntry());
+        }
+
+        while (items.Count > slotCapacity)
+        {
+            items.RemoveAt(items.Count - 1);
+        }
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i] == null)
+                items[i] = CreateEmptyEntry();
+        }
+    }
+
+    /// <summary>
+    /// ëª¨ë“  ìŠ¬ë¡¯ì„ ë¹ˆ ìƒíƒœë¡œ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
+    /// ìŠ¬ë¡¯ ê°œìˆ˜ ìì²´ëŠ” ìœ ì§€í•©ë‹ˆë‹¤.
+    /// </summary>
+    private void ClearAllSlots()
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            ClearSlot(i);
+        }
+    }
+
+    /// <summary>
+    /// ë¹„ì–´ ìˆëŠ” ìŠ¬ë¡¯ ë°ì´í„°ë¥¼ í•˜ë‚˜ ìƒì„±í•©ë‹ˆë‹¤.
+    /// </summary>
+    private BoxItemEntry CreateEmptyEntry()
+    {
+        return new BoxItemEntry
+        {
+            itemData = null,
+            amount = 0
+        };
     }
 }

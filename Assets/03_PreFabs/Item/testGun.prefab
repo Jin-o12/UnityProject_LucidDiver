@@ -260,6 +260,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemData: {fileID: 11400000, guid: 4d7cdec436751fb4c910eb79a82e51ea, type: 2}
+  stackCount: 0
 --- !u!1 &6892280866995068878
 GameObject:
   m_ObjectHideFlags: 0

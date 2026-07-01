@@ -200,8 +200,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: PlayerDialogue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -335,8 +335,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: '[BACK TO LOBBY]'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -470,8 +470,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "manaStoneCount \xD7 00"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -982,8 +982,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'kills: 000'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1193,8 +1193,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'Play Time: mm:ss'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1403,8 +1403,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: memoryLogUnlocked
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1691,8 +1691,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "MemoryFragment \xD700\n(Used)"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1826,8 +1826,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "potionCount \xD7 00"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -2447,21 +2447,29 @@ MonoBehaviour:
   extractionResult: 0
   playTime: 0
   memoryFragmentCount: 3
+  prevLinkRateLevel: 0
   linkRateLevel: 0
   linkRateGain: 1
+  linkRateUp: 0
   memoryLogUnlocked: 0
   manaStoneCount: 0
   potionCount: 0
   returnDialogueID: 
   enemyKillCount: 0
   _lobbySceneName: LobbyScene
+  potionData: {fileID: 11400000, guid: e1f045e6d1c51e143a76ad1a32e8bf41, type: 2}
+  manaStoneData: {fileID: 11400000, guid: 36f1d5fb5ed6737499dc5a46fa2f09cd, type: 2}
+  memoryFragmentData: {fileID: 11400000, guid: 6864ad3bfd9a78b4fb3eedba4599fb5f, type: 2}
   image_Banner: {fileID: 8034121711670500306}
   text_playTime: {fileID: 8758344084923695250}
   text_enemyKillCount: {fileID: 6068161064921168821}
+  image_memoryFragmentIcon: {fileID: 6173978446217951987}
   text_getMemoryFragment: {fileID: 3545491913913321293}
   text_linkRate: {fileID: 1369103070854608163}
   text_memoryLogUnlocked: {fileID: 4645654938423374871}
+  image_manaStoneIcon: {fileID: 2229627532762034742}
   text_manaStoneCount: {fileID: 6587944048801142547}
+  image_potionIcon: {fileID: 1495840250195983064}
   text_potionCount: {fileID: 7481784490366416458}
   image_manaStoneLost: {fileID: 4034565077410086683}
   image_potionLost: {fileID: 7052561747800267532}
@@ -2688,8 +2696,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: LinkRateLevel Lv0
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b6701dc95ac3d6e479c5b43a161dd90e, type: 2}
-  m_sharedMaterial: {fileID: -6861659243047087439, guid: b6701dc95ac3d6e479c5b43a161dd90e,
+  m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
+  m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}

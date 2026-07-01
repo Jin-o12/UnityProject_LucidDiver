@@ -22,8 +22,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69d5691a300e73d48807dd8d4dad4f01
+    m_Address: Assets/03_PreFabs/Item/testManaPiece_Drop.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 97dd73e0342ee554a925055653552b0d
+    m_Address: Assets/03_PreFabs/Item/testHealMedicine_Drop.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aa9423379d442b74bba59f8933ebd6c3
     m_Address: Assets/04_Graphics/Images/Img_MemoryPiece.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be7dbcd4181dbe04891bcc710918239f
+    m_Address: Assets/03_PreFabs/Item/testMemoryPiece_Drop.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

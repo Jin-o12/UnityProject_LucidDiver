@@ -6,24 +6,27 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 public class PlayerWeapon : MonoBehaviour
 {
     [Header("Equip Weapon")]
-    [SerializeField] private WeaponItemData weaponData;
-    [SerializeField] private Transform handPos;
-    [SerializeField] private Transform firePoint;
-    [SerializeField] private LayerMask hitMask;
+    [SerializeField] private WeaponItemData weaponData;                 // 무기 데이터
+    [SerializeField] private Transform firePoint;                       // 발사 지점
+    [SerializeField] private LayerMask hitMask;                         // 피격 대상 레이어 마스크
 
     [Header("Shot Trace Visual")]
-    [SerializeField] private bool showShotTrace = true;
-    [SerializeField] private LineRenderer shotTraceRenderer;
-    [SerializeField] private float shotTraceDuration = 0.08f;
-    [SerializeField] private Color hitTraceColor = Color.white;
-    [SerializeField] private Color missTraceColor = Color.red;
+    [SerializeField] private bool showShotTrace = true;                 // 궤적 보이기 여부
+    [SerializeField] private LineRenderer shotTraceRenderer;            // 궤적 렌더러
+    [SerializeField] private float shotTraceDuration = 0.08f;           // 궤적이 보이는 시간
+    [SerializeField] private Color hitTraceColor = Color.white;         // 적중 했을 시 궤적 색상
+    [SerializeField] private Color missTraceColor = Color.red;          // 적중하지 않을 시 궤적 색상
 
-    public bool isEquipped => weaponData != null;
-    public float nowUseMana => weaponData.useMana;
+    public bool isEquipped => weaponData != null;                       // 무기 장착 여부
+    public float nowUseMana => weaponData.useMana;                      // 현재 무기의 마나 사용량
 
-    private GameObject currentWeaponInstance;
-    private Coroutine shotTraceCoroutine;
-    private WaitForSeconds shotTraceWait;
+    private GameObject currentWeaponInstance;                           // 현재 무기 인스턴스
+    private Coroutine shotTraceCoroutine;                               // 궤적 출력 코루틴
+    private WaitForSeconds shotTraceWait;                               // 궤적 출력 코루틴 WS
+
+    [Header("Aim")]
+    [SerializeField] private float aimOriginHeight = 1.0f;        // 1차 조준 레이를 쏠 높이
+    [SerializeField] private float muzzleBackstepDistance = 0.3f; // 총구가 벽 안에 들어갔을 때 시작점을 뒤로 물릴 거리
 
     private void Awake()
     {
@@ -48,25 +51,62 @@ public class PlayerWeapon : MonoBehaviour
         if (weaponData == null || firePoint == null)
             return;
 
-        Vector3 origin = firePoint.position;
-        Vector3 direction = firePoint.forward;
-        Vector3 endPoint = origin + direction * weaponData.fireRange;
+        Vector3 muzzleOrigin = firePoint.position;
+        Vector3 aimOrigin = transform.position + Vector3.up * aimOriginHeight;
+        Vector3 aimDirection = firePoint.forward;
+
+        // 1차: 먼저 "어디를 겨누고 있는지"를 구한다.
+        Vector3 targetPoint = aimOrigin + aimDirection * weaponData.fireRange;
+
+        if (Physics.Raycast(
+            aimOrigin,
+            aimDirection,
+            out RaycastHit aimHit,
+            weaponData.fireRange,
+            hitMask,
+            QueryTriggerInteraction.Ignore))
+        {
+            targetPoint = aimHit.point;
+        }
+
+        // 2차: 총구에서 targetPoint까지 실제 발사 판정을 한다.
+        Vector3 shotVector = targetPoint - muzzleOrigin;
+        float shotDistance = shotVector.magnitude;
+
+        if (shotDistance <= 0.001f)
+            return;
+
+        Vector3 shotDirection = shotVector / shotDistance;
+
+        // 총구가 벽 안에 들어간 상황을 완화하려고 시작점을 약간 뒤로 민다.
+        Vector3 safeShotOrigin = muzzleOrigin - shotDirection * muzzleBackstepDistance;
+        float safeShotDistance = shotDistance + muzzleBackstepDistance;
+
+        Vector3 endPoint = targetPoint;
         Color traceColor = missTraceColor;
 
-        if (Physics.Raycast(origin, direction, out RaycastHit hit, weaponData.fireRange, hitMask, QueryTriggerInteraction.Ignore))
+        if (Physics.Raycast(
+            safeShotOrigin,
+            shotDirection,
+            out RaycastHit shotHit,
+            safeShotDistance,
+            hitMask,
+            QueryTriggerInteraction.Ignore))
         {
-            endPoint = hit.point;
-            traceColor = hitTraceColor;
+            endPoint = shotHit.point;
 
-            IDamageable target = hit.collider.GetComponentInParent<IDamageable>();
+            IDamageable target = shotHit.collider.GetComponentInParent<IDamageable>();
 
+            // 실제로 데미지를 줄 수 있는 적을 맞았을 때만 흰색으로 바꾸고 피해를 준다.
             if (target != null && target.EntityFaction != Faction.player)
             {
+                traceColor = hitTraceColor;
                 target.TakeDamage(weaponData.AtkValue);
             }
         }
 
-        ShowShotTrace(origin, endPoint, traceColor);
+        // 궤적은 여전히 총구에서 시작해 보이게 한다.
+        ShowShotTrace(muzzleOrigin, endPoint, traceColor);
     }
 
     public void EquipWeapon(WeaponItemData weaponItemData)

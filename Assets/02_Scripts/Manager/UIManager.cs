@@ -7,17 +7,17 @@ using UnityEngine;
 
 public class UIManager : MonoBehaviour
 {
-    public static UIManager Instance { get; private set; }
+    public static UIManager Instance { get; private set; }                          // 인스턴스
 
     [Header("UI 프리팹 등록")]
-    [SerializeField] private List<GameObject> uiPrefabs = new();            // UI 프리팹 목록
+    [SerializeField] private List<GameObject> uiPrefabs = new();                    // UI 프리팹 목록
     
-    private readonly Dictionary<Type, MonoBehaviour> uiInstances = new();     // 생성된 UI 캐시
-    private readonly Stack<MonoBehaviour> uiStack = new();                     // UI 레이어를 관리 할 스텍
+    private readonly Dictionary<Type, MonoBehaviour> uiInstances = new();           // 생성된 UI 캐시가 저장되는 딕셔너리
+    private readonly Stack<MonoBehaviour> uiStack = new();                          // UI 레이어 계층을 관리 할 스텍
 
     private void Awake()
     {
-        // 인스턴스 중복 방지
+        // 인스턴스 생성 및 중복 방지
         if(Instance!=null)
             Destroy(gameObject);
         else
@@ -51,7 +51,23 @@ public class UIManager : MonoBehaviour
         // UI 비활성화, 스택에서 해당 UI 삭제
         ui.gameObject.SetActive(false);
         if(uiStack.Contains(ui)) RemoveFromStack(ui);
-;    }
+    }
+
+    /* 가장 최근 열린 UI를 닫음 */
+    public void CloseNowUI()
+    {
+        // 스택이 비어있는지 확인하는 동시에 맨 위 UI를 꺼냄
+        if (uiStack.TryPop(out MonoBehaviour topUI))
+        {
+            // 꺼낸 UI 비활성화
+            topUI.gameObject.SetActive(false);
+        }
+        else
+        {
+            // 스택이 비어있을 때 (더 이상 닫을 창이 없을 때)의 예외 처리
+            Debug.LogWarning("현재 스택에 닫을 UI가 없습니다.");
+        }
+    }
 
     /* UI가 열릴 때, 이미 캐싱된 UI를 찾고 그렇지 않다면 새로 생성함 */
     private UiType GetOrCreate<UiType>() where UiType: MonoBehaviour

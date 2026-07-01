@@ -1,9 +1,7 @@
 /// <summary>
-/// 퀵슬롯에 대한 프레젠터입니다
-/// 퀵슬롯 UI, 데이터 변환 등에 대한 조율자 역할을 수행합니다
+/// 퀵슬롯 입력과 아이템 사용 효과를 중재하는 프레젠터입니다.
+/// 퀵슬롯에 등록된 아이템이 실제로 소비된 경우에만 효과를 실행합니다.
 /// </summary>
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class QuickSlotPresenter : MonoBehaviour
@@ -11,74 +9,71 @@ public class QuickSlotPresenter : MonoBehaviour
     [Header("참조 컴포넌트")]
     public PlayerInventory inventory;
 
+    // 아이템 데이터 조회 인터페이스
+    private IItemDataRepository itemRepo;
+
     private void Awake()
     {
         inventory = GetComponent<PlayerInventory>();
 
-        if(inventory==null)
+        if (inventory == null)
         {
-            this.enabled = false;
-            Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
+            enabled = false;
+            Debug.LogError("QuickSlotPresenter: 필요한 컴포넌트가 없습니다.");
             return;
         }
+
+        itemRepo = new SOItemRepository();
     }
 
-    public void OnEnable()
+    private void OnEnable()
     {
-        GlobalEventBus.OnQuickSlotUseRequested += UseQuickSLotItem;
+        GlobalEventBus.OnQuickSlotUseRequested += UseQuickSlotItem;
     }
 
-    public void OnDisable()
+    private void OnDisable()
     {
-        GlobalEventBus.OnQuickSlotUseRequested -= UseQuickSLotItem;
+        GlobalEventBus.OnQuickSlotUseRequested -= UseQuickSlotItem;
     }
 
-    /* 퀵슬롯에서 아이템을 사용 */
-    private void UseQuickSLotItem(int slotIndex)
+    /* 퀵슬롯에 등록된 아이템을 사용 */
+    private void UseQuickSlotItem(int slotIndex)
     {
-        // 퀵슬롯 범위 검사 및 데이터 존재 여부 확인
-        if(slotIndex<0 || slotIndex>=inventory.quickSlotNum) return;
-        // 슬롯 데이터 저장
+        // 퀵슬롯 범위 및 등록 여부 확인
+        if (slotIndex < 0 || slotIndex >= inventory.quickSlotNum) return;
+
         InventorySlotData slot = inventory.quickSlots[slotIndex];
- 
-        // 슬롯이 비어있거나, 아이템을 보유하고 있지 않은 경우 처리하지 않음
-        if(slot == null || slot.amount <= 0) return;
+        if (slot == null || slot.TID == 0 || slot.amount <= 0) return;
 
-        // 아이템 고유 번호로 아이템 데이터를 가져옴
-        ItemData itemData = DataManager.Instance.GetItemData(slot.TID);
+        ItemData itemData = slot.itemData ?? itemRepo.GetItemData(slot.TID);
+        if (itemData == null) return;
 
-        // 플리이어 인벤토리에서 아이템 사용 처리
-        inventory.UseQuickSlotItem(slotIndex);
+        // 실제 인벤토리에서 소비가 성공했을 때만 아이템 효과를 실행합니다.
+        bool isConsumed = inventory.UseQuickSlotItem(slotIndex);
+        if (!isConsumed) return;
 
-        // 만약 아이템이 소비 아이템일 경우
-        if(itemData is ConsumeItemData consumeable)
+        ConsumeItemData consumable = itemData as ConsumeItemData;
+        if (consumable == null) return;
+
+        for (int i = 0; i < consumable.useEffect.Count; i++)
         {
-            // 사용 시의 모든 효과를 발동
-            for(int i=0; i<consumeable.useEffect.Count; i++)
+            ItemEffect currentEffect = consumable.useEffect[i];
+            GameObject targetObj = null;
+
+            switch (currentEffect.effectTarget)
             {
-                ItemEffect currentEffect = consumeable.useEffect[i];
-                GameObject targetObj = null;
+                case EffectTarget.self:
+                    targetObj = gameObject;
+                    break;
+                case EffectTarget.enemy:
+                    Debug.Log($"적에게 사용하는 효과는 아직 연결되지 않았습니다: {itemData.itemName}");
+                    break;
+            }
 
-                // 타겟 지정
-                switch(currentEffect.effectTarget)
-                {
-                    case EffectTarget.self:
-                        //Debug.Log($"자신에게 아이템 사용: {itemData.itemName}");
-                        targetObj = this.gameObject;
-                        break;
-                    case EffectTarget.enemy:
-                        Debug.Log($"적에게 아이템 사용: {itemData.itemName}");
-                        break;
-                }
-
-                // 지정된 타겟에게 효과 실행
-                if(targetObj != null)
-                {
-                    currentEffect.Execute(targetObj);
-                }
+            if (targetObj != null)
+            {
+                currentEffect.Execute(targetObj);
             }
         }
-
-        
     }
 }
