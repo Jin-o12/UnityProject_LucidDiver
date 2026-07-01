@@ -405,7 +405,7 @@ Transform:
   m_GameObject: {fileID: 186051289}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38302222, y: -0.38302222, z: 0.17860618, w: 0.82139385}
-  m_LocalPosition: {x: 10, y: 20, z: 45.11}
+  m_LocalPosition: {x: 4.77, y: 11.45, z: -4.21}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -974,7 +974,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 2047
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -995,7 +995,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38302222, y: -0.38302222, z: 0.17860618, w: 0.82139385}
-  m_LocalPosition: {x: 10, y: 20, z: 45.11}
+  m_LocalPosition: {x: 4.77, y: 11.45, z: -4.21}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1151,7 +1151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d92947f864f1ec46905e7f0f9fe3c68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 6799049228847976370, guid: ea09e9cc13d1e7d488e069fe5917de7c,
+  playerPrefab: {fileID: 6496859401421214368, guid: 1ca9f47baa802824c8a073c57f7dc6db,
     type: 3}
   EnemyPrefab: {fileID: 5821617809353532596, guid: 4f1d7c647241b76438ef6f5ba02ccf9c,
     type: 3}
@@ -4383,7 +4383,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   linkRateLevel: 0
-  linkRateGain: 1
+  linkRatePoint: 1
   slotTID1: 0
   slotSprite1: {fileID: 0}
   slotCount1: 0
