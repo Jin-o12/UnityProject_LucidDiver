@@ -3,6 +3,7 @@
 /// </summary>
 using UnityEngine;
 
+
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Player Movement Controll")]
@@ -14,15 +15,15 @@ public class PlayerMovement : MonoBehaviour
 
     private readonly float isometricYAngle = -45.0f;    // 쿼터뷰 기준 이동 방향 보정
     public float moveSpeed;                             // 이동 속도
-    public float rotationSpeed = 10f;                   // 회전 속도
+    public float rotationSpeed = 1000f;                   // 회전 속도
 
     [Header("Player Animation Controll")]
-    private Animator animator;
+    [SerializeField] private Animator animator;
+    [SerializeField] private GameObject Body;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        animator = GetComponent<Animator>();
         if (mainCamera == null)
         {
             mainCamera = Camera.main;
@@ -41,12 +42,14 @@ public class PlayerMovement : MonoBehaviour
     {
         GlobalEventBus.OnPlayerMove += PlayerMove;
         GlobalEventBus.OnMousePositionInput += UpdateMousePos;
+        GlobalEventBus.onPlayerDead += PlayerDie;
     }
 
     private void OnDisable()
     {
         GlobalEventBus.OnPlayerMove -= PlayerMove;
         GlobalEventBus.OnMousePositionInput -= UpdateMousePos;
+        GlobalEventBus.onPlayerDead -= PlayerDie;
     }
 
     private void FixedUpdate()
@@ -74,6 +77,16 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 targetPosition = rb.position + movement * moveSpeed * Time.fixedDeltaTime;
         rb.MovePosition(targetPosition);
+
+        // 이동 방향에 따라 바라보는 방향 회전
+        if(movementInput.x>0)
+        {
+            Body.transform.localScale = new Vector3(-1, 1, 1);
+        }
+        else if(movementInput.x<0)
+        {
+            Body.transform.localScale = new Vector3(1, 1, 1);
+        }
 
         AimTowardsMouse();
     }
@@ -109,5 +122,41 @@ public class PlayerMovement : MonoBehaviour
         Quaternion targetRot = Quaternion.LookRotation(dir.normalized);
         Quaternion smoothRot = Quaternion.Slerp(rb.rotation, targetRot, rotationSpeed * Time.fixedDeltaTime);
         rb.MoveRotation(smoothRot);
+
+        // 2. 마우스 방향을 2D 애니메이터용 방향(상하좌우)으로 변환
+        // 이동할 때 곱했던 isometricYAngle(-45도)의 반대 각도(45도)를 곱하여 화면 기준의 방향을 구합니다.
+        Quaternion inverseIsoRotation = Quaternion.Euler(0f, -isometricYAngle, 0f);
+        Vector3 aimVisualDir = inverseIsoRotation * dir.normalized;
+
+        // 3. 마우스 방향(aimVisualDir.x)에 따른 시각적 좌우 반전
+        if (aimVisualDir.x > 0)
+        {
+            Body.transform.localScale = new Vector3(-1, 1, 1);
+        }
+        else if (aimVisualDir.x < 0)
+        {
+            Body.transform.localScale = new Vector3(1, 1, 1);
+        }
+
+        // 키보드 입력이 있으면 true, 없으면 false
+        bool isMoving = movementInput.sqrMagnitude > 0.01f;
+        animator.SetBool("IsMoving", isMoving);
+
+        int lookDir = 0; 
+
+        // Z값이 양수면 위(뒷모습), 음수면 아래(앞모습)
+        lookDir = aimVisualDir.z > 0 ? 1 : 0;
+
+        animator.SetInteger("LookDir", lookDir);
+    }
+
+    /* 플레이어 사망 시 이동 및 회전 비활성화 */
+    private void PlayerDie(int playerID)
+    {
+        enabled = false;
+        rb.velocity = Vector3.zero;
+        animator.SetBool("IsMoving", false);
+        animator.SetInteger("LookDir", 0);
+        animator.SetTrigger("IsDead");
     }
 }

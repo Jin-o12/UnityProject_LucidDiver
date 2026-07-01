@@ -119,8 +119,12 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         if (!IsPlayerIdle(_playerID)) return;
         // 플레이어 상태를 gameover로 변경
         ResultServiceLocator.Instance.HandleEscapeFail(_playerID);
+        // 코루틴 정지
+        StopAllCoroutines();
         // 탈출 실패 판정 이벤트를 전송
         GlobalEventBus.OnEscapeRequest?.Invoke(false);
+        // 스크립트 비활성화
+        enabled = false;
     }
 
     // 플레이어가 idle 상태인지 확인
