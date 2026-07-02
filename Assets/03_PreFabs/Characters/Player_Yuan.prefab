@@ -294,6 +294,38 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: cab83422-cfb2-4925-af40-a30c1c892a2a
     m_ActionName: Player/QuickSlot[/Keyboard/1,/Keyboard/2,/Keyboard/3]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnSprint
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 5aabe901-952f-4ae2-9f25-2ee5d8eb13a4
+    m_ActionName: Player/Sprint[/Keyboard/leftShift]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnEvade
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: f078f8e9-0e24-4b57-a420-e85d6597076e
+    m_ActionName: Player/Evade[/Mouse/rightButton]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -359,6 +391,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76f05191b2c2928428804ffb5cbed90e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isSprint: 0
 --- !u!114 &1851497693015075309
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -374,9 +407,11 @@ MonoBehaviour:
   rb: {fileID: 8911344894910441550}
   mainCamera: {fileID: 0}
   moveSpeed: 5
+  sprintSpeed: 0
   rotationSpeed: 10
   animator: {fileID: 685425605809845948}
   Body: {fileID: 2501758572594892001}
+  apPort: {fileID: 0}
 --- !u!114 &6859278987789504281
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -432,6 +467,7 @@ MonoBehaviour:
   hpCurrent: 0
   mpMax: 0
   manaRegen: 0
+  sprintMP: 0
 --- !u!114 &7758750535247349011
 MonoBehaviour:
   m_ObjectHideFlags: 0

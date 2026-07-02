@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,12 +25,14 @@ public class PlayerCombatPresenter : MonoBehaviour
     {
         /// 이벤트 구독 ///
         GlobalEventBus.OnAttackInput += TryAttack;
+        GlobalEventBus.OnEvadeRequested += TryEvade;
     }
 
     private void OnDisable()
     {
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnAttackInput -= TryAttack;
+        GlobalEventBus.OnEvadeRequested += TryEvade;
     }
 
     private void TryAttack()
@@ -45,5 +47,22 @@ public class PlayerCombatPresenter : MonoBehaviour
 
         playerWeapon.PlayerAttack();
         playerStatus.UseAttackMana(playerWeapon.nowUseMana);
+    }
+
+    private void TryEvade()
+    {
+        // 플레이어 상태가 idle이 아니면 구르기를 수행하지 않음
+        if (playerStatus.nowState != PlayerStatus.livingState.idle)
+            return;
+
+        // 현재 마나가 소비 할 마나보다 부족하다면 구르기 불가
+        if (playerStatus.mpCurrent < playerStatus.evadeMP)
+            return;
+
+        // 최근 구르기 사용 후 쿨타임이 경과하지 않았다면 구르기 불가
+        if (Time.time < playerStatus.lastEvadeTime + playerStatus.evadeCooltime)
+            return;
+
+        playerStatus.UseEvadeMana(playerStatus.evadeMP);
     }
 }
