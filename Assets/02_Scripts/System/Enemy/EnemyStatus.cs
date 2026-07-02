@@ -19,8 +19,8 @@ public class EnemyStatus : MonoBehaviour, IDamageable
     public int objID = 0;                               // 적 개체 식별용 ID
     public float hpMax;                                 // 최대 체력
     public float hpCurrent;                             // 현재 체력
-    public float atkValue { get; private set; }         // 공격력
-    private float defValue;                             // 방어력
+    public float atkValue  { get; private set; }        // 공격력
+    public float defValue { get; private set; }         // 방어력
 
     public event Action OnLocalDeath;                   // 이 적이 죽었을 때만 알리는 로컬 이벤트
 

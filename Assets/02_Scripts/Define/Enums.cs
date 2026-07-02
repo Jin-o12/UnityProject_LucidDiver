@@ -68,3 +68,4 @@ public enum CharacterTID
 {
     Yuan = 101          // 유안
 }
+

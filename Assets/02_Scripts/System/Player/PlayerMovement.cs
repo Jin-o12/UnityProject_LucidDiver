@@ -240,10 +240,6 @@ public class PlayerMovement : MonoBehaviour
         Quaternion inverseIsoRotation = Quaternion.Euler(0f, -isometricYAngle, 0f);
         Vector3 aimVisualDir = inverseIsoRotation * dir.normalized;
 
-        // 세밀한 손의 회전을 위한 애니포트레이트 파라미터 제어
-        //apPort.SetControlParamFloat("Yuan_AimY", 1.0f);
-        // apPort.SetControlParamFloat("Yuan_B_AimY", 1.0f);
-
         // 마우스 방향(aimVisualDir.x)에 따른 시각적 좌우 반전
         if (aimVisualDir.x > 0)
         {
@@ -254,12 +250,27 @@ public class PlayerMovement : MonoBehaviour
             Body.transform.localScale = new Vector3(1, 1, 1);
         }
 
+        /// 애니 포트레이틑 파라미터 제어를 통한 세밀한 손의 회전(마우스를 향항 총구 조준) ///
+        // 마우스 방향을 이용해 팔 회전 각도 계산
+        if (apPort != null)
+        {
+            // 마우스가 캐릭터 기준 위쪽에 있을 때
+            if(aimVisualDir.z > 0)
+            {
+                apPort.SetControlParamFloat("Yuan_B_AimY", -1 * Mathf.Lerp(-1f, 1f, aimVisualDir.z));
+            }
+            else
+            {
+                apPort.SetControlParamFloat("Yuan_AimY", Mathf.Lerp(-1f, 1f, Mathf.Abs(aimVisualDir.z)));
+            }
+        }
+
+        /// 애니메이션 파라미터 ///
         // 키보드 입력이 있으면 true, 없으면 false
         bool isMoving = movementInput.sqrMagnitude > 0.01f;
         animator.SetBool("IsMoving", isMoving);
 
         int lookDir = 0; 
-
         // Z값이 양수면 위(뒷모습), 음수면 아래(앞모습)
         lookDir = aimVisualDir.z > 0 ? 1 : 0;
 
