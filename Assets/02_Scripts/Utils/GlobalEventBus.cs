@@ -14,6 +14,7 @@ public class GlobalEventBus
     /// 플레이어 행동에 의한 이벤트 ///
     public static Action<Vector2> OnPlayerMove;                     // 플레이어 이동 버튼 입력: Action<이동 버튼 입력 벡터>
     public static Action OnAttackInput;                             // 공격 버튼 입력
+    public static Action OnMainActiveSkillRequested;                // 다이버 액티브 스킬 버튼 입력
     public static Action OnInteractionInput;                        // 상호작용 버튼 입력
     public static Action<bool> OnSprintInput;                       // 달리기 버튼 입력: Action<isSprint>
     public static Action<bool> SendCanSprint;                       // 달리기 여부 계산 전달: Action<canSprint>

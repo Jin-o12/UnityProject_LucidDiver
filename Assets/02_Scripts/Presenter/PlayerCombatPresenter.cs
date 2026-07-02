@@ -26,6 +26,7 @@ public class PlayerCombatPresenter : MonoBehaviour
         /// 이벤트 구독 ///
         GlobalEventBus.OnAttackInput += TryAttack;
         GlobalEventBus.OnEvadeRequested += TryEvade;
+        GlobalEventBus.OnMainActiveSkillRequested += TrySkill;
     }
 
     private void OnDisable()
@@ -33,6 +34,7 @@ public class PlayerCombatPresenter : MonoBehaviour
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnAttackInput -= TryAttack;
         GlobalEventBus.OnEvadeRequested += TryEvade;
+        GlobalEventBus.OnMainActiveSkillRequested -= TrySkill;
     }
 
     private void TryAttack()
@@ -55,7 +57,7 @@ public class PlayerCombatPresenter : MonoBehaviour
         if (playerStatus.nowState != PlayerStatus.livingState.idle)
             return;
 
-        // 현재 마나가 소비 할 마나보다 부족하다면 구르기 불가
+        // 현재 마나가 소비할 마나보다 부족하다면 구르기 불가
         if (playerStatus.mpCurrent < playerStatus.evadeMP)
             return;
 
@@ -64,5 +66,14 @@ public class PlayerCombatPresenter : MonoBehaviour
             return;
 
         playerStatus.UseEvadeMana(playerStatus.evadeMP);
+    }
+
+    private void TrySkill()
+    {
+        // 플레이어 상태가 idle이 아니면 스킬을 사용할 수 없음
+        if (playerStatus.nowState != PlayerStatus.livingState.idle)
+            return;
+
+        Debug.Log("스킬 키 입력 실행됨");
     }
 }
