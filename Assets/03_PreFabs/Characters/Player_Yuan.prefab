@@ -407,8 +407,18 @@ MonoBehaviour:
   rb: {fileID: 8911344894910441550}
   mainCamera: {fileID: 0}
   moveSpeed: 5
-  sprintSpeed: 0
   rotationSpeed: 10
+  sprintSpeed: 0
+  sprintMP: 0
+  isEvading: 0
+  evadeSpeed: 0
+  evadeTime: 0
+  evadeMP: 0
+  evadeCooltime: 0
+  walkNoiseRange: 10
+  runNoiseRange: 15
+  walkNoiseInterval: 0.55
+  runNoiseInterval: 0.3
   animator: {fileID: 685425605809845948}
   Body: {fileID: 2501758572594892001}
   apPort: {fileID: 0}
@@ -463,11 +473,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d5c59c17171d6548afa42dcd987ecb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cannotSprint: 0
+  sprintRecoverTime: 0
+  evadeCooltime: 0
+  lastEvadeTime: 0
   hpMax: 0
   hpCurrent: 0
   mpMax: 0
   manaRegen: 0
   sprintMP: 0
+  evadeMP: 0
 --- !u!114 &7758750535247349011
 MonoBehaviour:
   m_ObjectHideFlags: 0
