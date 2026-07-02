@@ -47,7 +47,7 @@ public class InventoryPresenter : MonoBehaviour
 
         // 인벤토리 슬롯 초기화
         PlayerSaveData playerData = DataManager.Instance.playerData;
-        playerInventory.Initialize(playerData.invenSlotNum, playerData.quickSlotsNum);
+        playerInventory.Initialize(playerData.invenSlotNum, playerData.quickSlotsNum, playerData.safeSlotNum);
     }
 
     private void OnEnable()
@@ -62,8 +62,9 @@ public class InventoryPresenter : MonoBehaviour
         localInputReader.OnInventoryOpenRequested += OpenInventoryUI;
         localInputReader.OnInventoryCloseRequested += CloseInventoryUI;
 
-        // 인벤토리 슬롯 데이터가 바뀌면 해당 슬롯 UI를 갱신한다.
+        // 인벤토리 및 각성 보존 슬롯 데이터가 바뀌면 해당 슬롯 UI를 갱신한다.
         playerInventory.OnSlotChanged += HandleSlotChanged;
+        playerInventory.OnSafeSlotChanged += HandleSafeSlotChanged;
 
         // 인벤토리 드랍존으로 버리기 요청이 들어오면 월드 드랍으로 처리한다.
         GlobalEventBus.OnInventoryDropRequested += HandleInventoryDropRequested;
@@ -79,6 +80,7 @@ public class InventoryPresenter : MonoBehaviour
         localInputReader.OnInventoryCloseRequested -= CloseInventoryUI;
 
         playerInventory.OnSlotChanged -= HandleSlotChanged;
+        playerInventory.OnSafeSlotChanged -= HandleSafeSlotChanged;
 
         GlobalEventBus.OnInventoryDropRequested -= HandleInventoryDropRequested;
     }
@@ -203,7 +205,18 @@ public class InventoryPresenter : MonoBehaviour
         if (inventoryUI == null || !inventoryUI.gameObject.activeInHierarchy)
             return;
 
-        inventoryUI.UpdateSlot(index, playerInventory.slots[index]);
+        inventoryUI.UpdateSlot(index, playerInventory.anySlots[index]);
+    }
+
+    /// <summary>
+    /// 각성 보존 슬롯 데이터가 바뀌면 해당 슬롯 UI만 갱신한다.
+    /// </summary>
+    private void HandleSafeSlotChanged(int index)
+    {
+        if (inventoryUI == null || !inventoryUI.gameObject.activeInHierarchy)
+            return;
+
+        inventoryUI.UpdateSafeSlot(index, playerInventory.safeSlots[index]);
     }
 
     /// <summary>
@@ -225,12 +238,15 @@ public class InventoryPresenter : MonoBehaviour
         // 상자 UI가 열려 있을 때는 드랍존을 비활성화한다.
         inventoryUI.SetDropZoneAvailable(!isChestOpen);
 
-        // 슬롯 개수에 맞춰 UI를 생성한다.
+        // 슬롯 개수에 맞춰 인벤토리 및 각성 보존 슬롯 UI를 생성한다.
         inventoryUI.CreatSlots(playerInventory.slots.Count);
+        inventoryUI.CreateSafeSlots(playerInventory.safeSlots.Count);
 
         // 현재 인벤토리 데이터를 슬롯 UI에 반영한다.
         for (int i = 0; i < playerInventory.slotNum; i++)
             inventoryUI.UpdateSlot(i, playerInventory.slots[i]);
+        for (int k = 0; k < playerInventory.safeSlotNum; k++)
+            inventoryUI.UpdateSafeSlot(k, playerInventory.safeSlots[k]);
 
         // 일반 인벤토리는 Player 액션맵을 유지한다.
     }

@@ -12,9 +12,11 @@ public class StorageInventoryUI : MonoBehaviour
     {
         Storage,
         Inventory,
+        SafeSlot,
         QuickSlot,
         StoragePanel,
-        InventoryPanel
+        InventoryPanel,
+        SafeSlotPanel
     }
 
     //[System.Serializable]
@@ -34,6 +36,7 @@ public class StorageInventoryUI : MonoBehaviour
     [Header("Slot Roots")]
     [SerializeField] private Transform storageSlotRoot;
     [SerializeField] private Transform inventorySlotRoot;
+    [SerializeField] private Transform safeSlotRoot;
     [SerializeField] private Transform quickSlotRoot;
 
     [Header("Buttons")]
@@ -50,6 +53,7 @@ public class StorageInventoryUI : MonoBehaviour
     [Header("Panel Drop Zones")]
     [SerializeField] private Graphic storagePanelRaycastTarget;
     [SerializeField] private Graphic inventoryPanelRaycastTarget;
+    [SerializeField] private Graphic safeSlotPanelRaycastTarget;
 
     [Header("Existing UI")]
     [SerializeField] private QuickSlotGroupUI quickSlotGroupUI;
@@ -64,10 +68,12 @@ public class StorageInventoryUI : MonoBehaviour
 
     private readonly List<InventorySlotUI> storageSlotUIs = new();
     private readonly List<InventorySlotUI> inventorySlotUIs = new();
+    private readonly List<InventorySlotUI> safeSlotUIs = new();
     private readonly List<QuickSlotUI> quickSlotUIs = new();
 
     private readonly List<InventorySlotData> storageData = new();
     private readonly List<InventorySlotData> inventoryData = new();
+    private readonly List<InventorySlotData> safeSlotData = new();
     private readonly List<int> quickSlotTIDs = new();
 
     private LocalSaveRepository saveRepo;
@@ -120,6 +126,9 @@ public class StorageInventoryUI : MonoBehaviour
 
         // {인벤토리 데이터를 빈 슬롯으로 초기화한다}
         ClearData(inventoryData, inventorySlotUIs.Count);
+
+        // {각성 보존 슬롯 데이터를 빈 슬롯으로 초기화한다}
+        ClearData(safeSlotData, safeSlotUIs.Count);
 
         // {퀵슬롯 데이터를 빈 상태로 초기화한다}
         quickSlotTIDs.Clear();
@@ -191,18 +200,25 @@ public class StorageInventoryUI : MonoBehaviour
         if (saveData.inventorySlots == null)
             saveData.inventorySlots = new List<SaveSlotData>();
 
+        if (saveData.safeSlots == null)
+            saveData.safeSlots = new List<SaveSlotData>();
+
         if (saveData.quickSlots == null)
             saveData.quickSlots = new List<int>();
 
         // {창고/인벤토리 런타임 데이터를 빈 슬롯으로 초기화한다}
         ClearData(storageData, storageSlotUIs.Count);
         ClearData(inventoryData, inventorySlotUIs.Count);
+        ClearData(safeSlotData, safeSlotUIs.Count);
 
         // {저장된 창고 슬롯 데이터를 런타임 창고 데이터로 복원한다}
         CopyFromSaveSlots(saveData.storageSlots, storageData, storageSlotUIs.Count);
 
         // {저장된 인벤토리 슬롯 데이터를 런타임 인벤토리 데이터로 복원한다}
         CopyFromSaveSlots(saveData.inventorySlots, inventoryData, inventorySlotUIs.Count);
+
+        // {저장된 각성 보존 슬롯 데이터를 런타임 인벤토리 데이터로 복원한다}
+        CopyFromSaveSlots(saveData.safeSlots, safeSlotData, safeSlotUIs.Count);
 
         // {저장된 퀵슬롯 데이터를 복원한다}
         quickSlotTIDs.Clear();
@@ -261,10 +277,12 @@ public class StorageInventoryUI : MonoBehaviour
 
         if (saveData.storageSlots == null) saveData.storageSlots = new List<SaveSlotData>();
         if (saveData.inventorySlots == null) saveData.inventorySlots = new List<SaveSlotData>();
+        if (saveData.safeSlots == null) saveData.safeSlots = new List<SaveSlotData>();
         if (saveData.quickSlots == null) saveData.quickSlots = new List<int>();
 
         WriteSaveSlots(storageData, saveData.storageSlots);
         WriteSaveSlots(inventoryData, saveData.inventorySlots);
+        WriteSaveSlots(safeSlotData, saveData.safeSlots);
 
         saveData.quickSlots.Clear();
         for (int i = 0; i < quickSlotUIs.Count; i++)
@@ -331,6 +349,10 @@ public class StorageInventoryUI : MonoBehaviour
         inventorySlotUIs.Clear();
         inventorySlotUIs.AddRange(inventorySlotRoot.GetComponentsInChildren<InventorySlotUI>(true));
 
+        // {각성 보존 슬롯 수집}
+        safeSlotUIs.Clear();
+        safeSlotUIs.AddRange(safeSlotRoot.GetComponentsInChildren<InventorySlotUI>(true));
+
         // {퀵슬롯 수집}
         quickSlotUIs.Clear();
         quickSlotUIs.AddRange(quickSlotRoot.GetComponentsInChildren<QuickSlotUI>(true));
@@ -342,10 +364,12 @@ public class StorageInventoryUI : MonoBehaviour
 
         BindInventorySlotEvents(storageSlotUIs, AreaType.Storage);
         BindInventorySlotEvents(inventorySlotUIs, AreaType.Inventory);
+        BindInventorySlotEvents(safeSlotUIs, AreaType.SafeSlot);
         BindQuickSlotEvents();
 
         AddPanelDropReceiver(storagePanelRaycastTarget, AreaType.StoragePanel);
         AddPanelDropReceiver(inventoryPanelRaycastTarget, AreaType.InventoryPanel);
+        AddPanelDropReceiver(safeSlotPanelRaycastTarget, AreaType.SafeSlotPanel);
     }
 
     private void BindInventorySlotEvents(List<InventorySlotUI> slotUIs, AreaType area)
@@ -447,6 +471,10 @@ public class StorageInventoryUI : MonoBehaviour
         {
             MoveToArea(inventoryData, index, storageData);
         }
+        else if (area == AreaType.SafeSlot)
+        {
+            MoveToArea(safeSlotData, index, inventoryData);
+        }
         else if (area == AreaType.QuickSlot)
         {
             quickSlotTIDs[index] = 0;
@@ -491,6 +519,10 @@ public class StorageInventoryUI : MonoBehaviour
         {
             DropToSlot(inventoryData, index);
         }
+        else if (targetArea == AreaType.SafeSlot)
+        {
+            DropToSlot(safeSlotData, index);
+        }
         else if (targetArea == AreaType.StoragePanel)
         {
             DropToArea(storageData);
@@ -498,6 +530,10 @@ public class StorageInventoryUI : MonoBehaviour
         else if (targetArea == AreaType.InventoryPanel)
         {
             DropToArea(inventoryData);
+        }
+        else if (targetArea == AreaType.SafeSlotPanel)
+        {
+            DropToArea(safeSlotData);
         }
         else if (targetArea == AreaType.QuickSlot)
         {
@@ -576,6 +612,11 @@ public class StorageInventoryUI : MonoBehaviour
         }
 
         if (draggingArea == AreaType.Inventory && targetList == inventoryData)
+        {
+            return;
+        }
+
+        if (draggingArea == AreaType.SafeSlot && targetList == safeSlotData)
         {
             return;
         }
@@ -689,6 +730,10 @@ public class StorageInventoryUI : MonoBehaviour
         {
             sourceList = inventoryData;
         }
+        else if (draggingArea == AreaType.SafeSlot)
+        {
+            sourceList = safeSlotData;
+        }
 
         return sourceList != null;
     }
@@ -703,6 +748,11 @@ public class StorageInventoryUI : MonoBehaviour
         if (draggingArea == AreaType.Inventory && IsValid(inventoryData, draggingIndex))
         {
             return inventoryData[draggingIndex].TID;
+        }
+
+        if (draggingArea == AreaType.SafeSlot && IsValid(safeSlotData, draggingIndex))
+        {
+            return safeSlotData[draggingIndex].TID;
         }
 
         return 0;
@@ -736,6 +786,12 @@ public class StorageInventoryUI : MonoBehaviour
         for (int i = 0; i < inventorySlotUIs.Count; i++)
         {
             RefreshInventorySlot(inventorySlotUIs[i], inventoryData[i]);
+        }
+
+        // {각성 보존 슬롯 UI 갱신}
+        for (int i = 0; i < safeSlotUIs.Count; i++)
+        {
+            RefreshInventorySlot(safeSlotUIs[i], safeSlotData[i]);
         }
 
         // {퀵슬롯 UI 갱신}
@@ -797,6 +853,11 @@ public class StorageInventoryUI : MonoBehaviour
             // {인벤토리 슬롯의 TID를 가져온다}
             tid = inventoryData[index].TID;
         }
+        else if (area == AreaType.SafeSlot && IsValid(safeSlotData, index))
+        {
+            // {각성 보존 슬롯의 TID를 가져온다}
+            tid = safeSlotData[index].TID;
+        }
         else if (area == AreaType.QuickSlot && index >= 0 && index < quickSlotTIDs.Count)
         {
             // {퀵슬롯의 TID를 가져온다}
@@ -831,6 +892,11 @@ public class StorageInventoryUI : MonoBehaviour
             return inventoryData[index].TID != 0;
         }
 
+        if (area == AreaType.SafeSlot && IsValid(safeSlotData, index))
+        {
+            return safeSlotData[index].TID != 0;
+        }
+
         if (area == AreaType.QuickSlot && index >= 0 && index < quickSlotTIDs.Count)
         {
             return quickSlotTIDs[index] != 0;
@@ -847,9 +913,10 @@ public class StorageInventoryUI : MonoBehaviour
 
     private int CountTotalItem(int tid)
     {
-        // {창고와 인벤토리의 특정 아이템 총량 계산}
+        // {창고 + 인벤토리 + 각성 보존 슬롯의 특정 아이템 총량 계산}
         return storageData.Where(slot => slot.TID == tid).Sum(slot => slot.amount)
-             + inventoryData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
+             + inventoryData.Where(slot => slot.TID == tid).Sum(slot => slot.amount)
+             + safeSlotData.Where(slot => slot.TID == tid).Sum(slot => slot.amount);
     }
 
     private ItemData GetItemData(int tid)
@@ -1036,6 +1103,12 @@ public class StorageInventoryUI : MonoBehaviour
         {
             // {인벤토리 슬롯의 아이콘 반환}
             return GetSlotIcon(inventoryData, index);
+        }
+
+        if (area == AreaType.SafeSlot)
+        {
+            // {각성 보존 슬롯의 아이콘 반환}
+            return GetSlotIcon(safeSlotData, index);
         }
 
         if (area == AreaType.QuickSlot)
