@@ -50,6 +50,19 @@ public class LocalInputReader : MonoBehaviour
         }
     }
 
+    /* 플레이어 스킬 입력 처리 */
+    public void OnActiveSkill(InputAction.CallbackContext context)
+    {
+        //인벤토리 메뉴 오픈 중에는 스킬이 발동하지 않도록 잠금
+        if (isInventoryOpen)
+            return;
+
+        if (context.performed)
+        {
+            GlobalEventBus.OnMainActiveSkillRequested?.Invoke();
+        }
+    }
+
     /* 플레이어 상호작용 입력 처리 */
     public void OnInteract(InputAction.CallbackContext context)
     {
@@ -101,6 +114,7 @@ public class LocalInputReader : MonoBehaviour
         }
     }
 
+    /* 플레이어 달리기 입력 처리 */
     public void OnSprint(InputAction.CallbackContext context)
     {
         // Sprint 키 입력 시작 시 및 입력 유지 중 달리기 상태를 true로
@@ -117,6 +131,7 @@ public class LocalInputReader : MonoBehaviour
         GlobalEventBus.OnSprintInput?.Invoke(isSprint);
     }
 
+    /* 플레이어 구르기 입력 처리 */
     public void OnEvade(InputAction.CallbackContext context)
     {
         if (context.performed)

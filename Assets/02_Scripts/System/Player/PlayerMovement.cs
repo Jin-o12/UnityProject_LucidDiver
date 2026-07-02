@@ -28,11 +28,20 @@ public class PlayerMovement : MonoBehaviour
     public float evadeMP;                               // 구르기 MP 소비
     public float evadeCooltime;                         // 구르기 쿨타임
 
+    [Header("Noise Settings")]
+    // 발소리는 "플레이어 이동 입력"이 아니라 실제 이동 중일 때 일정 간격으로만 발생시킵니다.
+    [SerializeField] private float walkNoiseRange = 15.0f;
+    [SerializeField] private float runNoiseRange = 20.0f;
+    [SerializeField] private float walkNoiseInterval = 0.55f;
+    [SerializeField] private float runNoiseInterval = 0.3f;
+
     [Header("Player Animation Controll")]
     [SerializeField] private Animator animator;
     [SerializeField] private GameObject Body;
 
     [SerializeField] public apPortrait apPort;              // AnyPortrait 캐릭터 애니메이션 컨트롤러
+
+    private float moveNoiseTimer;
 
     private void Awake()
     {
@@ -67,6 +76,7 @@ public class PlayerMovement : MonoBehaviour
         GlobalEventBus.SendCannotSprint -= PlayerSprint;
         GlobalEventBus.OnMousePositionInput -= UpdateMousePos;
         GlobalEventBus.onPlayerDead -= PlayerDie;
+        moveNoiseTimer = 0.0f;
     }
 
     private void FixedUpdate()
@@ -122,6 +132,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         rb.MovePosition(targetPosition);
+        EmitMovementNoise(movement.sqrMagnitude > 0.001f);
 
         // 이동 방향에 따라 바라보는 방향 회전
         if(movementInput.x>0)
@@ -135,6 +146,32 @@ public class PlayerMovement : MonoBehaviour
 
         AimTowardsMouse();
         ImageTowardsMouse();
+    }
+
+    private void EmitMovementNoise(bool isMoving)
+    {
+        if (!isMoving || isEvading)
+        {
+            moveNoiseTimer = 0.0f;
+            return;
+        }
+
+        // 매 프레임 소음을 만들지 않고, 걷기/달리기 상태에 따라 간격을 두고 보냅니다.
+        moveNoiseTimer -= Time.fixedDeltaTime;
+        if (moveNoiseTimer > 0.0f)
+        {
+            return;
+        }
+
+        if (sprintInput)
+        {
+            NoiseSystem.Emit(NoiseType.Run, transform.position, gameObject, runNoiseRange);
+            moveNoiseTimer = Mathf.Max(0.05f, runNoiseInterval);
+            return;
+        }
+
+        NoiseSystem.Emit(NoiseType.Walk, transform.position, gameObject, walkNoiseRange);
+        moveNoiseTimer = Mathf.Max(0.05f, walkNoiseInterval);
     }
 
     /* 구르기 처리 */
@@ -203,10 +240,6 @@ public class PlayerMovement : MonoBehaviour
         Quaternion inverseIsoRotation = Quaternion.Euler(0f, -isometricYAngle, 0f);
         Vector3 aimVisualDir = inverseIsoRotation * dir.normalized;
 
-        // 세밀한 손의 회전을 위한 애니포트레이트 파라미터 제어
-        //apPort.SetControlParamFloat("Yuan_AimY", 1.0f);
-        // apPort.SetControlParamFloat("Yuan_B_AimY", 1.0f);
-
         // 마우스 방향(aimVisualDir.x)에 따른 시각적 좌우 반전
         if (aimVisualDir.x > 0)
         {
@@ -217,12 +250,27 @@ public class PlayerMovement : MonoBehaviour
             Body.transform.localScale = new Vector3(1, 1, 1);
         }
 
+        /// 애니 포트레이틑 파라미터 제어를 통한 세밀한 손의 회전(마우스를 향항 총구 조준) ///
+        // 마우스 방향을 이용해 팔 회전 각도 계산
+        if (apPort != null)
+        {
+            // 마우스가 캐릭터 기준 위쪽에 있을 때
+            if(aimVisualDir.z > 0)
+            {
+                apPort.SetControlParamFloat("Yuan_B_AimY", -1 * Mathf.Lerp(-1f, 1f, aimVisualDir.z));
+            }
+            else
+            {
+                apPort.SetControlParamFloat("Yuan_AimY", Mathf.Lerp(-1f, 1f, Mathf.Abs(aimVisualDir.z)));
+            }
+        }
+
+        /// 애니메이션 파라미터 ///
         // 키보드 입력이 있으면 true, 없으면 false
         bool isMoving = movementInput.sqrMagnitude > 0.01f;
         animator.SetBool("IsMoving", isMoving);
 
         int lookDir = 0; 
-
         // Z값이 양수면 위(뒷모습), 음수면 아래(앞모습)
         lookDir = aimVisualDir.z > 0 ? 1 : 0;
 

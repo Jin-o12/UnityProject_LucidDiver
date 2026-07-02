@@ -14,6 +14,7 @@ public class GlobalEventBus
     /// 플레이어 행동에 의한 이벤트 ///
     public static Action<Vector2> OnPlayerMove;                     // 플레이어 이동 버튼 입력: Action<이동 버튼 입력 벡터>
     public static Action OnAttackInput;                             // 공격 버튼 입력
+    public static Action OnMainActiveSkillRequested;                // 다이버 액티브 스킬 버튼 입력
     public static Action OnInteractionInput;                        // 상호작용 버튼 입력
     public static Action<bool> OnSprintInput;                       // 달리기 버튼 입력: Action<isSprint>
     public static Action<bool> SendCanSprint;                       // 달리기 여부 계산 전달: Action<canSprint>
@@ -58,6 +59,8 @@ public class GlobalEventBus
     public static Action<bool> OnEscapeRequest;                     // 탈출 판정 발생 시: Action<탈출 성공 여부>
     public static Action OnReturnToLobby;                           // 로비로 돌아가기 이벤트 발생
     public static Action<IInteractable, int> OnItemBoxOpened;       // 상자와 상호작용하여 UI를 열었을 시: Action<열린 상자, 상호작용한 플레이어 ID>
+    public static Action<NoiseStimulus> OnNoiseRequested;           // 노이즈 시스템에 소음 발생을 요청: Action<요청된 소음 데이터>
+    public static Action<NoiseStimulus> OnNoiseEmitted;             // 노이즈 매니저가 실제 처리한 소음 전달: Action<확정된 소음 데이터>
 
     /// <summary>
     /// UI 관리 이벤트
