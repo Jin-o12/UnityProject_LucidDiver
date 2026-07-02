@@ -115,6 +115,9 @@ public class PlayerWeapon : MonoBehaviour
 
         // 궤적은 여전히 총구에서 시작해 보이게 한다.
         ShowShotTrace(muzzleOrigin, endPoint, traceColor);
+
+        // 실제 오디오 재생과 별개로, AI는 이 총소리 이벤트를 통해 위치를 조사합니다.
+        NoiseSystem.Emit(NoiseType.Gunshot, muzzleOrigin, gameObject);
     }
 
     // 리코일 애니메이션 출력

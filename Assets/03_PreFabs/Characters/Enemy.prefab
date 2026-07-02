@@ -682,7 +682,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 3
-  sightLength: 10
+  sightLength: 15
+  awarenessRange: 20
+  hearingRange: 40
   sightAngle: 120
   eyeHeight: 1.4
   attackLength: 3

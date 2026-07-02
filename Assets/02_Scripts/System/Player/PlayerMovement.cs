@@ -1,8 +1,9 @@
-/// <summary>
+﻿/// <summary>
 /// 플레이어의 이동과 커서 방향 회전을 처리하는 스크립트
 /// </summary>
 using UnityEngine;
 using AnyPortrait;
+using System.Collections;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -11,17 +12,36 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Camera mainCamera;
 
     private Vector2 movementInput;                       // 플레이어의 이동 입력
+    private bool sprintInput;                           // 플레이어의 달리기 입력
     private Vector2 currentMousePos;                    // 현재 마우스 화면 좌표
 
     private readonly float isometricYAngle = -45.0f;    // 쿼터뷰 기준 이동 방향 보정
     public float moveSpeed;                             // 이동 속도
-    public float rotationSpeed = 1000f;                   // 회전 속도
+    public float rotationSpeed = 1000f;                 // 회전 속도
+
+    public float sprintSpeed;                           // 달리기 중 이동 속도
+    public float sprintMP;                              // 달리기 중 초당 MP 소비
+
+    public bool isEvading;                              // 구르기 상태 체크
+    public float evadeSpeed;                            // 구르기 이동 속도
+    public float evadeTime;                             // 구르기 동작 시간
+    public float evadeMP;                               // 구르기 MP 소비
+    public float evadeCooltime;                         // 구르기 쿨타임
+
+    [Header("Noise Settings")]
+    // 발소리는 "플레이어 이동 입력"이 아니라 실제 이동 중일 때 일정 간격으로만 발생시킵니다.
+    [SerializeField] private float walkNoiseRange = 15.0f;
+    [SerializeField] private float runNoiseRange = 20.0f;
+    [SerializeField] private float walkNoiseInterval = 0.55f;
+    [SerializeField] private float runNoiseInterval = 0.3f;
 
     [Header("Player Animation Controll")]
     [SerializeField] private Animator animator;
     [SerializeField] private GameObject Body;
 
     [SerializeField] public apPortrait apPort;              // AnyPortrait 캐릭터 애니메이션 컨트롤러
+
+    private float moveNoiseTimer;
 
     private void Awake()
     {
@@ -43,6 +63,8 @@ public class PlayerMovement : MonoBehaviour
     private void OnEnable()
     {
         GlobalEventBus.OnPlayerMove += PlayerMove;
+        GlobalEventBus.SendCanSprint += PlayerSprint;
+        GlobalEventBus.SendCannotSprint += PlayerSprint;
         GlobalEventBus.OnMousePositionInput += UpdateMousePos;
         GlobalEventBus.onPlayerDead += PlayerDie;
     }
@@ -50,8 +72,11 @@ public class PlayerMovement : MonoBehaviour
     private void OnDisable()
     {
         GlobalEventBus.OnPlayerMove -= PlayerMove;
+        GlobalEventBus.SendCanSprint -= PlayerSprint;
+        GlobalEventBus.SendCannotSprint -= PlayerSprint;
         GlobalEventBus.OnMousePositionInput -= UpdateMousePos;
         GlobalEventBus.onPlayerDead -= PlayerDie;
+        moveNoiseTimer = 0.0f;
     }
 
     private void FixedUpdate()
@@ -59,13 +84,33 @@ public class PlayerMovement : MonoBehaviour
         MoveAndRotate();
     }
 
-    public void initialize(float _speed)
+    public void initialize(float _speed, float _sSpeed, float _sMana, float _eSpeed, float _eTime,  float _eMana, float _eCooltime)
     {
+        // 기본 이동 속도 초기화
         moveSpeed = _speed;
+
+        // 달리기 속도 초기화
+        sprintSpeed = _sSpeed;
+
+        // 달리기 중 초당 MP 소비 초기화
+        sprintMP = _sMana;
+
+        // 구르기 이동 거리(속도 × 시간) 초기화
+        evadeSpeed = _eSpeed;
+        evadeTime = _eTime;
+
+        // 구르기 MP 소비 초기화
+        evadeMP = _eMana;
+
+        // 구르기 쿨타임 초기화
+        evadeCooltime = _eCooltime;
     }
 
     /* 플레이어 이동 입력 갱신 */
     private void PlayerMove(Vector2 input) => movementInput = input;
+
+    /* 플레이어 달리기 입력 갱신 */
+    private void PlayerSprint(bool sprint) => sprintInput = sprint;
 
     /* 마우스 화면 좌표 갱신 */
     private void UpdateMousePos(Vector2 pos) => currentMousePos = pos;
@@ -77,8 +122,17 @@ public class PlayerMovement : MonoBehaviour
         Quaternion isoRotation = Quaternion.Euler(0f, isometricYAngle, 0f);
         Vector3 movement = (isoRotation * inputDir).normalized;
 
-        Vector3 targetPosition = rb.position + movement * moveSpeed * Time.fixedDeltaTime;
+        Vector3 targetPosition = rb.position + movement * (isEvading ? evadeSpeed : (sprintInput ? sprintSpeed : moveSpeed) ) * Time.fixedDeltaTime;
+
+        // 달리기 중 MP 소비 이벤트 전달
+        if (sprintInput)
+        {
+            GlobalEventBus.OnSprintManaConsume?.Invoke(sprintMP);
+            GlobalEventBus.OnSprintInput?.Invoke(sprintInput);
+        }
+
         rb.MovePosition(targetPosition);
+        EmitMovementNoise(movement.sqrMagnitude > 0.001f);
 
         // 이동 방향에 따라 바라보는 방향 회전
         if(movementInput.x>0)
@@ -92,6 +146,48 @@ public class PlayerMovement : MonoBehaviour
 
         AimTowardsMouse();
         ImageTowardsMouse();
+    }
+
+    private void EmitMovementNoise(bool isMoving)
+    {
+        if (!isMoving || isEvading)
+        {
+            moveNoiseTimer = 0.0f;
+            return;
+        }
+
+        // 매 프레임 소음을 만들지 않고, 걷기/달리기 상태에 따라 간격을 두고 보냅니다.
+        moveNoiseTimer -= Time.fixedDeltaTime;
+        if (moveNoiseTimer > 0.0f)
+        {
+            return;
+        }
+
+        if (sprintInput)
+        {
+            NoiseSystem.Emit(NoiseType.Run, transform.position, gameObject, runNoiseRange);
+            moveNoiseTimer = Mathf.Max(0.05f, runNoiseInterval);
+            return;
+        }
+
+        NoiseSystem.Emit(NoiseType.Walk, transform.position, gameObject, walkNoiseRange);
+        moveNoiseTimer = Mathf.Max(0.05f, walkNoiseInterval);
+    }
+
+    /* 구르기 처리 */
+    public void PlayerEvade()
+    {
+        isEvading = true;
+
+        // 구르기 상태 종료는 코루틴으로 처리
+        StartCoroutine(EvadeComplete());
+    }
+
+    /* 구르기 상태 종료 코루틴 */
+    private IEnumerator EvadeComplete()
+    {
+        yield return new WaitForSeconds(evadeTime);
+        isEvading = false;
     }
 
     /* 마우스 커서가 가리키는 월드 위치 계산 */
