@@ -13,9 +13,14 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     public livingState nowState { get; private set; }       // 현재 플레이어
     public void SetPlayerState(livingState _state) => nowState = _state;
     public bool isReloading { get; private set; }           // 재장전 실행 중 여부
+    public bool canSprint { get; private set; }             // 달리기 실행 가능 여부
+    public bool cannotSprint;                               // 마나 소진 시 달리기 실행 불가 상태
+    public float sprintRecoverTime;                         // 달리기 실행 불가 회복 시간
+    public float evadeCooltime;                             // 구르기 쿨타임
+    public float lastEvadeTime;                             // 최근 구르기 실행 시점
 
     int playerID;                                           // 플레이어 고유 번호
-    
+
     // 플레이어 체력
     public float hpMax;                                     // 전체 체력
     public float hpCurrent;                                 // 현재 체력
@@ -23,7 +28,9 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     // 플레이어 마나
     public float mpMax;                                     // 마나 최대값
     public float mpCurrent { get; private set; }            // 현재 마나
-    public float manaRegen;                                 // 초탕 마나 회복량
+    public float manaRegen;                                 // 초당 마나 회복량
+    public float sprintMP;                                  // 달리기 중 초당 마나 소비량
+    public float evadeMP;                                   // 구르기 시 마나 소비량
 
     private LocalInputReader _input;                        // 플레이어 인게임 조작 입력
     private PlayerMovement _movement;                       // 플레이어 이동 조작
@@ -42,6 +49,8 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         /// 이벤트 구독 ///
         GlobalEventBus.OnGainManaRequested += GainMana;
         GlobalEventBus.OnHealRequested += HealingHealth;
+        GlobalEventBus.OnSprintInput += CanSprint;
+        GlobalEventBus.OnSprintManaConsume += UseSprintMana;
     }
 
     private void OnDisable()
@@ -49,6 +58,8 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnGainManaRequested -= GainMana;
         GlobalEventBus.OnHealRequested -= HealingHealth;
+        GlobalEventBus.OnSprintInput -= CanSprint;
+        GlobalEventBus.OnSprintManaConsume -= UseSprintMana;
     }
 
     void Start()
@@ -71,9 +82,9 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         if (_movement != null) _movement.enabled = canInput;
     }
 
-#region Status Management
+    #region Status Management
     /* 플레이어 상태 및 스텟 초기화 */
-    public void initialize(float _hp, float _mp, float _regen)
+    public void initialize(float _hp, float _mp, float _regen, float _sMP, float _sTime, float _eMana, float _eCooltime)
     {
         nowState = livingState.idle;
 
@@ -82,6 +93,12 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         mpMax = _mp;
         mpCurrent = mpMax;
         manaRegen = _regen;
+        sprintMP = _sMP;
+        cannotSprint = false;
+        sprintRecoverTime = _sTime;
+        evadeMP = _eMana;
+        evadeCooltime = _eCooltime;
+        lastEvadeTime = Time.time;
     }
 
     /* 피격 시 자신의 타입을 반환 */
@@ -102,7 +119,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     /* 체력 변화 */
     private void GetHp(float _val)
     {
-        hpCurrent = Mathf.Clamp(hpCurrent+_val, 0, hpMax);
+        hpCurrent = Mathf.Clamp(hpCurrent + _val, 0, hpMax);
         UpdateHp();
         // 플레이어 체력이 0이 되었을 때 사망 처리 이벤트 및 게임오버 메소드를 발동
         if (hpCurrent <= 0)
@@ -113,7 +130,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     }
 
     /* 게임 오버 처리 */
-    public void GameOver(int _playerID)  
+    public void GameOver(int _playerID)
     {
         // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
         if (!IsPlayerIdle(_playerID)) return;
@@ -154,14 +171,28 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     /* 마나 변화 */
     private void GetMp(float _val)
     {
-        mpCurrent = Mathf.Clamp(mpCurrent+_val, 0, mpMax);
+        mpCurrent = Mathf.Clamp(mpCurrent + _val, 0, mpMax);
         UpdateMp();
     }
-#endregion
+
+    /* 현재 달리기 가능한 상태인지 체크 */
+    public void CanSprint(bool _isSprint)
+    {
+        // 현재 보유 마나가 1초당 달리기 시 소비 마나 이상인지 체크
+        bool canSprint_Mana = mpCurrent >= sprintMP;
+        // 달리기 동작 여부 최종 계산 후 달리기 이벤트 전송
+        // (isSprint 입력 && 보유 마나가 1초당 소비 마나 이상 && 달리기 불가 상태 아님)
+        canSprint = _isSprint && canSprint_Mana && !cannotSprint;
+        GlobalEventBus.SendCanSprint?.Invoke(canSprint);
+    }
+    #endregion
 
     /* 피해 입을 시 체력 감소 처리 */
     public void TakeDamage(float dmg)
     {
+        // 구르기 도중에는 플레이어가 피해를 받아 HP가 감소하지 않음
+        if (_movement.isEvading) return;
+
         GetHp(-dmg);
     }
 
@@ -169,6 +200,38 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     public void UseAttackMana(float _useMana)
     {
         GetMp(-_useMana);
+    }
+
+    /* 달리기 중 시간당 마나 사용 */
+    public void UseSprintMana(float _useMana)
+    {
+        GetMp(-_useMana * Time.fixedDeltaTime);
+
+        // 마나 소비 후 보유 마나가 1초당 달리기 시 소비 마나 미만이 되면 달리기 불가 상태 전송 후 달리기 중단
+        if (mpCurrent < sprintMP)
+        {
+            cannotSprint = true;
+            GlobalEventBus.SendCannotSprint?.Invoke(cannotSprint);
+            StartCoroutine(SprintRecover());
+            return;
+        }
+    }
+
+    /* 달리기 불가 상태 회복 코루틴*/
+    private IEnumerator SprintRecover()
+    {
+        // 달리기 회복 시간 동안 대기 후 달리기 불가 상태를 해제
+        yield return new WaitForSeconds(sprintRecoverTime);
+        cannotSprint = false;
+        GlobalEventBus.SendCannotSprint?.Invoke(cannotSprint);
+    }
+
+    /* 마나 사용 후 구르기 실행 */
+    public void UseEvadeMana(float _useMana)
+    {
+        GetMp(-_useMana);
+        _movement.PlayerEvade();
+        lastEvadeTime = Time.time;
     }
 
     /* 초당 마나 회복 코루틴 */

@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -69,11 +69,11 @@ public class SpawnManager : MonoBehaviour
         {
             if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
             {
-                status.initialize(charData.hpMax, charData.manaMax, charData.manaRegen);
+                status.initialize(charData.hpMax, charData.manaMax, charData.manaRegen, charData.sprintMana, charData.sprintRecoverTime, charData.evadeMana, charData.evadeCooltime);
             }
             if(spawnedPlayer.TryGetComponent<PlayerMovement>(out var movement))
             {
-                movement.initialize(charData.moveSpeed);
+                movement.initialize(charData.moveSpeed, charData.sprintSpeed, charData.sprintMana, charData.evadeSpeed, charData.evadeTime, charData.evadeMana, charData.evadeCooltime);
             }
         }
 
