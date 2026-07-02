@@ -12,7 +12,7 @@ public class EnemyStatus : MonoBehaviour, IDamageable
     public float hpMax;                                 // 전체 체력
     public float hpCurrent;                             // 현재 체력
     public float atkValue  { get; private set; }        // 공격력
-    private float defValue;                             // 방어력
+    public float defValue { get; private set; }         // 방어력
 
     public event Action OnLocalDeath;                   // 내부 이벤트로 죽음여부 전달
     
