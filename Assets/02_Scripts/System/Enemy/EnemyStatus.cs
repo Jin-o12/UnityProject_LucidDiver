@@ -3,69 +3,67 @@ using UnityEngine;
 
 public class EnemyStatus : MonoBehaviour, IDamageable
 {
-    // 적의 상태
-    public enum EnemyState { Idle, Chase, Attack, Dead }        // 적이 가질 수 있는 상태의 종류
-    public EnemyState nowState { get; private set; }    // 현재 적 상태
-    public bool isAttacking { get; private set; }       // 공격 실행 중 여부
+    // 이번 노이즈 시스템 작업으로 "소리를 듣고 조사하는 상태"를 추가합니다.
+    public enum EnemyState
+    {
+        Idle,
+        Investigate,
+        Chase,
+        Attack,
+        Dead
+    }
 
-    public int objID = 0;                               // 고유 번호: 씬 내의 오브젝트로서의 고유 값을 의미합니다
-    public float hpMax;                                 // 전체 체력
+    public EnemyState nowState { get; private set; }    // 현재 적 상태
+    public bool isAttacking { get; private set; }       // 공격 수행 여부
+
+    public int objID = 0;                               // 적 개체 식별용 ID
+    public float hpMax;                                 // 최대 체력
     public float hpCurrent;                             // 현재 체력
-    public float atkValue  { get; private set; }        // 공격력
+    public float atkValue { get; private set; }         // 공격력
     private float defValue;                             // 방어력
 
-    public event Action OnLocalDeath;                   // 내부 이벤트로 죽음여부 전달
-    
-    public void SetIsAttacking(bool _isAttacking) { isAttacking = _isAttacking; }
+    public event Action OnLocalDeath;                   // 이 적이 죽었을 때만 알리는 로컬 이벤트
 
-    public void SetNowState(EnemyState _nowState) { nowState = _nowState; }
+    public void SetIsAttacking(bool attacking)
+    {
+        isAttacking = attacking;
+    }
+
+    public void SetNowState(EnemyState state)
+    {
+        nowState = state;
+    }
 
     private void Awake()
     {
         nowState = EnemyState.Idle;
 
-        // 아래 수치들은 프로토타입 환경에서의 일시적인 수치로
-        // 이후 게임에서는 적에 따라 유동적으로 값이 지정되게 할 예정 
-        hpMax = 100;
+        // 현재 프로젝트에서는 기본 스탯을 여기서 초기화합니다.
+        hpMax = 100.0f;
         hpCurrent = hpMax;
-        atkValue = 10;
-        defValue = 0;
+        atkValue = 10.0f;
+        defValue = 0.0f;
     }
 
-    void Start()
+    private void Start()
     {
-        // UI 초기 업데이트
-        UpdataHp();
+        UpdateHp();
     }
 
-    /* 체력 UI 업데이트 */
-    private void UpdataHp()
+    private void UpdateHp()
     {
-        // 체력 변동 사항을 이벤트 버스로 전송
+        // UI와 디버그 로직이 현재 체력을 받을 수 있도록 이벤트를 보냅니다.
         GlobalEventBus.OnEnemyHealthChanged?.Invoke(0, hpCurrent, hpMax);
     }
 
-    private void OnEnable()
-    {
-        /// 이벤트 구독 ///
-    }
-
-    private void OnDisable()
-    {
-        /// 이벤트 구독 해제 ///
-    }
-
-    /* 피격 시 자신의 타입을 반환 */
     public Faction EntityFaction => Faction.enemy;
 
-    /* 피해를 받는 메소드 */
-    public void TakeDamage(float dmg)
+    public void TakeDamage(float damage)
     {
-        hpCurrent = Mathf.Clamp(hpCurrent-dmg, 0, hpMax);
+        hpCurrent = Mathf.Clamp(hpCurrent - damage, 0.0f, hpMax);
         GlobalEventBus.OnEnemyHealthChanged?.Invoke(objID, hpCurrent, hpMax);
 
-        // 체력이 0 이하로 내려갈 경우 사망처리를 위한 이벤트 발생
-        if(hpCurrent <= 0)
+        if (hpCurrent <= 0.0f)
         {
             nowState = EnemyState.Dead;
             OnLocalDeath?.Invoke();

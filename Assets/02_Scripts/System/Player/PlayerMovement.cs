@@ -28,11 +28,20 @@ public class PlayerMovement : MonoBehaviour
     public float evadeMP;                               // 구르기 MP 소비
     public float evadeCooltime;                         // 구르기 쿨타임
 
+    [Header("Noise Settings")]
+    // 발소리는 "플레이어 이동 입력"이 아니라 실제 이동 중일 때 일정 간격으로만 발생시킵니다.
+    [SerializeField] private float walkNoiseRange = 15.0f;
+    [SerializeField] private float runNoiseRange = 20.0f;
+    [SerializeField] private float walkNoiseInterval = 0.55f;
+    [SerializeField] private float runNoiseInterval = 0.3f;
+
     [Header("Player Animation Controll")]
     [SerializeField] private Animator animator;
     [SerializeField] private GameObject Body;
 
     [SerializeField] public apPortrait apPort;              // AnyPortrait 캐릭터 애니메이션 컨트롤러
+
+    private float moveNoiseTimer;
 
     private void Awake()
     {
@@ -67,6 +76,7 @@ public class PlayerMovement : MonoBehaviour
         GlobalEventBus.SendCannotSprint -= PlayerSprint;
         GlobalEventBus.OnMousePositionInput -= UpdateMousePos;
         GlobalEventBus.onPlayerDead -= PlayerDie;
+        moveNoiseTimer = 0.0f;
     }
 
     private void FixedUpdate()
@@ -122,6 +132,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         rb.MovePosition(targetPosition);
+        EmitMovementNoise(movement.sqrMagnitude > 0.001f);
 
         // 이동 방향에 따라 바라보는 방향 회전
         if(movementInput.x>0)
@@ -135,6 +146,32 @@ public class PlayerMovement : MonoBehaviour
 
         AimTowardsMouse();
         ImageTowardsMouse();
+    }
+
+    private void EmitMovementNoise(bool isMoving)
+    {
+        if (!isMoving || isEvading)
+        {
+            moveNoiseTimer = 0.0f;
+            return;
+        }
+
+        // 매 프레임 소음을 만들지 않고, 걷기/달리기 상태에 따라 간격을 두고 보냅니다.
+        moveNoiseTimer -= Time.fixedDeltaTime;
+        if (moveNoiseTimer > 0.0f)
+        {
+            return;
+        }
+
+        if (sprintInput)
+        {
+            NoiseSystem.Emit(NoiseType.Run, transform.position, gameObject, runNoiseRange);
+            moveNoiseTimer = Mathf.Max(0.05f, runNoiseInterval);
+            return;
+        }
+
+        NoiseSystem.Emit(NoiseType.Walk, transform.position, gameObject, walkNoiseRange);
+        moveNoiseTimer = Mathf.Max(0.05f, walkNoiseInterval);
     }
 
     /* 구르기 처리 */
