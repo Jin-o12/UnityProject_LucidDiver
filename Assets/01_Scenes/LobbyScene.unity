@@ -419,7 +419,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   linkRateLevel: 0
-  linkRateGain: 1
+  linkRatePoint: 1
   slotTID1: 0
   slotSprite1: {fileID: 0}
   slotCount1: 0
@@ -484,6 +484,9 @@ MonoBehaviour:
   gameScene:
     sceneAsset: {fileID: 102900000, guid: 99c9720ab356a0642a771bea13969a05, type: 3}
     sceneName: DemoScene
+  LoadScene:
+    sceneAsset: {fileID: 102900000, guid: a6fff15a1e907ef43a982704c405cfee, type: 3}
+    sceneName: LoadScene
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
