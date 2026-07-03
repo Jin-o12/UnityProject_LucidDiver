@@ -246,7 +246,7 @@ public class ResultManager : MonoBehaviour, IResultService
             // TID가 0이 아닌 슬롯만 저장 (빈 슬롯 제외)
             if (sSlot.TID != 0)
             {
-                _playerSaveData.inventorySlots.Add(new SaveSlotData
+                _playerSaveData.safeSlots.Add(new SaveSlotData
                 {
                     index = sSlot.order,
                     TID = sSlot.TID,
@@ -354,6 +354,8 @@ public class ResultManager : MonoBehaviour, IResultService
         {
             resultPanel.UpdateSafeSlot(k, _inven.safeSlots[k]);
         }
+        // 각성 보존 슬롯 인덱스 보정용 인벤토리 칸 수 전달
+        resultPanel.invenSlotsCount = _inven.slotNum;
         // 결과 창 UI 출력 갱신
         resultPanel.RefreshResult();
     }

@@ -70,13 +70,15 @@ public class InventoryUI : MonoBehaviour
 
         safeSlotsObj.Clear();
 
+        int invenCnt = slotsObj.Count;
+
         for (int j = 0; j < count; j++)
         {
             GameObject newSlot = Instantiate(slotPrefab, safeSlotContainer);
             InventorySlotUI slotUI = newSlot.GetComponent<InventorySlotUI>();
 
             if (slotUI != null)
-                slotUI.Initialize(j);
+                slotUI.Initialize(j + invenCnt);
 
             safeSlotsObj.Add(newSlot);
         }

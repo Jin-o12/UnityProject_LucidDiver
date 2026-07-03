@@ -25,6 +25,7 @@ public class ResultUI : MonoBehaviour
     public ItemData potionData;                 //변질된 붕대 아이템 데이터
     public ItemData manaStoneData;              //기묘한 사탕 아이템 데이터
     public ItemData memoryFragmentData;         //기억 파편 아이템 데이터
+    public int invenSlotsCount;                //인벤토리 슬롯 개수 (각성 보존 슬롯 인덱스 값 보정)
 
     [Header("UI 컴포넌트")]
     public Image image_Banner;                      //탈출 신 패널 타이틀 이미지
@@ -178,7 +179,7 @@ public class ResultUI : MonoBehaviour
             InventorySlotUI slotUI = newSlot.GetComponent<InventorySlotUI>();
 
             if (slotUI != null)
-                slotUI.Initialize(j);
+                slotUI.Initialize(j + invenSlotsCount);
 
             safeSlotsObj.Add(newSlot);
         }
