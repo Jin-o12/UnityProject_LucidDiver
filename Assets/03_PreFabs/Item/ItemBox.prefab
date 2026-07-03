@@ -44,7 +44,6 @@ GameObject:
   - component: {fileID: 8379933475469959545}
   - component: {fileID: 8231862850697718748}
   - component: {fileID: 3570556423017487055}
-  - component: {fileID: 7803023828782650196}
   m_Layer: 0
   m_Name: ItemBox
   m_TagString: Untagged
@@ -103,7 +102,7 @@ MonoBehaviour:
     weight: 0
     minAmount: 1
     maxAmount: 5
-  openNoiseRange: 12
+  openNoiseRange: 20
   openNoiseDuration: 1.8
 --- !u!65 &8379933475469959545
 BoxCollider:
@@ -166,27 +165,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   promptRoot: {fileID: 4753328075908462758}
---- !u!114 &7803023828782650196
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 864261442559763118}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 839e0a0136526b74e951173198bc184e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  slotCapacity: 8
-  items: []
-  useRandomLoot: 1
-  minCreateCount: 1
-  maxCreateCount: 2
-  allowDuplicateLoot: 0
-  lootOptions: []
-  openNoiseRange: 30
-  openNoiseDuration: 1.8
 --- !u!1 &1709890698025653938
 GameObject:
   m_ObjectHideFlags: 0
