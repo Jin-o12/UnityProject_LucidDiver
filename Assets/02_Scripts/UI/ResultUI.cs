@@ -27,27 +27,24 @@ public class ResultUI : MonoBehaviour
     public ItemData memoryFragmentData;         //기억 파편 아이템 데이터
 
     [Header("UI 컴포넌트")]
-    public Image image_Banner;                      //탈출 신 패널 타이틀 이미지
-    public TMP_Text text_playTime;                  //플레이 시간 텍스트
-    public TMP_Text text_enemyKillCount;            //적 처치 수 텍스트
-    public Image image_memoryFragmentIcon;          //기억 파편 아이콘 이미지
-    public TMP_Text text_getMemoryFragment;         //기억 파편 획득 텍스트
-    public TMP_Text text_linkRate;                  //동조율 상승 텍스트
-    public TMP_Text text_memoryLogUnlocked;         //심상 기록 해금 텍스트
-    public Image image_manaStoneIcon;               //기묘한 사탕 아이콘 이미지
-    public TMP_Text text_manaStoneCount;            //기묘한 사탕 획득 텍스트
-    public Image image_potionIcon;                  //변질된 붕대 아이콘 이미지
-    public TMP_Text text_potionCount;               //변질된 붕대 획득 텍스트
-    public Image image_manaStoneLost;               //탈출 실패 시 기묘한 사탕 유실 이펙트 이미지
-    public Image image_potionLost;                  //탈출 실패 시 변질된 붕대 유실 이펙트 이미지
-    public TMP_Text text_returnDialogue;            //귀환 대사 텍스트
-    public Transform safeSlotContainer;             //각성 보존 슬롯 출력 콘테이너
-    public List<GameObject> safeSlotsObj = new();   //각성 보존 슬롯 리스트
+    public Image image_Banner;                  //탈출 신 패널 타이틀 이미지
+    public TMP_Text text_playTime;              //플레이 시간 텍스트
+    public TMP_Text text_enemyKillCount;        //적 처치 수 텍스트
+    public Image image_memoryFragmentIcon;      //기억 파편 아이콘 이미지
+    public TMP_Text text_getMemoryFragment;     //기억 파편 획득 텍스트
+    public TMP_Text text_linkRate;              //동조율 상승 텍스트
+    public TMP_Text text_memoryLogUnlocked;     //심상 기록 해금 텍스트
+    public Image image_manaStoneIcon;           //기묘한 사탕 아이콘 이미지
+    public TMP_Text text_manaStoneCount;        //기묘한 사탕 획득 텍스트
+    public Image image_potionIcon;              //변질된 붕대 아이콘 이미지
+    public TMP_Text text_potionCount;           //변질된 붕대 획득 텍스트
+    public Image image_manaStoneLost;           //탈출 실패 시 기묘한 사탕 유실 이펙트 이미지
+    public Image image_potionLost;              //탈출 실패 시 변질된 붕대 유실 이펙트 이미지
+    public TMP_Text text_returnDialogue;        //귀환 대사 텍스트
 
     [Header("UI 리소스")]
     public Sprite Banner_Success;   //탈출 성공 시 패널 타이틀 스프라이트
     public Sprite Banner_Failed;    //강제 각성(탈출 실패) 시 패널 타이틀 스프라이트
-    public GameObject slotPrefab;   //각성 보존 슬롯 칸 프리팹
 
     // Addressable Assets 불러오기
     private List<AsyncOperationHandle<Sprite>> loadHandles = new();    // 메모리 관리를 위해 로드 상태를 저장할 핸들
@@ -157,38 +154,6 @@ public class ResultUI : MonoBehaviour
         // 탈출 실패 시 인벤토리 아이템 유실 이펙트 이미지를 출력 (탈출 성공 시에는 출력하지 않음)
         image_manaStoneLost.enabled = !extractionResult;
         image_potionLost.enabled = !extractionResult;
-    }
-
-    public void CreateSafeSlots(int count)  // 각성 보존 슬롯 생성
-    {
-        if (safeSlotsObj.Count == count)
-            return;
-
-        for (int j = 0; j < safeSlotsObj.Count; j++)
-        {
-            if (safeSlotsObj[j] != null)
-                Destroy(safeSlotsObj[j]);
-        }
-
-        safeSlotsObj.Clear();
-
-        for (int j = 0; j < count; j++)
-        {
-            GameObject newSlot = Instantiate(slotPrefab, safeSlotContainer);
-            InventorySlotUI slotUI = newSlot.GetComponent<InventorySlotUI>();
-
-            if (slotUI != null)
-                slotUI.Initialize(j);
-
-            safeSlotsObj.Add(newSlot);
-        }
-    }
-
-    // 각성 보존 슬롯 데이터 업데이트
-    public void UpdateSafeSlot(int slotNum, InventorySlotData slotData)
-    {
-        InventorySlotUI slotUI = safeSlotsObj[slotNum].GetComponent<InventorySlotUI>();
-        slotUI.UpdateSlot(slotData.amount, slotData.icon);
     }
 
     private string Dialogue_Return()  //결과 창 말풍선 대사를 DB에서 추출해 출력하는 메소드

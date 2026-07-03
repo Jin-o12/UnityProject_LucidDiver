@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -61,19 +61,17 @@ public class SpawnManager : MonoBehaviour
         
         // 플레이어 오브젝트 세션 데이터에 등록
         GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
-        
-        Debug.Log($"Player spawned at {spawnPoint.position} with ID: {spawnedPlayer.GetComponent<EntityIdentity>().entityID}");
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if (charData != null)
         {
             if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
             {
-                status.initialize(charData.hpMax, charData.manaMax, charData.manaRegen, charData.sprintMana, charData.sprintRecoverTime, charData.evadeMana, charData.evadeCooltime);
+                status.initialize(charData.hpMax, charData.manaMax, charData.manaRegen);
             }
             if(spawnedPlayer.TryGetComponent<PlayerMovement>(out var movement))
             {
-                movement.initialize(charData.moveSpeed, charData.sprintSpeed, charData.sprintMana, charData.evadeSpeed, charData.evadeTime, charData.evadeMana, charData.evadeCooltime);
+                movement.initialize(charData.moveSpeed);
             }
         }
 

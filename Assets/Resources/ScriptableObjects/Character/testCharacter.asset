@@ -30,14 +30,7 @@ MonoBehaviour:
     m_SubObjectType: 
     m_EditorAssetChanged: 0
   hpMax: 100
+  moveSpeed: 3
   manaMax: 100
   manaRegen: 1
   mindRecordNum: 0
-  moveSpeed: 8
-  sprintSpeed: 15
-  sprintMana: 5
-  sprintRecoverTime: 5
-  evadeSpeed: 25
-  evadeTime: 0.4
-  evadeMana: 20
-  evadeCooltime: 5

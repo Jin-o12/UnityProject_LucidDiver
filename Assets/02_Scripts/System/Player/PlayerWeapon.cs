@@ -2,7 +2,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using AnyPortrait;
 
 public class PlayerWeapon : MonoBehaviour
 {
@@ -14,7 +13,7 @@ public class PlayerWeapon : MonoBehaviour
     [Header("Shot Trace Visual")]
     [SerializeField] private bool showShotTrace = true;                 // 궤적 보이기 여부
     [SerializeField] private LineRenderer shotTraceRenderer;            // 궤적 렌더러
-    [SerializeField] private float shotTraceDuration = 0.3f;           // 궤적이 보이는 시간
+    [SerializeField] private float shotTraceDuration = 0.08f;           // 궤적이 보이는 시간
     [SerializeField] private Color hitTraceColor = Color.white;         // 적중 했을 시 궤적 색상
     [SerializeField] private Color missTraceColor = Color.red;          // 적중하지 않을 시 궤적 색상
 
@@ -28,8 +27,6 @@ public class PlayerWeapon : MonoBehaviour
     [Header("Aim")]
     [SerializeField] private float aimOriginHeight = 1.0f;        // 1차 조준 레이를 쏠 높이
     [SerializeField] private float muzzleBackstepDistance = 0.3f; // 총구가 벽 안에 들어갔을 때 시작점을 뒤로 물릴 거리
-
-    [SerializeField] public apPortrait apPort;
 
     private void Awake()
     {
@@ -53,11 +50,6 @@ public class PlayerWeapon : MonoBehaviour
     {
         if (weaponData == null || firePoint == null)
             return;
-
-        apPort.SetControlParamFloat("Yuan_Recoil", 1.0f);
-        apPort.SetControlParamFloat("Yuan_B_Recoil", 1.0f);
-        StartCoroutine(PlayRecoilAnimation(0.5f, "Yuan_Recoil"));
-        StartCoroutine(PlayRecoilAnimation(0.5f, "Yuan_B_Recoil"));
 
         Vector3 muzzleOrigin = firePoint.position;
         Vector3 aimOrigin = transform.position + Vector3.up * aimOriginHeight;
@@ -115,24 +107,6 @@ public class PlayerWeapon : MonoBehaviour
 
         // 궤적은 여전히 총구에서 시작해 보이게 한다.
         ShowShotTrace(muzzleOrigin, endPoint, traceColor);
-
-        // 실제 오디오 재생과 별개로, AI는 이 총소리 이벤트를 통해 위치를 조사합니다.
-        NoiseSystem.Emit(NoiseType.Gunshot, muzzleOrigin, gameObject);
-    }
-
-    // 리코일 애니메이션 출력
-    public IEnumerator PlayRecoilAnimation(float recoilDuration, string controlParamName)
-    {
-        float elapsedTime = 0f;
-        // 시간에 비례하여 리코일 애니메이션을 천천히 복구
-        while (elapsedTime < recoilDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            float normalizedTime = Mathf.Clamp01(elapsedTime / recoilDuration);
-            apPort.SetControlParamFloat(controlParamName, 1.0f - normalizedTime);
-            yield return null;
-        }
-        apPort.SetControlParamFloat(controlParamName, 0f);
     }
 
     public void EquipWeapon(WeaponItemData weaponItemData)

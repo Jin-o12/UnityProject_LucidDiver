@@ -19,11 +19,6 @@ public class ItemBox : MonoBehaviour, IInteractable
     [SerializeField] private bool allowDuplicateLoot = false;         // 같은 후보 아이템의 중복 생성 허용 여부
     [SerializeField] private List<BoxLootOption> lootOptions = new(); // 랜덤 생성 후보 목록
 
-    [Header("Noise Settings")]
-    // 상자를 열면 주변 적을 끌 수 있는 디코이성 소음을 함께 발생시킵니다.
-    [SerializeField] private float openNoiseRange = 30.0f;
-    [SerializeField] private float openNoiseDuration = 1.8f;
-
     private bool isOpened = false;                                    // 현재 다른 플레이어가 열어 둔 상태인지 여부
 
     /// <summary>
@@ -70,9 +65,6 @@ public class ItemBox : MonoBehaviour, IInteractable
 
         // Presenter가 이 이벤트를 받아 체스트 UI를 열고 데이터를 바인딩합니다.
         GlobalEventBus.OnItemBoxOpened?.Invoke(this, playerID);
-
-        // 상자 오픈 소리는 일반 발소리보다 우선순위가 높고, 추적 중인 적도 끊어낼 수 있게 설정합니다.
-        NoiseSystem.Emit(NoiseType.ChestOpen, transform.position, gameObject, openNoiseRange, openNoiseDuration, true, 40);
 
         // 현재 프로젝트 구조에서는 상호작용 후 별도 기본 동작을 막기 위해 false를 유지합니다.
         return false;
