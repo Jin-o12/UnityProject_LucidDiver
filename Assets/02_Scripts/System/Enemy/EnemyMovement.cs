@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
@@ -44,7 +45,8 @@ public class EnemyMovement : MonoBehaviour
     private float forcedInvestigationUntilTime; // 디코이성 소음 때문에 시야 재획득을 잠시 막는 시간
     private int currentInvestigatePriority;  // 현재 조사 중인 소리의 우선순위
 
-    private Animator animator;
+    [Header("필수 컴포넌트")]
+    //[SerializeField] private Animator animator;
     private EnemyStatus myStatus;
     private NavMeshAgent navAgent;
 
@@ -55,14 +57,20 @@ public class EnemyMovement : MonoBehaviour
     public float EyeHeight => eyeHeight;
     public Transform CurrentTarget => targetPlayer;
 
+    // 애니메이션 이벤트
+    public event Action<bool> OnWalkEvent;          // 걷기 애니메이션 이벤트
+    public event Action OnAttackEvent;              // 공격 애니메이션 이벤트
+    public event Action OnDeathEvent;               // 사망 애니메이션 이벤트
+    public event Action<int, int> OnLookDirEvent;        // 바라보는 방향 애니메이션 이벤트
+
+
     private void Awake()
     {
-        animator = GetComponent<Animator>();
         navAgent = GetComponent<NavMeshAgent>();
         myStatus = GetComponent<EnemyStatus>();
 
         // 이동/상태/애니메이션 중 하나라도 빠지면 이 스크립트는 정상 동작할 수 없습니다.
-        if (animator == null || navAgent == null || myStatus == null)
+        if (navAgent == null || myStatus == null)
         {
             enabled = false;
             Debug.LogError("EnemyMovement: required components are missing.");
@@ -353,7 +361,7 @@ public class EnemyMovement : MonoBehaviour
 
         if (attackLengthSqr >= sqrDistToTarget)
         {
-            animator.SetBool("isWalk", false);
+            OnWalkEvent?.Invoke(false);
             StartCoroutine(Attack());
         }
         else if (sqrDistToTarget <= awarenessRangeSqr)
@@ -361,13 +369,29 @@ public class EnemyMovement : MonoBehaviour
             navAgent.isStopped = false;
             navAgent.SetDestination(targetPlayer.position);
             myStatus.SetNowState(EnemyStatus.EnemyState.Chase);
-            animator.SetBool("isWalk", true);
+            
+            PlayWalkAnimation();
         }
         else
         {
             targetPlayer = null;
             SetIdleState();
         }
+    }
+
+    /// <summary>
+    /// 플래이어 추적 시 애니메이션 재생 및 방향에 따른 애니메이션 전환을 처리합니다
+    /// <summary>
+    private void PlayWalkAnimation()
+    {
+        OnWalkEvent?.Invoke(true);
+
+        // 아래를 바라볼 시 0, 위를 바라볼 시 1로 설정
+        int lookUp = transform.rotation.y > 0 ? 0 : 1;
+        // 왼쪽을 바라볼 시 1, 오른쪽을 바라볼 시 -1로 설정
+        int lookRight = Mathf.Abs(transform.rotation.y) < 0.5f ? -1 : 1;
+
+        OnLookDirEvent?.Invoke(lookUp, lookRight);
     }
 
     /// <summary>
@@ -392,14 +416,14 @@ public class EnemyMovement : MonoBehaviour
                 navAgent.isStopped = true;
                 navAgent.ResetPath();
                 myStatus.SetNowState(EnemyStatus.EnemyState.Investigate);
-                animator.SetBool("isWalk", false);
+                OnWalkEvent?.Invoke(false);
                 return true;
             }
 
             navAgent.isStopped = false;
             navAgent.SetDestination(investigateDestination);
             myStatus.SetNowState(EnemyStatus.EnemyState.Investigate);
-            animator.SetBool("isWalk", true);
+            OnWalkEvent?.Invoke(true);
             return true;
         }
 
@@ -412,7 +436,7 @@ public class EnemyMovement : MonoBehaviour
         navAgent.isStopped = true;
         navAgent.ResetPath();
         myStatus.SetNowState(EnemyStatus.EnemyState.Investigate);
-        animator.SetBool("isWalk", false);
+        OnWalkEvent?.Invoke(false);
         return true;
     }
 
@@ -453,7 +477,7 @@ public class EnemyMovement : MonoBehaviour
     {
         myStatus.SetNowState(EnemyStatus.EnemyState.Idle);
         myStatus.SetIsAttacking(false);
-        animator.SetBool("isWalk", false);
+        OnWalkEvent?.Invoke(false);
 
         navAgent.isStopped = false;
         navAgent.ResetPath();
@@ -465,7 +489,7 @@ public class EnemyMovement : MonoBehaviour
     public void Die()
     {
         StopAllCoroutines();
-        animator.SetTrigger("isDead");
+        OnDeathEvent?.Invoke();
         Destroy(gameObject, 3.0f);
     }
 
@@ -487,7 +511,7 @@ public class EnemyMovement : MonoBehaviour
         navAgent.ResetPath();
 
         transform.LookAt(new Vector3(targetPlayer.position.x, transform.position.y, targetPlayer.position.z));
-        animator.SetTrigger("isAttack");
+        OnAttackEvent?.Invoke();
 
         yield return new WaitForSeconds(attackCooldown);
 
@@ -498,7 +522,7 @@ public class EnemyMovement : MonoBehaviour
     /// <summary>
     /// 공격 타이밍에 플레이어가 여전히 사거리 안에 있을 때만 피해를 적용합니다.
     /// </summary>
-    public void isPlayerTakeDamage()
+    public void CheckAndApplyDamage()
     {
         if (targetPlayer == null)
         {
