@@ -11,11 +11,20 @@ public class PlayerInventory : MonoBehaviour
 {
     public List<InventorySlotData> slots = new();
     public List<InventorySlotData> quickSlots = new();
+    public List<InventorySlotData> safeSlots = new();
+    public List<InventorySlotData> anySlots = new();
     public int slotNum { get; private set; }
     public int quickSlotNum { get; private set; }
+    public int safeSlotNum { get; private set; }
+
+    // 인벤토리 슬롯과 각성 보존 슬롯을 동시에 취급하는 경우에 AnySlots 헬퍼를 호출하여 사용
+    public List<InventorySlotData> AnySlots => anySlots;
 
     // 특정 슬롯 UI를 갱신할 때 사용하는 이벤트
     public event Action<int> OnSlotChanged;
+
+    // 각성 보존 슬롯 UI를 갱신할 때 사용하는 이벤트
+    public event Action<int> OnSafeSlotChanged;
 
     // 어드레시블로 불러온 스프라이트 주소 가져오기
     private AsyncOperationHandle<Sprite> loadHandle;
@@ -45,21 +54,39 @@ public class PlayerInventory : MonoBehaviour
     }
 
     /* 인벤토리 UI 초기화 */
-    public void Initialize(int _slotNum, int _quickSlotNum)
+    public void Initialize(int _slotNum, int _quickSlotNum, int _safeSlotNum)
     {
         slotNum = _slotNum;
         quickSlotNum = _quickSlotNum;
+        safeSlotNum = _safeSlotNum; 
         
-        // 모든 슬롯 데이터 초기화
+        // 모든 슬롯 (인벤토리, 퀵슬롯, 각성 보존 슬롯) 데이터 초기화
         for (int i = 0; i < _slotNum; i++)
         {
             slots.Add(new InventorySlotData(0, i, 0, null));
         }
 
+        for (int j = 0; j < _safeSlotNum; j++)
+        {
+            safeSlots.Add(new InventorySlotData(0, j, 0, null));
+        }
+
+        RebuildAnySlots();
+
         for (int i = 0; i < _quickSlotNum; i++)
         {
             quickSlots.Add(new InventorySlotData(0, i, 0, null));
         }
+    }
+
+    // 인벤토리 슬롯과 각성 보존 슬롯을 병합해 anySlots 리스트 생성
+    public void RebuildAnySlots()
+    {
+        anySlots.Clear();
+        // 인벤토리 슬롯(우선순위 그대로)
+        if (slots != null) anySlots.AddRange(slots);
+        // 각성 보존 슬롯을 뒤에 추가
+        if (safeSlots != null) anySlots.AddRange(safeSlots);
     }
 
     /* 인벤토리에 아이템 추가 및 남는 수량 반환 */
@@ -121,6 +148,9 @@ public class PlayerInventory : MonoBehaviour
             Debug.Log("인벤토리가 가득차서 아이템을 주울 수 없습니다.");
         }
 
+        // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
+        RebuildAnySlots();
+
         return remain;
     }
 
@@ -130,7 +160,7 @@ public class PlayerInventory : MonoBehaviour
         if (_slotIndex < 0 || _slotIndex >= slotNum) return _count;
         if (_itemData == null || _count <= 0) return _count;
 
-        InventorySlotData slot = slots[_slotIndex];
+        InventorySlotData slot = anySlots[_slotIndex];
         int maxStack = Mathf.Max(1, _itemData.itemMultiple);
 
         // 빈 슬롯이면 새로 배치
@@ -166,6 +196,11 @@ public class PlayerInventory : MonoBehaviour
         slot.amount += realAdd;
 
         OnSlotChanged?.Invoke(_slotIndex);
+
+        // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
+        RebuildAnySlots();
+
+        // 남은 수량 반환
         return _count - realAdd;
     }
 
@@ -173,21 +208,21 @@ public class PlayerInventory : MonoBehaviour
     public InventorySlotData GetSlot(int _slotIndex)
     {
         if (_slotIndex < 0 || _slotIndex >= slotNum) return null;
-        return slots[_slotIndex];
+        return anySlots[_slotIndex];
     }
 
     /* 특정 슬롯의 원본 ItemData 반환 */
     public ItemData GetSlotItemData(int _slotIndex)
     {
         if (_slotIndex < 0 || _slotIndex >= slotNum) return null;
-        return slots[_slotIndex].itemData;
+        return anySlots[_slotIndex].itemData;
     }
 
     /* 특정 슬롯이 비어 있는지 확인 */
     public bool IsSlotEmpty(int _slotIndex)
     {
         if (_slotIndex < 0 || _slotIndex >= slotNum) return true;
-        return slots[_slotIndex].TID == 0 || slots[_slotIndex].amount <= 0;
+        return anySlots[_slotIndex].TID == 0 || anySlots[_slotIndex].amount <= 0;
     }
 
     /* 특정 슬롯 수량 차감 */
@@ -196,10 +231,10 @@ public class PlayerInventory : MonoBehaviour
         if (_slotIndex < 0 || _slotIndex >= slotNum) return;
         if (IsSlotEmpty(_slotIndex)) return;
 
-        int tid = slots[_slotIndex].TID;
-        slots[_slotIndex].amount -= _count;
+        int tid = anySlots[_slotIndex].TID;
+        anySlots[_slotIndex].amount -= _count;
 
-        if (slots[_slotIndex].amount <= 0)
+        if (anySlots[_slotIndex].amount <= 0)
         {
             ClearSlot(_slotIndex);
             return;
@@ -207,6 +242,9 @@ public class PlayerInventory : MonoBehaviour
 
         OnSlotChanged?.Invoke(_slotIndex);
         SyncQuickSlotsByTID(tid);
+
+        // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
+        RebuildAnySlots();
     }
 
     /* 특정 슬롯 완전 초기화 */
@@ -214,11 +252,11 @@ public class PlayerInventory : MonoBehaviour
     {
         if (_slotIndex < 0 || _slotIndex >= slotNum) return;
 
-        int tid = slots[_slotIndex].TID;
-        slots[_slotIndex].TID = 0;
-        slots[_slotIndex].amount = 0;
-        slots[_slotIndex].icon = null;
-        slots[_slotIndex].itemData = null;
+        int tid = anySlots[_slotIndex].TID;
+        anySlots[_slotIndex].TID = 0;
+        anySlots[_slotIndex].amount = 0;
+        anySlots[_slotIndex].icon = null;
+        anySlots[_slotIndex].itemData = null;
 
         OnSlotChanged?.Invoke(_slotIndex);
 
@@ -226,6 +264,9 @@ public class PlayerInventory : MonoBehaviour
         {
             SyncQuickSlotsByTID(tid);
         }
+
+        // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
+        RebuildAnySlots();
     }
 
     /* 특정 슬롯 아이템을 월드에 드롭하고, 성공 시 후처리 콜백을 실행 */
@@ -246,6 +287,9 @@ public class PlayerInventory : MonoBehaviour
         }
 
         int dropCount = slot.amount;
+
+        // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
+        RebuildAnySlots();
 
         itemData.itemPrefabRef.InstantiateAsync(dropPosition, Quaternion.identity).Completed += handle =>
         {
@@ -310,8 +354,20 @@ public class PlayerInventory : MonoBehaviour
     {
         if (iconRef == null || !iconRef.RuntimeKeyIsValid())
         {
-            slots[slotIndex].icon = null;
-            OnSlotChanged?.Invoke(slotIndex);
+            // anySlots 헬퍼에서 먼저 기록 후 원본 슬롯에 각각 전달
+            if (slotIndex >= 0 && slotIndex < anySlots.Count) anySlots[slotIndex].icon = null;
+
+            if (slotIndex < slots.Count)
+            {
+                slots[slotIndex].icon = null;
+                OnSlotChanged?.Invoke(slotIndex);
+            }
+            else
+            {
+                int safeIndex = slotIndex - slots.Count;
+                if (safeIndex >= 0 && safeIndex < safeSlots.Count) safeSlots[safeIndex].icon = null;
+                OnSafeSlotChanged?.Invoke(safeIndex);
+            }
             return;
         }
 
@@ -320,18 +376,23 @@ public class PlayerInventory : MonoBehaviour
         loadHandle.Completed += (handle) =>
         {
             // 성공적으로 가져왔는지 확인
-            if (handle.Status == AsyncOperationStatus.Succeeded)
+            Sprite result = (handle.Status == AsyncOperationStatus.Succeeded) ? handle.Result : null;
+
+            // 아이콘이 준비된 시점에 UI를 anySlots 헬퍼에서 갱신
+            if (slotIndex >= 0 && slotIndex < anySlots.Count) anySlots[slotIndex].icon = result;
+
+            // 로드된 아이콘을 각 슬롯 데이터에 반영
+            if (slotIndex < slots.Count)
             {
-                // 로드된 아이콘을 슬롯 데이터에 반영
-                slots[slotIndex].icon = handle.Result;
+                slots[slotIndex].icon = result;
+                OnSlotChanged?.Invoke(slotIndex);
             }
             else
             {
-                slots[slotIndex].icon = null;
+                int safeIndex = slotIndex - slots.Count;
+                if (safeIndex >= 0 && safeIndex < safeSlots.Count) safeSlots[safeIndex].icon = result;
+                OnSafeSlotChanged?.Invoke(safeIndex);
             }
-
-            // 아이콘이 준비된 시점에 UI를 한 번 더 갱신
-            OnSlotChanged?.Invoke(slotIndex);
         };
     }
 
@@ -349,8 +410,8 @@ public class PlayerInventory : MonoBehaviour
     {
         /// ※추가: 해당 아이템이 동일한 아이템이라면 존재한다면 합산 가능한지 판정 후 합산 ///
 
-        InventorySlotData slot1 = slots[_index1];
-        InventorySlotData slot2 = slots[_index2];
+        InventorySlotData slot1 = anySlots[_index1];
+        InventorySlotData slot2 = anySlots[_index2];
 
         // 두 데이터 교환
         (slot1.TID, slot2.TID) = (slot2.TID, slot1.TID);
@@ -359,8 +420,26 @@ public class PlayerInventory : MonoBehaviour
         (slot1.itemData, slot2.itemData) = (slot2.itemData, slot1.itemData);
 
         // 변동사항 알림
-        OnSlotChanged?.Invoke(_index1);
-        OnSlotChanged?.Invoke(_index2);
+        if (_index1 < slots.Count)
+        {
+            OnSlotChanged?.Invoke(_index1);
+        }
+        else
+        {
+            OnSafeSlotChanged?.Invoke(_index1 - slots.Count);
+        }
+
+        if (_index2 < slots.Count)
+        {
+            OnSlotChanged?.Invoke(_index2);
+        }
+        else
+        {
+            OnSafeSlotChanged?.Invoke(_index2 - slots.Count);
+        }
+
+        // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
+        RebuildAnySlots();
     }
 
     /* 퀵슬롯에 아이템 추가 */
@@ -464,6 +543,9 @@ public class PlayerInventory : MonoBehaviour
             return true;
         }
 
+        // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
+        RebuildAnySlots();
+
         // 인벤토리에는 없지만 퀵슬롯에는 등록된 상태일 수 있으므로 한 번 더 정리합니다.
         SyncQuickSlotsByTID(tid);
         return false;
@@ -486,7 +568,7 @@ public class PlayerInventory : MonoBehaviour
         GlobalEventBus.OnQuickSlotChanged?.Invoke(_index2, slot2.icon, slot2.amount);
     }
 
-    /* 저장된 인벤토리/퀵슬롯 데이터를 런타임 슬롯에 복원 */
+    /* 저장된 인벤토리/퀵슬롯/각성 보존 슬롯 데이터를 런타임 슬롯에 복원 */
     public void RestoreFromSave(PlayerSaveData saveData)
     {
         if (saveData == null) return;
@@ -509,6 +591,25 @@ public class PlayerInventory : MonoBehaviour
 
             OnSlotChanged?.Invoke(savedSlot.index);
         }
+
+        // 저장된 각성 보존 슬롯 데이터를 순서대로 복원
+        foreach (var savedSlot in saveData.safeSlots)
+        {
+            if (savedSlot.index < 0 || savedSlot.index >= safeSlotNum) continue;
+
+            safeSlots[savedSlot.index].TID = savedSlot.TID;
+            safeSlots[savedSlot.index].amount = savedSlot.amount;
+
+            ItemData itemData = GetItemDataByTID(savedSlot.TID);
+            safeSlots[savedSlot.index].itemData = itemData;
+
+            if (itemData != null) LoadSprite(itemData.icon, savedSlot.index + slots.Count);
+
+            OnSafeSlotChanged?.Invoke(savedSlot.index);
+        }
+
+        // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
+        RebuildAnySlots();
 
         // 저장된 퀵슬롯 TID를 기준으로 퀵슬롯 데이터를 복원
         for (int i = 0; i < quickSlotNum; i++)
@@ -582,7 +683,7 @@ public class PlayerInventory : MonoBehaviour
         };
     }
 
-    /* 런타임 인벤토리/퀵슬롯 데이터를 모두 초기화 */
+    /* 런타임 인벤토리/퀵슬롯/각성 보존 슬롯 데이터를 모두 초기화 */
     private void ClearRuntimeSlots()
     {
         for (int i = 0; i < slotNum; i++)
@@ -593,6 +694,18 @@ public class PlayerInventory : MonoBehaviour
             slots[i].itemData = null;
             OnSlotChanged?.Invoke(i);
         }
+
+        for (int j = 0; j < safeSlotNum; j++)
+        {
+            safeSlots[j].TID = 0;
+            safeSlots[j].amount = 0;
+            safeSlots[j].icon = null;
+            safeSlots[j].itemData = null;
+            OnSafeSlotChanged?.Invoke(j);
+        }
+
+        // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
+        RebuildAnySlots();
 
         for (int i = 0; i < quickSlotNum; i++)
         {

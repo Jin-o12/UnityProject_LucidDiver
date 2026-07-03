@@ -12,9 +12,11 @@ public class PlayerSaveData
     // 아이템 데이터
     public List<SaveSlotData> storageSlots = new();         // 창고
     public List<SaveSlotData> inventorySlots = new();       // 인벤토리
+    public List<SaveSlotData> safeSlots = new();            // 각성 보존 슬롯
     public List<int> quickSlots = new();                    // 퀵슬롯 (아이템 코드만 기억하고 인벤토리에서 갯수를 셈)
     public int storageSlotNum;                              // 창고 최대 슬롯 수
     public int invenSlotNum;                                // 인벤토리 최대 슬롯 수
+    public int safeSlotNum;                                 // 각성 보존 슬롯 수
     public int quickSlotsNum;                               // 퀵슬롯 최대 슬롯 수
     
 
@@ -34,6 +36,7 @@ public class PlayerSaveData
         // 인벤토리 및 창고 슬롯 갯수 지정
         invenSlotNum = 16;
         storageSlotNum = 16;
+        safeSlotNum = 4;
         quickSlotsNum = 3;
     }
 }

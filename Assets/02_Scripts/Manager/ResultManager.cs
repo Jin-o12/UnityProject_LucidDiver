@@ -240,6 +240,21 @@ public class ResultManager : MonoBehaviour, IResultService
             }
         }
 
+        // PlayerSaveData의 각성 보존 슬롯을 비우고 현재 플레이어 각성 보존 데이터로 채우기 
+        foreach (var sSlot in _inven.safeSlots)
+        {
+            // TID가 0이 아닌 슬롯만 저장 (빈 슬롯 제외)
+            if (sSlot.TID != 0)
+            {
+                _playerSaveData.safeSlots.Add(new SaveSlotData
+                {
+                    index = sSlot.order,
+                    TID = sSlot.TID,
+                    amount = sSlot.amount
+                });
+            }
+        }
+
         // PlayerSaveData의 퀵슬롯을 비우고 현재 플레이어 퀵슬롯 데이터로 채우기
         _playerSaveData.quickSlots.Clear();
         _playerSaveData.quickSlots.Add(_inven.quickSlots[0].TID);
@@ -287,6 +302,9 @@ public class ResultManager : MonoBehaviour, IResultService
         MemoryLogUnlocked = linkRateUp || prevLinkRateLevel > 0;
         // 기억 파편을 인벤토리에서 제거 (성공/실패 양쪽 모두 제거 처리는 실행함)
         RemoveFromInventory(401);
+        // 각성 보존 슬롯의 기억 파편을 제거
+        _playerSaveData.safeSlots.RemoveAll(slot => slot != null && slot.TID == 401);
+        // 동조율 단계 값을 세이브 데이터에 전달
         charData.linkRateLevel = linkRateLevel;
     }
 
@@ -330,6 +348,14 @@ public class ResultManager : MonoBehaviour, IResultService
         resultPanel.linkRateLevel = linkRateLevel;
         resultPanel.linkRateGain = linkRateGain;
         resultPanel.linkRateUp = linkRateUp;
+        // 결과 창 UI에 각성 보존 슬롯 출력
+        resultPanel.CreateSafeSlots(_inven.safeSlotNum);
+        for (int k = 0; k < _inven.safeSlotNum; k++)
+        {
+            resultPanel.UpdateSafeSlot(k, _inven.safeSlots[k]);
+        }
+        // 각성 보존 슬롯 인덱스 보정용 인벤토리 칸 수 전달
+        resultPanel.invenSlotsCount = _inven.slotNum;
         // 결과 창 UI 출력 갱신
         resultPanel.RefreshResult();
     }
@@ -341,7 +367,7 @@ public class ResultManager : MonoBehaviour, IResultService
         data = null;
 
         // 인벤토리 슬롯에서 아이템 개수 합계 및 각 아이템 데이터를 추출
-        foreach (InventorySlotData slot in _inven.slots)
+        foreach (InventorySlotData slot in _inven.anySlots)
         {
             if (slot.TID == _tid)
             {
@@ -397,6 +423,10 @@ public class ResultManager : MonoBehaviour, IResultService
         // {인벤토리 슬롯 리스트가 없으면 새로 만든다}
         if (_playerSaveData.inventorySlots == null)
             _playerSaveData.inventorySlots = new List<SaveSlotData>();
+
+        // {각성 보존 슬롯 리스트가 없으면 새로 만든다}
+        if (_playerSaveData.safeSlots == null)
+            _playerSaveData.safeSlots = new List<SaveSlotData>();
 
         // {퀵슬롯 리스트가 없으면 새로 만든다}
         if (_playerSaveData.quickSlots == null)

@@ -70,6 +70,7 @@ public class GameManager : MonoBehaviour
             if (SpawnManager.Instance != null)
             {
                 SpawnManager.Instance.SpawnEnemy();
+                SpawnManager.Instance.SpawnBoxes();
             }
         }
         else

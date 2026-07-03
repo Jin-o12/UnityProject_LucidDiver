@@ -102,6 +102,8 @@ MonoBehaviour:
     weight: 0
     minAmount: 1
     maxAmount: 5
+  openNoiseRange: 20
+  openNoiseDuration: 1.8
 --- !u!65 &8379933475469959545
 BoxCollider:
   m_ObjectHideFlags: 0

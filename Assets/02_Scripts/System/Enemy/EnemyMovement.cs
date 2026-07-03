@@ -1,66 +1,90 @@
-/// <summary>
-/// 적의 이동, 시야 판정, 추적과 공격 상태를 관리하는 스크립트입니다.
-/// 예전에 사용하던 부채꼴 시야각 판정과 벽 가림 판정을 현재 구조에 맞게 복원합니다.
-/// </summary>
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// 적의 시야 인식, 추적 유지, 공격, 그리고 소리 조사 상태를 함께 관리합니다.
+/// 현재 프로젝트는 EnemyBrain/Perception으로 완전히 분리되어 있지 않기 때문에,
+/// 이번 단계에서는 기존 EnemyMovement 안에 노이즈 조사 흐름을 안전하게 통합합니다.
+/// </summary>
 public class EnemyMovement : MonoBehaviour
 {
     [Header("Enemy Movement Control")]
-    [SerializeField] private float moveSpeed = 3.0f;       // NavMeshAgent에 반영할 이동 속도
-    [SerializeField] private float sightLength = 10.0f;    // 적이 대상을 인식할 수 있는 최대 거리
-    [SerializeField] private float sightAngle = 120.0f;    // 적의 전방 시야각
-    [SerializeField] private float eyeHeight = 1.4f;       // 시야 레이캐스트를 시작할 높이
+    [SerializeField] private float moveSpeed = 3.0f;
+    [SerializeField] private float sightLength = 15.0f;
+    [SerializeField] private float awarenessRange = 20.0f;
+    [SerializeField] private float hearingRange = 40.0f;
+    [SerializeField] private float sightAngle = 120.0f;
+    [SerializeField] private float eyeHeight = 1.4f;
 
     [Header("Enemy Attack")]
-    [SerializeField] private float attackLength = 3.0f;    // 공격 판정 거리
-    [SerializeField] private float attackCooldown = 2.0f;  // 공격 후 다음 행동까지의 대기 시간
+    [SerializeField] private float attackLength = 3.0f;
+    [SerializeField] private float attackCooldown = 2.0f;
 
     [Header("Enemy Search")]
-    [SerializeField] private float checkInterval = 0.2f;   // 타겟 탐색과 상태 갱신 주기
+    [SerializeField] private float checkInterval = 0.2f;
+    [SerializeField] private float investigateStopDistance = 1.0f;
+    [SerializeField] private float investigateDuration = 2.0f;
+    [SerializeField] private float investigateNavMeshSampleDistance = 2.5f;
 
-    private Transform targetPlayer;                        // 현재 추적 중인 플레이어
-    private float sightLengthSqr;                          // 거리 비교용 제곱값 캐시
-    private float halfSightAngle;                          // 시야 반각 캐시
-    private float attackLengthSqr;                         // 공격 거리 제곱값 캐시
-    private WaitForSeconds checkingTime;                   // 탐색 주기 캐시
+    private Transform targetPlayer;          // 현재 추적 중인 플레이어
+    private float sightLengthSqr;            // 시야 거리 제곱값 캐시
+    private float awarenessRangeSqr;         // 어그로 유지 거리 제곱값 캐시
+    private float hearingRangeSqr;           // 청각 감지 거리 제곱값 캐시
+    private float halfSightAngle;            // 시야 절반 각도 캐시
+    private float attackLengthSqr;           // 공격 거리 제곱값 캐시
+    private float investigateStopDistanceSqr;// 조사 목적지 도착 판정 제곱값 캐시
+    private WaitForSeconds checkingTime;     // 탐색 코루틴 간격 캐시
 
-    private Animator animator;
+    private bool hasInvestigateTarget;       // 조사할 소리 위치가 있는지 여부
+    private bool hasReachedInvestigatePoint; // 조사 목적지에 도착했는지 여부
+    private Vector3 investigateTargetPosition;
+    private Transform investigateTargetAnchor;
+    private float investigateSearchEndTime;  // 도착 후 제자리 조사 종료 시간
+    private float forcedInvestigationUntilTime; // 디코이성 소음 때문에 시야 재획득을 잠시 막는 시간
+    private int currentInvestigatePriority;  // 현재 조사 중인 소리의 우선순위
+
+    [Header("필수 컴포넌트")]
+    //[SerializeField] private Animator animator;
     private EnemyStatus myStatus;
     private NavMeshAgent navAgent;
 
-    // VisionGizmo가 읽어갈 현재 시야 정보입니다.
     public float SightLength => sightLength;
+    public float AwarenessRange => awarenessRange;
+    public float HearingRange => hearingRange;
     public float SightAngle => sightAngle;
     public float EyeHeight => eyeHeight;
     public Transform CurrentTarget => targetPlayer;
 
+    // 애니메이션 이벤트
+    public event Action<bool> OnWalkEvent;          // 걷기 애니메이션 이벤트
+    public event Action OnAttackEvent;              // 공격 애니메이션 이벤트
+    public event Action OnDeathEvent;               // 사망 애니메이션 이벤트
+    public event Action<int, int> OnLookDirEvent;        // 바라보는 방향 애니메이션 이벤트
+
+
     private void Awake()
     {
-        animator = GetComponent<Animator>();
         navAgent = GetComponent<NavMeshAgent>();
         myStatus = GetComponent<EnemyStatus>();
 
-        // 필수 컴포넌트가 없으면 잘못된 동작을 막기 위해 스크립트를 비활성화합니다.
-        if (animator == null || navAgent == null || myStatus == null)
+        // 이동/상태/애니메이션 중 하나라도 빠지면 이 스크립트는 정상 동작할 수 없습니다.
+        if (navAgent == null || myStatus == null)
         {
             enabled = false;
-            Debug.LogError("EnemyMovement: 필요한 컴포넌트가 없습니다.");
+            Debug.LogError("EnemyMovement: required components are missing.");
             return;
         }
 
         targetPlayer = null;
+        ClearInvestigateTarget();
         ApplyCachedValues();
-
-        // 인스펙터에서 조정한 이동 속도가 실제 NavMeshAgent에도 반영되도록 맞춰 둡니다.
         navAgent.speed = moveSpeed;
     }
 
     private void OnValidate()
     {
-        // 인스펙터 값이 바뀌었을 때도 시야 계산용 캐시를 바로 갱신합니다.
         ApplyCachedValues();
     }
 
@@ -72,6 +96,7 @@ public class EnemyMovement : MonoBehaviour
         }
 
         myStatus.OnLocalDeath += Die;
+        GlobalEventBus.OnNoiseEmitted += HandleNoiseEmitted;
         StartCoroutine(CheckRoutine());
     }
 
@@ -83,43 +108,76 @@ public class EnemyMovement : MonoBehaviour
         }
 
         myStatus.OnLocalDeath -= Die;
+        GlobalEventBus.OnNoiseEmitted -= HandleNoiseEmitted;
     }
 
     /// <summary>
-    /// 거리와 각도 계산에 필요한 값을 미리 캐시해 둡니다.
+    /// 거리/각도 계산에서 반복 사용하는 값을 미리 캐시해 둡니다.
     /// </summary>
     private void ApplyCachedValues()
     {
         sightLength = Mathf.Max(0.0f, sightLength);
+        awarenessRange = Mathf.Max(sightLength, awarenessRange);
+        hearingRange = Mathf.Max(awarenessRange, hearingRange);
         sightAngle = Mathf.Clamp(sightAngle, 0.0f, 360.0f);
         attackLength = Mathf.Max(0.0f, attackLength);
         checkInterval = Mathf.Max(0.05f, checkInterval);
+        investigateStopDistance = Mathf.Max(0.1f, investigateStopDistance);
+        investigateDuration = Mathf.Max(0.1f, investigateDuration);
+        investigateNavMeshSampleDistance = Mathf.Max(0.5f, investigateNavMeshSampleDistance);
 
         sightLengthSqr = sightLength * sightLength;
+        awarenessRangeSqr = awarenessRange * awarenessRange;
+        hearingRangeSqr = hearingRange * hearingRange;
         halfSightAngle = sightAngle * 0.5f;
         attackLengthSqr = attackLength * attackLength;
+        investigateStopDistanceSqr = investigateStopDistance * investigateStopDistance;
         checkingTime = new WaitForSeconds(checkInterval);
     }
 
     /// <summary>
-    /// 주기적으로 타겟을 갱신하고, 현재 상태에 따라 추적 또는 공격을 수행합니다.
+    /// 일정 주기로 시야/소리 상태를 갱신하고 현재 행동을 전환합니다.
     /// </summary>
     private IEnumerator CheckRoutine()
     {
         while (myStatus.nowState != EnemyStatus.EnemyState.Dead)
         {
             UpdateTarget();
-            ChaseTarget();
+            UpdateMovementState();
             yield return checkingTime;
         }
     }
 
     /// <summary>
-    /// 시야 거리, 시야각, 벽 가림 조건을 모두 통과한 가장 가까운 플레이어를 찾습니다.
+    /// 현재 타겟을 유지할지, 새로 시야 내 플레이어를 찾을지 결정합니다.
+    /// 강제 조사 시간 중에는 일부러 시야 재획득을 막아 "어그로를 끄는 소리"가 체감되게 합니다.
     /// </summary>
     private void UpdateTarget()
     {
-        float closestDistance = sightLengthSqr;
+        if (Time.time < forcedInvestigationUntilTime && hasInvestigateTarget)
+        {
+            targetPlayer = null;
+            return;
+        }
+
+        if (targetPlayer != null && IsTargetWithinAwareness(targetPlayer))
+        {
+            return;
+        }
+
+        targetPlayer = FindVisibleTarget();
+        if (targetPlayer != null)
+        {
+            ClearInvestigateTarget();
+        }
+    }
+
+    /// <summary>
+    /// 시야 조건을 모두 통과한 가장 가까운 플레이어를 찾습니다.
+    /// </summary>
+    private Transform FindVisibleTarget()
+    {
+        float closestDistance = float.MaxValue;
         Transform bestTarget = null;
 
         foreach (GameObject player in GlobalRuntimeData.GetPlayerList().Values)
@@ -129,7 +187,7 @@ public class EnemyMovement : MonoBehaviour
                 continue;
             }
 
-            float sqrDistance = (transform.position - player.transform.position).sqrMagnitude;
+            float sqrDistance = GetPlanarSqrDistance(transform.position, player.transform.position);
             if (sqrDistance > sightLengthSqr)
             {
                 continue;
@@ -147,11 +205,24 @@ public class EnemyMovement : MonoBehaviour
             }
         }
 
-        targetPlayer = bestTarget;
+        return bestTarget;
     }
 
     /// <summary>
-    /// 대상이 적의 전방 부채꼴 시야 안에 있고, 중간에 벽이 없는지 확인합니다.
+    /// 한 번 어그로가 붙은 뒤에는 시야각 밖으로 나가도 awarenessRange 안에 있는 동안 추적을 유지합니다.
+    /// </summary>
+    private bool IsTargetWithinAwareness(Transform target)
+    {
+        if (target == null)
+        {
+            return false;
+        }
+
+        return GetPlanarSqrDistance(transform.position, target.position) <= awarenessRangeSqr;
+    }
+
+    /// <summary>
+    /// 대상이 전방 시야각 안에 있고, 벽에 가려지지 않았는지 확인합니다.
     /// </summary>
     private bool IsTargetInSight(Transform target)
     {
@@ -160,14 +231,12 @@ public class EnemyMovement : MonoBehaviour
             return false;
         }
 
-        // 높이 차이보다 수평 방향을 우선해서 시야각 판정을 합니다.
         Vector3 flatForward = transform.forward;
         flatForward.y = 0.0f;
 
         Vector3 flatDirectionToTarget = target.position - transform.position;
         flatDirectionToTarget.y = 0.0f;
 
-        // 거의 같은 위치라면 각도 판정 없이 바로 시야 안으로 취급합니다.
         if (flatDirectionToTarget.sqrMagnitude <= 0.001f)
         {
             return true;
@@ -179,7 +248,6 @@ public class EnemyMovement : MonoBehaviour
             return false;
         }
 
-        // 시야각을 통과한 뒤에는 실제로 벽에 가려져 있는지 레이캐스트로 확인합니다.
         Vector3 eyePosition = transform.position + Vector3.up * eyeHeight;
         Vector3 targetPosition = target.position + Vector3.up * eyeHeight;
         Vector3 directionToTarget = targetPosition - eyePosition;
@@ -198,13 +266,11 @@ public class EnemyMovement : MonoBehaviour
                 ~0,
                 QueryTriggerInteraction.Ignore))
         {
-            // 플레이어 본체나 자식 오브젝트를 먼저 맞으면 정상 인식으로 봅니다.
             if (hit.transform == target || hit.transform.IsChildOf(target))
             {
                 return true;
             }
 
-            // 그보다 먼저 다른 콜라이더를 맞았다면 벽이나 장애물에 가려진 상태입니다.
             return false;
         }
 
@@ -212,24 +278,82 @@ public class EnemyMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// 현재 타겟과의 거리 상태를 기준으로 대기, 추적, 공격 행동을 전환합니다.
+    /// 노이즈 매니저가 확정한 소음을 듣고 조사 목표를 갱신합니다.
+    /// 일반 소리는 추적 중인 적을 꺾지 못하고, 디코이성 소리만 어그로를 끊을 수 있게 분기합니다.
     /// </summary>
-    private void ChaseTarget()
+    private void HandleNoiseEmitted(NoiseStimulus stimulus)
     {
-        if (targetPlayer == null)
+        if (!enabled || myStatus == null || myStatus.nowState == EnemyStatus.EnemyState.Dead)
         {
-            myStatus.SetNowState(EnemyStatus.EnemyState.Idle);
-            myStatus.SetIsAttacking(false);
-            animator.SetBool("isWalk", false);
-
-            navAgent.isStopped = false;
-            navAgent.ResetPath();
             return;
         }
 
-        float sqrDistToTarget = (transform.position - targetPlayer.position).sqrMagnitude;
+        if (stimulus.Source == gameObject)
+        {
+            return;
+        }
 
-        // 공격 중에는 추적과 공격 시작을 중복해서 실행하지 않습니다.
+        float effectiveRadius = Mathf.Min(hearingRange, Mathf.Max(0.0f, stimulus.Radius));
+        if (effectiveRadius <= 0.0f)
+        {
+            return;
+        }
+
+        float sqrDistanceToNoise = GetPlanarSqrDistance(transform.position, stimulus.Position);
+        if (sqrDistanceToNoise > hearingRangeSqr || sqrDistanceToNoise > effectiveRadius * effectiveRadius)
+        {
+            return;
+        }
+
+        // 이미 플레이어를 쫓는 중이라면, 디코이로 지정된 소리만 추적을 꺾을 수 있습니다.
+        if (targetPlayer != null && !stimulus.CanInterruptChase)
+        {
+            return;
+        }
+
+        // 더 낮은 우선순위의 소리로 현재 조사 목표를 덮어쓰지 않도록 막습니다.
+        if (hasInvestigateTarget && !stimulus.CanInterruptChase && stimulus.Priority < currentInvestigatePriority)
+        {
+            return;
+        }
+
+        if (stimulus.CanInterruptChase)
+        {
+            targetPlayer = null;
+            myStatus.SetIsAttacking(false);
+
+            // 강제 조사 시간 동안은 플레이어가 시야에 들어와도 바로 재획득하지 않습니다.
+            forcedInvestigationUntilTime = Time.time + Mathf.Max(investigateDuration, stimulus.Duration);
+        }
+
+        investigateTargetPosition = stimulus.Position;
+        investigateTargetAnchor = stimulus.AnchorTransform;
+        hasInvestigateTarget = true;
+        hasReachedInvestigatePoint = false;
+        investigateSearchEndTime = 0.0f;
+        currentInvestigatePriority = stimulus.Priority;
+    }
+
+    /// <summary>
+    /// 현재 상황에 따라 추적, 공격, 조사, 대기 행동을 전환합니다.
+    /// </summary>
+    private void UpdateMovementState()
+    {
+        if (targetPlayer == null)
+        {
+            if (InvestigateNoise())
+            {
+                return;
+            }
+
+            SetIdleState();
+            return;
+        }
+
+        ClearInvestigateTarget();
+
+        float sqrDistToTarget = GetPlanarSqrDistance(transform.position, targetPlayer.position);
+
         if (myStatus.isAttacking)
         {
             return;
@@ -237,30 +361,140 @@ public class EnemyMovement : MonoBehaviour
 
         if (attackLengthSqr >= sqrDistToTarget)
         {
-            animator.SetBool("isWalk", false);
+            OnWalkEvent?.Invoke(false);
             StartCoroutine(Attack());
         }
-        else if (sqrDistToTarget <= sightLengthSqr)
+        else if (sqrDistToTarget <= awarenessRangeSqr)
         {
             navAgent.isStopped = false;
             navAgent.SetDestination(targetPlayer.position);
             myStatus.SetNowState(EnemyStatus.EnemyState.Chase);
-            animator.SetBool("isWalk", true);
+            
+            PlayWalkAnimation();
+        }
+        else
+        {
+            targetPlayer = null;
+            SetIdleState();
         }
     }
 
     /// <summary>
-    /// 적이 죽었을 때 추적 코루틴을 멈추고 사망 애니메이션을 재생합니다.
+    /// 플래이어 추적 시 애니메이션 재생 및 방향에 따른 애니메이션 전환을 처리합니다
+    /// <summary>
+    private void PlayWalkAnimation()
+    {
+        OnWalkEvent?.Invoke(true);
+
+        // 아래를 바라볼 시 0, 위를 바라볼 시 1로 설정
+        int lookUp = transform.rotation.y > 0 ? 0 : 1;
+        // 왼쪽을 바라볼 시 1, 오른쪽을 바라볼 시 -1로 설정
+        int lookRight = Mathf.Abs(transform.rotation.y) < 0.5f ? -1 : 1;
+
+        OnLookDirEvent?.Invoke(lookUp, lookRight);
+    }
+
+    /// <summary>
+    /// 마지막으로 들은 소리 위치까지 이동하고, 도착 후 잠시 그 자리에서 조사합니다.
+    /// </summary>
+    private bool InvestigateNoise()
+    {
+        if (!hasInvestigateTarget)
+        {
+            return false;
+        }
+
+        if (!hasReachedInvestigatePoint)
+        {
+            Vector3 investigateDestination = GetInvestigateDestination();
+            float sqrDistanceToTarget = GetPlanarSqrDistance(transform.position, investigateDestination);
+            if (sqrDistanceToTarget <= investigateStopDistanceSqr)
+            {
+                hasReachedInvestigatePoint = true;
+                investigateSearchEndTime = Time.time + investigateDuration;
+
+                navAgent.isStopped = true;
+                navAgent.ResetPath();
+                myStatus.SetNowState(EnemyStatus.EnemyState.Investigate);
+                OnWalkEvent?.Invoke(false);
+                return true;
+            }
+
+            navAgent.isStopped = false;
+            navAgent.SetDestination(investigateDestination);
+            myStatus.SetNowState(EnemyStatus.EnemyState.Investigate);
+            OnWalkEvent?.Invoke(true);
+            return true;
+        }
+
+        if (Time.time >= investigateSearchEndTime)
+        {
+            ClearInvestigateTarget();
+            return false;
+        }
+
+        navAgent.isStopped = true;
+        navAgent.ResetPath();
+        myStatus.SetNowState(EnemyStatus.EnemyState.Investigate);
+        OnWalkEvent?.Invoke(false);
+        return true;
+    }
+
+    /// <summary>
+    /// 조사 관련 상태를 모두 초기화합니다.
+    /// </summary>
+    private void ClearInvestigateTarget()
+    {
+        hasInvestigateTarget = false;
+        hasReachedInvestigatePoint = false;
+        investigateTargetPosition = transform.position;
+        investigateTargetAnchor = null;
+        investigateSearchEndTime = 0.0f;
+        forcedInvestigationUntilTime = 0.0f;
+        currentInvestigatePriority = -1;
+    }
+
+    private Vector3 GetInvestigateDestination()
+    {
+        if (investigateTargetAnchor != null)
+        {
+            investigateTargetPosition = investigateTargetAnchor.position;
+        }
+
+        if (NavMesh.SamplePosition(
+                investigateTargetPosition,
+                out NavMeshHit hit,
+                investigateNavMeshSampleDistance,
+                NavMesh.AllAreas))
+        {
+            return hit.position;
+        }
+
+        return investigateTargetPosition;
+    }
+
+    private void SetIdleState()
+    {
+        myStatus.SetNowState(EnemyStatus.EnemyState.Idle);
+        myStatus.SetIsAttacking(false);
+        OnWalkEvent?.Invoke(false);
+
+        navAgent.isStopped = false;
+        navAgent.ResetPath();
+    }
+
+    /// <summary>
+    /// 적이 죽으면 추적 코루틴을 멈추고 사망 애니메이션만 남깁니다.
     /// </summary>
     public void Die()
     {
         StopAllCoroutines();
-        animator.SetTrigger("isDead");
+        OnDeathEvent?.Invoke();
         Destroy(gameObject, 3.0f);
     }
 
     /// <summary>
-    /// 공격 중에는 이동을 멈추고, 대상을 바라본 뒤 공격 애니메이션을 재생합니다.
+    /// 공격 중에는 이동을 멈추고 대상을 바라본 뒤 애니메이션을 재생합니다.
     /// </summary>
     private IEnumerator Attack()
     {
@@ -277,7 +511,7 @@ public class EnemyMovement : MonoBehaviour
         navAgent.ResetPath();
 
         transform.LookAt(new Vector3(targetPlayer.position.x, transform.position.y, targetPlayer.position.z));
-        animator.SetTrigger("isAttack");
+        OnAttackEvent?.Invoke();
 
         yield return new WaitForSeconds(attackCooldown);
 
@@ -288,17 +522,27 @@ public class EnemyMovement : MonoBehaviour
     /// <summary>
     /// 공격 타이밍에 플레이어가 여전히 사거리 안에 있을 때만 피해를 적용합니다.
     /// </summary>
-    public void isPlayerTakeDamage()
+    public void CheckAndApplyDamage()
     {
         if (targetPlayer == null)
         {
             return;
         }
 
-        float sqrDistToTarget = (transform.position - targetPlayer.position).sqrMagnitude;
+        float sqrDistToTarget = GetPlanarSqrDistance(transform.position, targetPlayer.position);
         if (attackLengthSqr >= sqrDistToTarget)
         {
             targetPlayer.GetComponentInParent<IDamageable>().TakeDamage(myStatus.atkValue);
         }
+    }
+
+    /// <summary>
+    /// 높이 차이를 무시한 수평 거리 비교용 헬퍼입니다.
+    /// </summary>
+    private static float GetPlanarSqrDistance(Vector3 from, Vector3 to)
+    {
+        Vector3 delta = to - from;
+        delta.y = 0.0f;
+        return delta.sqrMagnitude;
     }
 }

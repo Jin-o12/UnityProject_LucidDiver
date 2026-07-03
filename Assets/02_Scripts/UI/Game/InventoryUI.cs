@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -9,7 +9,9 @@ public class InventoryUI : MonoBehaviour
 {
     [Header("Inventory UI")]
     [SerializeField] private Transform slotContainer;
+    [SerializeField] private Transform safeSlotContainer;
     [SerializeField] private List<GameObject> slotsObj = new();
+    [SerializeField] private List<GameObject> safeSlotsObj = new();
     [SerializeField] private GameObject slotPrefab;
 
     [Header("Drop Zone UI")]
@@ -54,9 +56,43 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
+    // 각성 보존 슬롯 생성
+    public void CreateSafeSlots(int count)
+    {
+        if (safeSlotsObj.Count == count)
+            return;
+
+        for (int j = 0; j < safeSlotsObj.Count; j++)
+        {
+            if (safeSlotsObj[j] != null)
+                Destroy(safeSlotsObj[j]);
+        }
+
+        safeSlotsObj.Clear();
+
+        int invenCnt = slotsObj.Count;
+
+        for (int j = 0; j < count; j++)
+        {
+            GameObject newSlot = Instantiate(slotPrefab, safeSlotContainer);
+            InventorySlotUI slotUI = newSlot.GetComponent<InventorySlotUI>();
+
+            if (slotUI != null)
+                slotUI.Initialize(j + invenCnt);
+
+            safeSlotsObj.Add(newSlot);
+        }
+    }
+
     public void UpdateSlot(int slotNum, InventorySlotData slotData)
     {
         InventorySlotUI slotUI = slotsObj[slotNum].GetComponent<InventorySlotUI>();
+        slotUI.UpdateSlot(slotData.amount, slotData.icon);
+    }
+
+    public void UpdateSafeSlot(int slotNum, InventorySlotData slotData)
+    {
+        InventorySlotUI slotUI = safeSlotsObj[slotNum].GetComponent<InventorySlotUI>();
         slotUI.UpdateSlot(slotData.amount, slotData.icon);
     }
 

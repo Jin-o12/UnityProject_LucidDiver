@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 로컬 입력을 읽어서 글로벌 이벤트 버스에 전달하는 역할을 하는 클래스
 /// 'Player input'에 등록되는 모든 메서드들이 정리되어 있습니다
 /// </summary>
@@ -13,6 +13,7 @@ public class LocalInputReader : MonoBehaviour
     public event Action OnInventoryOpenRequested;
     public event Action OnInventoryCloseRequested;
     private bool isInventoryOpen;
+    public bool isSprint;
 
     private void Awake()
     {
@@ -46,6 +47,19 @@ public class LocalInputReader : MonoBehaviour
         if (context.performed)
         {
             GlobalEventBus.OnAttackInput?.Invoke();
+        }
+    }
+
+    /* 플레이어 스킬 입력 처리 */
+    public void OnActiveSkill(InputAction.CallbackContext context)
+    {
+        //인벤토리 메뉴 오픈 중에는 스킬이 발동하지 않도록 잠금
+        if (isInventoryOpen)
+            return;
+
+        if (context.performed)
+        {
+            GlobalEventBus.OnMainActiveSkillRequested?.Invoke();
         }
     }
 
@@ -99,6 +113,33 @@ public class LocalInputReader : MonoBehaviour
             GlobalEventBus.OnQuickSlotUseRequested?.Invoke(slotIndex);
         }
     }
+
+    /* 플레이어 달리기 입력 처리 */
+    public void OnSprint(InputAction.CallbackContext context)
+    {
+        // Sprint 키 입력 시작 시 및 입력 유지 중 달리기 상태를 true로
+        if (context.started || context.performed)
+        {
+            isSprint = true;
+        }
+        // Sprint 키 입력 종료 시 달리기 상태를 false로
+        if (context.canceled)
+        {
+            isSprint = false;
+        }
+        //변경한 isSprint 값을 이벤트로 PlayerStatus에 전달
+        GlobalEventBus.OnSprintInput?.Invoke(isSprint);
+    }
+
+    /* 플레이어 구르기 입력 처리 */
+    public void OnEvade(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            GlobalEventBus.OnEvadeRequested?.Invoke();
+        }
+    }
+
     /* 액션맵을 UI 모드로 전환 */
     public void SwitchToUIMap()
     {

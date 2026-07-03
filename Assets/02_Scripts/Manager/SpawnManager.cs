@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,6 +11,7 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private GameObject EnemyPrefab;
     [SerializeField] private GameObject playerSpawnPool;
     [SerializeField] private GameObject enemySpawnPool;
+    [SerializeField] private LevelBoxSpawner levelBoxSpawner;
     private List<Transform> playerSpawnPoint = new();
     private List<Transform> enemySpawnPoint = new();
 
@@ -35,6 +36,11 @@ public class SpawnManager : MonoBehaviour
             {
                 enemySpawnPoint.Add(point);
             }
+        }
+
+        if (levelBoxSpawner == null)
+        {
+            levelBoxSpawner = GetComponent<LevelBoxSpawner>();
         }
     }
 
@@ -61,17 +67,19 @@ public class SpawnManager : MonoBehaviour
         
         // 플레이어 오브젝트 세션 데이터에 등록
         GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
+        
+        Debug.Log($"Player spawned at {spawnPoint.position} with ID: {spawnedPlayer.GetComponent<EntityIdentity>().entityID}");
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if (charData != null)
         {
             if(spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
             {
-                status.initialize(charData.hpMax, charData.manaMax, charData.manaRegen);
+                status.initialize(charData.hpMax, charData.manaMax, charData.manaRegen, charData.sprintMana, charData.sprintRecoverTime, charData.evadeMana, charData.evadeCooltime);
             }
             if(spawnedPlayer.TryGetComponent<PlayerMovement>(out var movement))
             {
-                movement.initialize(charData.moveSpeed);
+                movement.initialize(charData.moveSpeed, charData.sprintSpeed, charData.sprintMana, charData.evadeSpeed, charData.evadeTime, charData.evadeMana, charData.evadeCooltime);
             }
         }
 
@@ -112,5 +120,16 @@ public class SpawnManager : MonoBehaviour
 
         // 생성된 적 오브젝트를 런타임 데이터에 등록
         GlobalRuntimeData.CountingEnemyData(spawnedEnemy);
+    }
+
+    public void SpawnBoxes()
+    {
+        if (levelBoxSpawner == null)
+        {
+            Debug.LogWarning("SpawnManager: LevelBoxSpawner is not assigned.");
+            return;
+        }
+
+        levelBoxSpawner.SpawnBoxes();
     }
 }
