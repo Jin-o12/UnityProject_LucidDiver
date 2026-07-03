@@ -21,8 +21,6 @@ public class EnemyPresenter : MonoBehaviour
             Debug.LogError("EnemyPresenter: required components are missing.");
             return;
         }
-
-
     }
 
     private void OnEnable()
@@ -40,17 +38,10 @@ public class EnemyPresenter : MonoBehaviour
     {
         // 구독 해제
         movement.OnWalkEvent -= animator.PlayWalk;
-        movement.OnAttackEvent -= PlayAttack;
+        movement.OnAttackEvent -= animator.PlayAttack;
         movement.OnDeathEvent -= animator.PlayDeath;
         movement.OnLookDirEvent -= animator.PlayLookDir;
 
         animator.OnGetAttack -= movement.CheckAndApplyDamage;
-    }
-
-    private void PlayAttack()
-    {
-        // 이미 공격 중이면 공격 애니메이션을 더 실행하지 않음
-        if(status.nowState == EnemyStatus.EnemyState.Attack) return;
-        animator.PlayAttack();
     }
 }

@@ -56,7 +56,6 @@ public class EnemyAnimator : MonoBehaviour
     /* 공격 타이밍에 플레이어가 여전히 사거리 안에 있을 때만 피해를 적용합니다 */
     public void GetAttack()
     {
-        PlayAttack();
         OnGetAttack?.Invoke();
     }
 }

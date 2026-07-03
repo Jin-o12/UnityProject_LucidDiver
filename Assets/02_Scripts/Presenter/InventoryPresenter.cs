@@ -240,7 +240,7 @@ public class InventoryPresenter : MonoBehaviour
 
         // 슬롯 개수에 맞춰 인벤토리 및 각성 보존 슬롯 UI를 생성한다.
         inventoryUI.CreatSlots(playerInventory.slots.Count);
-        inventoryUI.CreateSafeSlots(playerInventory.safeSlots.Count);
+        inventoryUI.CreateSafeSlots(playerInventory.safeSlots.Count, playerInventory.slotNum);
 
         // 현재 인벤토리 데이터를 슬롯 UI에 반영한다.
         for (int i = 0; i < playerInventory.slotNum; i++)
