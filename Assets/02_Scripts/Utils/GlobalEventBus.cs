@@ -52,11 +52,13 @@ public class GlobalEventBus
     public static Func<float, bool> OnRequestManaConsume;           // 플레이어 마나 소비 요청: Func<소모량, 성공여부>
     public static Action<int, float, float> OnEnemyHealthChanged;   // 적의 체력 변동: Action<고유 번호, 현재 체력, 전체 체력>
     public static Action<int> OnEnemyDead;                          // 적의 사망 여부: Action<고유 번호>
+    public static Action<float> OnTimerChanged;                     // 남은 제한 시간 변동: Action<남은 시간>
 
     /// <summary>
     /// 게임 시스템 관련 이벤트
     /// </summary>
     public static Action<bool> OnEscapeRequest;                     // 탈출 판정 발생 시: Action<탈출 성공 여부>
+    public static Action<int> OnEscapeFailure;                      // 탈출 취소 판정 발생: Action<플레이어 ID>
     public static Action OnReturnToLobby;                           // 로비로 돌아가기 이벤트 발생
     public static Action<IInteractable, int> OnItemBoxOpened;       // 상자와 상호작용하여 UI를 열었을 시: Action<열린 상자, 상호작용한 플레이어 ID>
     public static Action<NoiseStimulus> OnNoiseRequested;           // 노이즈 시스템에 소음 발생을 요청: Action<요청된 소음 데이터>

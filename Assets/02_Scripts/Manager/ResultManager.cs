@@ -167,11 +167,14 @@ public class ResultManager : MonoBehaviour, IResultService
         else return null;
     }
 
-    // 탈출 성공 처리
-    public void HandleEscapeSuccess(int playerID) => SetPlayerState(playerID, PlayerStatus.livingState.escape);
+    // 탈출 채널링 시작 처리
+    public void HandleEscapeStart(int playerID) => SetPlayerState(playerID, PlayerStatus.livingState.escape);
 
-    // 탈출 실패 처리
-    public void HandleEscapeFail(int playerID) => SetPlayerState(playerID, PlayerStatus.livingState.gameover);
+    // 강제 각성(게임오버) 처리
+    public void HandleEscapeGameover(int playerID) => SetPlayerState(playerID, PlayerStatus.livingState.gameover);
+
+    //탈출 취소로 기본 상태로 돌아가는 처리
+    public void HandleEscapeIdle(int playerID) => SetPlayerState(playerID, PlayerStatus.livingState.idle);
 
     // 플레이어 상태 변경
     private void SetPlayerState(int playerID, PlayerStatus.livingState state)
