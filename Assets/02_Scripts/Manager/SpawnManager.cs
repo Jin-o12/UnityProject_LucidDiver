@@ -11,6 +11,7 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private GameObject EnemyPrefab;
     [SerializeField] private GameObject playerSpawnPool;
     [SerializeField] private GameObject enemySpawnPool;
+    [SerializeField] private LevelBoxSpawner levelBoxSpawner;
     private List<Transform> playerSpawnPoint = new();
     private List<Transform> enemySpawnPoint = new();
 
@@ -35,6 +36,11 @@ public class SpawnManager : MonoBehaviour
             {
                 enemySpawnPoint.Add(point);
             }
+        }
+
+        if (levelBoxSpawner == null)
+        {
+            levelBoxSpawner = GetComponent<LevelBoxSpawner>();
         }
     }
 
@@ -114,5 +120,16 @@ public class SpawnManager : MonoBehaviour
 
         // 생성된 적 오브젝트를 런타임 데이터에 등록
         GlobalRuntimeData.CountingEnemyData(spawnedEnemy);
+    }
+
+    public void SpawnBoxes()
+    {
+        if (levelBoxSpawner == null)
+        {
+            Debug.LogWarning("SpawnManager: LevelBoxSpawner is not assigned.");
+            return;
+        }
+
+        levelBoxSpawner.SpawnBoxes();
     }
 }
