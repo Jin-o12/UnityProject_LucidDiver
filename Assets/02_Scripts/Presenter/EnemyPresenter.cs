@@ -31,7 +31,7 @@ public class EnemyPresenter : MonoBehaviour
         movement.OnDeathEvent += animator.PlayDeath;
         movement.OnLookDirEvent += animator.PlayLookDir;
 
-        animator.OnGetAttack += movement.CheckAndApplyDamage;
+        animator.OnAttackSwing += movement.HandleAttackSwing;
     }
 
     private void OnDisable()
@@ -42,6 +42,6 @@ public class EnemyPresenter : MonoBehaviour
         movement.OnDeathEvent -= animator.PlayDeath;
         movement.OnLookDirEvent -= animator.PlayLookDir;
 
-        animator.OnGetAttack -= movement.CheckAndApplyDamage;
+        animator.OnAttackSwing -= movement.HandleAttackSwing;
     }
 }
