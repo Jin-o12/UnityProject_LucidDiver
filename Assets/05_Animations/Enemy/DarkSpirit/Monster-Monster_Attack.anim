@@ -175,8 +175,15 @@ AnimationClip:
   m_HasGenericRootTransform: 1
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.6666667
-    functionName: GetAttack
+  - time: 0.5833333
+    functionName: GetAttack1
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.9166667
+    functionName: GetAttack2
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0

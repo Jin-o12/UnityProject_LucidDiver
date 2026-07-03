@@ -57,7 +57,7 @@ public class InventoryUI : MonoBehaviour
     }
 
     // 각성 보존 슬롯 생성
-    public void CreateSafeSlots(int count)
+    public void CreateSafeSlots(int count, int slotIndexOffset)
     {
         if (safeSlotsObj.Count == count)
             return;

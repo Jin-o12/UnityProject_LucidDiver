@@ -694,18 +694,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06ed57334439a514fb514083fd226332, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 3
-  sightLength: 10
-  awarenessRange: 20
-  hearingRange: 40
-  sightAngle: 120
-  eyeHeight: 1.4
-  attackLength: 3
-  attackCooldown: 2
-  checkInterval: 0.2
-  investigateStopDistance: 1
-  investigateDuration: 2
-  investigateNavMeshSampleDistance: 2.5
+  brain:
+    checkInterval: 0.2
+  perception:
+    sightRange: 10
+    awarenessRange: 20
+    hearingRange: 40
+    sightAngle: 120
+    eyeHeight: 1.4
+  noiseListener:
+    investigateStopDistance: 1
+    investigateDuration: 2
+    investigateNavMeshSampleDistance: 2.5
+  locomotion:
+    moveSpeed: 8
+  combat:
+    attackStartRange: 5
+    attackHitRange: 1.2
+    attackCooldown: 2
+    firstSlashTelegraphTime: 0.35
+    attackAnimationDuration: 2
+    attackRecoveryTime: 0.65
+    firstSlashLungeDistance: 3
+    secondSlashLungeDistance: 5
+    firstSlashLungeDuration: 0.15
+    secondSlashLungeDuration: 0.18
+    firstSlashDamage: 8
+    secondSlashDamage: 12
+    secondSlashTurnLimit: 25
+  attackOrigin: {fileID: 56568208924813218}
 --- !u!195 &7557683503473658478
 NavMeshAgent:
   m_ObjectHideFlags: 0

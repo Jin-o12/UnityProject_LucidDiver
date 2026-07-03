@@ -229,6 +229,7 @@ public class ResultManager : MonoBehaviour, IResultService
     {
         // PlayerSaveData의 인벤토리 슬롯을 비우고 현재 플레이어 인벤토리 데이터로 채우기
         _playerSaveData.inventorySlots.Clear();
+        _playerSaveData.safeSlots.Clear();
         foreach (var slot in _inven.slots)
         {
             // TID가 0이 아닌 슬롯만 저장 (빈 슬롯 제외)
