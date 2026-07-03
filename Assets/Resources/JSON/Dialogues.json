@@ -1,0 +1,149 @@
+[
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "lobbyEnter",
+    "DialogID": 10101,
+    "Text": "로비 씬에서의 대사 1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "lobbyEnter",
+    "DialogID": 10102,
+    "Text": "로비 씬에서의 대사 2"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "storyOpen",
+    "DialogID": 10111,
+    "Text": "심상 기록 대사 1-1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "storyOpen",
+    "DialogID": 10112,
+    "Text": "심상 기록 대사 1-2"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "storyOpen",
+    "DialogID": 10113,
+    "Text": "심상 기록 대사 1-3"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "storyOpen",
+    "DialogID": 10114,
+    "Text": "심상 기록 대사 1-4"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "storyOpen",
+    "DialogID": 10115,
+    "Text": "심상 기록 대사 1-5"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "worldEnter",
+    "DialogID": 10121,
+    "Text": "인게임 세션 진입 시 대사 1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "worldEnter",
+    "DialogID": 10122,
+    "Text": "인게임 세션 진입 시 대사 2"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "enemyEncounter",
+    "DialogID": 10131,
+    "Text": "적 캐릭터 발견 시 대사 1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "enemyEncounter",
+    "DialogID": 10132,
+    "Text": "적 캐릭터 발견 시 대사 2"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "hitAttack",
+    "DialogID": 10141,
+    "Text": "적 공격에 피격 시 대사 1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "hitAttack",
+    "DialogID": 10142,
+    "Text": "적 공격에 피격 시 대사 2"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "getMemory",
+    "DialogID": 10151,
+    "Text": "기억 파편 획득 시 대사 1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "getMemory",
+    "DialogID": 10152,
+    "Text": "기억 파편 획득 시 대사 2"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "getConsume",
+    "DialogID": 10161,
+    "Text": "소비 기물 획득 시 대사 1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "getConsume",
+    "DialogID": 10162,
+    "Text": "소비 기물 획득 시 대사 2"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "escapeSuccess",
+    "DialogID": 10171,
+    "Text": "임무 성공 시 대사 1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "escapeSuccess",
+    "DialogID": 10172,
+    "Text": "임무 성공 시 대사 2"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "escapeFailed",
+    "DialogID": 10181,
+    "Text": "임무 실패 시 대사 1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "escapeFailed",
+    "DialogID": 10182,
+    "Text": "임무 실패 시 대사 2"
+  }
+]
