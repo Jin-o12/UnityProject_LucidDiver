@@ -696,18 +696,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   brain:
     checkInterval: 0.2
+  memory:
+    homePosition: {x: 0, y: 0, z: 0}
+    patrolRoute: {fileID: 0}
+    patrolIndex: 0
+    needsReturnToPatrol: 0
+    isWaitingAtPatrolPoint: 0
+    patrolWaitUntilTime: 0
   perception:
     sightRange: 10
-    awarenessRange: 20
-    hearingRange: 40
-    sightAngle: 120
+    awarenessRange: 15
+    hearingRange: 20
+    sightAngle: 100
     eyeHeight: 1.4
+    requireLineOfHearing: 0
+    hearingObstacleMask:
+      serializedVersion: 2
+      m_Bits: 1024
+    soundSampleHeight: 1.2
   noiseListener:
+    maxInvestigateMoveTime: 3
     investigateStopDistance: 1
     investigateDuration: 2
     investigateNavMeshSampleDistance: 2.5
   locomotion:
-    moveSpeed: 8
+    moveSpeed: 1.8
   combat:
     attackStartRange: 5
     attackHitRange: 1.2

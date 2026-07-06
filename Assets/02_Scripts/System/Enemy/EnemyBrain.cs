@@ -90,7 +90,6 @@ public class EnemyBrain
 
         // 플레이어를 다시 보게 되면 조사/복귀 흐름은 중단합니다.
         noiseListener.Clear();
-        memory.ClearReturnToPatrol();
         memory.ClearPatrolWait();
 
         if (status.isAttacking)
@@ -143,6 +142,8 @@ public class EnemyBrain
         EnemyMemory memory,
         ICollection<GameObject> players)
     {
+        bool hadTarget = currentTarget != null;
+
         if (noiseListener.ShouldBlockSightReacquire())
         {
             currentTarget = null;
@@ -157,8 +158,13 @@ public class EnemyBrain
         currentTarget = perception.FindVisibleTarget(self, players);
         if (currentTarget != null)
         {
+            // 순찰이나 복귀 흐름에서 처음 벗어난 지점만 복귀 기준점으로 저장합니다.
+            if (!hadTarget)
+            {
+                memory.CaptureReturnAnchor(self.position);
+            }
+
             noiseListener.Clear();
-            memory.ClearReturnToPatrol();
             memory.ClearPatrolWait();
         }
     }
@@ -181,25 +187,14 @@ public class EnemyBrain
             return false;
         }
 
-        Transform patrolPoint = memory.GetCurrentPatrolPoint();
-        if (patrolPoint == null)
-        {
-            memory.ClearReturnToPatrol();
-            return false;
-        }
+        // 현재 순찰 포인트가 아니라, 순찰에서 이탈했던 시작 지점으로 복귀합니다.
+        Vector3 returnDestination = memory.ReturnAnchorPosition;
 
-        if (locomotion.HasReachedDestination(self.position, patrolPoint.position, memory.GetPointReachDistance()))
+        if (locomotion.HasReachedDestination(self.position, returnDestination, memory.GetPointReachDistance()))
         {
             locomotion.Stop(agent, onWalkEvent);
             status.SetNowState(EnemyStatus.EnemyState.Patrol);
-            memory.ClearReturnToPatrol();
-            memory.BeginPatrolWait();
-
-            if (memory.HasCompletedPatrolWait())
-            {
-                memory.AdvancePatrolIndex();
-            }
-
+            memory.CompleteReturnToPatrol();
             return true;
         }
 
@@ -207,7 +202,7 @@ public class EnemyBrain
         locomotion.MoveTo(
             self,
             agent,
-            patrolPoint.position,
+            returnDestination,
             status,
             EnemyStatus.EnemyState.Return,
             onWalkEvent,
