@@ -5,14 +5,14 @@ using UnityEngine.AI;
 
 /// <summary>
 /// 적 AI의 상위 의사결정 계층입니다.
-/// 감지 결과와 현재 상태를 바탕으로 대기, 조사, 추적, 공격 중 무엇을 할지 결정합니다.
+/// 감지 결과와 현재 상태를 바탕으로 조사, 복귀, 순찰, 추적, 공격 중 무엇을 할지 결정합니다.
 /// </summary>
 [Serializable]
 public class EnemyBrain
 {
     [SerializeField] private float checkInterval = 0.2f;     // AI 판단 주기
 
-    [NonSerialized] private WaitForSeconds checkingDelay;     // 판단 루프 재사용용 대기 객체
+    [NonSerialized] private WaitForSeconds checkingDelay;     // 판단 루프에서 재사용할 대기 객체
     [NonSerialized] private Transform currentTarget;          // 현재 추적 중인 플레이어
 
     public Transform CurrentTarget => currentTarget;
@@ -25,7 +25,8 @@ public class EnemyBrain
     }
 
     /// <summary>
-    /// 판단 루프에서 재사용할 WaitForSeconds를 반환합니다.
+    /// 판단 루프에서 사용할 WaitForSeconds를 반환합니다.
+    /// 코루틴에서 새 객체를 반복 생성하지 않기 위해 캐시된 값을 재사용합니다.
     /// </summary>
     public WaitForSeconds GetCheckDelay()
     {
@@ -39,6 +40,7 @@ public class EnemyBrain
 
     /// <summary>
     /// 현재 추적 대상을 강제로 비웁니다.
+    /// 강한 디코이 소리로 추적이 끊기는 상황에서 사용합니다.
     /// </summary>
     public void ClearTarget()
     {
@@ -47,21 +49,23 @@ public class EnemyBrain
 
     /// <summary>
     /// 현재 감지 결과를 바탕으로 적의 다음 행동을 결정합니다.
+    /// 우선순위는 타겟 추적/공격 -> 조사 -> 복귀 -> 순찰 -> 대기 순서입니다.
     /// </summary>
     public void Tick(
-        MonoBehaviour host, // 코루틴을 실행할 MonoBehaviour
-        Transform self, // 적 자신의 Transform
-        EnemyStatus status, // 적의 상태 정보
-        NavMeshAgent agent, // 적의 NavMeshAgent
-        EnemyPerception perception, // 적의 시야 감지
-        EnemyNoiseListener noiseListener, // 적의 소리 감지
-        EnemyLocomotion locomotion, // 적의 이동 처리
-        EnemyCombat combat, // 적의 전투 처리
-        Action<bool> onWalkEvent, // 이동 시작/종료 이벤트
-        Action<int, int> onLookDirEvent, // 시선 방향 변경 이벤트
-        Action onAttackEvent) // 공격 시작 이벤트
+        MonoBehaviour host,
+        Transform self,
+        EnemyStatus status,
+        NavMeshAgent agent,
+        EnemyMemory memory,
+        EnemyPerception perception,
+        EnemyNoiseListener noiseListener,
+        EnemyLocomotion locomotion,
+        EnemyCombat combat,
+        Action<bool> onWalkEvent,
+        Action<int, int> onLookDirEvent,
+        Action onAttackEvent)
     {
-        RefreshTarget(self, perception, noiseListener, GlobalRuntimeData.GetPlayerList().Values);
+        RefreshTarget(self, perception, noiseListener, memory, GlobalRuntimeData.GetPlayerList().Values);
 
         if (currentTarget == null)
         {
@@ -70,12 +74,24 @@ public class EnemyBrain
                 return;
             }
 
+            if (HandleReturnToPatrol(self, agent, status, memory, locomotion, onWalkEvent, onLookDirEvent))
+            {
+                return;
+            }
+
+            if (HandlePatrol(self, agent, status, memory, locomotion, onWalkEvent, onLookDirEvent))
+            {
+                return;
+            }
+
             locomotion.SetIdle(agent, status, onWalkEvent);
             return;
         }
 
-        // 플레이어를 다시 확보했으면 조사 상태는 종료합니다.
+        // 플레이어를 다시 보게 되면 조사/복귀 흐름은 중단합니다.
         noiseListener.Clear();
+        memory.ClearReturnToPatrol();
+        memory.ClearPatrolWait();
 
         if (status.isAttacking)
         {
@@ -112,16 +128,19 @@ public class EnemyBrain
         }
 
         currentTarget = null;
+        memory.MarkNeedsReturnToPatrol();
         locomotion.SetIdle(agent, status, onWalkEvent);
     }
 
     /// <summary>
-    /// 기존 타겟을 유지할 수 있는지 확인하고, 아니면 새로 시야 내 대상을 찾습니다.
+    /// 기존 대상을 유지할지, 새로 시야 내 플레이어를 찾을지 결정합니다.
+    /// 강제 조사 시간 중에는 일부러 시야 재획득을 막아 소리에 반응하는 느낌을 살립니다.
     /// </summary>
     private void RefreshTarget(
         Transform self,
         EnemyPerception perception,
         EnemyNoiseListener noiseListener,
+        EnemyMemory memory,
         ICollection<GameObject> players)
     {
         if (noiseListener.ShouldBlockSightReacquire())
@@ -139,6 +158,122 @@ public class EnemyBrain
         if (currentTarget != null)
         {
             noiseListener.Clear();
+            memory.ClearReturnToPatrol();
+            memory.ClearPatrolWait();
         }
+    }
+
+    /// <summary>
+    /// 조사나 추적이 끝난 뒤 현재 순찰 포인트로 복귀합니다.
+    /// 복귀가 끝나면 다시 Patrol 상태로 넘겨 이후 순찰을 이어서 계속하게 만듭니다.
+    /// </summary>
+    private bool HandleReturnToPatrol(
+        Transform self,
+        NavMeshAgent agent,
+        EnemyStatus status,
+        EnemyMemory memory,
+        EnemyLocomotion locomotion,
+        Action<bool> onWalkEvent,
+        Action<int, int> onLookDirEvent)
+    {
+        if (memory == null || !memory.NeedsReturnToPatrol || !memory.HasPatrolRoute)
+        {
+            return false;
+        }
+
+        Transform patrolPoint = memory.GetCurrentPatrolPoint();
+        if (patrolPoint == null)
+        {
+            memory.ClearReturnToPatrol();
+            return false;
+        }
+
+        if (locomotion.HasReachedDestination(self.position, patrolPoint.position, memory.GetPointReachDistance()))
+        {
+            locomotion.Stop(agent, onWalkEvent);
+            status.SetNowState(EnemyStatus.EnemyState.Patrol);
+            memory.ClearReturnToPatrol();
+            memory.BeginPatrolWait();
+
+            if (memory.HasCompletedPatrolWait())
+            {
+                memory.AdvancePatrolIndex();
+            }
+
+            return true;
+        }
+
+        memory.ClearPatrolWait();
+        locomotion.MoveTo(
+            self,
+            agent,
+            patrolPoint.position,
+            status,
+            EnemyStatus.EnemyState.Return,
+            onWalkEvent,
+            onLookDirEvent);
+        return true;
+    }
+
+    /// <summary>
+    /// 타겟도 조사 상태도 없을 때 기본 순찰 루트를 따라 이동합니다.
+    /// 포인트 도착 시 잠시 기다렸다가 다음 포인트로 넘어갑니다.
+    /// </summary>
+    private bool HandlePatrol(
+        Transform self,
+        NavMeshAgent agent,
+        EnemyStatus status,
+        EnemyMemory memory,
+        EnemyLocomotion locomotion,
+        Action<bool> onWalkEvent,
+        Action<int, int> onLookDirEvent)
+    {
+        if (memory == null || !memory.HasPatrolRoute)
+        {
+            return false;
+        }
+
+        Transform patrolPoint = memory.GetCurrentPatrolPoint();
+        if (patrolPoint == null)
+        {
+            return false;
+        }
+
+        if (locomotion.HasReachedDestination(self.position, patrolPoint.position, memory.GetPointReachDistance()))
+        {
+            locomotion.Stop(agent, onWalkEvent);
+            status.SetNowState(EnemyStatus.EnemyState.Patrol);
+
+            if (!memory.IsWaitingAtPatrolPoint)
+            {
+                memory.BeginPatrolWait();
+
+                if (memory.HasCompletedPatrolWait())
+                {
+                    memory.AdvancePatrolIndex();
+                }
+
+                return true;
+            }
+
+            if (memory.HasCompletedPatrolWait())
+            {
+                memory.ClearPatrolWait();
+                memory.AdvancePatrolIndex();
+            }
+
+            return true;
+        }
+
+        memory.ClearPatrolWait();
+        locomotion.MoveTo(
+            self,
+            agent,
+            patrolPoint.position,
+            status,
+            EnemyStatus.EnemyState.Patrol,
+            onWalkEvent,
+            onLookDirEvent);
+        return true;
     }
 }

@@ -3,11 +3,13 @@ using UnityEngine;
 
 public class EnemyStatus : MonoBehaviour, IDamageable
 {
-    // 이번 노이즈 시스템 작업으로 "소리를 듣고 조사하는 상태"를 추가합니다.
+    // 이번 AI 고도화 작업 기준으로 순찰 상태와 복귀 상태를 추가합니다.
     public enum EnemyState
     {
         Idle,
+        Patrol,
         Investigate,
+        Return,
         Chase,
         Attack,
         Dead
@@ -16,13 +18,13 @@ public class EnemyStatus : MonoBehaviour, IDamageable
     public EnemyState nowState { get; private set; }    // 현재 적 상태
     public bool isAttacking { get; private set; }       // 공격 수행 여부
 
-    public int objID = 0;                               // 적 개체 식별용 ID
+    public int objID = 0;                               // 각 개체 식별용 ID
     public float hpMax;                                 // 최대 체력
     public float hpCurrent;                             // 현재 체력
-    public float atkValue  { get; private set; }        // 공격력
+    public float atkValue { get; private set; }         // 공격력
     public float defValue { get; private set; }         // 방어력
 
-    public event Action OnLocalDeath;                   // 이 적이 죽었을 때만 알리는 로컬 이벤트
+    public event Action OnLocalDeath;                   // 해당 적이 죽었을 때만 울리는 로컬 이벤트
 
     public void SetIsAttacking(bool attacking)
     {
@@ -52,7 +54,7 @@ public class EnemyStatus : MonoBehaviour, IDamageable
 
     private void UpdateHp()
     {
-        // UI와 디버그 로직이 현재 체력을 받을 수 있도록 이벤트를 보냅니다.
+        // UI와 디버그 로직에서 현재 체력을 받을 수 있도록 이벤트를 보냅니다.
         GlobalEventBus.OnEnemyHealthChanged?.Invoke(0, hpCurrent, hpMax);
     }
 
