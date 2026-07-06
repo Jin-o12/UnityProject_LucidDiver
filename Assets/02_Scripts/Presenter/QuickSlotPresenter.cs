@@ -55,25 +55,13 @@ public class QuickSlotPresenter : MonoBehaviour
         ConsumeItemData consumable = itemData as ConsumeItemData;
         if (consumable == null) return;
 
-        for (int i = 0; i < consumable.useEffect.Count; i++)
+        if (ItemEffectProcessor.Instance != null)
         {
-            ItemEffect currentEffect = consumable.useEffect[i];
-            GameObject targetObj = null;
-
-            switch (currentEffect.effectTarget)
-            {
-                case EffectTarget.self:
-                    targetObj = gameObject;
-                    break;
-                case EffectTarget.enemy:
-                    Debug.Log($"적에게 사용하는 효과는 아직 연결되지 않았습니다: {itemData.itemName}");
-                    break;
-            }
-
-            if (targetObj != null)
-            {
-                //currentEffect.Execute(targetObj);
-            }
+            ItemEffectProcessor.Instance.UseConsumeItem(consumable, this.gameObject);
+        }
+        else
+        {
+            Debug.LogError("ItemEffectProcessor 인스턴스가 존재하지 않습니다.");
         }
     }
 }

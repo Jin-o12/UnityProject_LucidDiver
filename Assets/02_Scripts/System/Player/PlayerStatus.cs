@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerStatus : MonoBehaviour, IDamageable
+public class PlayerStatus : MonoBehaviour, IDamageable, IEffectReceiver
 {
     // 플레이어 상태
     public enum livingState { idle, escape, gameover }      // 플레이어가 가질 수 있는 상태의 종류
@@ -116,6 +116,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         GlobalEventBus.OnPlayerManaChanged?.Invoke(mpCurrent, mpMax);
     }
 
+#region 플레이어 상태 변화 및 수치 조절에 사용되는 메소드
     /* 체력 변화 */
     private void GetHp(float _val)
     {
@@ -128,6 +129,14 @@ public class PlayerStatus : MonoBehaviour, IDamageable
             GameOver(playerID);
         }
     }
+
+    /* 마나 변화 */
+    private void GetMp(float _val)
+    {
+        mpCurrent = Mathf.Clamp(mpCurrent + _val, 0, mpMax);
+        UpdateMp();
+    }
+#endregion
 
     /* 게임 오버 처리 */
     public void GameOver(int _playerID)
@@ -166,13 +175,6 @@ public class PlayerStatus : MonoBehaviour, IDamageable
             return false;
         }
         return comp.nowState == livingState.idle;
-    }
-
-    /* 마나 변화 */
-    private void GetMp(float _val)
-    {
-        mpCurrent = Mathf.Clamp(mpCurrent + _val, 0, mpMax);
-        UpdateMp();
     }
 
     /* 현재 달리기 가능한 상태인지 체크 */
@@ -262,5 +264,17 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void UpdateFaceImage()
     {
         /// 플레이어 데이터 구조가 구축되면 연동하여 업데이트 할 것 ///
+    }
+
+    /* 아이템을 사용해 체력 회복 */
+    public void HealthRecoverInst(float _amount)
+    {
+        GetHp(_amount);
+    }
+
+    /* 아이템을 사용해 마나 회복 */
+    public void ManaRecoverInst(float _amount)
+    {
+        GetMp(_amount);
     }
 }
