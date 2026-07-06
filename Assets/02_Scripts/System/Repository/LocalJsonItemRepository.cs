@@ -13,6 +13,7 @@ public class FlatItemData
     public string desc;
     public string category; // Enum 대신 문자열로 먼저 받습니다.
     public int itemMultiple;
+    public string itemGrade;
     public string icon;
 
     // 무기(Weapon) 전용 정보
@@ -27,7 +28,7 @@ public class FlatItemData
     public float useRange;
     public float useDelay;
     public float useValue;
-    public string effectTarget;
+    public string useTarget;
     public string effectType;
 
     // 기억 조각(Memory) 전용 정보[cite: 6]
@@ -65,11 +66,17 @@ public class LocalJsonItemRepository : IItemDataRepository
                 continue;
             }
 
+            if(!System.Enum.TryParse(data.itemGrade, out ItemGrade parsedGrade))
+            {
+                Debug.Log("알 수 없는 등급입니다.");
+                parsedGrade = ItemGrade.empty;
+            }
+
             switch(data.category.ToLower())
             {
                 case "weapon":
                     WeaponItemData weapon = ScriptableObject.CreateInstance<WeaponItemData>();
-                    SetCommonData(weapon, data, parsedCategory);
+                    SetCommonData(weapon, data, parsedCategory, parsedGrade);
                     
                     // 무기 전용 속성 할당[cite: 6]
                     weapon.fireRate = data.FireRate;
@@ -83,7 +90,7 @@ public class LocalJsonItemRepository : IItemDataRepository
 
                 case "consume":
                     ConsumeItemData consume = ScriptableObject.CreateInstance<ConsumeItemData>();
-                    SetCommonData(consume, data, parsedCategory);
+                    SetCommonData(consume, data, parsedCategory, parsedGrade);
                     
                     // 소비 전용 속성 할당
                     if (System.Enum.TryParse(data.useType, out AreaType areaType))
@@ -97,12 +104,13 @@ public class LocalJsonItemRepository : IItemDataRepository
                     consume.useEffect = new List<ItemEffect>();
 
                     EffectTarget finalTarget = EffectTarget.self;
-                    if (!string.IsNullOrEmpty(data.effectTarget) && !System.Enum.TryParse(data.effectTarget, true, out finalTarget))
+                    if (!string.IsNullOrEmpty(data.useTarget) && !System.Enum.TryParse(data.useTarget, true, out finalTarget))
                     {
                         Debug.Log($"알 수 없는 카테고리입니다: {consume.itemName}");
                         continue;
                     }
-                    if (!System.Enum.TryParse(data.effectType, true, out EffectType finalType))
+                    EffectType finalType = EffectType.none;
+                    if (!string.IsNullOrEmpty(data.effectType) && !System.Enum.TryParse(data.effectType, true, out finalType))
                     {
                         Debug.Log($"알 수 없는 카테고리입니다: {consume.itemName}");
                         continue;
@@ -121,7 +129,7 @@ public class LocalJsonItemRepository : IItemDataRepository
 
                 case "memory":
                     MemoryPieceitemData memory = ScriptableObject.CreateInstance<MemoryPieceitemData>();
-                    SetCommonData(memory, data, parsedCategory);
+                    SetCommonData(memory, data, parsedCategory, parsedGrade);
                     
                     // 기억 조각 전용 속성 할당
                     if(!System.Enum.TryParse(data.userType, out UserType parsedUserType))
@@ -145,7 +153,7 @@ public class LocalJsonItemRepository : IItemDataRepository
     }
 
     // 반복되는 공통 속성 할당을 위한 헬퍼 함수
-    private void SetCommonData(ItemData item, FlatItemData data, itemCategory cat)
+    private void SetCommonData(ItemData item, FlatItemData data, itemCategory cat, ItemGrade grade)
     {
         item.TID = data.itemTID;
         item.itemName = data.itemName;
@@ -153,6 +161,7 @@ public class LocalJsonItemRepository : IItemDataRepository
         item.category = cat; 
         item.itemMultiple = data.itemMultiple;
         item.iconAddress = data.icon;
+        item.itemGrade = grade;
     }
 
     /* ID를 이용해 아이템의 기본 데이터를 가져옴 */

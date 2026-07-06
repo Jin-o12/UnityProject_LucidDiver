@@ -46,6 +46,7 @@ public enum EffectTarget
 // 아이템 효과 종류
 public enum EffectType
 {
+    none,                   // 효과 할당되지 않음 (오류)
     health_recover_inst,    // 체력 즉시 회복
     mana_recover_inst       // 마나 즉시 회복
 }
@@ -69,3 +70,12 @@ public enum CharacterTID
     Yuan = 101          // 유안
 }
 
+public enum ItemGrade
+{
+	empty = 0,     //빈 칸 (default)
+	normal = 1,    //일반 등급
+	uncommon = 2,  //고급 등급
+	rare = 3,      //희귀 등급
+	epic = 4,      //서사 등급
+	legend = 5     //전설 등급
+}
