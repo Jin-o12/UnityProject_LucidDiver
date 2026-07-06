@@ -63,7 +63,7 @@ public class ResultManager : MonoBehaviour, IResultService
         ResultServiceLocator.Instance = this;
         // 인터페이스 구현부 연결
         saveRepo = new LocalSaveRepository();
-        itemRepo = new SOItemRepository();
+        itemRepo = new LocalJsonItemRepository();
 
         // 씬에 이미 존재하는 PlayerStatus를 찾아 등록 (타이밍 안전성 보장)
         foreach (var p in FindObjectsOfType<PlayerStatus>())
@@ -140,7 +140,7 @@ public class ResultManager : MonoBehaviour, IResultService
         if (idComp == null) return;
         // EntityIdentity에서 ID 값을 불러옴
         _players[playerID] = (PlayerStatus)ps;
-        Debug.Log($"ResultManager.Register: playerID={playerID} registered (obj={ps.gameObject.name})");
+        //Debug.Log($"ResultManager.Register: playerID={playerID} registered (obj={ps.gameObject.name})");
     }
 
     // 플레이어 등록 해제
@@ -384,7 +384,7 @@ public class ResultManager : MonoBehaviour, IResultService
             if (slot.TID == _tid)
             {
                 count += slot.amount;
-                if (data == null) data = itemRepo.GetItemData(_tid);
+                if (data == null) data = itemRepo.GetItemDataByID(_tid);
             }
         }
     }
