@@ -33,11 +33,11 @@ MonoBehaviour:
   manaMax: 100
   manaRegen: 1
   mindRecordNum: 0
-  moveSpeed: 8
-  sprintSpeed: 15
+  moveSpeed: 2
+  sprintSpeed: 5
   sprintMana: 5
   sprintRecoverTime: 5
-  evadeSpeed: 25
+  evadeSpeed: 10
   evadeTime: 0.4
   evadeMana: 20
   evadeCooltime: 5

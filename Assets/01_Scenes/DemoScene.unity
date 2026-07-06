@@ -4454,6 +4454,7 @@ MonoBehaviour:
   timeLimit: 600
   currentTimeLimit: 600
   timeLimitSpeed: 1
+  timeLimitAccel: 1
 --- !u!1 &335469027
 GameObject:
   m_ObjectHideFlags: 0
@@ -28377,6 +28378,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timerCanvas: {fileID: 490515740}
+  escapeTime: 3
 --- !u!1001 &1935843507
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -260,6 +260,12 @@ public class SpawnManager : MonoBehaviour
 
         GameObject spawnedEnemy = Instantiate(EnemyPrefab, pointTransform.position, pointTransform.rotation);
 
+        // 수정 이유:
+        // 적 프리팹의 EntityIdentity는 프리팹 기본값이 그대로 복제되므로,
+        // 여러 마리를 생성하면 같은 ID를 공유할 수 있습니다.
+        // 스폰 직후 런타임 고유 번호를 다시 배정해서 적 개체별 UI/이벤트 식별이 섞이지 않게 만듭니다.
+        AssignEnemyRuntimeIdentity(spawnedEnemy);
+
         EnemyPatrolRoute patrolRoute = spawnPointSettings != null
             ? spawnPointSettings.ResolvePatrolRoute(zone)
             : ResolvePatrolRouteByName(pointTransform, zone);
@@ -274,7 +280,6 @@ public class SpawnManager : MonoBehaviour
         }
 
         // 생성된 적 오브젝트를 런타임 데이터에 등록
-        GlobalRuntimeData.CountingEnemyData(spawnedEnemy);
         return true;
     }
 
@@ -353,5 +358,30 @@ public class SpawnManager : MonoBehaviour
         }
 
         return routePrefix + spawnPointName.Substring(spawnPrefix.Length, lastUnderscoreIndex - spawnPrefix.Length);
+    }
+
+    /// <summary>
+    /// 생성된 적에게 런타임 고유 번호를 부여합니다.
+    /// EnemyStatus와 EntityIdentity를 함께 맞춰 주어, HP UI/사망 이벤트 식별이 섞이지 않게 합니다.
+    /// </summary>
+    private static void AssignEnemyRuntimeIdentity(GameObject spawnedEnemy)
+    {
+        if (spawnedEnemy == null)
+        {
+            return;
+        }
+
+        int enemyRuntimeId = GlobalRuntimeData.CountingEnemyData(spawnedEnemy);
+
+        if (spawnedEnemy.TryGetComponent(out EnemyStatus enemyStatus))
+        {
+            enemyStatus.SetRuntimeObjectId(enemyRuntimeId);
+            return;
+        }
+
+        if (spawnedEnemy.TryGetComponent(out EntityIdentity identity))
+        {
+            identity.SetupIdentity(enemyRuntimeId, Faction.enemy);
+        }
     }
 }

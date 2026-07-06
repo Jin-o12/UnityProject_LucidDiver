@@ -162,7 +162,7 @@ public class EnemyMovement : MonoBehaviour
 
         bool hasRegisteredNoise = noiseListener.TryRegisterNoise(
             perception,
-            transform.position,
+            transform,
             stimulus,
             brain.HasTarget,
             myStatus,
@@ -176,6 +176,8 @@ public class EnemyMovement : MonoBehaviour
 
         if (hasRegisteredNoise)
         {
+            // 여러 번 소리를 들어도 첫 이탈 지점을 유지해, 복귀 시 같은 기준점으로 돌아가게 합니다.
+            memory.CaptureReturnAnchor(transform.position);
             memory.MarkNeedsReturnToPatrol();
         }
     }

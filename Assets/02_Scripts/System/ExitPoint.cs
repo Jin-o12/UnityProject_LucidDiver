@@ -13,8 +13,10 @@ public class ExitPoint : MonoBehaviour, IInteractable
 
     private void Awake()
     {
+        ResolveTimerCanvasReference();
+
         // 초기 상태에서는 타이머 캔버스를 꺼둠
-        timerCanvas.SetActive(false);
+        SetTimerCanvasActive(false);
     }
 
     private void OnEnable()
@@ -45,8 +47,12 @@ public class ExitPoint : MonoBehaviour, IInteractable
     {
         //탈출 타이머 출력(P0에서는 사용 안함)
         Debug.Log("타이머 시작");
-        timerCanvas.SetActive(true);
-        timerOn?.Invoke(escapeTime);
+        SetTimerCanvasActive(true);
+
+        if (timerCanvas != null)
+        {
+            timerOn?.Invoke(escapeTime);
+        }
 
         //플레이어 상태를 escape로 변경하고 탈출 판정 시작
         ResultServiceLocator.Instance.HandleEscapeStart(_playerID);
@@ -56,7 +62,7 @@ public class ExitPoint : MonoBehaviour, IInteractable
         
         // 채널링 종료 후 탈출 성공 판정 이벤트를 발송
         Debug.Log("타이머 종료");
-        timerCanvas.SetActive(false);
+        SetTimerCanvasActive(false);
         GlobalEventBus.OnEscapeRequest?.Invoke(true);
     }
 
@@ -67,7 +73,7 @@ public class ExitPoint : MonoBehaviour, IInteractable
         isEscaping = false;
 
         //탈출 타이머 출력 종료
-        timerCanvas.SetActive(isEscaping);
+        SetTimerCanvasActive(isEscaping);
 
         //채널링 코루틴을 중단
         if (escapeCoroutine != null)
@@ -75,5 +81,30 @@ public class ExitPoint : MonoBehaviour, IInteractable
             StopCoroutine(escapeCoroutine);
             escapeCoroutine = null;
         }
+    }
+
+    private void ResolveTimerCanvasReference()
+    {
+        // 인스펙터 연결이 빠졌다면 자식 오브젝트에서 타이머 UI를 자동으로 탐색
+        if (timerCanvas != null) return;
+
+        EscapeTimer escapeTimer = GetComponentInChildren<EscapeTimer>(true);
+        if (escapeTimer != null)
+        {
+            timerCanvas = escapeTimer.gameObject;
+        }
+
+        if (timerCanvas == null)
+        {
+            Debug.LogWarning($"{name} ExitPoint의 timerCanvas가 비어 있습니다. 타이머 UI 없이 탈출 기능만 동작합니다.", this);
+        }
+    }
+
+    private void SetTimerCanvasActive(bool isActive)
+    {
+        // P0처럼 타이머 UI를 사용하지 않는 씬에서는 null 예외 없이 안전하게 넘어감
+        if (timerCanvas == null) return;
+
+        timerCanvas.SetActive(isActive);
     }
 }
