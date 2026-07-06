@@ -125,7 +125,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 targetPosition = rb.position + movement * (isEvading ? evadeSpeed : (sprintInput ? sprintSpeed : moveSpeed) ) * Time.fixedDeltaTime;
 
         // 달리기 중 MP 소비 이벤트 전달
-        if (sprintInput)
+        if (movement.sqrMagnitude > 0.001f && sprintInput)
         {
             GlobalEventBus.OnSprintManaConsume?.Invoke(sprintMP);
             GlobalEventBus.OnSprintInput?.Invoke(sprintInput);
@@ -275,6 +275,12 @@ public class PlayerMovement : MonoBehaviour
         lookDir = aimVisualDir.z > 0 ? 1 : 0;
 
         animator.SetInteger("LookDir", lookDir);
+
+        // 달리기 입력이 있으면 true, 없으면 false
+        animator.SetBool("IsSprint", sprintInput);
+
+        // 구르기 입력을 애니메이터에 전달
+        animator.SetTrigger("Evade");
     }
 
     /* 플레이어 사망 시 이동 및 회전 비활성화 */
