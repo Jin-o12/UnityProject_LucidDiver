@@ -23,6 +23,6 @@ public abstract class ItemData : ScriptableObject
     public int itemMultiple;                      // 최대 스택 수량
 
     [Header("연관 파일 주소")]
-    public AssetReferenceSprite icon;                   // 아이템 아이콘
-    public AssetReferenceGameObject itemPrefabRef;      // 아이템 프리팹 주소
+    public string iconAddress;                   // 아이템 아이콘 AssetReferenceSprite
+    //public string itemPrefabRef;      // 아이템 프리팹 주소 AssetReferenceGameObject
 }

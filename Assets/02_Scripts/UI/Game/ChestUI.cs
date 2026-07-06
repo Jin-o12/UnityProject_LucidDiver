@@ -4,28 +4,34 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using System.Threading.Tasks;
 
 /// <summary>
-/// »óÀÚ UI¸¦ °ü¸®ÇÏ´Â ½ºÅ©¸³Æ®
-/// »óÀÚ ½½·ÔÀº °íÁ¤ °³¼ö·Î ÇÑ ¹ø¸¸ »ı¼ºÇÏ°í,
-/// ÀÌÈÄ¿¡´Â ½½·Ô ³»¿ëÀ» °»½ÅÇÏ´Â ¹æ½ÄÀ¸·Î µ¿ÀÛÇÑ´Ù.
+/// ï¿½ï¿½ï¿½ï¿½ UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®
+/// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½,
+/// ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
 /// </summary>
 public class ChestUI : MonoBehaviour
 {
     [Header("Chest UI")]
-    [SerializeField] private Transform slotContainer;           // Ã¼½ºÆ® ½½·ÔÀÌ »ı¼ºµÉ ºÎ¸ğ
-    [SerializeField] private GameObject slotPrefab;             // Ã¼½ºÆ® ½½·Ô ÇÁ¸®ÆÕ
-    [SerializeField] private List<GameObject> slotsObj = new(); // »ı¼ºµÈ ½½·Ô ¿ÀºêÁ§Æ® ¸ñ·Ï
-    [SerializeField] private Button closeButton;                // ´İ±â ¹öÆ°
+    [SerializeField] private Transform slotContainer;           // ìƒì ìŠ¬ë¡¯ ì»¨í…Œì´ë„ˆ
+    [SerializeField] private GameObject slotPrefab;             // ìŠ¬ë¡¯ í”„ë¦¬íŒ¹
+    [SerializeField] private List<GameObject> slotsObj = new(); // ìŠ¬ë¡¯ ì¸ìŠ¤í„´ìŠ¤ ë¦¬ìŠ¤íŠ¸
+    [SerializeField] private Button closeButton;                // ë‹«ê¸° ë²„íŠ¼
 
-    private ItemBox itemBox;                                    // ÇöÀç ¿­·Á ÀÖ´Â »óÀÚ µ¥ÀÌÅÍ
-    private PlayerInventory playerInventory;                    // ÇÃ·¹ÀÌ¾î ÀÎº¥Åä¸® ÂüÁ¶
-    private Action onCloseRequested;                            // ´İ±â ¿äÃ» Äİ¹é
+    private ItemBox itemBox;                                    // ì•„ì´í…œ ë°•ìŠ¤ ì»´í¬ë„ŒíŠ¸
+    private PlayerInventory playerInventory;                    // í”Œë ˆì´ì–´ ì¸ë²¤í† ë¦¬ ìŠ¤í¬ë¦½íŠ¸
+    private Action onCloseRequested;                            // ë‹«ê¸° ìš”ì²­ ì´ë²¤íŠ¸
 
-    public static ChestUI ActiveUI { get; private set; }        // ÇöÀç ¿­·Á ÀÖ´Â Ã¼½ºÆ® UI
+    // ì €ì¥ ë°ì´í„° ì¸í„°í˜ì´ìŠ¤
+    private IItemDataRepository itemRepo;                       // ì•„ì´í…œ ë°ì´í„° ì ‘ê·¼ ì¸í„°í˜ì´ìŠ¤
+
+    public static ChestUI ActiveUI { get; private set; }        // í˜„ì¬ ìƒì UI ìºì‹œ
 
     private void Awake()
     {
+        itemRepo = new LocalJsonItemRepository();
+
         if (closeButton != null)
             closeButton.onClick.AddListener(CloseUI);
     }
@@ -43,8 +49,8 @@ public class ChestUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Ã¼½ºÆ® UI¿Í »óÀÚ µ¥ÀÌÅÍ¸¦ ¿¬°áÇÑ´Ù.
-    /// »óÀÚ ½½·Ô °³¼ö¸¸Å­ ½½·ÔÀ» ¸¸µé°í, ³»¿ëÀ» °»½ÅÇÑ´Ù.
+    /// Ã¼ï¿½ï¿½Æ® UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å­ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
     /// </summary>
     public void Bind(ItemBox box, PlayerInventory inventory, Action closeRequested = null)
     {
@@ -56,23 +62,23 @@ public class ChestUI : MonoBehaviour
         if (itemBox == null)
             return;
 
-        // °íÁ¤ ½½·Ô °³¼ö ±âÁØÀ¸·Î ½½·Ô »ı¼º
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         CreateSlots(itemBox.SlotCount);
 
-        // ÇöÀç »óÀÚ ³»¿ëÀ¸·Î ½½·Ô °»½Å
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         RefreshAll();
     }
 
     /// <summary>
-    /// ½½·ÔÀ» count°³ »ı¼ºÇÑ´Ù.
-    /// ÀÌ¹Ì °°Àº °³¼ö·Î ¸¸µé¾îÁ® ÀÖÀ¸¸é ´Ù½Ã ¸¸µéÁö ¾Ê´Â´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ countï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
+    /// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½.
     /// </summary>
     public void CreateSlots(int count)
     {
         if (slotsObj.Count == count)
             return;
 
-        // ±âÁ¸ ½½·Ô Á¦°Å
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         for (int i = 0; i < slotsObj.Count; i++)
         {
             if (slotsObj[i] != null)
@@ -81,7 +87,7 @@ public class ChestUI : MonoBehaviour
 
         slotsObj.Clear();
 
-        // »õ ½½·Ô »ı¼º
+        // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         for (int i = 0; i < count; i++)
         {
             GameObject newSlot = Instantiate(slotPrefab, slotContainer);
@@ -95,7 +101,7 @@ public class ChestUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ¸ğµç ½½·ÔÀÇ UI¸¦ ÇöÀç »óÀÚ µ¥ÀÌÅÍ ±âÁØÀ¸·Î °»½ÅÇÑ´Ù.
+    /// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
     /// </summary>
     public void RefreshAll()
     {
@@ -109,7 +115,7 @@ public class ChestUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Æ¯Á¤ ½½·Ô ÇÏ³ª¸¸ °»½ÅÇÑ´Ù.
+    /// Æ¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
     /// </summary>
     public void RefreshSlot(int slotIndex)
     {
@@ -125,20 +131,27 @@ public class ChestUI : MonoBehaviour
 
         BoxItemEntry entry = itemBox.GetItem(slotIndex);
 
-        // ½½·ÔÀÌ ºñ¾î ÀÖÀ¸¸é ºó Ä­À¸·Î °»½Å
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ä­ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (entry == null || entry.itemData == null || entry.amount <= 0)
         {
             slotUI.UpdateSlot(0, null);
             return;
         }
 
-        // ¾ÆÀÌÄÜÀÌ ÇÊ¿äÇÑ ½½·ÔÀÌ¸é ºñµ¿±â·Î ºÒ·¯¿Í¼­ °»½Å
-        LoadSlotIcon(slotUI, entry);
+        ItemData jsonItemData = itemRepo.GetItemDataByID(entry.itemData.TID);
+        if (jsonItemData == null)
+        {
+            slotUI.UpdateSlot(0, null);
+            return;
+        }
+
+        // AddressableLoaderë¥¼ ì‚¬ìš©í•˜ì—¬ ë¹„ë™ê¸°ë¡œ ì•„ì´ì½˜ì„ ë¡œë“œí•˜ê³  ìŠ¬ë¡¯ì„ ì—…ë°ì´íŠ¸í•©ë‹ˆë‹¤ (Fire-and-Forget)
+        _ = LoadSlotIconAsync(slotUI, jsonItemData.iconAddress, entry.amount);
     }
 
     /// <summary>
-    /// Ã¼½ºÆ® ½½·ÔÀÇ ¾ÆÀÌÅÛÀ» ÀÎº¥Åä¸®·Î ¿Å±ä´Ù.
-    /// ÀÎº¥Åä¸®¿¡ ´Ù ¸ø µé¾î°£ ¼ö·®Àº »óÀÚ¿¡ ³²±ä´Ù.
+    /// Ã¼ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ä¸®ï¿½ï¿½ ï¿½Å±ï¿½ï¿½.
+    /// ï¿½Îºï¿½ï¿½ä¸®ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½î°£ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½.
     /// </summary>
     public void TryMoveToInventory(int slotIndex)
     {
@@ -149,7 +162,7 @@ public class ChestUI : MonoBehaviour
         if (entry == null || entry.itemData == null || entry.amount <= 0)
             return;
 
-        int remain = playerInventory.AddItem(entry.itemData, entry.amount);
+        int remain = playerInventory.AddItem(itemRepo.GetItemDataByID(entry.itemData.TID), entry.amount);
         int movedAmount = entry.amount - remain;
 
         if (movedAmount <= 0)
@@ -160,8 +173,8 @@ public class ChestUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Ã¼½ºÆ® ½½·ÔÀÇ ¾ÆÀÌÅÛÀ» ÀÎº¥Åä¸®ÀÇ Æ¯Á¤ Ä­À¸·Î ¿Å±ä´Ù.
-    /// ºñ¾î ÀÖ´Â Ä­ÀÌ°Å³ª °°Àº ¾ÆÀÌÅÛ ½ºÅÃÀÏ ¶§¸¸ ÀÌµ¿µÈ´Ù.
+    /// Ã¼ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ä¸®ï¿½ï¿½ Æ¯ï¿½ï¿½ Ä­ï¿½ï¿½ï¿½ï¿½ ï¿½Å±ï¿½ï¿½.
+    /// ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ Ä­ï¿½Ì°Å³ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½È´ï¿½.
     /// </summary>
     public void TryMoveToInventorySlot(int chestSlotIndex, int inventorySlotIndex)
     {
@@ -172,7 +185,7 @@ public class ChestUI : MonoBehaviour
         if (entry == null || entry.itemData == null || entry.amount <= 0)
             return;
 
-        int remain = playerInventory.TryAddToSlot(inventorySlotIndex, entry.itemData, entry.amount);
+        int remain = playerInventory.TryAddToSlot(inventorySlotIndex, itemRepo.GetItemDataByID(entry.itemData.TID), entry.amount);
         int movedAmount = entry.amount - remain;
 
         if (movedAmount <= 0)
@@ -183,8 +196,8 @@ public class ChestUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀÎº¥Åä¸® ½½·ÔÀÇ ¾ÆÀÌÅÛÀ» »óÀÚ ¾ÈÀ¸·Î ¿Å±ä´Ù.
-    /// ¸ÕÀú °°Àº ¾ÆÀÌÅÛ ½ºÅÃÀ» Ã¤¿ì°í, ³²´Â ¼ö·®Àº ºó ½½·Ô¿¡ ³Ö´Â´Ù.
+    /// ï¿½Îºï¿½ï¿½ä¸® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Å±ï¿½ï¿½.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¤ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ô¿ï¿½ ï¿½Ö´Â´ï¿½.
     /// </summary>
     public void TryMoveFromInventory(int inventorySlotIndex)
     {
@@ -210,8 +223,8 @@ public class ChestUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀÎº¥Åä¸® ½½·ÔÀÇ ¾ÆÀÌÅÛÀ» »óÀÚÀÇ Æ¯Á¤ Ä­À¸·Î ¿Å±ä´Ù.
-    /// ´ë»ó Ä­ÀÌ ºñ¾î ÀÖ°Å³ª °°Àº ¾ÆÀÌÅÛ ½ºÅÃÀÏ ¶§¸¸ ÀÌµ¿µÈ´Ù.
+    /// ï¿½Îºï¿½ï¿½ä¸® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Æ¯ï¿½ï¿½ Ä­ï¿½ï¿½ï¿½ï¿½ ï¿½Å±ï¿½ï¿½.
+    /// ï¿½ï¿½ï¿½ Ä­ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö°Å³ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½È´ï¿½.
     /// </summary>
     public void TryMoveFromInventorySlot(int inventorySlotIndex, int chestSlotIndex)
     {
@@ -237,8 +250,8 @@ public class ChestUI : MonoBehaviour
     }
 
     /// <summary>
-    /// »óÀÚ UI¸¦ ´İ´Â´Ù.
-    /// ½ÇÁ¦ ´İ±â Ã³¸®´Â Presenter ÂÊ Äİ¹é¿¡ ¸Ã±ä´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ UIï¿½ï¿½ ï¿½İ´Â´ï¿½.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½İ±ï¿½ Ã³ï¿½ï¿½ï¿½ï¿½ Presenter ï¿½ï¿½ ï¿½İ¹é¿¡ ï¿½Ã±ï¿½ï¿½.
     /// </summary>
     public void CloseUI()
     {
@@ -246,26 +259,25 @@ public class ChestUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ½½·Ô ¾ÆÀÌÄÜÀ» Addressables·Î ºÒ·¯¿Í °»½ÅÇÑ´Ù.
+    ///   AddressableLoaderë¥¼ ì‚¬ìš©í•˜ì—¬ ì•„ì´ì½˜ì„ ë¡œë“œí•©ë‹ˆë‹¤.
     /// </summary>
-    private void LoadSlotIcon(ChestSlotUI slotUI, BoxItemEntry entry)
+    private async Task LoadSlotIconAsync(ChestSlotUI slotUI, string iconAddress, int amount)
     {
-        if (slotUI == null || entry == null || entry.itemData == null)
+        if (slotUI == null)
             return;
 
-        AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(entry.itemData.icon);
-
-        handle.Completed += operation =>
+        if (string.IsNullOrEmpty(iconAddress))
         {
-            if (slotUI == null)
-                return;
+            Debug.LogWarning($"ì•„ì´í…œì˜ ì•„ì´ì½˜ ì£¼ì†Œê°€ ë¹„ì–´ìˆìŠµë‹ˆë‹¤!");
+            slotUI.UpdateSlot(amount, null);
+            return;
+        }
 
-            if (operation.Status == AsyncOperationStatus.Succeeded)
-                slotUI.UpdateSlot(entry.amount, operation.Result);
-            else
-                slotUI.UpdateSlot(entry.amount, null);
+        Sprite loadedIcon = await AddressableLoader.LoadAssetAsync<Sprite>(iconAddress);
 
-            Addressables.Release(operation);
-        };
+        if (slotUI != null)
+        {
+            slotUI.UpdateSlot(amount, loadedIcon);
+        }
     }
 }

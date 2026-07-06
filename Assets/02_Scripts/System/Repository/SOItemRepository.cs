@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SOItemRepository : IItemDataRepository
+public class SOItemRepository
 {
     private Dictionary<int, ItemData> itemDataDictionary = new();           // 아이템 데이터 사전
 

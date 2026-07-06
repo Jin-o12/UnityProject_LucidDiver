@@ -43,7 +43,7 @@ public class InventoryPresenter : MonoBehaviour
         }
         
         // 인터페이스 구현부 연결
-        itemRepo = new SOItemRepository();
+        itemRepo = new LocalJsonItemRepository();
 
         // 인벤토리 슬롯 초기화
         PlayerSaveData playerData = DataManager.Instance.playerData;
@@ -100,7 +100,7 @@ public class InventoryPresenter : MonoBehaviour
         if (identity.entityID != pickerID)
             return;
 
-        ItemData data = itemRepo.GetItemData(pickedItemTID);
+        ItemData data = itemRepo.GetItemDataByID(pickedItemTID);
         if (data == null)
             return;
 

@@ -30,7 +30,7 @@ public class GameManager : MonoBehaviour
         // 인터페이스 구현부 연결
         saveRepo = new LocalSaveRepository();
         charRepo = new SOCharacterRepository();
-        itemRepo = new SOItemRepository();
+        itemRepo = new LocalJsonItemRepository();
 
         SceneManager.sceneLoaded += OnSceneLoaded;                  //신 로드 완료 시점에 실행하는 메소드 연결
         GlobalEventBus.OnEscapeRequest += ResultTime;               //탈출 판정 이벤트에 경과 시간 기록 메소드 연결
