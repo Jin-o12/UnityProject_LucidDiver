@@ -88,30 +88,6 @@ public class PlayerInventory : MonoBehaviour
         if (safeSlots != null) anySlots.AddRange(safeSlots);
     }
 
-    // anySlots 기준 인덱스가 유효한지 확인
-    private bool IsAnySlotIndexValid(int slotIndex)
-    {
-        return slotIndex >= 0 && slotIndex < anySlots.Count;
-    }
-
-    // anySlots 기준 인덱스가 각성 보존 슬롯 영역인지 확인
-    private bool IsSafeSlotIndex(int slotIndex)
-    {
-        return slotIndex >= slotNum && slotIndex < anySlots.Count;
-    }
-
-    // anySlots 기준 인덱스 변경을 실제 UI 이벤트로 분기
-    private void NotifySlotChanged(int slotIndex)
-    {
-        if (IsSafeSlotIndex(slotIndex))
-        {
-            OnSafeSlotChanged?.Invoke(slotIndex - slotNum);
-            return;
-        }
-
-        OnSlotChanged?.Invoke(slotIndex);
-    }
-
     /* 인벤토리에 아이템 추가 및 남는 수량 반환 */
     public int AddItem(ItemData _itemData, int _count)
     {
@@ -199,7 +175,7 @@ public class PlayerInventory : MonoBehaviour
             _ = LoadSprite(_itemData.iconAddress, _slotIndex);
 
             // 수량부터 먼저 반영
-            NotifySlotChanged(_slotIndex);
+            OnSlotChanged?.Invoke(_slotIndex);
 
             return _count - addAmount;
         }
@@ -217,7 +193,7 @@ public class PlayerInventory : MonoBehaviour
         int realAdd = Mathf.Min(_count, canAdd);
         slot.amount += realAdd;
 
-        NotifySlotChanged(_slotIndex);
+        OnSlotChanged?.Invoke(_slotIndex);
 
         // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
         RebuildAnySlots();
@@ -262,7 +238,7 @@ public class PlayerInventory : MonoBehaviour
             return;
         }
 
-        NotifySlotChanged(_slotIndex);
+        OnSlotChanged?.Invoke(_slotIndex);
         SyncQuickSlotsByTID(tid);
 
         // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
@@ -280,7 +256,7 @@ public class PlayerInventory : MonoBehaviour
         anySlots[_slotIndex].icon = null;
         anySlots[_slotIndex].itemData = null;
 
-        NotifySlotChanged(_slotIndex);
+        OnSlotChanged?.Invoke(_slotIndex);
 
         if (tid != 0)
         {
@@ -410,11 +386,6 @@ public class PlayerInventory : MonoBehaviour
     public void SwapSlotData(int _index1, int _index2)
     {
         /// ※추가: 해당 아이템이 동일한 아이템이라면 존재한다면 합산 가능한지 판정 후 합산 ///
-
-        if (!IsAnySlotIndexValid(_index1) || !IsAnySlotIndexValid(_index2))
-        {
-            return;
-        }
 
         InventorySlotData slot1 = anySlots[_index1];
         InventorySlotData slot2 = anySlots[_index2];
