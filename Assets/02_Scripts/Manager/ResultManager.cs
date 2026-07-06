@@ -1,7 +1,8 @@
-﻿﻿/// <summary>
+﻿/// <summary>
 /// 인게임 세션 종료 시 데이터 변동을 관리하는 클래스
 /// (탈출 성공 여부, 플레이 타임, 인벤토리 및 퀵슬롯, 동조율 단계)
 /// </summary>
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 public class ResultManager : MonoBehaviour, IResultService
@@ -16,6 +17,7 @@ public class ResultManager : MonoBehaviour, IResultService
     // 탈출 여부 및 결과 창 필드
     private bool extractionResult;                      //탈출 성공 여부 판정
     private ResultUI resultPanel;                       //결과 창 UI 
+    private Coroutine resultCoroutine;                  //결과 창 출력 코루틴
     // 동조율 저장 필드
     private int prevLinkRateLevel;                      //동조율 상승 전 다이버와의 동조율 단계 값을 저장
     public int linkRateLevel;                           //동조율 상승 후 다이버와의 동조율 단계
@@ -211,8 +213,8 @@ public class ResultManager : MonoBehaviour, IResultService
         FindItemCountAndData(401, out memoryFragmentCount, out memoryFragmentData);
         // 기억 파편을 사용해 동조율 상승 → 심상 기록 해금 처리를 실행
         LinkRateUp(_extractionResult);
-        // 결과 창 패널 출력 메소드
-        OpenResultPanel();
+        // 결과 창 패널 출력 코루틴 (사망 시간 동안 대기 후 출력)
+        StartCoroutine(OpenResultPanel());
         // 심상 기록 읽기 상태 저장
         // _playerSaveData.hasNewMemoryLog = hasNewMemoryLog;
         // 탈출 실패 시 소비 기물 아이템을 인벤토리에서 제거
@@ -223,6 +225,10 @@ public class ResultManager : MonoBehaviour, IResultService
         }
         // 모든 처리 완료 후 후 DataManager에서 playerData를 저장
         DataManager.Instance.SaveGame();
+
+        // 저장 처리 후 코루틴 중단 코드를 진행
+        if (resultCoroutine != null) StopCoroutine(resultCoroutine);
+        resultCoroutine = StartCoroutine(OpenResultPanel());
     }
 
     private void InventorySync()
@@ -332,11 +338,13 @@ public class ResultManager : MonoBehaviour, IResultService
     }
 
     // 결과 창 패널 출력 메소드
-    public void OpenResultPanel()
+    public IEnumerator OpenResultPanel()
     {
+        // 플레이어 Die 애니메이션 재생 시간만큼 대기 후 UI 오픈
+        yield return new WaitForSeconds(1.3f);
         // UIManager에서 Canvas-ResultPanel을 받아와 UI 오픈
         resultPanel = UIManager.Instance.Open<ResultUI>();
-        if (resultPanel == null) return;
+        if (resultPanel == null) yield break;
         // 인게임 세션에서 저장된 데이터를 resultPanel에 전달해 UI 갱신
         _playerSaveData = DataManager.Instance.playerData;
         resultPanel.extractionResult = extractionResult;
@@ -384,6 +392,13 @@ public class ResultManager : MonoBehaviour, IResultService
     // 결과 창 패널 닫기
     private void CloseResultPanel()
     {
+        // 결과 창 패널이 열린 후에는 결과 창 열기 코루틴을 중단시킨다
+        if (resultCoroutine != null)
+        {
+            StopCoroutine(resultCoroutine);
+            resultCoroutine = null;
+        }
+
         UIManager.Instance.Close<ResultUI>();
     }
 

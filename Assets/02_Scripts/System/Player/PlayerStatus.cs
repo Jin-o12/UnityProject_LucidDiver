@@ -195,6 +195,9 @@ public class PlayerStatus : MonoBehaviour, IDamageable
 
         GetHp(-dmg);
 
+        // 피해 입을 시 애니메이션 재생 이벤트
+        GlobalEventBus.OnHitAnimate?.Invoke();
+
         // 피해 입을 시 탈출 실패 처리
         GlobalEventBus.OnEscapeFailure?.Invoke(playerID);
     }
