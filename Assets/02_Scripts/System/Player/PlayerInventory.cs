@@ -1,8 +1,9 @@
-﻿/// <summary>
+/// <summary>
 /// 플레이어의 인벤토리 데이터와 내부의 슬롯, 아이템을 관리하는 클래스
 /// </summary>
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -17,6 +18,9 @@ public class PlayerInventory : MonoBehaviour
     public int quickSlotNum { get; private set; }
     public int safeSlotNum { get; private set; }
 
+    // JSON 데이터 저장소 접근용 리포지토리 인스턴스
+    private IItemDataRepository itemRepo;
+
     // 인벤토리 슬롯과 각성 보존 슬롯을 동시에 취급하는 경우에 AnySlots 헬퍼를 호출하여 사용
     public List<InventorySlotData> AnySlots => anySlots;
 
@@ -26,8 +30,8 @@ public class PlayerInventory : MonoBehaviour
     // 각성 보존 슬롯 UI를 갱신할 때 사용하는 이벤트
     public event Action<int> OnSafeSlotChanged;
 
-    // 어드레시블로 불러온 스프라이트 주소 가져오기
-    private AsyncOperationHandle<Sprite> loadHandle;
+    // 아이템 드롭 시 생성 할 공통 드롭 아이템 오브젝트 프리팹
+    [SerializeField] private GameObject itemPrefabRef;
 
 
     private void OnEnable()
@@ -36,6 +40,8 @@ public class PlayerInventory : MonoBehaviour
         GlobalEventBus.OnSwapInventorySlot += SwapSlotData;
         GlobalEventBus.OnDropItemQuickSlot += AddItemToQuickslot;
         GlobalEventBus.OnSwapItemQuickSlot += SwapItemQuickSlot;
+
+        itemRepo = new LocalJsonItemRepository();
     }
 
     private void OnDisable()
@@ -44,13 +50,6 @@ public class PlayerInventory : MonoBehaviour
         GlobalEventBus.OnSwapInventorySlot -= SwapSlotData;
         GlobalEventBus.OnDropItemQuickSlot -= AddItemToQuickslot;
         GlobalEventBus.OnSwapItemQuickSlot -= SwapItemQuickSlot;
-
-        // 핸들이 유효하다면 (이미 로드된 상태라면)
-        if (loadHandle.IsValid())
-        {
-            // 메모리에서 해당 스프라이트를 안전하게 해제
-            Addressables.Release(loadHandle);
-        }
     }
 
     /* 인벤토리 UI 초기화 */
@@ -157,7 +156,7 @@ public class PlayerInventory : MonoBehaviour
     /* 특정 슬롯 하나에 아이템을 넣고 남은 수량 반환 */
     public int TryAddToSlot(int _slotIndex, ItemData _itemData, int _count)
     {
-        if (_slotIndex < 0 || _slotIndex >= slotNum) return _count;
+        if (_slotIndex < 0 || _slotIndex >= anySlots.Count) return _count;
         if (_itemData == null || _count <= 0) return _count;
 
         InventorySlotData slot = anySlots[_slotIndex];
@@ -170,11 +169,10 @@ public class PlayerInventory : MonoBehaviour
 
             slot.TID = _itemData.TID;
             slot.amount = addAmount;
-            slot.icon = null;
             slot.itemData = _itemData;
 
-            // 아이콘 로드
-            LoadSprite(_itemData.icon, _slotIndex);
+            // 아이콘 로드는 비동기로 백그라운드에서 진행 (LoadSprite 내부에서 UI 갱신을 알아서 수행)
+            _ = LoadSprite(_itemData.iconAddress, _slotIndex);
 
             // 수량부터 먼저 반영
             OnSlotChanged?.Invoke(_slotIndex);
@@ -207,28 +205,28 @@ public class PlayerInventory : MonoBehaviour
     /* 특정 슬롯 데이터 반환 */
     public InventorySlotData GetSlot(int _slotIndex)
     {
-        if (_slotIndex < 0 || _slotIndex >= slotNum) return null;
+        if (_slotIndex < 0 || _slotIndex >= anySlots.Count) return null;
         return anySlots[_slotIndex];
     }
 
     /* 특정 슬롯의 원본 ItemData 반환 */
     public ItemData GetSlotItemData(int _slotIndex)
     {
-        if (_slotIndex < 0 || _slotIndex >= slotNum) return null;
+        if (_slotIndex < 0 || _slotIndex >= anySlots.Count) return null;
         return anySlots[_slotIndex].itemData;
     }
 
     /* 특정 슬롯이 비어 있는지 확인 */
     public bool IsSlotEmpty(int _slotIndex)
     {
-        if (_slotIndex < 0 || _slotIndex >= slotNum) return true;
+        if (_slotIndex < 0 || _slotIndex >= anySlots.Count) return true;
         return anySlots[_slotIndex].TID == 0 || anySlots[_slotIndex].amount <= 0;
     }
 
     /* 특정 슬롯 수량 차감 */
     public void RemoveAmount(int _slotIndex, int _count)
     {
-        if (_slotIndex < 0 || _slotIndex >= slotNum) return;
+        if (_slotIndex < 0 || _slotIndex >= anySlots.Count) return;
         if (IsSlotEmpty(_slotIndex)) return;
 
         int tid = anySlots[_slotIndex].TID;
@@ -250,7 +248,7 @@ public class PlayerInventory : MonoBehaviour
     /* 특정 슬롯 완전 초기화 */
     public void ClearSlot(int _slotIndex)
     {
-        if (_slotIndex < 0 || _slotIndex >= slotNum) return;
+        if (_slotIndex < 0 || _slotIndex >= anySlots.Count) return;
 
         int tid = anySlots[_slotIndex].TID;
         anySlots[_slotIndex].TID = 0;
@@ -280,41 +278,26 @@ public class PlayerInventory : MonoBehaviour
         if (itemData == null)
             return;
 
-        if (itemData.itemPrefabRef == null || !itemData.itemPrefabRef.RuntimeKeyIsValid())
-        {
-            Debug.LogWarning($"드롭 프리팹 주소가 비어 있습니다. TID: {itemData.TID}");
-            return;
-        }
-
         int dropCount = slot.amount;
 
         // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
         RebuildAnySlots();
 
-        itemData.itemPrefabRef.InstantiateAsync(dropPosition, Quaternion.identity).Completed += handle =>
+        GameObject dropObject = Instantiate(itemPrefabRef, dropPosition, Quaternion.identity);
+        DropItem dropItem = dropObject.GetComponent<DropItem>();
+
+        if (dropItem == null)
         {
-            if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
-            {
-                Debug.LogError($"드롭 아이템 생성 실패: {itemData.itemName}");
-                return;
-            }
+            Debug.LogError($"생성된 프리팹에 DropItem 컴포넌트가 없습니다: {dropObject.name}");
+            Destroy(dropObject);
+            return;
+        }
 
-            GameObject dropObject = handle.Result;
-            DropItem dropItem = dropObject.GetComponent<DropItem>();
+        dropItem.itemData = itemData;
+        dropItem.stackCount = dropCount;
 
-            if (dropItem == null)
-            {
-                Debug.LogError($"생성된 프리팹에 DropItem 컴포넌트가 없습니다: {dropObject.name}");
-                Addressables.ReleaseInstance(dropObject);
-                return;
-            }
-
-            dropItem.itemData = itemData;
-            dropItem.stackCount = dropCount;
-
-            RemoveAmount(_slotIndex, dropCount);
-            onDropped?.Invoke();
-        };
+        RemoveAmount(_slotIndex, dropCount);
+        onDropped?.Invoke();
     }
 
     /* 획득한 아이템을 퀵슬롯에서 찾아 개수 변동 반영 */
@@ -341,7 +324,7 @@ public class PlayerInventory : MonoBehaviour
             // 등록은 유지하되 아이콘이 아직 없으면 다시 로드를 시도합니다.
             if (quickSlot.icon == null && quickSlot.itemData != null)
             {
-                LoadQuickSlotSprite(quickSlot.itemData.icon, i);
+                _ = LoadQuickSlotSprite(quickSlot.itemData.iconAddress, i);
                 continue;
             }
 
@@ -350,9 +333,11 @@ public class PlayerInventory : MonoBehaviour
     }
 
     /* 아이템의 아이콘 Addressable 주소 해석 및 스프라이트 이미지 가져오기 */
-    private void LoadSprite(AssetReferenceSprite iconRef, int slotIndex)
+    private async Task LoadSprite(string iconRef, int slotIndex)
     {
-        if (iconRef == null || !iconRef.RuntimeKeyIsValid())
+        Sprite loadIcon = await AddressableLoader.LoadAssetAsync<Sprite>(iconRef);
+        
+        if (loadIcon == null)
         {
             // anySlots 헬퍼에서 먼저 기록 후 원본 슬롯에 각각 전달
             if (slotIndex >= 0 && slotIndex < anySlots.Count) anySlots[slotIndex].icon = null;
@@ -371,29 +356,21 @@ public class PlayerInventory : MonoBehaviour
             return;
         }
 
-        loadHandle = Addressables.LoadAssetAsync<Sprite>(iconRef);
+        // 아이콘이 준비된 시점에 UI를 anySlots 헬퍼에서 갱신
+        if (slotIndex >= 0 && slotIndex < anySlots.Count) anySlots[slotIndex].icon = loadIcon;
 
-        loadHandle.Completed += (handle) =>
+        // 로드된 아이콘을 각 슬롯 데이터에 반영
+        if (slotIndex < slots.Count)
         {
-            // 성공적으로 가져왔는지 확인
-            Sprite result = (handle.Status == AsyncOperationStatus.Succeeded) ? handle.Result : null;
-
-            // 아이콘이 준비된 시점에 UI를 anySlots 헬퍼에서 갱신
-            if (slotIndex >= 0 && slotIndex < anySlots.Count) anySlots[slotIndex].icon = result;
-
-            // 로드된 아이콘을 각 슬롯 데이터에 반영
-            if (slotIndex < slots.Count)
-            {
-                slots[slotIndex].icon = result;
-                OnSlotChanged?.Invoke(slotIndex);
-            }
-            else
-            {
-                int safeIndex = slotIndex - slots.Count;
-                if (safeIndex >= 0 && safeIndex < safeSlots.Count) safeSlots[safeIndex].icon = result;
-                OnSafeSlotChanged?.Invoke(safeIndex);
-            }
-        };
+            slots[slotIndex].icon = loadIcon;
+            OnSlotChanged?.Invoke(slotIndex);
+        }
+        else
+        {
+            int safeIndex = slotIndex - slots.Count;
+            if (safeIndex >= 0 && safeIndex < safeSlots.Count) safeSlots[safeIndex].icon = loadIcon;
+            OnSafeSlotChanged?.Invoke(safeIndex);
+        }
     }
 
     public void UseItem(int slotIndex)
@@ -482,7 +459,7 @@ public class PlayerInventory : MonoBehaviour
         }
         else if (qSlot.itemData != null)
         {
-            LoadQuickSlotSprite(qSlot.itemData.icon, _quickIndex);
+            _ = LoadQuickSlotSprite(qSlot.itemData.iconAddress, _quickIndex);
         }
         else
         {
@@ -587,7 +564,10 @@ public class PlayerInventory : MonoBehaviour
             ItemData itemData = GetItemDataByTID(savedSlot.TID);
             slots[savedSlot.index].itemData = itemData;
 
-            if (itemData != null) LoadSprite(itemData.icon, savedSlot.index);
+            if (itemData != null)
+            {
+                _ = LoadSprite(itemData.iconAddress, savedSlot.index);
+            }
 
             OnSlotChanged?.Invoke(savedSlot.index);
         }
@@ -603,7 +583,7 @@ public class PlayerInventory : MonoBehaviour
             ItemData itemData = GetItemDataByTID(savedSlot.TID);
             safeSlots[savedSlot.index].itemData = itemData;
 
-            if (itemData != null) LoadSprite(itemData.icon, savedSlot.index + slots.Count);
+            if (itemData != null) _ = LoadSprite(itemData.iconAddress, savedSlot.index + slots.Count);
 
             OnSafeSlotChanged?.Invoke(savedSlot.index);
         }
@@ -634,53 +614,33 @@ public class PlayerInventory : MonoBehaviour
 
             if (itemData != null)
             {
-                LoadQuickSlotSprite(itemData.icon, i);
+                _ = LoadQuickSlotSprite(itemData.iconAddress, i);
             }
         }
     }
 
-    /* 아이템 TID로 ScriptableObject 원본 데이터 찾기 */
-    private ItemData GetItemDataByTID(int tid)
+    /* TID를 통해 저장소에서 아이템 데이터 찾기 */
+    public ItemData GetItemDataByTID(int tid)
     {
         if (tid == 0) return null;
 
-        ItemData[] itemDatas = Resources.LoadAll<ItemData>("ScriptableObjects/Item");
-        foreach (ItemData itemData in itemDatas)
-        {
-            if (itemData != null && itemData.TID == tid)
-            {
-                return itemData;
-            }
-        }
-
-        return null;
+        return itemRepo.GetItemDataByID(tid);
     }
 
     /* 퀵슬롯 아이콘 Addressable 주소 해석 및 스프라이트 이미지 가져오기 */
-    private void LoadQuickSlotSprite(AssetReferenceSprite iconRef, int quickIndex)
+    private async Task LoadQuickSlotSprite(string iconRef, int quickIndex)
     {
-        if (iconRef == null || !iconRef.RuntimeKeyIsValid())
+        Sprite loadIcon = await AddressableLoader.LoadAssetAsync<Sprite>(iconRef);
+        
+        if (loadIcon == null)
         {
             quickSlots[quickIndex].icon = null;
             GlobalEventBus.OnQuickSlotChanged?.Invoke(quickIndex, null, quickSlots[quickIndex].amount);
             return;
         }
 
-        loadHandle = Addressables.LoadAssetAsync<Sprite>(iconRef);
-
-        loadHandle.Completed += handle =>
-        {
-            if (handle.Status == AsyncOperationStatus.Succeeded)
-            {
-                quickSlots[quickIndex].icon = handle.Result;
-                GlobalEventBus.OnQuickSlotChanged?.Invoke(quickIndex, handle.Result, quickSlots[quickIndex].amount);
-            }
-            else
-            {
-                quickSlots[quickIndex].icon = null;
-                GlobalEventBus.OnQuickSlotChanged?.Invoke(quickIndex, null, quickSlots[quickIndex].amount);
-            }
-        };
+        quickSlots[quickIndex].icon = loadIcon;
+        GlobalEventBus.OnQuickSlotChanged?.Invoke(quickIndex, loadIcon, quickSlots[quickIndex].amount);
     }
 
     /* 런타임 인벤토리/퀵슬롯/각성 보존 슬롯 데이터를 모두 초기화 */

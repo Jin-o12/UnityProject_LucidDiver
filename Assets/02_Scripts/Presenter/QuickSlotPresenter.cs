@@ -23,7 +23,7 @@ public class QuickSlotPresenter : MonoBehaviour
             return;
         }
 
-        itemRepo = new SOItemRepository();
+        itemRepo = new LocalJsonItemRepository();
     }
 
     private void OnEnable()
@@ -45,7 +45,7 @@ public class QuickSlotPresenter : MonoBehaviour
         InventorySlotData slot = inventory.quickSlots[slotIndex];
         if (slot == null || slot.TID == 0 || slot.amount <= 0) return;
 
-        ItemData itemData = slot.itemData ?? itemRepo.GetItemData(slot.TID);
+        ItemData itemData = slot.itemData ?? itemRepo.GetItemDataByID(slot.TID);
         if (itemData == null) return;
 
         // 실제 인벤토리에서 소비가 성공했을 때만 아이템 효과를 실행합니다.
@@ -72,7 +72,7 @@ public class QuickSlotPresenter : MonoBehaviour
 
             if (targetObj != null)
             {
-                currentEffect.Execute(targetObj);
+                //currentEffect.Execute(targetObj);
             }
         }
     }

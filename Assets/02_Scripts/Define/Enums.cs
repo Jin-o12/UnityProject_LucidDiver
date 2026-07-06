@@ -5,8 +5,8 @@
 // 캐릭터 종류
 public enum UserType
 {
-    main,       // 메인 다이버
-    enemy       // 적
+    main,           // 메인 다이버
+    support         // 적
 }
 
 // 피해를 받는 대상이 될 수 있는 것 타입

@@ -1,0 +1,54 @@
+[
+  {
+    "itemTID": 101,
+    "itemName": "에너지 권총",
+    "desc": "에너지를 사용하는 기본적인 총기",
+    "category": "weapon",
+    "itemMultiple": 1,
+    "icon": "Image_101_testGun",
+    "FireRate": 0.5,
+    "FireRange": 10,
+    "AtkValue": 10,
+    "dreamBarrierBreakValue": 10,
+    "useMana": 1
+  },
+  {
+    "itemTID": 301,
+    "itemName": "회복약",
+    "desc": "체력을 10 회복",
+    "category": "consume",
+    "itemMultiple": 5,
+    "icon": "Image_301_HealMedicine",
+    "useType": "target",
+    "useRange": 0,
+    "useDelay": 0,
+    "useValue": 10,
+    "useTarget": "self",
+    "effectType": "health_recover_inst"
+  },
+  {
+    "itemTID": 302,
+    "itemName": "이상한 사탕",
+    "desc": "섭취 시 마나 5 회복",
+    "category": "consume",
+    "itemMultiple": 5,
+    "icon": "Image_302_WeirdCandy",
+    "useType": "target",
+    "useRange": 0,
+    "useDelay": 0,
+    "useValue": 5,
+    "useTarget": "self",
+    "effectType": "mana_recover_inst"
+  },
+  {
+    "itemTID": 401,
+    "itemName": "기억 조각",
+    "desc": "다이버의 동조율을 상승시킴",
+    "category": "memory",
+    "itemMultiple": 10,
+    "icon": "Image_401_MemoryPiece",
+    "userType": "main",
+    "charID": 0,
+    "linkRateGain": 0
+  }
+]

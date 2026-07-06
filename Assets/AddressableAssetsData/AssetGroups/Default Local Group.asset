@@ -17,38 +17,38 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: c50e6a64479f53b419454afd384ff002
   m_SerializeEntries:
-  - m_GUID: 4e02c9e1f07b002469477ef272336c98
-    m_Address: Image_301_testHealMedicine
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 69d5691a300e73d48807dd8d4dad4f01
-    m_Address: Assets/03_PreFabs/Item/testManaPiece_Drop.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 97dd73e0342ee554a925055653552b0d
-    m_Address: Assets/03_PreFabs/Item/testHealMedicine_Drop.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: aa9423379d442b74bba59f8933ebd6c3
-    m_Address: Assets/04_Graphics/Images/Img_MemoryPiece.png
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: be7dbcd4181dbe04891bcc710918239f
-    m_Address: Assets/03_PreFabs/Item/testMemoryPiece_Drop.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c419aaafcbf53de4a84acb42f22678da
+  - m_GUID: 1a83250437eb7cb40ac2d57f6f005a8e
     m_Address: Weapon_101_testGun
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4e02c9e1f07b002469477ef272336c98
+    m_Address: Image_301_HealMedicine
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69d5691a300e73d48807dd8d4dad4f01
+    m_Address: Prefab_301_testManaPIece
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 97dd73e0342ee554a925055653552b0d
+    m_Address: Prefab_301_testMedicine
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa9423379d442b74bba59f8933ebd6c3
+    m_Address: Image_401_MemoryPiece
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be7dbcd4181dbe04891bcc710918239f
+    m_Address: Prefab_301_testMemoryPiece
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: faab77ee407a7e041bbf4527bec04be9
-    m_Address: Image_302_testManaPiece
+    m_Address: Image_302_WeirdCandy
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
