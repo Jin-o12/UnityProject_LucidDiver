@@ -66,6 +66,8 @@ public class PlayerMovement : MonoBehaviour
         GlobalEventBus.SendCanSprint += PlayerSprint;
         GlobalEventBus.SendCannotSprint += PlayerSprint;
         GlobalEventBus.OnMousePositionInput += UpdateMousePos;
+        GlobalEventBus.OnMainActiveSkillRequested += SkillAnimate;
+        GlobalEventBus.OnHitAnimate += HitAnimate;
         GlobalEventBus.onPlayerDead += PlayerDie;
     }
 
@@ -75,6 +77,8 @@ public class PlayerMovement : MonoBehaviour
         GlobalEventBus.SendCanSprint -= PlayerSprint;
         GlobalEventBus.SendCannotSprint -= PlayerSprint;
         GlobalEventBus.OnMousePositionInput -= UpdateMousePos;
+        GlobalEventBus.OnMainActiveSkillRequested -= SkillAnimate;
+        GlobalEventBus.OnHitAnimate -= HitAnimate;
         GlobalEventBus.onPlayerDead -= PlayerDie;
         moveNoiseTimer = 0.0f;
     }
@@ -84,7 +88,7 @@ public class PlayerMovement : MonoBehaviour
         MoveAndRotate();
     }
 
-    public void initialize(float _speed, float _sSpeed, float _sMana, float _eSpeed, float _eTime,  float _eMana, float _eCooltime)
+    public void initialize(float _speed, float _sSpeed, float _sMana, float _eSpeed, float _eTime, float _eMana, float _eCooltime)
     {
         // 기본 이동 속도 초기화
         moveSpeed = _speed;
@@ -122,7 +126,7 @@ public class PlayerMovement : MonoBehaviour
         Quaternion isoRotation = Quaternion.Euler(0f, isometricYAngle, 0f);
         Vector3 movement = (isoRotation * inputDir).normalized;
 
-        Vector3 targetPosition = rb.position + movement * (isEvading ? evadeSpeed : (sprintInput ? sprintSpeed : moveSpeed) ) * Time.fixedDeltaTime;
+        Vector3 targetPosition = rb.position + movement * (isEvading ? evadeSpeed : (sprintInput ? sprintSpeed : moveSpeed)) * Time.fixedDeltaTime;
 
         // 달리기 중 MP 소비 이벤트 전달
         if (movement.sqrMagnitude > 0.001f && sprintInput)
@@ -135,11 +139,11 @@ public class PlayerMovement : MonoBehaviour
         EmitMovementNoise(movement.sqrMagnitude > 0.001f);
 
         // 이동 방향에 따라 바라보는 방향 회전
-        if(movementInput.x>0)
+        if (movementInput.x > 0)
         {
             Body.transform.localScale = new Vector3(-1, 1, 1);
         }
-        else if(movementInput.x<0)
+        else if (movementInput.x < 0)
         {
             Body.transform.localScale = new Vector3(1, 1, 1);
         }
@@ -179,6 +183,9 @@ public class PlayerMovement : MonoBehaviour
     {
         isEvading = true;
 
+        // 구르기 입력을 애니메이터에 전달
+        animator.SetTrigger("Evade");
+
         // 구르기 상태 종료는 코루틴으로 처리
         StartCoroutine(EvadeComplete());
     }
@@ -188,6 +195,25 @@ public class PlayerMovement : MonoBehaviour
     {
         yield return new WaitForSeconds(evadeTime);
         isEvading = false;
+    }
+
+    /* 스킬 사용 애니메이션 트리거 */
+    public void SkillAnimate()
+    {
+        animator.SetTrigger("UseSkill");
+    }
+
+    /* 피격 애니메이션 코루틴 */
+    public void HitAnimate() => StartCoroutine(HitFaceAnimation());
+    public IEnumerator HitFaceAnimation()
+    {
+        if (apPort != null)
+        {
+            // 히트 시 이벤트를 받아서 Hit_Face 변수를 1로 만듦
+            apPort.SetControlParamFloat("Yuan_Hit_Face", 1);
+            yield return new WaitForSeconds(0.75f);
+            apPort.SetControlParamFloat("Yuan_Hit_Face", 0);
+        }
     }
 
     /* 마우스 커서가 가리키는 월드 위치 계산 */
@@ -278,9 +304,6 @@ public class PlayerMovement : MonoBehaviour
 
         // 달리기 입력이 있으면 true, 없으면 false
         animator.SetBool("IsSprint", sprintInput);
-
-        // 구르기 입력을 애니메이터에 전달
-        animator.SetTrigger("Evade");
     }
 
     /* 플레이어 사망 시 이동 및 회전 비활성화 */
