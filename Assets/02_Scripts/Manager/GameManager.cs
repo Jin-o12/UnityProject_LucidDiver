@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     // 플레이 타임 기록에 관한 필드
     private bool timeTrack = false;                     //플레이 시간 측정 중
     private float startTime;                            //플레이 시작 시점
-    private readonly string playScene = "DemoScene";    //플레이 시간을 측정할 신
+    private readonly string[] playScenes = { "DemoScene", "DemoScene Patrol" }; //인게임 세션으로 취급할 씬 목록
 
     // 저장 데이터 인터페이스
     private ISaveRepository saveRepo;                   // 플레이어 데이터 접근 인터페이스
@@ -44,7 +44,7 @@ public class GameManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if(scene.name == playScene) //인게임 세션 신에서 실행
+        if(IsPlayScene(scene.name)) //인게임 세션 신에서 실행
         {
             startTime = Time.time;  //시작 시점 등록
             timeTrack = true;       //시간 기록 시작
@@ -77,6 +77,23 @@ public class GameManager : MonoBehaviour
         {
             timeTrack = false;     //인게임 세션 신을 벗어나면 시간 기록 중단
         }
+    }
+
+    /// <summary>
+    /// 현재 로드된 씬이 인게임 세션 대상인지 판정합니다.
+    /// 데모 씬과 패트롤 테스트 씬을 모두 같은 플레이 씬으로 취급하기 위한 보조 함수입니다.
+    /// </summary>
+    private bool IsPlayScene(string sceneName)
+    {
+        for (int i = 0; i < playScenes.Length; i++)
+        {
+            if (sceneName == playScenes[i])
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void ResultTime(bool _extractionResult)

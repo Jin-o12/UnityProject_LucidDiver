@@ -144,7 +144,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable, IEffectReceiver
         // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
         if (!IsPlayerIdle(_playerID)) return;
         // 플레이어 상태를 gameover로 변경
-        ResultServiceLocator.Instance.HandleEscapeFail(_playerID);
+        ResultServiceLocator.Instance.HandleEscapeGameover(_playerID);
         // 코루틴 정지
         StopAllCoroutines();
         // 탈출 실패 판정 이벤트를 전송
@@ -196,6 +196,12 @@ public class PlayerStatus : MonoBehaviour, IDamageable, IEffectReceiver
         if (_movement.isEvading) return;
 
         GetHp(-dmg);
+
+        // 피해 입을 시 애니메이션 재생 이벤트
+        GlobalEventBus.OnHitAnimate?.Invoke();
+
+        // 피해 입을 시 탈출 실패 처리
+        GlobalEventBus.OnEscapeFailure?.Invoke(playerID);
     }
 
     /* 공격 시 마나 사용 */
