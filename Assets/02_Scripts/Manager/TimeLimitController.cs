@@ -29,7 +29,7 @@ public class TimeLimitController : MonoBehaviour
         // 남은 시간 제한 값이 0이 되면 탈출 실패로 게임 종료 
         if (currentTimeLimit <= 0)
         {
-            GlobalEventBus.OnEscapeRequest?.Invoke(false);
+            GlobalEventBus.OnTimeOver?.Invoke();
             timeFlow = false;
         }
     }

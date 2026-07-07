@@ -85,6 +85,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // 메인 카메라 연결이 끊겼다면 갱신
+        if (mainCamera == null && Camera.main != null)
+        {
+            mainCamera = Camera.main;
+        }
+
         MoveAndRotate();
     }
 

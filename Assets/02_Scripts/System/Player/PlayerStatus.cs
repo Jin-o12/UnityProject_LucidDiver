@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
 /// </summary>
@@ -51,6 +51,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnHealRequested += HealingHealth;
         GlobalEventBus.OnSprintInput += CanSprint;
         GlobalEventBus.OnSprintManaConsume += UseSprintMana;
+        GlobalEventBus.OnTimeOver += TimeOver;
     }
 
     private void OnDisable()
@@ -60,6 +61,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnHealRequested -= HealingHealth;
         GlobalEventBus.OnSprintInput -= CanSprint;
         GlobalEventBus.OnSprintManaConsume -= UseSprintMana;
+        GlobalEventBus.OnTimeOver -= TimeOver;
     }
 
     void Start()
@@ -122,8 +124,8 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     {
         hpCurrent = Mathf.Clamp(hpCurrent + _val, 0, hpMax);
         UpdateHp();
-        // 플레이어 체력이 0이 되었을 때 사망 처리 이벤트 및 게임오버 메소드를 발동
-        if (hpCurrent <= 0)
+        // 플레이어 체력이 0이 되었을 때 idle 상태이면 사망 처리 이벤트 및 게임오버 메소드를 발동
+        if (hpCurrent <= 0 && nowState == livingState.idle)
         {
             GlobalEventBus.onPlayerDead?.Invoke(playerID);
             GameOver(playerID);
@@ -136,7 +138,14 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         mpCurrent = Mathf.Clamp(mpCurrent + _val, 0, mpMax);
         UpdateMp();
     }
-#endregion
+    #endregion
+
+    /* 제한 시간 종료 이벤트에 게임 오버 처리를 연결 */
+    public void TimeOver()
+    {
+        _movement.enabled = false;
+        GameOver(playerID);
+    }
 
     /* 게임 오버 처리 */
     public void GameOver(int _playerID)

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -38,7 +38,7 @@ public class PlayerCombatPresenter : MonoBehaviour
     {
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnAttackInput -= TryAttack;
-        GlobalEventBus.OnEvadeRequested += TryEvade;
+        GlobalEventBus.OnEvadeRequested -= TryEvade;
         GlobalEventBus.OnMainActiveSkillRequested -= TrySkill;
     }
 
