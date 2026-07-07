@@ -213,8 +213,6 @@ public class ResultManager : MonoBehaviour, IResultService
         FindItemCountAndData(401, out memoryFragmentCount, out memoryFragmentData);
         // 기억 파편을 사용해 동조율 상승 → 심상 기록 해금 처리를 실행
         LinkRateUp(_extractionResult);
-        // 결과 창 패널 출력 코루틴 (사망 시간 동안 대기 후 출력)
-        StartCoroutine(OpenResultPanel());
         // 심상 기록 읽기 상태 저장
         // _playerSaveData.hasNewMemoryLog = hasNewMemoryLog;
         // 탈출 실패 시 소비 기물 아이템을 인벤토리에서 제거
@@ -226,8 +224,13 @@ public class ResultManager : MonoBehaviour, IResultService
         // 모든 처리 완료 후 후 DataManager에서 playerData를 저장
         DataManager.Instance.SaveGame();
 
-        // 저장 처리 후 코루틴 중단 코드를 진행
-        if (resultCoroutine != null) StopCoroutine(resultCoroutine);
+        // 저장 처리 후 기존 코루틴을 중단
+        if (resultCoroutine != null)
+        {
+            StopCoroutine(resultCoroutine);
+            resultCoroutine = null;
+        }
+        // 결과 창 패널 출력 코루틴
         resultCoroutine = StartCoroutine(OpenResultPanel());
     }
 
@@ -341,7 +344,7 @@ public class ResultManager : MonoBehaviour, IResultService
     public IEnumerator OpenResultPanel()
     {
         // 플레이어 Die 애니메이션 재생 시간만큼 대기 후 UI 오픈
-        yield return new WaitForSeconds(1.3f);
+        yield return new WaitForSeconds(1.25f);
         // UIManager에서 Canvas-ResultPanel을 받아와 UI 오픈
         resultPanel = UIManager.Instance.Open<ResultUI>();
         if (resultPanel == null) yield break;

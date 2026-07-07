@@ -375,8 +375,6 @@ public class LevelBoxSpawner : MonoBehaviour
 
         Transform parent = spawnedBoxRoot != null ? spawnedBoxRoot : null;
         GameObject spawnedBox = Instantiate(boxPrefab, point.PointTransform.position, point.PointTransform.rotation, parent);
-        // 스폰된 오브젝트를 게임 신에 배치 (LoadScene 언로드 방어)
-        SceneManager.MoveGameObjectToScene(spawnedBox, gameObject.scene);
         spawnedBoxes.Add(spawnedBox);
         zone.SpawnedCount++;
         return true;

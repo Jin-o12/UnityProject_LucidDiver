@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
@@ -11,6 +11,20 @@ public class CameraSetupManager : MonoBehaviour
     private void OnEnable()
     {
         GlobalEventBus.OnPlayerSpawned += SetupCameraTarget;
+
+        // 이벤트를 놓쳤을 경우를 대비해 이미 생성된 플레이어가 있으면 즉시 설정
+        var players = GlobalRuntimeData.GetPlayerList();
+        if (players != null)
+        {
+            foreach (var kvp in players)
+            {
+                if (kvp.Value != null)
+                {
+                    SetupCameraTarget(kvp.Value);
+                    break;
+                }
+            }
+        }
     }
 
     private void OnDisable()
