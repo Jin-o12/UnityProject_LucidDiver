@@ -42,6 +42,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b28cb3f6c6e0a9546ace9b3e059b7390
+    m_Address: Prefab_1_PrismGrenade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: be7dbcd4181dbe04891bcc710918239f
     m_Address: Prefab_301_testMemoryPiece
     m_ReadOnly: 0

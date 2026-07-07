@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
 /// </summary>
@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerStatus : MonoBehaviour, IDamageable, IEffectReceiver
+public class PlayerStatus : MonoBehaviour, IEffectReceiver
 {
     // 플레이어 상태
     public enum livingState { idle, escape, gameover }      // 플레이어가 가질 수 있는 상태의 종류

@@ -43,12 +43,13 @@ public enum EffectTarget
     enemy               // 적 캐릭터
 }
 
-// 아이템 효과 종류
+// 아이템&스킬 효과 종류
 public enum EffectType
 {
     none,                   // 효과 할당되지 않음 (오류)
     health_recover_inst,    // 체력 즉시 회복
-    mana_recover_inst       // 마나 즉시 회복
+    mana_recover_inst,      // 마나 즉시 회복
+    Get_Damage              // 일정량의 피해를 입음
 }
 
 public enum DialogueType
