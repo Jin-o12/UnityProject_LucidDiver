@@ -4,26 +4,27 @@ using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
-/// 프리팹에 실제로 붙어 있는 메인 적 AI 스크립트입니다.
-/// 판단, 감지, 이동, 전투 모듈을 묶고 스폰 시 받은 순찰 정보도 초기화합니다.
+/// 적 프리팹에 실제로 붙는 메인 AI 스크립트입니다.
+/// 브레인, 기억, 감지, 이동, 전투 모듈을 묶고 스폰 직후 전달받은 순찰 정보까지 초기화합니다.
 /// </summary>
 public class EnemyMovement : MonoBehaviour
 {
     [Header("Enemy AI Modules")]
-    [SerializeField] private EnemyBrain brain = new EnemyBrain();                   // 상위 의사결정 담당
-    [SerializeField] private EnemyMemory memory = new EnemyMemory();                // 순찰/복귀 런타임 기억 담당
-    [SerializeField] private EnemyPerception perception = new EnemyPerception();    // 시야/청각 감지 담당
-    [SerializeField] private EnemyNoiseListener noiseListener = new EnemyNoiseListener(); // 조사 상태와 소음 반응 담당
-    [SerializeField] private EnemyLocomotion locomotion = new EnemyLocomotion();    // 이동, 방향 전환, 돌진 담당
-    [SerializeField] private EnemyCombat combat = new EnemyCombat();                // 공격 판정과 2연격 담당
+    [SerializeField] private EnemyBrain brain = new EnemyBrain();                         // 상위 의사결정 모듈
+    [SerializeField] private EnemyMemory memory = new EnemyMemory();                      // 순찰/복귀/추적 기억 모듈
+    [SerializeField] private EnemyPerception perception = new EnemyPerception();          // 시야/청각 감지 모듈
+    [SerializeField] private EnemyNoiseListener noiseListener = new EnemyNoiseListener(); // 소리 조사 모듈
+    [SerializeField] private EnemyLocomotion locomotion = new EnemyLocomotion();          // 이동/회전/돌진 모듈
+    [SerializeField] private EnemyCombat combat = new EnemyCombat();                      // 공격/2연격 모듈
+    [SerializeField] private EnemyInterceptPlanner interceptPlanner = new EnemyInterceptPlanner(); // 먹잇감 차단 이동 예측 모듈
 
     [Header("Attack Anchor")]
-    [SerializeField] private Transform attackOrigin;                                // 실제 근접 타격 거리 계산 기준점
+    [SerializeField] private Transform attackOrigin;                                      // 실제 근접 판정 거리 계산 기준 위치
 
     [Header("Required Components")]
-    private EnemyStatus myStatus;                                                   // 상태/스탯 보유 컴포넌트
-    private NavMeshAgent navAgent;                                                  // 네비게이션 이동 컴포넌트
-    private Coroutine aiRoutine;                                                    // AI 판단 루프 코루틴 핸들
+    private EnemyStatus myStatus;                                                         // 상태/스탯 컴포넌트
+    private NavMeshAgent navAgent;                                                        // 이동용 NavMeshAgent
+    private Coroutine aiRoutine;                                                          // AI 판단 루프 코루틴 핸들
 
     public float SightLength => perception.SightRange;
     public float AwarenessRange => perception.AwarenessRange;
@@ -32,10 +33,10 @@ public class EnemyMovement : MonoBehaviour
     public float EyeHeight => perception.EyeHeight;
     public Transform CurrentTarget => brain.CurrentTarget;
 
-    public event Action<bool> OnWalkEvent;                                          // 걷기 애니메이션 갱신 이벤트
-    public event Action OnAttackEvent;                                              // 공격 애니메이션 시작 이벤트
-    public event Action OnDeathEvent;                                               // 사망 애니메이션 시작 이벤트
-    public event Action<int, int> OnLookDirEvent;                                   // 방향 애니메이션 갱신 이벤트
+    public event Action<bool> OnWalkEvent;                                                // 걷기 애니메이션 갱신 이벤트
+    public event Action OnAttackEvent;                                                    // 공격 애니메이션 시작 이벤트
+    public event Action OnDeathEvent;                                                     // 사망 애니메이션 시작 이벤트
+    public event Action<int, int> OnLookDirEvent;                                         // 방향 애니메이션 갱신 이벤트
 
     private void Awake()
     {
@@ -51,7 +52,7 @@ public class EnemyMovement : MonoBehaviour
             return;
         }
 
-        // 공격 기준점이 프리팹에 수동 지정되지 않아도 body/HitRange를 우선 탐색합니다.
+        // 공격 기준점이 별도로 연결되지 않았으면 body/HitRange를 우선 탐색합니다.
         ResolveAttackOrigin();
 
         brain.OnValidate();
@@ -60,6 +61,7 @@ public class EnemyMovement : MonoBehaviour
         locomotion.OnValidate();
         locomotion.Initialize(navAgent);
         combat.OnValidate();
+        interceptPlanner.OnValidate();
     }
 
     private void OnValidate()
@@ -71,6 +73,7 @@ public class EnemyMovement : MonoBehaviour
         noiseListener.OnValidate();
         locomotion.OnValidate();
         combat.OnValidate();
+        interceptPlanner.OnValidate();
 
         if (attackOrigin == null)
         {
@@ -117,8 +120,8 @@ public class EnemyMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// 일정 주기마다 브레인에게 "지금 무엇을 해야 하는지" 판단을 맡깁니다.
-    /// 실제 행동 전환 로직은 EnemyBrain에 두고, 이 스크립트는 루프 진입점 역할만 담당합니다.
+    /// 일정 주기마다 브레인에게 지금 어떤 행동을 해야 하는지 판단을 맡깁니다.
+    /// 실제 상태 전환 로직은 EnemyBrain이 담당하고, 이 스크립트는 루프 진입점 역할만 합니다.
     /// </summary>
     private IEnumerator CheckRoutine()
     {
@@ -134,6 +137,7 @@ public class EnemyMovement : MonoBehaviour
                 noiseListener,
                 locomotion,
                 combat,
+                interceptPlanner,
                 RaiseWalkEvent,
                 RaiseLookDirEvent,
                 RaiseAttackEvent);
@@ -145,8 +149,8 @@ public class EnemyMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// 외부에서 발생한 소음 이벤트를 받아 조사 상태로 전환할지 판단합니다.
-    /// 조사에 실제로 반응한 경우에만 이후 순찰 복귀 플래그를 세워 둡니다.
+    /// 맵 어디선가 발생한 소리 이벤트를 받아 조사 상태로 전환할지 판단합니다.
+    /// 조사로 전환되면 추적 타겟 기억과 현재 추적 목적지도 함께 비워 이전 추적 흔적이 남지 않게 합니다.
     /// </summary>
     private void HandleNoiseEmitted(NoiseStimulus stimulus)
     {
@@ -170,13 +174,15 @@ public class EnemyMovement : MonoBehaviour
 
         if (hasRegisteredNoise && interruptedChase)
         {
-            // 추적 중이던 대상을 강한 소음으로 끊을 때는 현재 타겟을 비웁니다.
+            // 강한 소리에 추적이 끊긴 경우 기존 타겟과 추적 계획을 함께 비워 조사 상태가 우선되도록 합니다.
             brain.ClearTarget();
+            memory.ClearTargetTracking();
+            memory.ClearChasePlan();
         }
 
         if (hasRegisteredNoise)
         {
-            // 여러 번 소리를 들어도 첫 이탈 지점을 유지해, 복귀 시 같은 기준점으로 돌아가게 합니다.
+            // 여러 번 소리를 들어도 첫 이탈 지점을 유지해 복귀 시 같은 기준점으로 돌아가게 합니다.
             memory.CaptureReturnAnchor(transform.position);
             memory.MarkNeedsReturnToPatrol();
         }
@@ -184,20 +190,22 @@ public class EnemyMovement : MonoBehaviour
 
     /// <summary>
     /// 적이 죽으면 AI 루프를 멈추고 프레젠테이션 이벤트를 전달합니다.
-    /// 현재 공격 중이던 런타임 상태도 함께 정리합니다.
+    /// 진행 중이던 추적/공격 런타임 상태도 함께 정리합니다.
     /// </summary>
     public void Die()
     {
         StopAllCoroutines();
         aiRoutine = null;
+        memory.ClearTargetTracking();
+        memory.ClearChasePlan();
         combat.ClearRuntimeState();
         OnDeathEvent?.Invoke();
         Destroy(gameObject, 3.0f);
     }
 
     /// <summary>
-    /// 스폰 직후 받은 패트롤 루트와 시작 인덱스를 순찰 메모리에 기록합니다.
-    /// SpawnManager가 적을 생성한 직후 한 번 호출하는 초기화 진입점입니다.
+    /// 스폰 직후 전달받은 순찰 루트와 시작 인덱스를 메모리에 기록합니다.
+    /// SpawnManager가 적 생성 직후 한 번 호출하는 초기 진입점입니다.
     /// </summary>
     public void InitializeSpawnContext(Vector3 spawnPosition, EnemyPatrolRoute patrolRoute, int startPatrolIndex)
     {
@@ -205,7 +213,7 @@ public class EnemyMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// 공격 애니메이션의 각 스윙 이벤트를 받아 해당 단계의 돌진과 타격을 실행합니다.
+    /// 공격 애니메이션의 각 스윙 이벤트를 받아 해당 단계의 돌진과 공격 판정을 실행합니다.
     /// 2연격 구조를 애니메이션 이벤트 기준으로 분리하기 위한 진입점입니다.
     /// </summary>
     public void HandleAttackSwing(int swingIndex)
@@ -241,8 +249,8 @@ public class EnemyMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// 인스펙터 직렬화가 비어 있을 때 기본 모듈 인스턴스를 다시 채워 넣습니다.
-    /// 프리팹 재연결이나 스크립트 리로드 시 참조가 비는 상황을 방어하기 위한 함수입니다.
+    /// 인스펙터 직렬화 값이 비어 있을 때 기본 모듈 인스턴스를 다시 채워 넣습니다.
+    /// 프리팹 재연결이나 스크립트 리로드 후 참조가 비는 상황을 방어하기 위한 함수입니다.
     /// </summary>
     private void EnsureModules()
     {
@@ -252,11 +260,12 @@ public class EnemyMovement : MonoBehaviour
         noiseListener ??= new EnemyNoiseListener();
         locomotion ??= new EnemyLocomotion();
         combat ??= new EnemyCombat();
+        interceptPlanner ??= new EnemyInterceptPlanner();
     }
 
     /// <summary>
-    /// 공격 판정 기준점이 비어 있으면 프리팹 안에서 body/HitRange를 자동 탐색합니다.
-    /// 수동 지정이 없어도 기본 프리팹 구조만 맞으면 바로 동작하게 하기 위한 보조 함수입니다.
+    /// 공격 판정 기준점이 비어 있으면 프리팹 내부에서 body/HitRange를 자동 탐색합니다.
+    /// 수동 지정이 없어도 기본 구조만 맞으면 바로 동작하게 하기 위한 보조 함수입니다.
     /// </summary>
     private void ResolveAttackOrigin()
     {
@@ -278,5 +287,108 @@ public class EnemyMovement : MonoBehaviour
 
         Transform directHitRange = transform.Find("HitRange");
         attackOrigin = directHitRange != null ? directHitRange : transform;
+    }
+}
+
+/// <summary>
+/// 적이 단순히 뒤를 쫓는 대신 플레이어 이동 방향 앞쪽을 선점하도록 예측 목적지를 계산하는 모듈입니다.
+/// 실제 이동은 EnemyLocomotion이 담당하고, 이 모듈은 차단 이동을 시도할지와 목적지를 어디로 잡을지만 결정합니다.
+/// </summary>
+[Serializable]
+public class EnemyInterceptPlanner
+{
+    [SerializeField] private bool enableInterceptChase = true;            // 차단 이동 사용 여부
+    [SerializeField] private float minInterceptDistance = 4.0f;           // 너무 가까우면 차단 대신 바로 추적/공격으로 전환
+    [SerializeField] private float maxInterceptDistance = 18.0f;          // 너무 멀면 예측 오차가 커져 차단을 시도하지 않음
+    [SerializeField] private float minTargetMoveSpeed = 0.8f;             // 플레이어가 이 속도 이상으로 움직일 때만 차단 이동 시도
+    [SerializeField] private float predictionTime = 0.9f;                 // 현재 속도를 몇 초 앞까지 예측할지
+    [SerializeField] private float minLeadDistance = 1.8f;                // 최소 선점 거리
+    [SerializeField] private float maxLeadDistance = 6.5f;                // 최대 선점 거리
+    [SerializeField] private float awayDotThreshold = 0.0f;               // 플레이어가 적 정면 기준 어느 정도 바깥으로 움직여야 차단할지
+    [SerializeField] private float interceptNavMeshSampleDistance = 2.5f; // 예측 지점을 NavMesh 위로 보정하는 반경
+    [SerializeField] private float minInterceptAdvanceDistance = 0.75f;   // 현재 위치보다 앞을 자르는 느낌이 날 최소 차이
+
+    public void OnValidate()
+    {
+        minInterceptDistance = Mathf.Max(0.0f, minInterceptDistance);
+        maxInterceptDistance = Mathf.Max(minInterceptDistance, maxInterceptDistance);
+        minTargetMoveSpeed = Mathf.Max(0.0f, minTargetMoveSpeed);
+        predictionTime = Mathf.Max(0.05f, predictionTime);
+        minLeadDistance = Mathf.Max(0.0f, minLeadDistance);
+        maxLeadDistance = Mathf.Max(minLeadDistance, maxLeadDistance);
+        awayDotThreshold = Mathf.Clamp(awayDotThreshold, -1.0f, 1.0f);
+        interceptNavMeshSampleDistance = Mathf.Max(0.2f, interceptNavMeshSampleDistance);
+        minInterceptAdvanceDistance = Mathf.Max(0.1f, minInterceptAdvanceDistance);
+    }
+
+    /// <summary>
+    /// 현재 플레이어 이동 방향을 바탕으로 차단 이동 목적지를 계산합니다.
+    /// 차단 가치가 없거나 예측점이 유효하지 않으면 false를 반환하고, 호출부는 기존 직선 추적으로 폴백합니다.
+    /// </summary>
+    public bool TryPlanIntercept(
+        Transform self,
+        Transform target,
+        EnemyMemory memory,
+        out Vector3 interceptDestination)
+    {
+        interceptDestination = target != null ? target.position : Vector3.zero;
+
+        if (!enableInterceptChase || self == null || target == null || memory == null || !memory.HasTargetMotionSample)
+        {
+            return false;
+        }
+
+        Vector3 flatVelocity = memory.EstimatedTargetVelocity;
+        flatVelocity.y = 0.0f;
+
+        float targetMoveSpeed = flatVelocity.magnitude;
+        if (targetMoveSpeed < minTargetMoveSpeed)
+        {
+            return false;
+        }
+
+        Vector3 toTarget = EnemyMathUtility.GetFlatDirection(self.position, target.position);
+        float distanceToTarget = toTarget.magnitude;
+        if (distanceToTarget <= 0.001f ||
+            distanceToTarget < minInterceptDistance ||
+            distanceToTarget > maxInterceptDistance)
+        {
+            return false;
+        }
+
+        Vector3 targetMoveDir = flatVelocity / targetMoveSpeed;
+        float moveDot = Vector3.Dot(targetMoveDir, toTarget / distanceToTarget);
+        if (moveDot < awayDotThreshold)
+        {
+            return false;
+        }
+
+        float leadDistance = Mathf.Clamp(targetMoveSpeed * predictionTime, minLeadDistance, maxLeadDistance);
+        Vector3 predictedPosition = target.position + targetMoveDir * leadDistance;
+        predictedPosition.y = target.position.y;
+
+        float minAdvanceDistanceSqr = minInterceptAdvanceDistance * minInterceptAdvanceDistance;
+        if (EnemyMathUtility.GetPlanarSqrDistance(predictedPosition, target.position) < minAdvanceDistanceSqr)
+        {
+            return false;
+        }
+
+        if (NavMesh.SamplePosition(predictedPosition, out NavMeshHit hit, interceptNavMeshSampleDistance, NavMesh.AllAreas))
+        {
+            predictedPosition = hit.position;
+        }
+
+        if (EnemyMathUtility.GetPlanarSqrDistance(predictedPosition, target.position) < minAdvanceDistanceSqr)
+        {
+            return false;
+        }
+
+        if (EnemyMathUtility.GetPlanarSqrDistance(self.position, predictedPosition) <= 0.01f)
+        {
+            return false;
+        }
+
+        interceptDestination = predictedPosition;
+        return true;
     }
 }
