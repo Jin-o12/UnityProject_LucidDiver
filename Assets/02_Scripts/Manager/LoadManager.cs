@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -37,23 +36,35 @@ public class LoadManager : MonoBehaviour
     {
         // 최종 목적지 씬 이름 가져오기
         SceneField targetScene = SceneController.Instance.TargetSceneName;
-            
+        // 덮어쓸 씬 이름 가져오기
+        SceneField addScene = SceneController.Instance.TargetSceneName_additive;
+
         // 목적지 씬을 비동기로 로드
-        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(targetScene);
-        asyncLoad.allowSceneActivation = false;
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(targetScene, LoadSceneMode.Additive);
+        // 덮어쓸 씬이 있다면 비동기로 로드
+        AsyncOperation asyncAdd = null;
+        if (SceneController.Instance.TargetSceneName_additive != null)
+        {
+            asyncAdd = SceneManager.LoadSceneAsync(addScene, LoadSceneMode.Additive);
+        }
 
         // 로딩 진척도에 따라 UI 업데이트
-        while(!asyncLoad.isDone)
+        while (!asyncLoad.isDone || (asyncAdd != null && !asyncAdd.isDone))
         {
+            float Progress = (asyncAdd != null)
+                ? Mathf.Min (asyncLoad.progress , asyncAdd.progress)
+                : asyncLoad.progress;
+            loadUI.SetProgress(Progress);
             yield return null;
-
-            loadUI.SetProgress(asyncLoad.progress);
-            if(asyncLoad.progress >= 0.9f)
-            {
-                loadUI.SetProgress(1f);
-                asyncLoad.allowSceneActivation = true;
-                yield break;
-            }
         }
+
+        loadUI.SetProgress(1f);
+
+        // targetScene을 Active Scene으로 지정
+        Scene TargetScene = SceneManager.GetSceneByName(targetScene);
+        SceneManager.SetActiveScene(TargetScene);
+
+        // LoadScene 언로드
+        yield return SceneManager.UnloadSceneAsync(gameObject.scene);
     }
 }

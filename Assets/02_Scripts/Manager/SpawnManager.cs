@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SpawnManager : MonoBehaviour
 {
@@ -110,6 +111,9 @@ public class SpawnManager : MonoBehaviour
         // 플레이어 오브젝트 생성
         Transform spawnPoint = playerSpawnPoint[spawnNum].transform;
         GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
+
+        // 스폰된 오브젝트를 게임 신에 배치 (LoadScene 언로드 방어)
+        SceneManager.MoveGameObjectToScene(spawnedPlayer, gameObject.scene);
 
         // 플레이어 오브젝트 세션 데이터에 등록
         GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
@@ -259,6 +263,8 @@ public class SpawnManager : MonoBehaviour
         }
 
         GameObject spawnedEnemy = Instantiate(EnemyPrefab, pointTransform.position, pointTransform.rotation);
+        // 스폰된 오브젝트를 게임 신에 배치 (LoadScene 언로드 방어)
+        SceneManager.MoveGameObjectToScene(spawnedEnemy, gameObject.scene);
 
         // 수정 이유:
         // 적 프리팹의 EntityIdentity는 프리팹 기본값이 그대로 복제되므로,
