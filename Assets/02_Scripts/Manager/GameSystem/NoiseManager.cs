@@ -37,6 +37,7 @@ public class NoiseManager : MonoBehaviour
         new NoiseTypeSetting { type = NoiseType.HitReaction, defaultRadius = 5.0f, defaultDuration = 0.6f, priority = 15, canInterruptChase = false, debugColor = new Color(0.9f, 0.5f, 0.5f, 1.0f) },
         new NoiseTypeSetting { type = NoiseType.CombatImpact, defaultRadius = 8.0f, defaultDuration = 0.8f, priority = 20, canInterruptChase = false, debugColor = new Color(0.9f, 0.35f, 0.15f, 1.0f) },
         new NoiseTypeSetting { type = NoiseType.Decoy, defaultRadius = 18.0f, defaultDuration = 2.5f, priority = 60, canInterruptChase = true, debugColor = new Color(0.4f, 1.0f, 0.35f, 1.0f) },
+        new NoiseTypeSetting { type = NoiseType.LucidLeak, defaultRadius = 45.0f, defaultDuration = 3.0f, priority = 50, canInterruptChase = false, debugColor = new Color(0.85f, 0.15f, 0.2f, 1.0f) },
     };
 
     private readonly Dictionary<NoiseType, NoiseTypeSetting> cachedSettings = new();
