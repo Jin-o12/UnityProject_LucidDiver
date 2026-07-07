@@ -25,8 +25,8 @@ public class EnemyBrain
     }
 
     /// <summary>
-    /// 판단 루프에서 사용할 WaitForSeconds를 반환합니다.
-    /// 코루틴에서 새 객체를 반복 생성하지 않기 위해 캐시된 값을 재사용합니다.
+    /// 판단 루프에서 재사용할 WaitForSeconds를 반환합니다.
+    /// 코루틴 반복 시 객체를 계속 새로 만들지 않도록 캐시합니다.
     /// </summary>
     public WaitForSeconds GetCheckDelay()
     {
@@ -39,8 +39,8 @@ public class EnemyBrain
     }
 
     /// <summary>
-    /// 현재 추적 대상을 강제로 비웁니다.
-    /// 강한 디코이 소리로 추적이 끊기는 상황에서 사용합니다.
+    /// 현재 추적 타겟을 강제로 비웁니다.
+    /// 큰 소리 조사 등으로 추적을 끊어야 할 때 호출합니다.
     /// </summary>
     public void ClearTarget()
     {
@@ -49,7 +49,7 @@ public class EnemyBrain
 
     /// <summary>
     /// 현재 감지 결과를 바탕으로 적의 다음 행동을 결정합니다.
-    /// 우선순위는 타겟 추적/공격 -> 조사 -> 복귀 -> 순찰 -> 대기 순서입니다.
+    /// 우선순위는 공격/추적 -> 조사 -> 복귀 -> 순찰 -> 대기 순서입니다.
     /// </summary>
     public void Tick(
         MonoBehaviour host,
@@ -61,6 +61,7 @@ public class EnemyBrain
         EnemyNoiseListener noiseListener,
         EnemyLocomotion locomotion,
         EnemyCombat combat,
+        EnemyInterceptPlanner interceptPlanner,
         Action<bool> onWalkEvent,
         Action<int, int> onLookDirEvent,
         Action onAttackEvent)
@@ -69,6 +70,9 @@ public class EnemyBrain
 
         if (currentTarget == null)
         {
+            memory.ClearTargetTracking();
+            memory.ClearChasePlan();
+
             if (noiseListener.Investigate(self, agent, locomotion, status, onWalkEvent, onLookDirEvent))
             {
                 return;
@@ -88,18 +92,21 @@ public class EnemyBrain
             return;
         }
 
-        // 플레이어를 다시 보게 되면 조사/복귀 흐름은 중단합니다.
+        // 플레이어를 다시 보면 조사/복귀 흐름은 즉시 끊고 추적 정보로 전환합니다.
         noiseListener.Clear();
         memory.ClearPatrolWait();
+        memory.UpdateTargetTracking(currentTarget);
 
         if (status.isAttacking)
         {
+            memory.ClearChasePlan();
             return;
         }
 
         float sqrDistToTarget = EnemyMathUtility.GetPlanarSqrDistance(self.position, currentTarget.position);
         if (combat.CanStartAttack(sqrDistToTarget))
         {
+            memory.ClearChasePlan();
             locomotion.Stop(agent, onWalkEvent);
             host.StartCoroutine(combat.RunCombo(
                 self,
@@ -115,10 +122,21 @@ public class EnemyBrain
 
         if (perception.CanKeepAwareness(self.position, currentTarget))
         {
+            Vector3 chaseDestination = currentTarget.position;
+            EnemyMemory.ChaseMoveMode chaseMoveMode = EnemyMemory.ChaseMoveMode.Direct;
+
+            if (interceptPlanner != null &&
+                interceptPlanner.TryPlanIntercept(self, currentTarget, memory, out Vector3 interceptDestination))
+            {
+                chaseDestination = interceptDestination;
+                chaseMoveMode = EnemyMemory.ChaseMoveMode.Intercept;
+            }
+
+            memory.SetChasePlan(chaseMoveMode, chaseDestination);
             locomotion.MoveTo(
                 self,
                 agent,
-                currentTarget.position,
+                chaseDestination,
                 status,
                 EnemyStatus.EnemyState.Chase,
                 onWalkEvent,
@@ -127,13 +145,15 @@ public class EnemyBrain
         }
 
         currentTarget = null;
+        memory.ClearTargetTracking();
+        memory.ClearChasePlan();
         memory.MarkNeedsReturnToPatrol();
         locomotion.SetIdle(agent, status, onWalkEvent);
     }
 
     /// <summary>
-    /// 기존 대상을 유지할지, 새로 시야 내 플레이어를 찾을지 결정합니다.
-    /// 강제 조사 시간 중에는 일부러 시야 재획득을 막아 소리에 반응하는 느낌을 살립니다.
+    /// 기존 타겟을 계속 유지할지, 새로 시야에 들어온 플레이어를 찾을지 결정합니다.
+    /// 강제 조사 중에는 즉시 시야 재획득하지 않도록 조사 모듈의 차단 규칙을 우선 적용합니다.
     /// </summary>
     private void RefreshTarget(
         Transform self,
@@ -158,7 +178,7 @@ public class EnemyBrain
         currentTarget = perception.FindVisibleTarget(self, players);
         if (currentTarget != null)
         {
-            // 순찰이나 복귀 흐름에서 처음 벗어난 지점만 복귀 기준점으로 저장합니다.
+            // 순찰이나 복귀 상태에서 처음 전투로 전환될 때만 복귀 기준점을 저장합니다.
             if (!hadTarget)
             {
                 memory.CaptureReturnAnchor(self.position);
@@ -170,8 +190,8 @@ public class EnemyBrain
     }
 
     /// <summary>
-    /// 조사나 추적이 끝난 뒤 현재 순찰 포인트로 복귀합니다.
-    /// 복귀가 끝나면 다시 Patrol 상태로 넘겨 이후 순찰을 이어서 계속하게 만듭니다.
+    /// 조사나 추적이 끝난 뒤 현재 순찰 이탈 기준점으로 복귀합니다.
+    /// 복귀가 끝나면 다시 Patrol 상태로 돌아가 직전 순찰 흐름을 이어갑니다.
     /// </summary>
     private bool HandleReturnToPatrol(
         Transform self,
@@ -187,9 +207,7 @@ public class EnemyBrain
             return false;
         }
 
-        // 현재 순찰 포인트가 아니라, 순찰에서 이탈했던 시작 지점으로 복귀합니다.
         Vector3 returnDestination = memory.ReturnAnchorPosition;
-
         if (locomotion.HasReachedDestination(self.position, returnDestination, memory.GetPointReachDistance()))
         {
             locomotion.Stop(agent, onWalkEvent);
@@ -212,7 +230,7 @@ public class EnemyBrain
 
     /// <summary>
     /// 타겟도 조사 상태도 없을 때 기본 순찰 루트를 따라 이동합니다.
-    /// 포인트 도착 시 잠시 기다렸다가 다음 포인트로 넘어갑니다.
+    /// 포인트에 도착하면 설정된 시간만큼 대기한 뒤 다음 포인트로 넘어갑니다.
     /// </summary>
     private bool HandlePatrol(
         Transform self,

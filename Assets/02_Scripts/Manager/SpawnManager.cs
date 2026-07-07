@@ -289,8 +289,10 @@ public class SpawnManager : MonoBehaviour
     /// </summary>
     private static bool IsNamedSpawnPoint(Transform pointTransform)
     {
+        // 새 구조의 Spawn_ 규칙과, 기존 DemoScene에서 쓰던 EnemySpawnPoint 이름을 함께 허용합니다.
         return pointTransform != null &&
-            pointTransform.name.StartsWith("Spawn_", StringComparison.OrdinalIgnoreCase);
+            (pointTransform.name.StartsWith("Spawn_", StringComparison.OrdinalIgnoreCase) ||
+             pointTransform.name.StartsWith("EnemySpawnPoint", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
