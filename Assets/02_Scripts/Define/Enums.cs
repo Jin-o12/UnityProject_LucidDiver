@@ -49,7 +49,8 @@ public enum EffectType
     none,                   // 효과 할당되지 않음 (오류)
     health_recover_inst,    // 체력 즉시 회복
     mana_recover_inst,      // 마나 즉시 회복
-    Get_Damage              // 일정량의 피해를 입음
+    damage,                 // 일정량의 피해를 입음
+    vision                  // 자신의 위치를 드러냄 (적에 한정된 효과)
 }
 
 public enum DialogueType
