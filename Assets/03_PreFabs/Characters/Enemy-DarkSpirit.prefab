@@ -706,7 +706,7 @@ MonoBehaviour:
   perception:
     sightRange: 10
     awarenessRange: 15
-    hearingRange: 20
+    hearingRange: 45
     sightAngle: 100
     eyeHeight: 1.4
     requireLineOfHearing: 0

@@ -50,6 +50,7 @@ public class GlobalEventBus
     public static Action<float, float> OnPlayerManaChanged;         // 플레이어 마나 변동: Action<현재 마나, 전체 마나>
     public static Action<float> OnSprintManaConsume;                // 플레이어 달리기 시 마나 소비: Action<소모량>
     public static Func<float, bool> OnRequestManaConsume;           // 플레이어 마나 소비 요청: Func<소모량, 성공여부>
+    public static Action<float> OnTimePenaltyRequested;             // 루시드 낙인 등으로 남은 제한 시간 감소 요청: Action<감소 초>
     public static Action<int, float, float> OnEnemyHealthChanged;   // 적의 체력 변동: Action<고유 번호, 현재 체력, 전체 체력>
     public static Action<int> OnEnemyDead;                          // 적의 사망 여부: Action<고유 번호>
     public static Action<float> OnTimerChanged;                     // 남은 제한 시간 변동: Action<남은 시간>

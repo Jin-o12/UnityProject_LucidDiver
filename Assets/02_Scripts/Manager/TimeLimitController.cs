@@ -16,6 +16,16 @@ public class TimeLimitController : MonoBehaviour
         timeFlow = true;
     }
 
+    private void OnEnable()
+    {
+        GlobalEventBus.OnTimePenaltyRequested += ApplyTimePenalty;
+    }
+
+    private void OnDisable()
+    {
+        GlobalEventBus.OnTimePenaltyRequested -= ApplyTimePenalty;
+    }
+
     private void FixedUpdate()
     {
         if (!timeFlow) return;
@@ -23,14 +33,41 @@ public class TimeLimitController : MonoBehaviour
         // 시간 제한 가속 배율에 따라 실시간으로 남은 시간 감소
         currentTimeLimit -= timeLimitSpeed * Time.fixedDeltaTime * timeLimitAccel;
 
+        BroadcastCurrentTime();
+        TryFinishByTimeout();
+    }
+
+    /// <summary>
+    /// 낙인 같은 외부 패널티가 들어오면 남은 시간을 즉시 차감합니다.
+    /// 시간 제한 값은 이 컨트롤러만 소유하도록 유지해 다른 시스템이 직접 currentTimeLimit을 건드리지 않게 합니다.
+    /// </summary>
+    public void ApplyTimePenalty(float penaltySeconds)
+    {
+        if (!timeFlow || penaltySeconds <= 0.0f)
+        {
+            return;
+        }
+
+        currentTimeLimit = Mathf.Max(0.0f, currentTimeLimit - penaltySeconds);
+        BroadcastCurrentTime();
+        TryFinishByTimeout();
+    }
+
+    private void BroadcastCurrentTime()
+    {
         // 타이머 UI에 남은 제한 시간을 전달하는 이벤트
         GlobalEventBus.OnTimerChanged?.Invoke(currentTimeLimit);
+    }
 
+    private void TryFinishByTimeout()
+    {
         // 남은 시간 제한 값이 0이 되면 탈출 실패로 게임 종료 
-        if (currentTimeLimit <= 0)
+        if (currentTimeLimit > 0.0f || !timeFlow)
         {
-            GlobalEventBus.OnEscapeRequest?.Invoke(false);
-            timeFlow = false;
+            return;
         }
+
+        timeFlow = false;
+        GlobalEventBus.OnEscapeRequest?.Invoke(false);
     }
 }
