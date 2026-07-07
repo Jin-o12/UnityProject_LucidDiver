@@ -60,16 +60,22 @@ public class GrenadeProjectile : MonoBehaviour
         float delay = skillData.effects.Count > 0 ? skillData.effects[0].effectDelay : 0.0f;
         yield return new WaitForSeconds(delay);
 
-        // 폭팔 수행 및 범위 내 적 탐색
+        // 폭발 수행 및 범위 내 콜라이더 탐색
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, skillData.areaWidth);
-        Debug.Log("투척");
+
+        // 이미 효과를 받은 대상을 기록하여 중복 타격을 방지합니다.
+        HashSet<IEffectReceiver> hitReceivers = new HashSet<IEffectReceiver>();
+        IEffectReceiver userReceiver = user != null ? user.GetComponent<IEffectReceiver>() : null;
 
         // 범위 내 콜라이더들에 대해 차례대로 이펙트 판정 수행
         foreach(Collider hit in hitColliders)
         {
-            IEffectReceiver receiver = hit.GetComponent<IEffectReceiver>();
-            if (receiver != null && hit.gameObject != user)
+            // 적의 콜라이더가 자식 오브젝트에 있을 수 있으므로 GetComponentInParent를 사용합니다.
+            IEffectReceiver receiver = hit.GetComponentInParent<IEffectReceiver>();
+            
+            if (receiver != null && receiver != userReceiver && !hitReceivers.Contains(receiver))
             {
+                hitReceivers.Add(receiver);
                 ApplySkillEffects(receiver);
             }
         }
@@ -78,11 +84,14 @@ public class GrenadeProjectile : MonoBehaviour
 
     private void ApplySkillEffects(IEffectReceiver _receiver)
     {
+        Debug.Log($"{_receiver}가 데미지 입음");
         foreach(SkillEffect effect in skillData.effects)
         {
+            Debug.Log($"{_receiver}가 {skillData.skillName}의 데미지 입음");
             switch(effect.effectType)
             {
-                case EffectType.Get_Damage:
+                case EffectType.damage:
+                    Debug.Log($"{_receiver}가 데미지 {effect.effectValue}만큼 입음");
                     _receiver.TakeDamage(effect.effectValue); 
                     break;
             }
