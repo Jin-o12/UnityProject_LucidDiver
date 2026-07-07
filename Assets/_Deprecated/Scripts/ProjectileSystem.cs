@@ -39,7 +39,7 @@ public class ProjectileSystem : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        IDamageable target = other.GetComponentInParent<IDamageable>();
+        IEffectReceiver target = other.GetComponentInParent<IEffectReceiver>();
         
         if (target != null)
         {

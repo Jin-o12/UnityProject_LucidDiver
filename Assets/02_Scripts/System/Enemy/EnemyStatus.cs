@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class EnemyStatus : MonoBehaviour, IDamageable
+public class EnemyStatus : MonoBehaviour, IEffectReceiver
 {
     // 이번 AI 고도화 작업 기준으로 순찰 상태와 복귀 상태를 추가합니다.
     public enum EnemyState
@@ -119,5 +119,16 @@ public class EnemyStatus : MonoBehaviour, IDamageable
         {
             entityIdentity.SetupIdentity(objID, Faction.enemy);
         }
+    }
+
+    public void HealthRecoverInst(float amount)
+    {
+        hpCurrent = Mathf.Clamp(hpCurrent + amount, 0.0f, hpMax);
+        BroadcastHealthChanged();
+    }
+
+    public void ManaRecoverInst(float amount)
+    {
+        // 적 객체는 마나 시스템을 사용하지 않으므로 구현하지 않습니다.
     }
 }

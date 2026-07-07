@@ -103,7 +103,7 @@ public class PlayerWeapon : MonoBehaviour
         {
             endPoint = shotHit.point;
 
-            IDamageable target = shotHit.collider.GetComponentInParent<IDamageable>();
+            IEffectReceiver target = shotHit.collider.GetComponentInParent<IEffectReceiver>();
 
             // 실제로 데미지를 줄 수 있는 적을 맞았을 때만 흰색으로 바꾸고 피해를 준다.
             if (target != null && target.EntityFaction != Faction.player)
