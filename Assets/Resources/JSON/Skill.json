@@ -1,0 +1,20 @@
+[
+  {
+    "TID": 1,
+    "skillName": "프리즘 유탄",
+    "skillDesc": "소비 MP: 10\n15m 거리 이내에 프리즘 유탄을 발사합니다. 발사한 유탄은 0.5초 후에 폭발하여 반경 3m 내의 적에게 플레이어 공격력의 150%의 피해를 주고, 동일 범위 내의 시야를 2.5초 동안 확보합니다.\n재사용 대기시간: 5초",
+    "skillIcon": "Image_Skill_prismGrenade",
+    "skillPrefab": "Prefab_1_PrismGrenade",
+    "skillCooltime": 5,
+    "mpCost": 10,
+    "fireRange": 15,
+    "areaType": "circle_zone",
+    "areaWidth": 3,
+    "effectType_0": "damage",
+    "effectDelay_0": 0.5,
+    "effectValue_0": 1.5,
+    "effectType_1": "vision",
+    "effectDelay_1": 0.5,
+    "effectValue_1": 2.5
+  }
+]

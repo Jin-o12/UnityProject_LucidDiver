@@ -43,7 +43,7 @@ public class InventoryPresenter : MonoBehaviour
         }
         
         // 인터페이스 구현부 연결
-        itemRepo = new SOItemRepository();
+        itemRepo = new LocalJsonItemRepository();
 
         // 인벤토리 슬롯 초기화
         PlayerSaveData playerData = DataManager.Instance.playerData;
@@ -86,12 +86,6 @@ public class InventoryPresenter : MonoBehaviour
     }
 
     /// <summary>
-    /// 인벤토리 UI에서 추후 직접 장착 버튼을 연결할 때를 위한 확장 지점.
-    /// </summary>
-    // public void OnRequestEquipWeapon(string weaponTID)
-    // {}
-
-    /// <summary>
     /// 기존 이벤트 기반 아이템 습득 진입점.
     /// 현재 플레이어가 실제 수령한 수량만 처리하도록 TryPickUpItem으로 위임한다.
     /// </summary>
@@ -100,7 +94,7 @@ public class InventoryPresenter : MonoBehaviour
         if (identity.entityID != pickerID)
             return;
 
-        ItemData data = itemRepo.GetItemData(pickedItemTID);
+        ItemData data = itemRepo.GetItemDataByID(pickedItemTID);
         if (data == null)
             return;
 
@@ -166,9 +160,7 @@ public class InventoryPresenter : MonoBehaviour
         return remain;
     }
 
-    /// <summary>
-    /// 상자와 상호작용했을 때 상자 UI와 인벤토리 UI를 함께 연다.
-    /// </summary>
+    /* 상자와 상호작용했을 때 상자 UI와 인벤토리 UI를 함께 연다 */
     private void HandleItemBoxOpened(IInteractable interactable, int playerID)
     {
         // 다른 플레이어가 연 상자면 무시한다.

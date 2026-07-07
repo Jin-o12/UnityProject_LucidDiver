@@ -163,7 +163,7 @@ public class EnemyCombat
             return;
         }
 
-        IDamageable damageable = target.GetComponentInParent<IDamageable>();
+        IEffectReceiver damageable = target.GetComponentInParent<IEffectReceiver>();
         if (damageable == null)
         {
             return;

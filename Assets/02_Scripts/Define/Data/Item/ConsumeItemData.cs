@@ -9,6 +9,7 @@ public class ConsumeItemData : ItemData
     public AreaType useType;                 // 발동 타입
     public float useRange;                  // 사용 거리
     public float useDelay;                  // 발동 대기 시간
+    public float useValue;                  // 발동 시 효과 값
 
     [Header("소비 효과")]
     public List<ItemEffect> useEffect;      // 발동 효과

@@ -1242,6 +1242,9 @@ MonoBehaviour:
   gameScene:
     sceneAsset: {fileID: 102900000, guid: 99c9720ab356a0642a771bea13969a05, type: 3}
     sceneName: DemoScene
+  levelScene:
+    sceneAsset: {fileID: 102900000, guid: 60e8107b5568ec54786114359f3c8ad7, type: 3}
+    sceneName: LevelDesignScene
   LoadScene:
     sceneAsset: {fileID: 102900000, guid: a6fff15a1e907ef43a982704c405cfee, type: 3}
     sceneName: LoadScene

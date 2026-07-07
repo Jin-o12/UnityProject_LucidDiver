@@ -1,6 +1,17 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+
+// 1차원 JSON 데이터를 받아낼 임시 DTO 클래스 선언
+public class FlatDialogueData
+{
+    public int CharacterTID;
+    public string CharacterName;
+    public string Situation;
+    public int DialogID;
+    public string Text;
+}
 
 public class LocalJsonDialogueRepository : IDialogueRepository
 {
@@ -9,15 +20,54 @@ public class LocalJsonDialogueRepository : IDialogueRepository
     /* 생성자로 캐릭터 대사 스크립트 데이터를 읽어옴 */
     public LocalJsonDialogueRepository()
     {
-        TextAsset jsonAsset = Resources.Load<TextAsset>($"JSON/CharacterDialogues");
+        TextAsset jsonAsset = Resources.Load<TextAsset>($"JSON/Dialogues");
         if(jsonAsset != null)
         {
-            // JSON 파싱
-            CharacterDialogueData parsedData = JsonConvert.DeserializeObject<CharacterDialogueData>(jsonAsset.text);
-            // 딕셔너리에 저장
-            dialogueDataDictionary[parsedData.CharacterTID] = parsedData;
-            
-            Debug.Log("데이터 로드 완료");
+            // 1차원 JSON 배열을 임시 클래스로 파싱
+            List<FlatDialogueData> flatDataList = JsonConvert.DeserializeObject<List<FlatDialogueData>>(jsonAsset.text);
+
+            // 파싱된 리스트를 순회하며 계층형 딕셔너리로 조립
+            foreach(var data in flatDataList)
+            {
+                //JSON 데이터 중 일부 Situation 값이 누락된 경우를 대비한 예외 처리
+                if(string.IsNullOrEmpty(data.Situation))
+                {
+                    Debug.LogWarning($"[TID: {data.CharacterTID}] 대사({data.DialogID})에 Situation 값이 누락되어 건너뜁니다");
+                    continue;
+                }
+
+                // 문자열로 가져와진 대사 상황 Situation을 DialogueType Enum으로 변환 시도
+                if(System.Enum.TryParse(data.Situation, out DialogueType dialogueType))
+                {
+                    // 해당 캐릭터 TID가 딕서너리에 없으면 뼈대 생성
+                    if(!dialogueDataDictionary.ContainsKey(data.CharacterTID))
+                    {
+                        dialogueDataDictionary[data.CharacterTID] = new CharacterDialogueData
+                        {
+                            CharacterTID = data.CharacterTID,
+                            Dialogues = new Dictionary<DialogueType, List<DialogueLine>>()
+                        };
+                    }
+
+                    // 해당 캐릭터의 Dialogues 안에 현재 상황(Situation) 리스트가 없으면 생성
+                    if (!dialogueDataDictionary[data.CharacterTID].Dialogues.ContainsKey(dialogueType))
+                    {
+                        dialogueDataDictionary[data.CharacterTID].Dialogues[dialogueType] = new List<DialogueLine>();
+                    }
+
+                    // 실제 대사 데이터를 알맞은 위치의 리스트에 추가
+                    dialogueDataDictionary[data.CharacterTID].Dialogues[dialogueType].Add(new DialogueLine 
+                    { 
+                        ID = data.DialogID, 
+                        Text = data.Text 
+                    });
+                }
+                else
+                {
+                    Debug.LogWarning($"알 수 없는 Situation 값입니다: {data.Situation}");
+                }
+            }
+            Debug.Log("데이터 로드 및 계층화 조립 완료");
         }
         else
         {

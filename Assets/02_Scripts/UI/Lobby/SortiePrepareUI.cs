@@ -39,9 +39,6 @@ public class SortiePrepareUI : MonoBehaviour
     public Sprite slotSprite3;  //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
     public int slotCount3;      //2번 슬롯 아이템의 개수 데이터를 받아옴
 
-    [Header("Scene")]
-    [SerializeField] private string gameSceneName = "DemoScene";
-
     [Header("Temporary Test Data")]
     [SerializeField] private int testLinkRateLevel = 0;
 

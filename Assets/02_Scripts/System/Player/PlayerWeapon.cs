@@ -103,7 +103,7 @@ public class PlayerWeapon : MonoBehaviour
         {
             endPoint = shotHit.point;
 
-            IDamageable target = shotHit.collider.GetComponentInParent<IDamageable>();
+            IEffectReceiver target = shotHit.collider.GetComponentInParent<IEffectReceiver>();
 
             // 실제로 데미지를 줄 수 있는 적을 맞았을 때만 흰색으로 바꾸고 피해를 준다.
             if (target != null && target.EntityFaction != Faction.player)
@@ -149,7 +149,7 @@ public class PlayerWeapon : MonoBehaviour
         weaponData = weaponItemData;
 
         // 무기 프리팹 주소가 비어 있을 시 실패
-        if(!weaponData.itemPrefabRef.RuntimeKeyIsValid()) return;
+        //if(!weaponData.itemPrefabRef.RuntimeKeyIsValid()) return;
         // Addressble을 통해 비동기로 무기를 소환, 손 위치에 부착함
         // 2D 캐릭터를 사용하기 때문에 3D 무기 장착 코드는 사용하지 않습니다
         // Addressables.InstantiateAsync(weaponData.itemPrefabRef, handPos).Completed += OnWeaponLoaded;

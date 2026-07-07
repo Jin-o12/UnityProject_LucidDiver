@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +7,9 @@ public class PlayerCombatPresenter : MonoBehaviour
     // 게임 데이터 스크립트 참조
     private PlayerWeapon playerWeapon;                  // 플레이어 무기
     private PlayerStatus playerStatus;                  // 플레이어 상태
+
+    // JSON 데이터 저장소 접근용 리포지토리 인스턴스
+    private ISkillRepository skillRepo;
 
     private void Awake()
     {
@@ -19,6 +22,8 @@ public class PlayerCombatPresenter : MonoBehaviour
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
             return;
         }
+
+        skillRepo = new LocalJsonSkillRepository();
     }
 
     private void OnEnable()
@@ -33,7 +38,7 @@ public class PlayerCombatPresenter : MonoBehaviour
     {
         /// 이벤트 구독 해제 ///
         GlobalEventBus.OnAttackInput -= TryAttack;
-        GlobalEventBus.OnEvadeRequested += TryEvade;
+        GlobalEventBus.OnEvadeRequested -= TryEvade;
         GlobalEventBus.OnMainActiveSkillRequested -= TrySkill;
     }
 
@@ -74,6 +79,32 @@ public class PlayerCombatPresenter : MonoBehaviour
         if (playerStatus.nowState != PlayerStatus.livingState.idle)
             return;
 
-        Debug.Log("스킬 키 입력 실행됨");
+        // 임시로 1번 스킬만을 사용하게 함
+        var skill = skillRepo.GetSkillData(1);
+        if(TryGetMouseWorldPosition(out Vector3 mousePos))
+        {
+            SkillEffectProcessor.Instance.UseSkillEffect(skill, this.gameObject, mousePos);
+        }
+    }
+
+    /* 현재 마우스의 평면상의 위치*/
+    private bool TryGetMouseWorldPosition(out Vector3 worldPosition)
+    {
+        // 가상의 평면 생성
+        Plane groundPlane = new Plane(Vector3.up, transform.position);
+
+        // 카메라에서 마우스 커서 위치를 향해 쏘는 광선(Ray) 생성
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+        // 광선이 평면과 부딪혔는지 검사
+        if (groundPlane.Raycast(ray, out float enter))
+        {
+            // 거리를 바탕으로 실제 충돌한 3D 좌표를 계산하여 반환
+            worldPosition = ray.GetPoint(enter);
+            return true;
+        }
+        // 평면과 만나지 않았을 경우
+        worldPosition = Vector3.zero;
+        return false;
     }
 }

@@ -1,3 +1,4 @@
+
 /// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
@@ -7,7 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerStatus : MonoBehaviour, IDamageable
+public class PlayerStatus : MonoBehaviour, IEffectReceiver
 {
     // 플레이어 상태
     public enum livingState { idle, escape, gameover }      // 플레이어가 가질 수 있는 상태의 종류
@@ -61,6 +62,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         GlobalEventBus.OnHealRequested += HealingHealth;
         GlobalEventBus.OnSprintInput += CanSprint;
         GlobalEventBus.OnSprintManaConsume += UseSprintMana;
+        GlobalEventBus.OnTimeOver += TimeOver;
     }
 
     private void OnDisable()
@@ -70,6 +72,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         GlobalEventBus.OnHealRequested -= HealingHealth;
         GlobalEventBus.OnSprintInput -= CanSprint;
         GlobalEventBus.OnSprintManaConsume -= UseSprintMana;
+        GlobalEventBus.OnTimeOver -= TimeOver;
 
         // 플레이어가 비활성화되면 새 흔적 생성만 멈추고,
         // 이미 바닥에 떨어진 의식누출 흔적은 각자 수명만큼 남아 적을 유도합니다.
@@ -136,17 +139,33 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         GlobalEventBus.OnPlayerManaChanged?.Invoke(mpCurrent, mpMax);
     }
 
+#region 플레이어 상태 변화 및 수치 조절에 사용되는 메소드
     /* 체력 변화 */
     private void GetHp(float _val)
     {
         hpCurrent = Mathf.Clamp(hpCurrent + _val, 0, hpMax);
         UpdateHp();
-        // 플레이어 체력이 0이 되었을 때 사망 처리 이벤트 및 게임오버 메소드를 발동
-        if (hpCurrent <= 0)
+        // 플레이어 체력이 0이 되었을 때 idle 상태이면 사망 처리 이벤트 및 게임오버 메소드를 발동
+        if (hpCurrent <= 0 && nowState == livingState.idle)
         {
             GlobalEventBus.onPlayerDead?.Invoke(playerID);
             GameOver(playerID);
         }
+    }
+
+    /* 마나 변화 */
+    private void GetMp(float _val)
+    {
+        mpCurrent = Mathf.Clamp(mpCurrent + _val, 0, mpMax);
+        UpdateMp();
+    }
+    #endregion
+
+    /* 제한 시간 종료 이벤트에 게임 오버 처리를 연결 */
+    public void TimeOver()
+    {
+        _movement.enabled = false;
+        GameOver(playerID);
     }
 
     /* 게임 오버 처리 */
@@ -188,13 +207,6 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         return comp.nowState == livingState.idle;
     }
 
-    /* 마나 변화 */
-    private void GetMp(float _val)
-    {
-        mpCurrent = Mathf.Clamp(mpCurrent + _val, 0, mpMax);
-        UpdateMp();
-    }
-
     /* 현재 달리기 가능한 상태인지 체크 */
     public void CanSprint(bool _isSprint)
     {
@@ -221,7 +233,8 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         {
             lucidMark?.ApplyHit(transform, gameObject);
         }
-
+        // 피해 입을 시 애니메이션 재생 이벤트
+        GlobalEventBus.OnHitAnimate?.Invoke();
         // 피해 입을 시 탈출 실패 처리
         GlobalEventBus.OnEscapeFailure?.Invoke(playerID);
     }
@@ -292,6 +305,18 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void UpdateFaceImage()
     {
         /// 플레이어 데이터 구조가 구축되면 연동하여 업데이트 할 것 ///
+    }
+
+    /* 아이템을 사용해 체력 회복 */
+    public void HealthRecoverInst(float _amount)
+    {
+        GetHp(_amount);
+    }
+
+    /* 아이템을 사용해 마나 회복 */
+    public void ManaRecoverInst(float _amount)
+    {
+        GetMp(_amount);
     }
 }
 
