@@ -10,7 +10,11 @@ using UnityEngine.AI;
 [Serializable]
 public class EnemyLocomotion
 {
-    [SerializeField] private float moveSpeed = 3.0f;     // 기본 추적 및 순찰 이동 속도
+    [SerializeField] private float moveSpeed = 4.0f;     // 기본 추적 및 순찰 이동 속도
+
+    // 플레이어와 같은 쿼터뷰 기준으로 적의 시각 방향을 판정하기 위한 보정 각도입니다.
+    // 월드 forward를 그대로 쓰면 화면에서 보이는 좌우/상하와 어긋날 수 있어 애니메이션 동기화에 사용합니다.
+    private const float VisualDirectionAngle = 45.0f;
 
     public void OnValidate()
     {
@@ -201,13 +205,25 @@ public class EnemyLocomotion
     }
 
     /// <summary>
-    /// 현재 회전값을 기존 애니메이션이 사용하는 lookDir/lookRight 값으로 변환합니다.
-    /// 프레젠터나 애니메이터 쪽 구조는 유지한 채 방향 표현만 맞춰 주기 위한 보조 함수입니다.
+    /// 현재 바라보는 월드 방향을 애니메이터가 사용하는 lookDir/lookRight 값으로 변환합니다.
+    /// 쿼터니언 y값을 직접 쓰지 않고 self.forward를 쿼터뷰 화면 기준으로 보정해서
+    /// 실제 적이 바라보는 방향과 스프라이트 애니메이션 방향이 어긋나지 않도록 맞춰줍니다.
     /// </summary>
     private void UpdateLookDirection(Transform self, Action<int, int> onLookDirEvent)
     {
-        int lookUp = self.rotation.y > 0.0f ? 0 : 1;
-        int lookRight = Mathf.Abs(self.rotation.y) < 0.5f ? -1 : 1;
+        Vector3 flatForward = self.forward;
+        flatForward.y = 0.0f;
+
+        if (flatForward.sqrMagnitude <= 0.001f)
+        {
+            return;
+        }
+
+        Quaternion visualRotation = Quaternion.Euler(0.0f, VisualDirectionAngle, 0.0f);
+        Vector3 visualForward = visualRotation * flatForward.normalized;
+
+        int lookUp = visualForward.z > 0.0f ? 1 : 0;
+        int lookRight = visualForward.x > 0.0f ? -1 : 1;
         onLookDirEvent?.Invoke(lookUp, lookRight);
     }
 }
