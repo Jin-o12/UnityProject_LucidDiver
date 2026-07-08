@@ -76,6 +76,13 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
         }
     }
 
+    public event Action<Transform, float> OnAggroApplied;       // 강제 추적 타겟 지정 이벤트
+
+    public void ApplyAggro(Transform target, float duration)
+    {
+        OnAggroApplied?.Invoke(target, duration);
+    }
+
     /// <summary>
     /// SpawnManager가 적을 생성한 직후 런타임 고유 번호를 넣어 줄 때 호출합니다.
     /// EnemyStatus와 EntityIdentity가 같은 번호를 바라보도록 한 곳에서 함께 맞춥니다.

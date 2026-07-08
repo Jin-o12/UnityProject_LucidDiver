@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 플레이어의 이동과 커서 방향 회전을 처리하는 스크립트
 /// </summary>
 using UnityEngine;
@@ -66,7 +66,7 @@ public class PlayerMovement : MonoBehaviour
         GlobalEventBus.SendCanSprint += PlayerSprint;
         GlobalEventBus.SendCannotSprint += PlayerSprint;
         GlobalEventBus.OnMousePositionInput += UpdateMousePos;
-        GlobalEventBus.OnMainActiveSkillRequested += SkillAnimate;
+        GlobalEventBus.OnMainActiveSkillCasted += SkillAnimate;
         GlobalEventBus.OnHitAnimate += HitAnimate;
         GlobalEventBus.onPlayerDead += PlayerDie;
     }
@@ -77,7 +77,7 @@ public class PlayerMovement : MonoBehaviour
         GlobalEventBus.SendCanSprint -= PlayerSprint;
         GlobalEventBus.SendCannotSprint -= PlayerSprint;
         GlobalEventBus.OnMousePositionInput -= UpdateMousePos;
-        GlobalEventBus.OnMainActiveSkillRequested -= SkillAnimate;
+        GlobalEventBus.OnMainActiveSkillCasted -= SkillAnimate;
         GlobalEventBus.OnHitAnimate -= HitAnimate;
         GlobalEventBus.onPlayerDead -= PlayerDie;
         moveNoiseTimer = 0.0f;

@@ -91,6 +91,7 @@ public class EnemyMovement : MonoBehaviour
         }
 
         myStatus.OnLocalDeath += Die;
+        myStatus.OnAggroApplied += HandleAggroApplied;
         GlobalEventBus.OnNoiseEmitted += HandleNoiseEmitted;
     }
 
@@ -112,6 +113,7 @@ public class EnemyMovement : MonoBehaviour
         }
 
         myStatus.OnLocalDeath -= Die;
+        myStatus.OnAggroApplied -= HandleAggroApplied;
         GlobalEventBus.OnNoiseEmitted -= HandleNoiseEmitted;
 
         if (aiRoutine != null)
@@ -119,6 +121,11 @@ public class EnemyMovement : MonoBehaviour
             StopCoroutine(aiRoutine);
             aiRoutine = null;
         }
+    }
+
+    private void HandleAggroApplied(Transform target, float duration)
+    {
+        brain.ApplyAggro(target, duration);
     }
 
     /// <summary>
