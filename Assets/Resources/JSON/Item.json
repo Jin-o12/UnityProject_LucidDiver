@@ -26,7 +26,7 @@
     "useDelay": 0,
     "useValue": 10,
     "useTarget": "self",
-    "effectType": "health_recover_inst"
+    "effectType": "healHP"
   },
   {
     "itemTID": 302,
@@ -41,7 +41,7 @@
     "useDelay": 0,
     "useValue": 5,
     "useTarget": "self",
-    "effectType": "mana_recover_inst"
+    "effectType": "healMP"
   },
   {
     "itemTID": 401,
