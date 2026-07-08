@@ -11,9 +11,19 @@ using UnityEngine.EventSystems;
 public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
 {
     [Header("슬롯 UI 요소")]
+    [SerializeField] private Image slotFrameImage; // 기본 빈 슬롯 이미지
+    [SerializeField] private Image rarityFrameImage; // 등급별 슬롯 이미지
     [SerializeField] private Image itemImg;
     [SerializeField] private TMP_Text itemStack;
     [SerializeField] private Transform itemInfo;
+
+    [Header("등급별 슬롯 이미지")]
+    [SerializeField] private Sprite emptySlotSprite;
+    [SerializeField] private Sprite normalSlotSprite;
+    [SerializeField] private Sprite uncommonSlotSprite;
+    [SerializeField] private Sprite rareSlotSprite;
+    [SerializeField] private Sprite epicSlotSprite;
+    [SerializeField] private Sprite legendSlotSprite;
 
     private InventoryUI inventoryUI;
 
@@ -29,6 +39,9 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         mainCanvas = GetComponentInParent<Canvas>();
 
         // 프리팹에 수동 연결이 빠졌을 때를 대비해 같은 이름의 자식을 자동으로 찾는다.
+        if (slotFrameImage == null)
+            slotFrameImage = GetComponent<Image>();
+
         if (itemInfo == null)
             itemInfo = transform.Find("ItemInfo");
 
@@ -45,21 +58,76 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     public void Initialize(int index)
     {
         slotIndex = index;
-        UpdateSlot(0, null);
+        UpdateSlot(0, null, ItemGrade.empty);
     }
 
     public void UpdateSlot(int stack, Sprite sprite)
+    {
+        UpdateSlot(stack, sprite, ItemGrade.empty);
+    }
+
+    public void UpdateSlot(int stack, Sprite sprite, ItemGrade grade)
     {
         if (stack <= 0 || sprite == null)
         {
             itemImg.enabled = false;
             itemStack.text = "";
+            ApplySlotFrame(ItemGrade.empty);
             return;
         }
 
         itemImg.enabled = true;
         itemImg.sprite = sprite;
         itemStack.text = stack.ToString();
+        ApplySlotFrame(grade);
+    }
+
+    /// <summary>
+    /// 엑셀/JSON에서 넘어온 아이템 등급에 맞춰 슬롯 배경 이미지를 교체한다.
+    /// </summary>
+    /// 빈 슬롯
+    ///-> slotFrameImage = emptySlotSprite
+    ///-> rarityFrameImage 숨김
+    ///-> itemImg 숨김
+
+    ///아이템 있음
+    ///-> slotFrameImage = emptySlotSprite 그대로 유지
+    ///-> rarityFrameImage = 등급별 Sprite
+    ///-> rarityFrameImage 표시
+    ///-> itemImg 표시
+    private void ApplySlotFrame(ItemGrade grade)
+    {
+        if (slotFrameImage != null)
+        {
+            slotFrameImage.sprite = emptySlotSprite;
+        }
+
+        if (rarityFrameImage == null)
+            return;
+
+        if (grade == ItemGrade.empty)
+        {
+            rarityFrameImage.enabled = false;
+            rarityFrameImage.sprite = null;
+            return;
+        }
+
+        rarityFrameImage.enabled = true;
+        rarityFrameImage.color = Color.white;
+        rarityFrameImage.sprite = GetSlotFrameSprite(grade);
+    }
+
+    private Sprite GetSlotFrameSprite(ItemGrade grade)
+    {
+        return grade switch
+        {
+            ItemGrade.normal => normalSlotSprite != null ? normalSlotSprite : emptySlotSprite,
+            ItemGrade.uncommon => uncommonSlotSprite != null ? uncommonSlotSprite : normalSlotSprite,
+            ItemGrade.rare => rareSlotSprite != null ? rareSlotSprite : normalSlotSprite,
+            ItemGrade.epic => epicSlotSprite != null ? epicSlotSprite : rareSlotSprite,
+            ItemGrade.legend => legendSlotSprite != null ? legendSlotSprite : epicSlotSprite,
+            _ => emptySlotSprite
+        };
     }
 
     // 왼쪽 버튼 더블클릭으로 인벤토리 이동을 처리

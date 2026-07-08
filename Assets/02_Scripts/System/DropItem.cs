@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -8,6 +9,29 @@ public class DropItem : MonoBehaviour, IInteractable
 {
     public ItemData itemData;   // 드랍 아이템이 가지고 있는 실제 아이템 데이터
     public int stackCount;      // 바닥에 남아 있는 수량
+
+    [SerializeField] private SpriteRenderer itemIconRenderer; // 공통 드랍 프리팹에서 아이템별 아이콘을 표시할 렌더러
+
+    private void Awake()
+    {
+        ResolveIconRenderer();
+    }
+
+    private void OnValidate()
+    {
+        ResolveIconRenderer();
+    }
+
+    /// <summary>
+    /// 인벤토리에서 버려진 아이템 데이터와 수량을 주입하고, 월드 표시 이미지를 갱신한다.
+    /// </summary>
+    public void Initialize(ItemData data, int count)
+    {
+        itemData = data;
+        stackCount = count;
+
+        _ = RefreshIconAsync();
+    }
 
     public bool Interact(int playerID)
     {
@@ -41,6 +65,38 @@ public class DropItem : MonoBehaviour, IInteractable
 
         // 일부만 주운 경우에는 바닥에 남겨 둔다.
         return false;
+    }
+
+    /// <summary>
+    /// 프리팹 연결 누락을 줄이기 위해 자식 SpriteRenderer를 자동으로 찾는다.
+    /// </summary>
+    private void ResolveIconRenderer()
+    {
+        if (itemIconRenderer == null)
+        {
+            itemIconRenderer = GetComponentInChildren<SpriteRenderer>(true);
+        }
+    }
+
+    /// <summary>
+    /// JSON 아이템 데이터의 아이콘 주소를 읽어 공통 드랍 프리팹의 이미지를 아이템별로 교체한다.
+    /// </summary>
+    private async Task RefreshIconAsync()
+    {
+        ResolveIconRenderer();
+
+        if (itemIconRenderer == null || itemData == null || string.IsNullOrEmpty(itemData.iconAddress))
+        {
+            return;
+        }
+
+        Sprite loadedIcon = await AddressableLoader.LoadAssetAsync<Sprite>(itemData.iconAddress);
+        if (loadedIcon == null)
+        {
+            return;
+        }
+
+        itemIconRenderer.sprite = loadedIcon;
     }
 
     /// <summary>

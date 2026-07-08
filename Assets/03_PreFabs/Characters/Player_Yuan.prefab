@@ -479,6 +479,8 @@ MonoBehaviour:
   quickSlots: []
   safeSlots: []
   anySlots: []
+  itemPrefabRef: {fileID: 5782343015041400679, guid: ab21ff7a51f0ed84c807b5403020d7d4,
+    type: 3}
 --- !u!114 &2296655442028726609
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -501,6 +503,32 @@ MonoBehaviour:
   manaRegen: 0
   sprintMP: 0
   evadeMP: 0
+  lucidMark:
+    maxStack: 2
+    leakRequiredStack: 2
+    hitTimePenaltySeconds: 5
+    markDuration: 8
+    leakDuration: 8
+    traceSpawnDistance: 1.8
+    traceSpawnMinInterval: 0.25
+    traceLifeTime: 4
+    traceNoisePulseInterval: 1
+    traceNoiseRadius: 45
+    traceNoiseDuration: 3
+    traceNoisePriority: 50
+    traceCanInterruptChase: 0
+    traceVisualPrefab: {fileID: 0}
+    traceVisualLocalOffset: {x: 0, y: 0.05, z: 0}
+    traceVisualLocalScale: {x: 1, y: 1, z: 1}
+    traceDebugColor: {r: 0.85, g: 0.15, b: 0.2, a: 1}
+    currentStack: 0
+    isLeakEmissionActive: 0
+    markExpireTime: 0
+    leakExpireTime: 0
+    lastTraceSpawnPosition: {x: 0, y: 0, z: 0}
+    lastTraceSpawnTime: 0
+    hasLastTraceSpawnPosition: 0
+    spawnedTraceCount: 0
 --- !u!114 &7758750535247349011
 MonoBehaviour:
   m_ObjectHideFlags: 0
