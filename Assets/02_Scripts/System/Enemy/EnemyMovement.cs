@@ -25,6 +25,7 @@ public class EnemyMovement : MonoBehaviour
     private EnemyStatus myStatus;                                                         // 상태/스탯 컴포넌트
     private NavMeshAgent navAgent;                                                        // 이동용 NavMeshAgent
     private Coroutine aiRoutine;                                                          // AI 판단 루프 코루틴 핸들
+    private BoxCollider collider;                                                         // 충돌 판정 콜라이더
 
     public float SightLength => perception.SightRange;
     public float AwarenessRange => perception.AwarenessRange;
@@ -44,8 +45,9 @@ public class EnemyMovement : MonoBehaviour
 
         navAgent = GetComponent<NavMeshAgent>();
         myStatus = GetComponent<EnemyStatus>();
+        collider = GetComponentInChildren<BoxCollider>();
 
-        if (navAgent == null || myStatus == null)
+        if (navAgent == null || myStatus == null || collider == null)
         {
             enabled = false;
             Debug.LogError("EnemyMovement: required components are missing.");
@@ -196,10 +198,16 @@ public class EnemyMovement : MonoBehaviour
     {
         StopAllCoroutines();
         aiRoutine = null;
+
         memory.ClearTargetTracking();
         memory.ClearChasePlan();
+        
         combat.ClearRuntimeState();
         OnDeathEvent?.Invoke();
+
+        navAgent.enabled = false;
+        collider.enabled = false;
+
         Destroy(gameObject, 3.0f);
     }
 
