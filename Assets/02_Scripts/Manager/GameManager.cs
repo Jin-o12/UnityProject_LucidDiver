@@ -66,6 +66,12 @@ public class GameManager : MonoBehaviour
                 playerInventory.RestoreFromSave(playerData);
             }
 
+            PlayerArtifactEquipment artifactEquipment = FindObjectOfType<PlayerArtifactEquipment>();
+            if (artifactEquipment != null)
+            {
+                artifactEquipment.RestoreFromSave(playerData, itemRepo);
+            }
+
             // 적 1회 생성
             if (SpawnManager.Instance != null)
             {

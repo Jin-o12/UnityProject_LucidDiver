@@ -23,7 +23,7 @@ public class FlatItemData
     public float dreamBarrierBreakValue;
     public float useMana;
 
-    // 소비(Consume) 전용 정보[cite: 6]
+    // 소비(Consume) 전용 정보
     public string useType;
     public float useRange;
     public float useDelay;
@@ -31,10 +31,19 @@ public class FlatItemData
     public string useTarget;
     public string effectType;
 
-    // 기억 조각(Memory) 전용 정보[cite: 6]
+    // 기억 조각(Memory) 전용 정보
     public string userType;
     public int charID;
     public int linkRateGain;
+
+    // 아티팩트(Artifact) 전용 정보
+    public string itemFlavorText;
+    public string artifactCategory;
+    public string equipEffectType_0;
+    public float equipEffectValue_0;
+    public string equipEffectType_1;
+    public float equipEffectValue_1;
+    public int sellValue;
 }
 
 public class LocalJsonItemRepository : IItemDataRepository
@@ -143,6 +152,52 @@ public class LocalJsonItemRepository : IItemDataRepository
                     memory.linkRateGain = data.linkRateGain;
                     
                     itemDatabase[memory.TID] = memory;
+                    break;
+
+                case "artifact":
+                    ArtifactItemData artifact = ScriptableObject.CreateInstance<ArtifactItemData>();
+                    SetCommonData(artifact, data, parsedCategory, parsedGrade);
+
+                    artifact.itemFlavorText = data.itemFlavorText;
+                    artifact.sellValue = data.sellValue;
+
+                    // JSON 문자열로 들어온 아티팩트 카테고리를 enum 값으로 변환한다.
+                    if (!System.Enum.TryParse(data.artifactCategory, out ArtifactCategory artifactCategory))
+                    {
+                        Debug.LogWarning($"알 수 없는 아티팩트 카테고리입니다: {data.itemName}");
+                        artifactCategory = ArtifactCategory.None;
+                    }
+
+                    artifact.artifactCategory = artifactCategory;
+                    artifact.equipEffects = new List<ArtifactEquipEffect>();
+
+                    // 첫 번째 장착 효과는 모든 아티팩트가 기본으로 가진다.
+                    if (!string.IsNullOrEmpty(data.equipEffectType_0) &&
+                        System.Enum.TryParse(data.equipEffectType_0, out ArtifactEffectType effectType0))
+                    {
+                        artifact.equipEffects.Add(new ArtifactEquipEffect
+                        {
+                            effectType = effectType0,
+                            effectValue = data.equipEffectValue_0
+                        });
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"아티팩트 효과 정보가 없습니다: {data.itemName}");
+                    }
+
+                    // 두 번째 장착 효과는 레전드 아티팩트처럼 추가 효과가 있을 때만 등록한다.
+                    if (!string.IsNullOrEmpty(data.equipEffectType_1) &&
+                        System.Enum.TryParse(data.equipEffectType_1, out ArtifactEffectType effectType1))
+                    {
+                        artifact.equipEffects.Add(new ArtifactEquipEffect
+                        {
+                            effectType = effectType1,
+                            effectValue = data.equipEffectValue_1
+                        });
+                    }
+
+                    itemDatabase[artifact.TID] = artifact;
                     break;
 
                 default:

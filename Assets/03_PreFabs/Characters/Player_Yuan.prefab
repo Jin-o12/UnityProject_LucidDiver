@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 6604895193218961620}
   - component: {fileID: 7647394893422696114}
   - component: {fileID: 1607228738055200154}
+  - component: {fileID: 6549187411095666664}
   m_Layer: 3
   m_Name: Player_Yuan
   m_TagString: Player
@@ -705,6 +706,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 2, z: 1}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &6549187411095666664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6496859401421214368}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcc24452e92ef3e4c8e77b50cdc19610, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  artifactSlotCount: 3
 --- !u!1 &7599140946263659434
 GameObject:
   m_ObjectHideFlags: 0

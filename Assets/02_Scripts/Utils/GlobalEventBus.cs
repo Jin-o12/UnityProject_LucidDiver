@@ -36,6 +36,8 @@ public class GlobalEventBus
     public static Action<int, int> OnDropItemQuickSlot;             // 인벤토리에서 퀵슬롯에 아이템을 드래그 앤 드롭 할 시: Action<퀵슬롯 번호, 인벤토리 번호> | 인벤토리->퀵슬롯
     public static Action<int, int> OnSwapItemQuickSlot;             // 퀵슬롯에서 퀵슬롯으로 아이템을 드래그 앤 드롭 할 시: Action<1번 퀵슬롯 번호, 2번 퀵슬롯 번호)> | 2번슬롯->1번슬롯
     public static Action<int, int, Sprite, int> QuickSlotLoad;      // 퀵슬롯 데이터 불러오기 시: Action<퀵슬롯 번호, 아이템 TID, 아이템 아이콘, 아이템 개수)>
+    public static Action<int, int> OnArtifactEquipRequested;     // 아티팩트 장착 요청: Action<장착 슬롯 번호, 인벤토리 슬롯 번호>
+    public static Action<int> OnArtifactUnequipRequested;        // 아티팩트 해제 요청: Action<장착 슬롯 번호>
 
     /// <summary>
     /// 아이템 효과 이벤트

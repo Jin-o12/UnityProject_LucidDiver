@@ -204,6 +204,14 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             return;
         }
 
+        if (droppedObj.TryGetComponent<ArtifactEquipSlotUI>(out var artifactSlot))
+        {
+            // 장착 슬롯에서 일반 인벤토리 슬롯으로 드롭하면 해제를 요청합니다.
+            // 실제로 인벤토리에 들어갈 공간이 있는지는 InventoryPresenter가 판단합니다.
+            GlobalEventBus.OnArtifactUnequipRequested?.Invoke(artifactSlot.EquipSlotIndex);
+            return;
+        }
+
         if (droppedObj.TryGetComponent<ChestSlotUI>(out var chestSlot))
         {
             if (chestSlot.OwnerUI == null)
