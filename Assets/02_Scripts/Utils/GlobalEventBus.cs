@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 글로벌 이벤트 버스 클래스
 /// 게임 내에서 발생하는 다양한 이벤트를 중앙에서 관리하고 전달하는 역할을 합니다.
 /// </summary>
@@ -15,6 +15,7 @@ public class GlobalEventBus
     public static Action<Vector2> OnPlayerMove;                     // 플레이어 이동 버튼 입력: Action<이동 버튼 입력 벡터>
     public static Action OnAttackInput;                             // 공격 버튼 입력
     public static Action OnMainActiveSkillRequested;                // 다이버 액티브 스킬 버튼 입력
+    public static Action OnMainActiveSkillCasted;                   // 다이버 액티브 스킬 사용 성공 시
     public static Action OnInteractionInput;                        // 상호작용 버튼 입력
     public static Action<bool> OnSprintInput;                       // 달리기 버튼 입력: Action<isSprint>
     public static Action<bool> SendCanSprint;                       // 달리기 여부 계산 전달: Action<canSprint>
