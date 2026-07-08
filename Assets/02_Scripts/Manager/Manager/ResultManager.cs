@@ -373,6 +373,8 @@ public class ResultManager : MonoBehaviour, IResultService
         resultPanel.invenSlotsCount = _inven.slotNum;
         // 결과 창 UI 출력 갱신
         resultPanel.RefreshResult();
+        // 결과 창을 출력하면 게임플레이 UI는 닫기
+        UIManager.Instance.Close<GamePlayUI>();
     }
 
     // 아이템 개수 및 데이터를 추출

@@ -90,6 +90,11 @@ public class LevelBoxSpawner : MonoBehaviour
             {
                 boxSpawnPointPool = foundPool.transform;
             }
+            else
+            {
+                // LevelDesignTable에 추가한 풀을 태그로 찾아옴
+                boxSpawnPointPool = GameObject.FindGameObjectWithTag("BoxSpawnPool").transform;
+            }
         }
 
         if (boxSpawnPointPool == null)

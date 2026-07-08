@@ -1,4 +1,4 @@
-
+﻿
 /// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
@@ -171,10 +171,8 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     /* 게임 오버 처리 */
     public void GameOver(int _playerID)
     {
-        // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
-        if (!IsPlayerIdle(_playerID)) return;
         // 플레이어 상태를 gameover로 변경
-        ResultServiceLocator.Instance.HandleEscapeGameover(_playerID);
+        SetPlayerState(livingState.gameover);
         // 코루틴 정지
         StopAllCoroutines();
         // 탈출 실패 판정 이벤트를 전송

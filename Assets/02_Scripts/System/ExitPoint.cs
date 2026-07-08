@@ -37,6 +37,8 @@ public class ExitPoint : MonoBehaviour, IInteractable
         if (!PlayerStatus.IsPlayerIdle(playerID)) return false;
         // 이미 탈출 판정 중이면 탈출 판정을 중복해서 시작하지 않음
         if (isEscaping) return false;
+        // 달리기 입력을 취소
+        GlobalEventBus.SendCanSprint?.Invoke(false);
         // 탈출 타이머 시작
         escapeCoroutine = StartCoroutine(StartEscapeTimer(playerID));
         // 상호작용 성공, 상호작용 리스트에서 삭제 요청
