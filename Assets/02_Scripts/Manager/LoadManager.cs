@@ -10,7 +10,6 @@ public class LoadManager : MonoBehaviour
     // 컴포넌트
     private LoadUI loadUI;                                      // 로딩 화면 UI
 
-
     private void Awake()
     {
         // 인스턴스 중복 방지

@@ -52,7 +52,7 @@ public class SceneController : MonoBehaviour
 
     public void GoToGameScene()
     {
-        SceneLoader(gameScene, true, levelScene);
+        SceneLoader(levelScene, true, gameScene);
     }
 
     // 씬 전환 메서드 (넘어가고 싶은 씬 이름, 로딩 씬 사용 여부(사용이 기본), 로드할 추가 씬(기본값 null))

@@ -44,7 +44,9 @@ public class SpawnManager : MonoBehaviour
         playerSpawnPoint.Clear();
         if (playerSpawnPool == null)
         {
-            return;
+            // LevelDesignTable에 추가한 풀을 태그로 찾아옴
+            playerSpawnPool = GameObject.FindGameObjectWithTag("PlayerSpawnPool");
+            if (playerSpawnPool == null)  return;
         }
 
         foreach (Transform point in playerSpawnPool.transform)
@@ -67,7 +69,9 @@ public class SpawnManager : MonoBehaviour
 
         if (enemySpawnPool == null)
         {
-            return;
+            // LevelDesignTable에 추가한 풀을 태그로 찾아옴
+            enemySpawnPool = GameObject.FindGameObjectWithTag("EnemySpawnPool");
+            if (enemySpawnPool == null) return;
         }
 
         foreach (Transform child in enemySpawnPool.transform)
