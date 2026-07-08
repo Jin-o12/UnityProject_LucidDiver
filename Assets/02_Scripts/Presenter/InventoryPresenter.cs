@@ -27,6 +27,9 @@ public class InventoryPresenter : MonoBehaviour
     // 저장 데이터 인터페이스
     private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
 
+    // 아티팩트 장착 상태 관리
+    private PlayerArtifactEquipment playerArtifactEquipment;       // 플레이어 아티팩트 장착 상태
+
     private void Awake()
     {
         playerWeapon = GetComponent<PlayerWeapon>();
@@ -34,14 +37,16 @@ public class InventoryPresenter : MonoBehaviour
         localInputReader = GetComponent<LocalInputReader>();
         identity = GetComponent<EntityIdentity>();
         playerStatus = GetComponent<PlayerStatus>();
+        playerArtifactEquipment = GetComponent<PlayerArtifactEquipment>();
 
-        if (playerWeapon == null || playerInventory == null || playerStatus == null || localInputReader == null || identity == null)
+        if (playerWeapon == null || playerInventory == null || playerStatus == null ||
+            localInputReader == null || identity == null || playerArtifactEquipment == null)
         {
             enabled = false;
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
             return;
         }
-        
+
         // 인터페이스 구현부 연결
         itemRepo = new LocalJsonItemRepository();
 
@@ -68,6 +73,11 @@ public class InventoryPresenter : MonoBehaviour
 
         // 인벤토리 드랍존으로 버리기 요청이 들어오면 월드 드랍으로 처리한다.
         GlobalEventBus.OnInventoryDropRequested += HandleInventoryDropRequested;
+
+        // 아티팩트 장착/해제 요청 이벤트를 구독한다.
+        GlobalEventBus.OnArtifactEquipRequested += HandleArtifactEquipRequested;
+        GlobalEventBus.OnArtifactUnequipRequested += HandleArtifactUnequipRequested;
+        playerArtifactEquipment.OnArtifactSlotChanged += HandleArtifactSlotChanged;
     }
 
     private void OnDisable()
@@ -83,6 +93,12 @@ public class InventoryPresenter : MonoBehaviour
         playerInventory.OnSafeSlotChanged -= HandleSafeSlotChanged;
 
         GlobalEventBus.OnInventoryDropRequested -= HandleInventoryDropRequested;
+
+        GlobalEventBus.OnArtifactEquipRequested -= HandleArtifactEquipRequested;
+        GlobalEventBus.OnArtifactUnequipRequested -= HandleArtifactUnequipRequested;
+
+        if (playerArtifactEquipment != null)
+            playerArtifactEquipment.OnArtifactSlotChanged -= HandleArtifactSlotChanged;
     }
 
     /// <summary>
@@ -143,6 +159,11 @@ public class InventoryPresenter : MonoBehaviour
         }
         // TID 400대는 특수 아이템
         else if (400 < pickedItemTID && pickedItemTID < 500)
+        {
+            remain = playerInventory.AddItem(data, remain);
+        }
+        // TID 1000대는 아티팩트
+        else if (1000 <= pickedItemTID && pickedItemTID < 1100)
         {
             remain = playerInventory.AddItem(data, remain);
         }
@@ -240,6 +261,8 @@ public class InventoryPresenter : MonoBehaviour
         for (int k = 0; k < playerInventory.safeSlotNum; k++)
             inventoryUI.UpdateSafeSlot(k, playerInventory.safeSlots[k]);
 
+        inventoryUI.UpdateArtifactSlots(playerArtifactEquipment);
+
         // 일반 인벤토리는 Player 액션맵을 유지한다.
     }
 
@@ -326,5 +349,59 @@ public class InventoryPresenter : MonoBehaviour
         // {인게임 드롭 후에는 즉시 저장하지 않는다}
         // {최종 저장은 결과 정산 시점에 처리한다}
         playerInventory.TryDropSlotToWorld(slotIndex, dropPosition);
+    }
+
+    private void HandleArtifactEquipRequested(int equipSlotIndex, int inventorySlotIndex)
+    {
+        // UI는 슬롯 번호만 전달하고, Presenter가 실제 아이템 타입과 장착 가능 여부를 검증한다.
+        ItemData itemData = playerInventory.GetSlotItemData(inventorySlotIndex);
+        ArtifactItemData artifactData = itemData as ArtifactItemData;
+
+        if (artifactData == null)
+        {
+            Debug.LogWarning("아티팩트 아이템만 장착할 수 있습니다.");
+            return;
+        }
+
+        if (!playerArtifactEquipment.EquipArtifact(equipSlotIndex, artifactData, out ArtifactItemData previousArtifact))
+            return;
+
+        // 새 아티팩트는 인벤토리에서 빠지고, 기존 장착 아티팩트가 있으면 같은 인벤토리 슬롯으로 돌려보낸다.
+        // 이렇게 하면 인벤토리가 가득 찬 상태에서도 장착 교체가 가능하다.
+        playerInventory.ClearSlot(inventorySlotIndex);
+
+        if (previousArtifact != null)
+        {
+            playerInventory.TryAddToSlot(inventorySlotIndex, previousArtifact, 1);
+        }
+
+        inventoryUI?.UpdateArtifactSlot(equipSlotIndex, artifactData);
+    }
+
+    private void HandleArtifactUnequipRequested(int equipSlotIndex)
+    {
+        // 해제는 먼저 장착 슬롯에서 빼 본 뒤, 인벤토리에 넣을 수 없으면 다시 장착 상태로 복구한다.
+        if (!playerArtifactEquipment.UnequipArtifact(equipSlotIndex, out ArtifactItemData removedArtifact))
+            return;
+
+        int remain = playerInventory.AddItem(removedArtifact, 1);
+
+        if (remain > 0)
+        {
+            playerArtifactEquipment.EquipArtifact(equipSlotIndex, removedArtifact, out _);
+            Debug.Log("인벤토리가 가득 차서 아티팩트를 해제할 수 없습니다.");
+            return;
+        }
+
+        inventoryUI?.UpdateArtifactSlot(equipSlotIndex, null);
+    }
+
+    private void HandleArtifactSlotChanged(int slotIndex, ArtifactItemData artifact)
+    {
+        if (inventoryUI == null || !inventoryUI.gameObject.activeInHierarchy)
+            return;
+
+        // 장착 상태가 바뀐 슬롯만 갱신하여 인벤토리 UI 전체 재생성을 피한다.
+        inventoryUI.UpdateArtifactSlot(slotIndex, artifact);
     }
 }

@@ -52,6 +52,31 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7a7868733bc48d18a7c2ddb358c73d8
+    m_Address: UI_Icon_Normal_FirstAidPouch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad41d5f0c9324fe68fda3baada98f359
+    m_Address: UI_Icon_Uncommon_EnergyDrink
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f0a5bc6a6ea5449ca237901c942ac0fe
+    m_Address: UI_Icon_Rare_CartWheel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d06773f9b60f49ef85ce0558bd0d2c2e
+    m_Address: UI_Icon_Epic_FrozenClockwork
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b2b12b281554e92b251f8c8ea89f24b
+    m_Address: UI_Icon_Legend_SecurityBaton
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: faab77ee407a7e041bbf4527bec04be9
     m_Address: Image_302_WeirdCandy
     m_ReadOnly: 0
