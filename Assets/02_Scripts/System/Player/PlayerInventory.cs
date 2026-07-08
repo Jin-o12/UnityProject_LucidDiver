@@ -291,8 +291,7 @@ public class PlayerInventory : MonoBehaviour
             return;
         }
 
-        dropItem.itemData = itemData;
-        dropItem.stackCount = dropCount;
+        dropItem.Initialize(itemData, dropCount);
 
         RemoveAmount(_slotIndex, dropCount);
         onDropped?.Invoke();

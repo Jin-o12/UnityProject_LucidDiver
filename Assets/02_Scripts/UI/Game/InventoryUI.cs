@@ -87,13 +87,15 @@ public class InventoryUI : MonoBehaviour
     public void UpdateSlot(int slotNum, InventorySlotData slotData)
     {
         InventorySlotUI slotUI = slotsObj[slotNum].GetComponent<InventorySlotUI>();
-        slotUI.UpdateSlot(slotData.amount, slotData.icon);
+        ItemGrade grade = slotData.itemData != null ? slotData.itemData.itemGrade : ItemGrade.empty;
+        slotUI.UpdateSlot(slotData.amount, slotData.icon, grade);
     }
 
     public void UpdateSafeSlot(int slotNum, InventorySlotData slotData)
     {
         InventorySlotUI slotUI = safeSlotsObj[slotNum].GetComponent<InventorySlotUI>();
-        slotUI.UpdateSlot(slotData.amount, slotData.icon);
+        ItemGrade grade = slotData.itemData != null ? slotData.itemData.itemGrade : ItemGrade.empty;
+        slotUI.UpdateSlot(slotData.amount, slotData.icon, grade);
     }
 
     public void SetDropZoneAvailable(bool available)
