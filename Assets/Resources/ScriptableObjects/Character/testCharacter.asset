@@ -14,6 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TID: 101
   charName: "\uC720\uC548"
+  mindRecordNum: 0
+  skillNum: 1
+  hpMax: 100
+  manaMax: 100
+  manaRegen: 1
+  weaponNum: 101
   chatIcon:
     m_AssetGUID: 
     m_SubObjectName: 
@@ -29,10 +35,6 @@ MonoBehaviour:
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
-  hpMax: 100
-  manaMax: 100
-  manaRegen: 1
-  mindRecordNum: 0
   moveSpeed: 3.5
   sprintSpeed: 6.5
   sprintMana: 5

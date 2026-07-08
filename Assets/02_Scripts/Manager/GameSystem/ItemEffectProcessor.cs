@@ -39,11 +39,11 @@ public class ItemEffectProcessor : MonoBehaviour
         // 효과 타입에 따라 인터페이스의 함수 실행
         switch (_effect.effectType)
         {
-            case EffectType.health_recover_inst:
+            case EffectType.healHP:
                 receiver.HealthRecoverInst(_effect.effectValue);
                 break;
 
-            case EffectType.mana_recover_inst:
+            case EffectType.healMP:
                 receiver.ManaRecoverInst(_effect.effectValue);
                 break;
         }

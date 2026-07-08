@@ -10,6 +10,7 @@ public class PlayerCombatPresenter : MonoBehaviour
 
     // JSON 데이터 저장소 접근용 리포지토리 인스턴스
     private ISkillRepository skillRepo;
+    private ICharDataRepository charRepo;
 
     private void Awake()
     {
@@ -24,6 +25,7 @@ public class PlayerCombatPresenter : MonoBehaviour
         }
 
         skillRepo = new LocalJsonSkillRepository();
+        charRepo = new SOCharacterRepository();
     }
 
     private void OnEnable()
@@ -76,14 +78,25 @@ public class PlayerCombatPresenter : MonoBehaviour
     private void TrySkill()
     {
         // 플레이어 상태가 idle이 아니면 스킬을 사용할 수 없음
-        if (playerStatus.nowState != PlayerStatus.livingState.idle)
-            return;
+        if (playerStatus.nowState != PlayerStatus.livingState.idle) return;
 
-        // 임시로 1번 스킬만을 사용하게 함
-        var skill = skillRepo.GetSkillData(1);
+        // 해당 캐릭터의 고유 스킬을 사용하게 함
+        CharacterData charData = charRepo.GetCharacterData(DataManager.Instance.playerData.SelectCharID);
+        var skill = skillRepo.GetSkillData(charData.skillNum);
+
+        // 스킬 사용 시 마나 소모 요청
+        bool success = GlobalEventBus.OnRequestManaConsume(skill.mpCost);
+
+        // 현재 마나가 스킬을 사용하기에 부족하다면 시전 취소
+        if (!success) return;
+
+        // 플레이어 스텟 정보를 넘겨줌
+        CasterStatPayload payload = new CasterStatPayload();
+        payload.attackPower = playerWeapon.nowAttackPower;
+
         if(TryGetMouseWorldPosition(out Vector3 mousePos))
         {
-            SkillEffectProcessor.Instance.UseSkillEffect(skill, this.gameObject, mousePos);
+            SkillEffectProcessor.Instance.UseSkillEffect(skill, this.gameObject, payload, mousePos);
         }
     }
 

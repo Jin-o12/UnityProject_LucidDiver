@@ -6,15 +6,17 @@ public class GrenadeProjectile : MonoBehaviour
 {
     private SkillData skillData;
     private GameObject user;
+    private CasterStatPayload playerstat;
 
     [Header("투척 연출 설정")]
     public float flightDuration = 0.5f; // 목적지까지 날아가는 데 걸리는 시간
     public float arcHeight = 3.0f;      // 포물선의 최대 높이
 
-    public void SetupAndThrow(SkillData _skill, GameObject _skillUser, Vector3 _targetPosition)
+    public void SetupAndThrow(SkillData _skill, GameObject _skillUser, CasterStatPayload _stats, Vector3 _targetPosition)
     {
         skillData = _skill;
         user = _skillUser;
+        playerstat = _stats;
 
         // 목표 지점으로 날아가는 물리 로직
         StartCoroutine(MoveToTarget(_targetPosition));
@@ -84,15 +86,12 @@ public class GrenadeProjectile : MonoBehaviour
 
     private void ApplySkillEffects(IEffectReceiver _receiver)
     {
-        Debug.Log($"{_receiver}가 데미지 입음");
         foreach(SkillEffect effect in skillData.effects)
         {
-            Debug.Log($"{_receiver}가 {skillData.skillName}의 데미지 입음");
             switch(effect.effectType)
             {
                 case EffectType.damage:
-                    Debug.Log($"{_receiver}가 데미지 {effect.effectValue}만큼 입음");
-                    _receiver.TakeDamage(effect.effectValue); 
+                    _receiver.TakeDamage(playerstat.attackPower * effect.effectValue); 
                     break;
             }
         }
