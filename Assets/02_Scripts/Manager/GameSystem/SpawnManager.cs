@@ -19,6 +19,9 @@ public class SpawnManager : MonoBehaviour
     private readonly List<Transform> legacyEnemySpawnPoints = new();
     private readonly List<Transform> zoneSpawnCandidates = new();
 
+    // JSON 데이터 저장소 접근용 리포지토리 인스턴스
+    private IItemDataRepository itemRepo;
+
     private void Awake()
     {
         if (Instance == null)
@@ -33,6 +36,8 @@ public class SpawnManager : MonoBehaviour
         {
             levelBoxSpawner = GetComponent<LevelBoxSpawner>();
         }
+
+        itemRepo = new LocalJsonItemRepository();
     }
 
     /// <summary>
@@ -131,6 +136,12 @@ public class SpawnManager : MonoBehaviour
             if (spawnedPlayer.TryGetComponent<PlayerMovement>(out var movement))
             {
                 movement.initialize(charData.moveSpeed, charData.sprintSpeed, charData.sprintMana, charData.evadeSpeed, charData.evadeTime, charData.evadeMana, charData.evadeCooltime);
+            }
+
+            if (spawnedPlayer.TryGetComponent<PlayerWeapon>(out var weapon))
+            {
+                WeaponItemData weaponItemData = itemRepo.GetTypeItemData<WeaponItemData>(charData.weaponNum);
+                weapon.initialize(weaponItemData);
             }
         }
 

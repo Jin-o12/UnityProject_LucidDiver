@@ -62,6 +62,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnHealRequested += HealingHealth;
         GlobalEventBus.OnSprintInput += CanSprint;
         GlobalEventBus.OnSprintManaConsume += UseSprintMana;
+        GlobalEventBus.OnRequestManaConsume += RequestUseMana;
         GlobalEventBus.OnTimeOver += TimeOver;
     }
 
@@ -72,6 +73,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnHealRequested -= HealingHealth;
         GlobalEventBus.OnSprintInput -= CanSprint;
         GlobalEventBus.OnSprintManaConsume -= UseSprintMana;
+        GlobalEventBus.OnRequestManaConsume -= RequestUseMana;
         GlobalEventBus.OnTimeOver -= TimeOver;
 
         // 플레이어가 비활성화되면 새 흔적 생성만 멈추고,
@@ -159,7 +161,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         mpCurrent = Mathf.Clamp(mpCurrent + _val, 0, mpMax);
         UpdateMp();
     }
-    #endregion
+#endregion
 
     /* 제한 시간 종료 이벤트에 게임 오버 처리를 연결 */
     public void TimeOver()
@@ -317,6 +319,21 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     public void ManaRecoverInst(float _amount)
     {
         GetMp(_amount);
+    }
+
+    public bool RequestUseMana(float _useMana)
+    {
+        // 소모값에 비해 마나량이 부족할 시
+        if(mpCurrent<_useMana)
+        {
+            return false;
+        }
+        // 마나가 충분하다면 소모 후 성공 여부를 리턴
+        else
+        {
+            GetMp(-_useMana);
+            return true;
+        }
     }
 }
 

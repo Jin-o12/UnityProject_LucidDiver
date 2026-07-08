@@ -13,7 +13,7 @@ public class SkillEffectProcessor : MonoBehaviour
             Instance = this;
     }
 
-    public async void UseSkillEffect(SkillData _skill, GameObject _user, Vector3 targetPosition)
+    public async void UseSkillEffect(SkillData _skill, GameObject _user, CasterStatPayload _stats, Vector3 targetPosition)
     {
         if(_skill.areaType == AreaType.circle_zone)
         {
@@ -34,7 +34,7 @@ public class SkillEffectProcessor : MonoBehaviour
                 GrenadeProjectile projectile = spawnedObject.GetComponent<GrenadeProjectile>();
                 if (projectile != null)
                 {
-                    projectile.SetupAndThrow(_skill, _user, targetPosition);
+                    projectile.SetupAndThrow(_skill, _user, _stats, targetPosition);
                 }
             }
         }

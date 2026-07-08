@@ -46,11 +46,19 @@ public enum EffectTarget
 // 아이템&스킬 효과 종류
 public enum EffectType
 {
+    // 플레이어 & 적 공통 사용
     none,                   // 효과 할당되지 않음 (오류)
-    health_recover_inst,    // 체력 즉시 회복
-    mana_recover_inst,      // 마나 즉시 회복
+    healHP,                 // 체력 즉시 회복
+    healMP,                 // 마나 즉시 회복
     damage,                 // 일정량의 피해를 입음
-    vision                  // 자신의 위치를 드러냄 (적에 한정된 효과)
+    
+    // 플레이어가 받는 효과
+    leap,
+    knockback,
+    parry,
+
+    // 적이 받는 효과
+    vision                  // 자신의 위치를 드러냄
 }
 
 public enum DialogueType
