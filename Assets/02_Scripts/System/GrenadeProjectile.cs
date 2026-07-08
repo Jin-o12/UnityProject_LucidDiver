@@ -62,36 +62,66 @@ public class GrenadeProjectile : MonoBehaviour
         float delay = skillData.effects.Count > 0 ? skillData.effects[0].effectDelay : 0.0f;
         yield return new WaitForSeconds(delay);
 
-        // 폭발 수행 및 범위 내 콜라이더 탐색
-        Collider[] hitColliders = Physics.OverlapSphere(transform.position, skillData.areaWidth);
+        // 모든 효과 중 가장 넓은 범위와 최대 어그로 지속 시간을 탐색
+        float maxRadius = 0f;
+        float maxDuration = 0f;
+        foreach (var effect in skillData.effects)
+        {
+            if (effect.areaWidth > maxRadius) maxRadius = effect.areaWidth;
+            if (effect.effectType == EffectType.aggro && effect.effectValue > maxDuration) maxDuration = effect.effectValue;
+        }
 
-        // 이미 효과를 받은 대상을 기록하여 중복 타격을 방지합니다.
+        // 폭발 수행 및 범위 내 콜라이더 탐색
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, maxRadius);
+
+        // 이미 효과를 받은 대상을 기록하여 중복 타격을 방지
         HashSet<IEffectReceiver> hitReceivers = new HashSet<IEffectReceiver>();
         IEffectReceiver userReceiver = user != null ? user.GetComponent<IEffectReceiver>() : null;
 
         // 범위 내 콜라이더들에 대해 차례대로 이펙트 판정 수행
         foreach(Collider hit in hitColliders)
         {
-            // 적의 콜라이더가 자식 오브젝트에 있을 수 있으므로 GetComponentInParent를 사용합니다.
+            // 적의 콜라이더가 자식 오브젝트에 있을 수 있으므로 GetComponentInParent를 사용
             IEffectReceiver receiver = hit.GetComponentInParent<IEffectReceiver>();
             
             if (receiver != null && receiver != userReceiver && !hitReceivers.Contains(receiver))
             {
                 hitReceivers.Add(receiver);
-                ApplySkillEffects(receiver);
+                
+                // 실제 거리를 계산하여 범위 내에 있는지 효과별로 확인하도록 거리를 함께 전달
+                MonoBehaviour receiverMono = receiver as MonoBehaviour;
+                if (receiverMono != null)
+                {
+                    float distance = Vector3.Distance(transform.position, receiverMono.transform.position);
+                    ApplySkillEffects(receiver, distance);
+                }
             }
         }
+
+        // 어그로 효과가 있다면 타겟으로 지정될 수 있도록 파괴를 지연시킵니다
+        if (maxDuration > 0f)
+        {
+            MeshRenderer mesh = GetComponentInChildren<MeshRenderer>();
+            yield return new WaitForSeconds(maxDuration);
+        }
+
         Destroy(gameObject);
     }
 
-    private void ApplySkillEffects(IEffectReceiver _receiver)
+    private void ApplySkillEffects(IEffectReceiver _receiver, float distance)
     {
         foreach(SkillEffect effect in skillData.effects)
         {
+            // 해당 효과의 범위를 벗어났으면 무시
+            if (distance > effect.areaWidth) continue;
+
             switch(effect.effectType)
             {
                 case EffectType.damage:
                     _receiver.TakeDamage(playerstat.attackPower * effect.effectValue); 
+                    break;
+                case EffectType.aggro:
+                    _receiver.ApplyAggro(this.transform, effect.effectValue);
                     break;
             }
         }
@@ -102,7 +132,12 @@ public class GrenadeProjectile : MonoBehaviour
         if (skillData != null)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, skillData.areaWidth);
+            float maxRadius = 0f;
+            foreach (var effect in skillData.effects)
+            {
+                if (effect.areaWidth > maxRadius) maxRadius = effect.areaWidth;
+            }
+            Gizmos.DrawWireSphere(transform.position, maxRadius);
         }
     }
 }

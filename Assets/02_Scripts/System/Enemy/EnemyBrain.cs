@@ -14,6 +14,14 @@ public class EnemyBrain
 
     [NonSerialized] private WaitForSeconds checkingDelay;     // 판단 루프에서 재사용할 대기 객체
     [NonSerialized] private Transform currentTarget;          // 현재 추적 중인 플레이어
+    [NonSerialized] private Transform aggroTarget;            // 강제 우선 추적 대상 (어그로)
+    [NonSerialized] private float aggroEndTime;               // 강제 추적 종료 시간
+
+    public void ApplyAggro(Transform target, float duration)
+    {
+        aggroTarget = target;
+        aggroEndTime = Time.time + duration;
+    }
 
     public Transform CurrentTarget => currentTarget;
     public bool HasTarget => currentTarget != null;
@@ -163,6 +171,26 @@ public class EnemyBrain
         ICollection<GameObject> players)
     {
         bool hadTarget = currentTarget != null;
+
+        // 1. 어그로 타겟이 유효한 경우 최우선 타겟으로 덮어씌움
+        if (aggroTarget != null)
+        {
+            if (Time.time < aggroEndTime)
+            {
+                currentTarget = aggroTarget;
+                if (!hadTarget)
+                {
+                    memory.CaptureReturnAnchor(self.position);
+                }
+                noiseListener.Clear();
+                memory.ClearPatrolWait();
+                return;
+            }
+            else
+            {
+                aggroTarget = null; // 지속 시간 종료 또는 타겟 파괴
+            }
+        }
 
         if (noiseListener.ShouldBlockSightReacquire())
         {

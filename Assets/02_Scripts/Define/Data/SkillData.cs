@@ -9,8 +9,13 @@ using UnityEngine;
 public class SkillEffect
 {
     public EffectType effectType;
+    public AreaType areaType;
+    public float areaWidth;
+    public EffectTarget effectTarget;
     public float effectDelay;
     public float effectValue;
+    public string effectHitSFX;
+    public string effectHitVFX;
 }
 
 public class SkillData : ScriptableObject
@@ -24,10 +29,13 @@ public class SkillData : ScriptableObject
     public float skillCooltime;
     public float mpCost;
 
-    [Header("범위 정보")]
+    [Header("시전 정보")]
     public float fireRange;
-    public AreaType areaType;
-    public float areaWidth;
+    public float activateTime;
+    public string activateSFX;
+    public string activateVFX;
+    public EffectTargetType targetType;
+    public EffectTarget targetObjectCategory;
 
     [Header("효과 리스트")]
     public List<SkillEffect> effects = new List<SkillEffect>();

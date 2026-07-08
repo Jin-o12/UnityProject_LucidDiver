@@ -7,4 +7,5 @@ public interface IEffectReceiver
     void TakeDamage(float damage);
     void HealthRecoverInst(float amount);
     void ManaRecoverInst(float amount);
+    void ApplyAggro(UnityEngine.Transform target, float duration);
 }

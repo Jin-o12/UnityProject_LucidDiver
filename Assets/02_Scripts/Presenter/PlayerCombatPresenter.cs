@@ -110,7 +110,7 @@ public class PlayerCombatPresenter : MonoBehaviour
         payload.attackPower = playerWeapon.nowAttackPower;
 
         // 마우스 위치에 따라 사거리 내 스킬 발사 지점을 지정함
-        if(TryGetMouseWorldPosition(skill.areaWidth, out Vector3 mousePos))
+        if(TryGetMouseWorldPosition(skill.fireRange, out Vector3 mousePos))
         {
             GlobalEventBus.OnMainActiveSkillCasted?.Invoke();
             SkillEffectProcessor.Instance.UseSkillEffect(skill, this.gameObject, payload, mousePos);
