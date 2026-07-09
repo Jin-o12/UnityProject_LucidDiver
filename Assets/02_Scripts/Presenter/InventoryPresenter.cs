@@ -309,7 +309,7 @@ public class InventoryPresenter : MonoBehaviour
     {
         // 툴팁 UI의 출력 위치를 isOpenFromInventory 변수로 전달
         itemTooltipUI = UIManager.Instance.Open<ItemTooltipUI>();
-        bool isFromInventory = (slot == SlotType.inventory || slot == SlotType.artifact);
+        bool isFromInventory = (slot == SlotType.inventory || slot == SlotType.artifact || slot == SlotType.safe);
         itemTooltipUI.isFromInventory = isFromInventory;
         // slotIndex를 참조하여 아이템 데이터를 불러온다.
         ItemData _item;
@@ -335,6 +335,11 @@ public class InventoryPresenter : MonoBehaviour
             case SlotType.artifact:  // 장비 장착 칸 index를 참조해 아이템 데이터를 전달
                 {
                     _item = playerArtifactEquipment.GetEquippedArtifact(slotIndex);
+                    break;
+                }
+            case SlotType.safe:  // 각성 보존 슬롯 index를 참조해 아이템 데이터를 전달
+                {
+                    _item = playerInventory.GetSlotItemData(slotIndex + playerInventory.slots.Count);
                     break;
                 }
             default:  // 기본값으로 null 처리

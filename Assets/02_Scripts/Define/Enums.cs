@@ -126,6 +126,7 @@ public enum ArtifactEffectType
 
 public enum SlotType
 {
+    empty,      //빈 칸
     inventory,  //인벤토리 슬롯
     chest,      //상자 아이템 슬롯
     artifact,   //장비 장착 슬롯

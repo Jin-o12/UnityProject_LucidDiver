@@ -16,6 +16,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     [SerializeField] private Image itemImg;
     [SerializeField] private TMP_Text itemStack;
     [SerializeField] private Transform itemInfo;
+    [SerializeField] private SlotType slotType;     //슬롯 종류
 
     [Header("등급별 슬롯 이미지")]
     [SerializeField] private Sprite emptySlotSprite;
@@ -58,20 +59,21 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     public void Initialize(int index)
     {
         slotIndex = index;
-        UpdateSlot(0, null, ItemGrade.empty);
+        UpdateSlot(0, null, ItemGrade.empty, SlotType.empty);
     }
 
-    public void UpdateSlot(int stack, Sprite sprite)
+    public void UpdateSlot(int stack, Sprite sprite, SlotType _type = SlotType.inventory)
     {
-        UpdateSlot(stack, sprite, ItemGrade.empty);
+        UpdateSlot(stack, sprite, ItemGrade.empty, _type);
     }
 
-    public void UpdateSlot(int stack, Sprite sprite, ItemGrade grade)
+    public void UpdateSlot(int stack, Sprite sprite, ItemGrade grade, SlotType _type)
     {
         if (stack <= 0 || sprite == null)
         {
             itemImg.enabled = false;
             itemStack.text = "";
+            slotType = SlotType.empty;
             ApplySlotFrame(ItemGrade.empty);
             return;
         }
@@ -79,6 +81,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         itemImg.enabled = true;
         itemImg.sprite = sprite;
         itemStack.text = stack.ToString();
+        slotType = _type;
         ApplySlotFrame(grade);
     }
 
@@ -224,7 +227,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     public void OnPointerEnter(PointerEventData eventData)
     {
         //포인터가 슬롯 UI에 들어오면 아이템 데이터를 읽는다
-        GlobalEventBus.OnTooltipUIOpen?.Invoke(SlotType.inventory, slotIndex);
+        GlobalEventBus.OnTooltipUIOpen?.Invoke(slotType, slotIndex);
     }
 
     public void OnPointerExit(PointerEventData eventData)
