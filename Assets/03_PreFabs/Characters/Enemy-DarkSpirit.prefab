@@ -104,7 +104,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 1.8, y: 1.2, z: 1.8}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1314301668546184600
 GameObject:
@@ -703,6 +703,16 @@ MonoBehaviour:
     needsReturnToPatrol: 0
     isWaitingAtPatrolPoint: 0
     patrolWaitUntilTime: 0
+    hasReturnAnchor: 0
+    returnAnchorPosition: {x: 0, y: 0, z: 0}
+    returnPatrolIndex: 0
+    lastKnownTargetPosition: {x: 0, y: 0, z: 0}
+    estimatedTargetVelocity: {x: 0, y: 0, z: 0}
+    lastTargetSampleTime: 0
+    hasTargetMotionSample: 0
+    trackedTargetInstanceId: 0
+    currentChaseMoveMode: 0
+    currentChaseDestination: {x: 0, y: 0, z: 0}
   perception:
     sightRange: 10
     awarenessRange: 15

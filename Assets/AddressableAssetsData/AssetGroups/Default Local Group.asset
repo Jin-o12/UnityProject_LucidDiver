@@ -72,6 +72,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f0a5bc6a6ea5449ca237901c942ac0fe
+    m_Address: UI_Icon_Rare_CartWheel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fb902b28974cf4a4fab2e16114c9c1cf
     m_Address: Image_101_testGun
     m_ReadOnly: 0

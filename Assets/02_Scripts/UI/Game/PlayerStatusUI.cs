@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 public class PlayerStatusUI : MonoBehaviour
 {
@@ -49,7 +50,7 @@ public class PlayerStatusUI : MonoBehaviour
     private void UpdateManaBar(float _currentMp, float _maxMp)
     {
         mpBar.fillAmount = _maxMp > 0f ? Mathf.Clamp01(_currentMp / _maxMp) : 0f;
-        mpText.text = $"{_currentMp}/{_maxMp}";
+        mpText.text = $"{Math.Round(_currentMp, 0)}/{_maxMp}";
     }
 
     private void UpdateTimer(float _currentTimer)
