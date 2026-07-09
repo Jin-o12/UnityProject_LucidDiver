@@ -47,11 +47,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ad41d5f0c9324fe68fda3baada98f359
-    m_Address: UI_Icon_Uncommon_EnergyDrink
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b28cb3f6c6e0a9546ace9b3e059b7390
     m_Address: Prefab_1_PrismGrenade
     m_ReadOnly: 0
@@ -59,6 +54,21 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: be7dbcd4181dbe04891bcc710918239f
     m_Address: Prefab_301_testMemoryPiece
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad41d5f0c9324fe68fda3baada98f359
+    m_Address: UI_Icon_Uncommon_EnergyDrink
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b2b12b281554e92b251f8c8ea89f24b
+    m_Address: UI_Icon_Legend_SecurityBaton
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: faab77ee407a7e041bbf4527bec04be9
+    m_Address: Image_302_WeirdCandy
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
