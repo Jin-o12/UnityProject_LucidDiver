@@ -21,12 +21,12 @@ MonoBehaviour:
   manaRegen: 1
   weaponNum: 101
   chatIcon:
-    m_AssetGUID: 
+    m_AssetGUID: 558d6aded3a52c0408bea40507abdfa1
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
   charStanding:
-    m_AssetGUID: 
+    m_AssetGUID: bf763a62145177140a19b7df78122a8e
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
