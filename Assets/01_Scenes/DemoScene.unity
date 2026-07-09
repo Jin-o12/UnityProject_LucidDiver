@@ -11028,6 +11028,39 @@ MonoBehaviour:
   maxCreateCount: 2
   allowDuplicateLoot: 0
   lootOptions: []
+  useCategoryLoot: 1
+  categoryLootOptions:
+  - category: 3
+    weight: 60
+    minAmount: 1
+    maxAmount: 1
+    itemTids: 2d0100002e010000
+  - category: 4
+    weight: 30
+    minAmount: 1
+    maxAmount: 1
+    itemTids: 91010000
+  - category: 5
+    weight: 10
+    minAmount: 1
+    maxAmount: 1
+    itemTids: 
+  artifactLootOptions:
+  - grade: 1
+    itemTid: 1001
+    weight: 55
+  - grade: 2
+    itemTid: 1002
+    weight: 25
+  - grade: 3
+    itemTid: 1003
+    weight: 12
+  - grade: 4
+    itemTid: 1004
+    weight: 6
+  - grade: 5
+    itemTid: 1005
+    weight: 2
   openNoiseRange: 30
   openNoiseDuration: 1.8
 --- !u!1001 &730569933

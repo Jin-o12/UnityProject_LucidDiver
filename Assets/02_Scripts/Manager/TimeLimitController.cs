@@ -8,6 +8,7 @@ public class TimeLimitController : MonoBehaviour
     public float currentTimeLimit;          //현재 남은 제한 시간
     public float timeLimitSpeed = 1.0f;     //플레이 시간 제한 배율 (기본 1.0배)
     public float timeLimitAccel = 1.0f;     //가속 구역으로 인한 플레이 시간 제한 가속 (기본 1.0배)
+    private float artifactTimeLimitSpeedMultiplier = 1.0f; // 아티팩트로 적용되는 시간 감소 속도 배율
     private bool timeFlow;                  //제한 시간 진행 스위치
 
     private void Awake()
@@ -31,7 +32,7 @@ public class TimeLimitController : MonoBehaviour
         if (!timeFlow) return;
 
         // 시간 제한 가속 배율에 따라 실시간으로 남은 시간 감소
-        currentTimeLimit -= timeLimitSpeed * Time.fixedDeltaTime * timeLimitAccel;
+        currentTimeLimit -= timeLimitSpeed * artifactTimeLimitSpeedMultiplier * Time.fixedDeltaTime * timeLimitAccel;
 
         BroadcastCurrentTime();
         TryFinishByTimeout();
@@ -51,6 +52,15 @@ public class TimeLimitController : MonoBehaviour
         currentTimeLimit = Mathf.Max(0.0f, currentTimeLimit - penaltySeconds);
         BroadcastCurrentTime();
         TryFinishByTimeout();
+    }
+
+    /// <summary>
+    /// 아티팩트 장착 효과로 제한 시간 감소 속도 배율을 갱신합니다.
+    /// 예: 0.6이면 기존 시간 감소 속도의 60%만 적용되어 시간 제한이 더 천천히 줄어듭니다.
+    /// </summary>
+    public void ApplyArtifactTimeLimitSpeedMultiplier(float multiplier)
+    {
+        artifactTimeLimitSpeedMultiplier = Mathf.Max(0.0f, multiplier);
     }
 
     private void BroadcastCurrentTime()

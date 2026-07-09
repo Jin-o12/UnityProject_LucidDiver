@@ -131,6 +131,7 @@ GameObject:
   - component: {fileID: 7647394893422696114}
   - component: {fileID: 1607228738055200154}
   - component: {fileID: 6549187411095666664}
+  - component: {fileID: 8674368954012794632}
   m_Layer: 3
   m_Name: Player_Yuan
   m_TagString: Player
@@ -719,6 +720,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   artifactSlotCount: 3
+--- !u!114 &8674368954012794632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6496859401421214368}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d4ca1eb22d34097beefe8adc52c1672, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7599140946263659434
 GameObject:
   m_ObjectHideFlags: 0
