@@ -14,21 +14,39 @@ public class FlatSkillData
     public float skillCooltime;
     public float mpCost;
     public float fireRange;
-    public string areaType;
-    public float areaWidth;
+    public float activateTime;
+    public string activateSFX;
+    public string activateVFX;
+    public string targetType;
+    public string targetObjectCategory;
     
     // 효과 변수들
     public string effectType_0;
+    public string areaType_0;
+    public float areaWidth_0;
+    public string effectTarget_0;
     public float effectDelay_0;
     public float effectValue_0;
+    public string effectHitSFX_0;
+    public string effectHitVFX_0;
 
     public string effectType_1;
+    public string areaType_1;
+    public float areaWidth_1;
+    public string effectTarget_1;
     public float effectDelay_1;
     public float effectValue_1;
+    public string effectHitSFX_1;
+    public string effectHitVFX_1;
 
     public string effectType_2;
+    public string areaType_2;
+    public float areaWidth_2;
+    public string effectTarget_2;
     public float effectDelay_2;
     public float effectValue_2;
+    public string effectHitSFX_2;
+    public string effectHitVFX_2;
 }
 
 public class LocalJsonSkillRepository : ISkillRepository
@@ -69,32 +87,45 @@ public class LocalJsonSkillRepository : ISkillRepository
             skill.skillCooltime = data.skillCooltime;
             skill.mpCost = data.mpCost;
             skill.fireRange = data.fireRange;
-            skill.areaWidth = data.areaWidth;
+            skill.activateTime = data.activateTime;
+            skill.activateSFX = data.activateSFX;
+            skill.activateVFX = data.activateVFX;
 
-            // 열거형(Enum) 파싱
-            if (!string.IsNullOrEmpty(data.areaType) && System.Enum.TryParse(data.areaType, true, out AreaType parsedArea))
-            {
-                skill.areaType = parsedArea;
-            }
+            if (!string.IsNullOrEmpty(data.targetType) && System.Enum.TryParse(data.targetType, true, out EffectTargetType parsedTargetType))
+                skill.targetType = parsedTargetType;
             else
-            {
-                Debug.LogWarning($"[{data.skillName}] 알 수 없는 AreaType 입니다: {data.areaType}");
-            }
+                Debug.LogWarning($"[{skill.skillName}] 알 수 없는 TargetType 입니다: {data.targetType}");
+
+            if (!string.IsNullOrEmpty(data.targetObjectCategory) && System.Enum.TryParse(data.targetObjectCategory, true, out EffectTarget parsedTargetObject))
+                skill.targetObjectCategory = parsedTargetObject;
+            else
+                Debug.LogWarning($"[{skill.skillName}] 알 수 없는 TargetObjectCategory 입니다: {data.targetObjectCategory}");
 
             // 넘버링 된 다중 효과(Effect) 리스트 파싱을 위한 로컬 함수
-            void AddEffect(string eType, float eDelay, float eValue)
+            void AddEffect(string eType, string aType, float aWidth, string eTarget, float eDelay, float eValue, string eHitSFX, string eHitVFX)
             {
                 // 타입 문자열이 비어있으면 아예 효과가 없는 슬롯이므로 무시
                 if (string.IsNullOrEmpty(eType)) return;
 
                 if (System.Enum.TryParse(eType, true, out EffectType finalType))
                 {
-                    skill.effects.Add(new SkillEffect 
+                    SkillEffect effect = new SkillEffect 
                     {
                         effectType = finalType,
+                        areaWidth = aWidth,
                         effectDelay = eDelay,
-                        effectValue = eValue
-                    });
+                        effectValue = eValue,
+                        effectHitSFX = eHitSFX,
+                        effectHitVFX = eHitVFX
+                    };
+                    
+                    if (!string.IsNullOrEmpty(aType) && System.Enum.TryParse(aType, true, out AreaType parsedArea))
+                        effect.areaType = parsedArea;
+
+                    if (!string.IsNullOrEmpty(eTarget) && System.Enum.TryParse(eTarget, true, out EffectTarget parsedTarget))
+                        effect.effectTarget = parsedTarget;
+
+                    skill.effects.Add(effect);
                 }
                 else
                 {
@@ -103,9 +134,9 @@ public class LocalJsonSkillRepository : ISkillRepository
             }
 
             // 만들어둔 함수를 이용해 0번, 1번, 2번 데이터를 차례대로 넣기
-            AddEffect(data.effectType_0, data.effectDelay_0, data.effectValue_0);
-            AddEffect(data.effectType_1, data.effectDelay_1, data.effectValue_1);
-            AddEffect(data.effectType_2, data.effectDelay_2, data.effectValue_2);
+            AddEffect(data.effectType_0, data.areaType_0, data.areaWidth_0, data.effectTarget_0, data.effectDelay_0, data.effectValue_0, data.effectHitSFX_0, data.effectHitVFX_0);
+            AddEffect(data.effectType_1, data.areaType_1, data.areaWidth_1, data.effectTarget_1, data.effectDelay_1, data.effectValue_1, data.effectHitSFX_1, data.effectHitVFX_1);
+            AddEffect(data.effectType_2, data.areaType_2, data.areaWidth_2, data.effectTarget_2, data.effectDelay_2, data.effectValue_2, data.effectHitSFX_2, data.effectHitVFX_2);
 
             // 완성된 스킬 데이터를 딕셔너리에 등록
             skillDatabase[skill.TID] = skill;

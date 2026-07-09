@@ -1,4 +1,4 @@
-﻿
+
 /// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
@@ -350,6 +350,11 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
             GetMp(-_useMana);
             return true;
         }
+    }
+
+    public void ApplyAggro(UnityEngine.Transform target, float duration)
+    {
+        // 플레이어는 타겟 강제 추적(어그로) 효과를 받지 않으므로 무시합니다.
     }
 }
 

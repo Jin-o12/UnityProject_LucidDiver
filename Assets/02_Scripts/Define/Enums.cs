@@ -31,24 +31,35 @@ public enum itemCategory
 // 아이템 사용 방법 종류
 public enum AreaType
 {
-    target,             // 사용자가 대상을 선택
-    circle_zone,        // 효과가 발동할 원형 구역의 중심 지점을 선택
-    raycast,            // 사용 처리 판정 ray를 발사할 방향을 선택
-    rectangle           // rectangle
+    none,               // 사용되지 않음
+    opponent,           // 단일 대상
+    rectangle,          // 직사각형 범위
+    arc,                // 부채꼴 범위
+    circle              // 원형 구역의 중심 지점을 선택
 }
 
 // 아이템 효과 적용 대상
 public enum EffectTarget
 {
+    none,               // 사용되지 않음
     self,               // 플레이어 자신
-    enemy               // 적 캐릭터
+    ally,               // 시전자의 아군
+    opponent            // 적 캐릭터
+}
+
+// 효과 사용 시 대상 지정 방식
+public enum EffectTargetType
+{
+    @object,            // 타겟팅 스킬
+    cursorPoint,        // 사거리 조절 가능 논타겟팅 스킬
+    maxRange            // 사거리 조절 불가능 논타겟팅 스킬
 }
 
 // 아이템&스킬 효과 종류
 public enum EffectType
 {
     // 플레이어 & 적 공통 사용
-    none,                   // 효과 할당되지 않음 (오류)
+    none,                   // 효과 할당되지 않음
     healHP,                 // 체력 즉시 회복
     healMP,                 // 마나 즉시 회복
     damage,                 // 일정량의 피해를 입음
@@ -59,7 +70,8 @@ public enum EffectType
     parry,
 
     // 적이 받는 효과
-    vision                  // 자신의 위치를 드러냄
+    vision,                 // 자신의 위치를 드러냄
+    aggro                   // 적이 추적 대상을 해당 개체로 우선 지정함
 }
 
 public enum DialogueType

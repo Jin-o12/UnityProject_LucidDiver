@@ -15,7 +15,7 @@ public class SkillEffectProcessor : MonoBehaviour
 
     public async void UseSkillEffect(SkillData _skill, GameObject _user, CasterStatPayload _stats, Vector3 targetPosition)
     {
-        if(_skill.areaType == AreaType.circle_zone)
+        if(_skill.effects[0].areaType == AreaType.circle)
         {
             if (string.IsNullOrEmpty(_skill.skillPrefab))
             {
