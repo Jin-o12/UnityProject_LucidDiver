@@ -53,7 +53,7 @@ public class LocalSaveRepository : ISaveRepository
         Debug.Log("Game Saved");
     }
 
-    /* Return the selected character's link rate level */
+    /* 캐릭터의 동조율 레벨 리턴 */
     public int GetLinkRateLevel()
     {
         if (playerSaveData == null)

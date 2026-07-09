@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,7 +12,8 @@ public class LobbyMainUI : MonoBehaviour
 
     [Header("Diver Info")]
     [SerializeField] private TextMeshProUGUI textDiverName;             // 다이버 이름 텍스트
-    [SerializeField] private TextMeshProUGUI textLinkRateLevel;         // 동조율 수치 텍스트 
+    [SerializeField] private TextMeshProUGUI textLinkRateLevel;         // 동조율 수치 텍스트
+    [SerializeField] private Image sliderLinkRateLevel;                // 동조율 경험치 슬라이더
     [SerializeField] private TextMeshProUGUI textSpeakerName;           // 로비 대사 화자 이름 텍스트
     [SerializeField] private TextMeshProUGUI textDialogue;              // 로비 대사 텍스트
     [SerializeField] private Image CharacterStandingImage;              // 캐릭터 스텐딩 일러스트
@@ -71,6 +72,8 @@ public class LobbyMainUI : MonoBehaviour
     {
         // 플레이어 저장 데이터
         PlayerSaveData saveData = saveRepo.LoadSaveData();
+        // 플레이어가 선택 한 캐릭터 데이터
+        SaveCharacterData charSaveData = saveData.myCharacters.Find(x => x.TID == saveData.SelectCharID);
         // 저장 데이터로부터 현재 선택 캐릭터 추출
         CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
 
@@ -81,7 +84,22 @@ public class LobbyMainUI : MonoBehaviour
         int link = saveRepo.GetLinkRateLevel();
         // {현재 동조율 단계를 표시한다}
         if (textLinkRateLevel != null)
-            textLinkRateLevel.text = $"동조율 Lv.{link}";
+            textLinkRateLevel.text = $"동조율 Lv.{saveRepo.GetLinkRateLevel()}";
+
+        if (sliderLinkRateLevel != null)
+        {
+            // 최대 레벨 미만일 경우 비율 계산, 최대 레벨일 경우 슬라이더를 꽉 채움(1.0f)
+            if (charSaveData.linkRateLevel < charData.requireLinkRatePerLevel.Length)
+            {
+                float requireExp = charData.requireLinkRatePerLevel[charSaveData.linkRateLevel];
+                // 0으로 나누기 방지
+                sliderLinkRateLevel.fillAmount = requireExp > 0 ? charSaveData.TotallinkRateValue / requireExp : 1.0f;
+            }
+            else
+            {
+                sliderLinkRateLevel.fillAmount = 1.0f;
+            }
+        }
         
         // {로비 기본 대사 화자 이름을 표시한다}
         if (textSpeakerName != null)
