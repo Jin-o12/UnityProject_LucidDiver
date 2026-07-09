@@ -22,13 +22,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4e02c9e1f07b002469477ef272336c98
-    m_Address: Image_301_HealMedicine
+  - m_GUID: 69d5691a300e73d48807dd8d4dad4f01
+    m_Address: Prefab_301_testManaPIece
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 69d5691a300e73d48807dd8d4dad4f01
-    m_Address: Prefab_301_testManaPIece
+  - m_GUID: 6cc85e659ab743743b5bdea680893b28
+    m_Address: Image_302_WeirdCandy
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -47,13 +47,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: be7dbcd4181dbe04891bcc710918239f
-    m_Address: Prefab_301_testMemoryPiece
+  - m_GUID: b7254102cf7223b4285ee7e6d6564a3a
+    m_Address: Image_301_HealMedicine
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: faab77ee407a7e041bbf4527bec04be9
-    m_Address: Image_302_WeirdCandy
+  - m_GUID: be7dbcd4181dbe04891bcc710918239f
+    m_Address: Prefab_301_testMemoryPiece
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
