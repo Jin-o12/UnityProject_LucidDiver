@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 인게임 세션 종료 시 데이터 변동을 관리하는 클래스
 /// (탈출 성공 여부, 플레이 타임, 인벤토리 및 퀵슬롯, 동조율 단계)
 /// </summary>
@@ -49,6 +49,7 @@ public class ResultManager : MonoBehaviour, IResultService
     // 저장 데이터 인터페이스
     private ISaveRepository saveRepo;                   // 플레이어 데이터 접근 인터페이스
     private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
+    private ICharDataRepository charRepo;               // 캐릭터 기획 데이터 접근 인터페이스
     
     private void Awake()
     {
@@ -64,6 +65,7 @@ public class ResultManager : MonoBehaviour, IResultService
         // 인터페이스 구현부 연결
         saveRepo = new LocalSaveRepository();
         itemRepo = new LocalJsonItemRepository();
+        charRepo = new SOCharacterRepository();
 
         // 씬에 이미 존재하는 PlayerStatus를 찾아 등록 (타이밍 안전성 보장)
         foreach (var p in FindObjectsOfType<PlayerStatus>())
@@ -295,30 +297,58 @@ public class ResultManager : MonoBehaviour, IResultService
     // 탈출 성공 여부에 따라 동조율 상승 → 심상 기록 해금을 실행하는 메소드
     private void LinkRateUp(bool _extractionResult)
     {
-        // 현재 선택한 캐릭터의 세이브 데이터를 가져옴
-        SaveCharacterData charData = _playerSaveData.myCharacters.Find(x => x.TID == _playerSaveData.SelectCharID);
+        // 현재 선택한 캐릭터의 세이브 데이터와 기획 데이터를 가져옴
+        SaveCharacterData charSaveData = _playerSaveData.myCharacters.Find(x => x.TID == _playerSaveData.SelectCharID);
+        CharacterData charData = charRepo.GetCharacterData(_playerSaveData.SelectCharID);
+
+        if (charSaveData == null || charData == null) return;
+
         // 세이브 데이터에서 이전 동조율 단계 값을 불러와 저장
-        prevLinkRateLevel = charData.linkRateLevel;
-        // 탈출 성공 시 기억 파편 개수만큼 동조율 경험치 값 증가
+        prevLinkRateLevel = charSaveData.linkRateLevel;
+
+        // 탈출 성공 시 기억 파편 개수만큼 동조율 경험치 증가
         if (_extractionResult)
         {
             float linkRatePointAdd = memoryFragmentCount * linkRatePoint;
-            charData.TotallinkRateValue += linkRatePointAdd;
+            charSaveData.TotallinkRateValue += linkRatePointAdd;
         }
-        // 다음 동조율 단계 값 계산 (P0: 탈출 성공 시 일괄 증가)
-        int nextLinkRateLevel = prevLinkRateLevel + linkRateGain;
-        // '동조율 단계 상승=true' 조건 계산 (P0: 기억 파편 획득 AND 탈출 성공)
-        linkRateUp = memoryFragmentCount > 0 && _extractionResult;
-        // 동조율 단계 값 갱신
-        linkRateLevel = linkRateUp ? nextLinkRateLevel : prevLinkRateLevel;
+
+        // 동조율 단계 상승 여부 초기화
+        linkRateUp = false;
+
+        // 탈출 성공 && 기억 파편을 얻었을 경우 레벨업 판정
+        if (_extractionResult && memoryFragmentCount > 0)
+        {
+            // 현재 레벨이 레벨 데이터 배열의 길이 한계보다 작을 때만(즉 최대 레벨이 아닐 때만) 레벨업 허용
+            while (charSaveData.linkRateLevel < charData.requireLinkRatePerLevel.Length)
+            {
+                // 현재 레벨 구간의 요구 경험치량
+                float requireExp = charData.requireLinkRatePerLevel[charSaveData.linkRateLevel];
+                
+                // 보유 경험치가 요구량 이상일 경우 레벨업 처리 및 잔여 경험치 이월
+                if (charSaveData.TotallinkRateValue >= requireExp)
+                {
+                    charSaveData.TotallinkRateValue -= requireExp;
+                    charSaveData.linkRateLevel++;
+                    linkRateUp = true;
+                }
+                else
+                {
+                    break; // 요구치를 채우지 못했다면 루프 종료
+                }
+            }
+        }
+
+        // 최종 동조율 단계 값 갱신
+        linkRateLevel = charSaveData.linkRateLevel;
+
         // 기억 파편을 사용해 동조율 단계가 상승했거나 이미 해금 상태(이전 동조율 단계 > 0)라면 '해금됨=true' 전달
         MemoryLogUnlocked = linkRateUp || prevLinkRateLevel > 0;
+        
         // 기억 파편을 인벤토리에서 제거 (성공/실패 양쪽 모두 제거 처리는 실행함)
         RemoveFromInventory(401);
         // 각성 보존 슬롯의 기억 파편을 제거
         _playerSaveData.safeSlots.RemoveAll(slot => slot != null && slot.TID == 401);
-        // 동조율 단계 값을 세이브 데이터에 전달
-        charData.linkRateLevel = linkRateLevel;
     }
 
     private void RemoveFromInventory(int _tid)  //아이템 ID별로 인벤토리에서 제거
