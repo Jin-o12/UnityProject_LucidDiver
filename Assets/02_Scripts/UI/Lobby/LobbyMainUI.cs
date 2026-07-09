@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -72,8 +72,6 @@ public class LobbyMainUI : MonoBehaviour
     {
         // 플레이어 저장 데이터
         PlayerSaveData saveData = saveRepo.LoadSaveData();
-        // 플레이어가 선택 한 캐릭터 데이터
-        SaveCharacterData charSaveData = saveData.myCharacters.Find(x => x.TID == saveData.SelectCharID);
         // 저장 데이터로부터 현재 선택 캐릭터 추출
         CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
 

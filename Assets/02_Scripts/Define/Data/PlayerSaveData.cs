@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -54,6 +54,6 @@ public class SaveSlotData
 public class SaveCharacterData
 {
     public int TID;                     // 캐릭터 고유 번호
-    public int linkRateLevel;           // 각 플레이어 캐릭터 동조율 단계 값 (현재 레벨: 0~4)
-    public float TotallinkRateValue;    // 누적된 동조율 값 (현재 경험치량)
+    public int linkRateLevel;           // 각 플레이어 캐릭터 동조율 단계 값
+    public float TotallinkRateValue;    // 동조율 단계 값을 달성하기 위해 누적해야 하는 총 동조율 값
 }
