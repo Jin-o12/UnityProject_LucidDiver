@@ -1203,7 +1203,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59c8c4f1bd258154c82a00ee59c0e159, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TooltipPanel: {fileID: 4379858591818494466}
+  tooltipPanel: {fileID: 7472605746917250594}
   textName: {fileID: 6886839666844276800}
   textType: {fileID: 8222708215186516971}
   textEffect: {fileID: 4222920053856375376}

@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class ItemTooltipUI : MonoBehaviour
 {
     [Header("UI 배치")]
-    [SerializeField] private GameObject TooltipPanel;   // 툴팁 창 위치
+    [SerializeField] private RectTransform tooltipPanel; // 툴팁 창 위치
     [SerializeField] private TMP_Text textName;         // 아이템 이름 표시
     [SerializeField] private TMP_Text textType;         // 등급 / 종류 표시
     [SerializeField] private TMP_Text textEffect;       // 효과 수치 및 설명 출력 공간
@@ -32,8 +32,8 @@ public class ItemTooltipUI : MonoBehaviour
 
     // 툴팁 창을 출력할 위치 좌표
     public bool isFromInventory = true;                                         //인벤토리 슬롯에 호버 중인지 체크 (false = 상자 슬롯에 호버)
-    private Vector3 PanelPositionFromInventory = new Vector3(1100, 400, 0);     //인벤토리 슬롯에 호버 시 출력하는 위치
-    private Vector3 PanelPositionFromChest = new Vector3(700, 400, 0);          //상자 슬롯에 호버 시 출력하는 위치
+    private Vector2 panelPositionFromInventory = new Vector2(1100, 400);        //인벤토리 슬롯에 호버 시 출력하는 위치
+    private Vector2 panelPositionFromChest = new Vector2(700, 400);             //상자 슬롯에 호버 시 출력하는 위치
 
     // 아이템 이름 색상
     private Color normalColor   = new(1.00f, 1.00f, 1.00f);
@@ -139,7 +139,8 @@ public class ItemTooltipUI : MonoBehaviour
     public void RefreshTooltip()
     {
         // 포인터를 호버한 슬롯에 따라 출력 위치를 변경
-        TooltipPanel.transform.position = isFromInventory ? PanelPositionFromInventory : PanelPositionFromChest;
+        if (tooltipPanel != null)
+            tooltipPanel.anchoredPosition = isFromInventory ? panelPositionFromInventory : panelPositionFromChest;
 
         // 아이템 이름 텍스트와 등급별 색상을 출력
         textName.text = currentItemName;
