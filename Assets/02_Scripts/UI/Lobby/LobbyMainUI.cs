@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -72,17 +72,18 @@ public class LobbyMainUI : MonoBehaviour
     {
         // 플레이어 저장 데이터
         PlayerSaveData saveData = saveRepo.LoadSaveData();
-        // 저장 데이터로부터 현재 선택 캐릭터 추출
+        // 플레이어가 선택 한 캐릭터의 세이브 데이터 추출
+        SaveCharacterData charSaveData = saveData.myCharacters.Find(x => x.TID == saveData.SelectCharID);
+        // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터 추출
         CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
 
         // {다이버 이름을 표시한다}
         if (textDiverName != null)
             textDiverName.text = charData.charName;
     
-        int link = saveRepo.GetLinkRateLevel();
         // {현재 동조율 단계를 표시한다}
         if (textLinkRateLevel != null)
-            textLinkRateLevel.text = $"동조율 Lv.{saveRepo.GetLinkRateLevel()}";
+            textLinkRateLevel.text = $"동조율 Lv.{charSaveData.linkRateLevel}";
 
         if (sliderLinkRateLevel != null)
         {
