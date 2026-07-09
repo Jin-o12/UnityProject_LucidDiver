@@ -22,13 +22,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 558d6aded3a52c0408bea40507abdfa1
-    m_Address: Image_101_Yuan_Icon
+  - m_GUID: 4b2b12b281554e92b251f8c8ea89f24b
+    m_Address: UI_Icon_Legend_SecurityBaton
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4e02c9e1f07b002469477ef272336c98
-    m_Address: Image_301_HealMedicine
+  - m_GUID: 558d6aded3a52c0408bea40507abdfa1
+    m_Address: Image_101_Yuan_Icon
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -47,6 +47,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad41d5f0c9324fe68fda3baada98f359
+    m_Address: UI_Icon_Uncommon_EnergyDrink
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b28cb3f6c6e0a9546ace9b3e059b7390
     m_Address: Prefab_1_PrismGrenade
     m_ReadOnly: 0
@@ -57,28 +62,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ad41d5f0c9324fe68fda3baada98f359
-    m_Address: UI_Icon_Uncommon_EnergyDrink
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4b2b12b281554e92b251f8c8ea89f24b
-    m_Address: UI_Icon_Legend_SecurityBaton
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: faab77ee407a7e041bbf4527bec04be9
-    m_Address: Image_302_WeirdCandy
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bf763a62145177140a19b7df78122a8e
     m_Address: Image_101_Yuan_ST
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bf763a62145177140a19b7df78122a8e
-    m_Address: Image_101_Yuan_ST
+  - m_GUID: c7a7868733bc48d18a7c2ddb358c73d8
+    m_Address: UI_Icon_Normal_FirstAidPouch
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
