@@ -484,8 +484,8 @@ MonoBehaviour:
     sceneAsset: {fileID: 102900000, guid: c67beebbfb6b5ad47b3fa2ef3f658b3d, type: 3}
     sceneName: LobbyScene
   levelScene:
-    sceneAsset: {fileID: 102900000, guid: 8c36779eaef1e344bb12278c70f768d6, type: 3}
-    sceneName: LevelDesignScene Additive
+    sceneAsset: {fileID: 102900000, guid: 60e8107b5568ec54786114359f3c8ad7, type: 3}
+    sceneName: LevelDesignScene
   gameScene:
     sceneAsset: {fileID: 102900000, guid: 35067dad38e9b394cb846a37067e052a, type: 3}
     sceneName: DemoScene Additive

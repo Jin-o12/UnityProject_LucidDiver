@@ -9,7 +9,7 @@ public class PlayerArtifactEquipment : MonoBehaviour
 {
     [SerializeField] private int artifactSlotCount = 3; // 플레이어가 사용할 아티팩트 장착 슬롯 수
 
-    private ArtifactItemData[] equippedArtifacts;       // 현재 장착 중인 아티팩트 목록
+    public ArtifactItemData[] equippedArtifacts;       // 현재 장착 중인 아티팩트 목록
 
     public event Action<int, ArtifactItemData> OnArtifactSlotChanged; // 장착 슬롯 변경 알림
 
