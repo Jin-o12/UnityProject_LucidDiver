@@ -1354,6 +1354,7 @@ GameObject:
   - component: {fileID: 4032586390846618248}
   - component: {fileID: 3423699262701415708}
   - component: {fileID: 6502900581990125564}
+  - component: {fileID: 1802057563256201124}
   m_Layer: 5
   m_Name: Canvas-Lobby
   m_TagString: Untagged
@@ -1461,11 +1462,46 @@ MonoBehaviour:
   buttonStorage: {fileID: 1586132335830246493}
   textDiverName: {fileID: 848244235026976283}
   textLinkRateLevel: {fileID: 965834552413327166}
+  sliderLinkRateLevel: {fileID: 3796316366617625295}
   textSpeakerName: {fileID: 4516556617685114177}
   textDialogue: {fileID: 5256806970443828623}
   CharacterStandingImage: {fileID: 0}
   newMemoryLogMark: {fileID: 861047826772908163}
   testHasNewMemoryLog: 0
+--- !u!328 &1802057563256201124
+VideoPlayer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2838638639429370787}
+  m_Enabled: 1
+  m_VideoClip: {fileID: 32900000, guid: ece31295782b93c44aed30ca6b8f2c0a, type: 3}
+  m_TargetCameraAlpha: 1
+  m_TargetCamera3DLayout: 0
+  m_TargetCamera: {fileID: 0}
+  m_TargetTexture: {fileID: 0}
+  m_TimeReference: 0
+  m_TargetMaterialRenderer: {fileID: 0}
+  m_TargetMaterialProperty: <noninit>
+  m_RenderMode: 2
+  m_AspectRatio: 2
+  m_DataSource: 0
+  m_TimeUpdateMode: 2
+  m_PlaybackSpeed: 1
+  m_AudioOutputMode: 2
+  m_TargetAudioSources: []
+  m_DirectAudioVolumes: []
+  m_Url: 
+  m_EnabledAudioTracks: 
+  m_DirectAudioMutes: 
+  m_ControlledAudioTrackCount: 0
+  m_PlayOnAwake: 1
+  m_SkipOnDrop: 1
+  m_Looping: 0
+  m_WaitForFirstFrame: 1
+  m_FrameReadyEventEnabled: 0
+  m_VideoShaders: []
 --- !u!1 &2867315597536943714
 GameObject:
   m_ObjectHideFlags: 0
@@ -2406,7 +2442,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cf481ffce84683a47a1ff21d4daaf67d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: bf763a62145177140a19b7df78122a8e, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1

@@ -13,7 +13,7 @@ public class LobbyMainUI : MonoBehaviour
     [Header("Diver Info")]
     [SerializeField] private TextMeshProUGUI textDiverName;             // 다이버 이름 텍스트
     [SerializeField] private TextMeshProUGUI textLinkRateLevel;         // 동조율 수치 텍스트
-    [SerializeField] private Image sliderLinkRateLevel;                // 동조율 경험치 슬라이더
+    [SerializeField] private Slider sliderLinkRateLevel;                // 동조율 경험치 슬라이더
     [SerializeField] private TextMeshProUGUI textSpeakerName;           // 로비 대사 화자 이름 텍스트
     [SerializeField] private TextMeshProUGUI textDialogue;              // 로비 대사 텍스트
     [SerializeField] private Image CharacterStandingImage;              // 캐릭터 스텐딩 일러스트
@@ -93,11 +93,11 @@ public class LobbyMainUI : MonoBehaviour
             {
                 float requireExp = charData.requireLinkRatePerLevel[charSaveData.linkRateLevel];
                 // 0으로 나누기 방지
-                sliderLinkRateLevel.fillAmount = requireExp > 0 ? charSaveData.TotallinkRateValue / requireExp : 1.0f;
+                sliderLinkRateLevel.value = requireExp > 0 ? charSaveData.TotallinkRateValue / requireExp : 1.0f;
             }
             else
             {
-                sliderLinkRateLevel.fillAmount = 1.0f;
+                sliderLinkRateLevel.value = 1.0f;
             }
         }
         

@@ -27,6 +27,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 558d6aded3a52c0408bea40507abdfa1
+    m_Address: Image_101_Yuan_Icon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 69d5691a300e73d48807dd8d4dad4f01
     m_Address: Prefab_301_testManaPIece
     m_ReadOnly: 0
@@ -64,6 +69,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: be7dbcd4181dbe04891bcc710918239f
     m_Address: Prefab_301_testMemoryPiece
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf763a62145177140a19b7df78122a8e
+    m_Address: Image_101_Yuan_ST
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
