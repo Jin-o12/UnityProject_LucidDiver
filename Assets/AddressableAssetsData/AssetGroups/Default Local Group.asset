@@ -22,23 +22,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4b2b12b281554e92b251f8c8ea89f24b
-    m_Address: UI_Icon_Legend_SecurityBaton
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 558d6aded3a52c0408bea40507abdfa1
     m_Address: Image_101_Yuan_Icon
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 69d5691a300e73d48807dd8d4dad4f01
-    m_Address: Prefab_301_testManaPIece
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 69d5691a300e73d48807dd8d4dad4f01
-    m_Address: Prefab_301_testManaPIece
   - m_GUID: 4e02c9e1f07b002469477ef272336c98
     m_Address: Image_301_HealMedicine
     m_ReadOnly: 0
@@ -81,21 +69,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: faab77ee407a7e041bbf4527bec04be9
     m_Address: Image_302_WeirdCandy
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c7a7868733bc48d18a7c2ddb358c73d8
-    m_Address: UI_Icon_Normal_FirstAidPouch
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d06773f9b60f49ef85ce0558bd0d2c2e
-    m_Address: UI_Icon_Epic_FrozenClockwork
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f0a5bc6a6ea5449ca237901c942ac0fe
-    m_Address: UI_Icon_Rare_CartWheel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
