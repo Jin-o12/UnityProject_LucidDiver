@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 게임 내 모든 Enum형을 관리합니다
 /// </summary>
 
@@ -122,4 +122,12 @@ public enum ArtifactEffectType
     timeLimitSpeed, // 시간 제한 속도 증가
     fireSpeedUp, // 공격 속도 증가
     fireMPDown // 공격 시 마나 소모 감소
+}
+
+public enum SlotType
+{
+    inventory,  //인벤토리 슬롯
+    chest,      //상자 아이템 슬롯
+    artifact,   //장비 장착 슬롯
+    safe        //각성 보존 슬롯
 }

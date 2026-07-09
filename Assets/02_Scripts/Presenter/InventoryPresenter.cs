@@ -23,6 +23,7 @@ public class InventoryPresenter : MonoBehaviour
     private InventoryUI inventoryUI;                    // 인벤토리 UI 캐시
     private ResultUI resultUI;                          // 결과 UI 캐시
     private ChestUI chestUI;                            // 상자 UI 캐시
+    private ItemTooltipUI itemTooltipUI;                // 툴팁 UI 캐시
 
     // 저장 데이터 인터페이스
     private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
@@ -78,6 +79,10 @@ public class InventoryPresenter : MonoBehaviour
         GlobalEventBus.OnArtifactEquipRequested += HandleArtifactEquipRequested;
         GlobalEventBus.OnArtifactUnequipRequested += HandleArtifactUnequipRequested;
         playerArtifactEquipment.OnArtifactSlotChanged += HandleArtifactSlotChanged;
+
+        // 아이템 툴팁 UI 열기/닫기 요청이 들어오면 Presenter가 처리한다.
+        GlobalEventBus.OnTooltipUIOpen += OpenTooltipUI;
+        GlobalEventBus.OnTooltipUIClose += CloseTooltipUI;
     }
 
     private void OnDisable()
@@ -96,6 +101,9 @@ public class InventoryPresenter : MonoBehaviour
 
         GlobalEventBus.OnArtifactEquipRequested -= HandleArtifactEquipRequested;
         GlobalEventBus.OnArtifactUnequipRequested -= HandleArtifactUnequipRequested;
+
+        GlobalEventBus.OnTooltipUIOpen -= OpenTooltipUI;
+        GlobalEventBus.OnTooltipUIClose -= CloseTooltipUI;
 
         if (playerArtifactEquipment != null)
             playerArtifactEquipment.OnArtifactSlotChanged -= HandleArtifactSlotChanged;
@@ -268,7 +276,7 @@ public class InventoryPresenter : MonoBehaviour
 
     /// <summary>
     /// 인벤토리 UI를 닫는다.
-    /// 상자 UI가 열려 있으면 컨테이너 UI 전체를 함께 닫는다.
+    /// 상자 UI나 툴팁 UI가 열려 있으면 컨테이너 UI 전체를 함께 닫는다.
     /// </summary>
     public void CloseInventoryUI()
     {
@@ -283,6 +291,9 @@ public class InventoryPresenter : MonoBehaviour
             return;
         }
 
+        // 툴팁 UI가 열려 있으면 닫아준다.
+        UIManager.Instance.Close<ItemTooltipUI>();
+
         UIManager.Instance.Close<InventoryUI>();
         inventoryUI = null;
         localInputReader.SetInventoryOpenState(false);
@@ -292,7 +303,69 @@ public class InventoryPresenter : MonoBehaviour
     }
 
     /// <summary>
-    /// 상자 UI와 인벤토리 UI를 함께 닫는다.
+    /// 아이템 툴팁 UI를 연다.
+    /// </summary>
+    public void OpenTooltipUI(SlotType slot, int slotIndex)
+    {
+        // 툴팁 UI의 출력 위치를 isOpenFromInventory 변수로 전달
+        itemTooltipUI = UIManager.Instance.Open<ItemTooltipUI>();
+        bool isFromInventory = (slot == SlotType.inventory || slot == SlotType.artifact);
+        itemTooltipUI.isFromInventory = isFromInventory;
+        // slotIndex를 참조하여 아이템 데이터를 불러온다.
+        ItemData _item;
+
+        switch (slot)
+        {
+            case SlotType.inventory:  // 인벤토리 슬롯 index를 참조해 아이템 데이터를 전달
+                {
+                    _item = playerInventory.GetSlotItemData(slotIndex);
+                    break;
+                }
+            case SlotType.chest:  // 상자 슬롯 index를 참조해 아이템 데이터를 전달
+                {
+                    // 현재 캐시된 chestUI 우선, 없으면 ActiveUI 사용
+                    ChestUI activeChestUI = chestUI ?? ChestUI.ActiveUI;
+                    if (activeChestUI != null)
+                        _item = activeChestUI.GetItemDataAt(slotIndex);
+                    else
+                        _item = null;
+
+                    break;
+                }
+            case SlotType.artifact:  // 장비 장착 칸 index를 참조해 아이템 데이터를 전달
+                {
+                    _item = playerArtifactEquipment.GetEquippedArtifact(slotIndex);
+                    break;
+                }
+            default:  // 기본값으로 null 처리
+                {
+                    _item = null;
+                    break;
+                }
+        }
+
+        // 슬롯에 저장된 아이템 데이터가 null이 아니면 UI 출력을 갱신
+        if (_item != null)
+        {
+            itemTooltipUI.RefreshData(isFromInventory, _item);
+        }
+        else  // 슬롯의 아이템 데이터가 null이면 슬롯 UI를 닫음
+        {
+            UIManager.Instance.Close<ItemTooltipUI>();
+        }
+    }
+
+    /// <summary>
+    /// 아이템 툴팁 UI를 닫는다.
+    /// </summary>
+    public void CloseTooltipUI()
+    {
+        UIManager.Instance.Close<ItemTooltipUI>();
+        itemTooltipUI = null;
+    }
+
+    /// <summary>
+    /// 상자 UI와 인벤토리 UI, 아이템 툴팁 UI를 함께 닫는다.
     /// </summary>
     public void CloseContainerUI()
     {
@@ -302,6 +375,7 @@ public class InventoryPresenter : MonoBehaviour
 
         UIManager.Instance.Close<ChestUI>();
         UIManager.Instance.Close<InventoryUI>();
+        UIManager.Instance.Close<ItemTooltipUI>();
 
         // 캐시와 상태를 초기화한다.
         chestUI = null;
