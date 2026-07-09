@@ -1,14 +1,14 @@
 ﻿/// <summary>
 /// 아이템 슬롯 하나의 역할을 수행합니다
 /// 인벤토리 슬롯 1칸의 표시와 입력을 담당한다.
-/// 인벤토리 슬롯끼리의 위치 교환, 체스트와의 우클릭 이동, 드래그 앤 드롭 이동을 처리한다.
+/// 인벤토리 슬롯끼리의 위치 교환, 체스트와의 우클릭 이동, 드래그 앤 드롭 이동, 포인터 호버로 툴팁 출력을 처리한다.
 /// </summary>
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
 
-public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("슬롯 UI 요소")]
     [SerializeField] private Image slotFrameImage; // 기본 빈 슬롯 이미지
@@ -204,6 +204,14 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             return;
         }
 
+        if (droppedObj.TryGetComponent<ArtifactEquipSlotUI>(out var artifactSlot))
+        {
+            // 장착 슬롯에서 일반 인벤토리 슬롯으로 드롭하면 해제를 요청합니다.
+            // 실제로 인벤토리에 들어갈 공간이 있는지는 InventoryPresenter가 판단합니다.
+            GlobalEventBus.OnArtifactUnequipRequested?.Invoke(artifactSlot.EquipSlotIndex);
+            return;
+        }
+
         if (droppedObj.TryGetComponent<ChestSlotUI>(out var chestSlot))
         {
             if (chestSlot.OwnerUI == null)
@@ -211,5 +219,17 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
             chestSlot.OwnerUI.TryMoveToInventorySlot(chestSlot.SlotIndex, slotIndex);
         }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        //포인터가 슬롯 UI에 들어오면 아이템 데이터를 읽는다
+        GlobalEventBus.OnTooltipUIOpen?.Invoke(SlotType.inventory, slotIndex);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        //포인터가 슬롯 UI에서 빠져나가면 슬롯 UI를 닫는다
+        GlobalEventBus.OnTooltipUIClose?.Invoke();
     }
 }

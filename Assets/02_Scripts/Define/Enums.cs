@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 게임 내 모든 Enum형을 관리합니다
 /// </summary>
 
@@ -24,7 +24,8 @@ public enum itemCategory
     weapon,         // 무장
     armor,          // 방어구
     consume,        // 소모품
-    memory          // 기억 파편
+    memory,         // 기억 파편
+    artifact        // 장비형 아이템
 }
 
 // 아이템 사용 방법 종류
@@ -100,4 +101,33 @@ public enum ItemGrade
 	rare = 3,      //희귀 등급
 	epic = 4,      //서사 등급
 	legend = 5     //전설 등급
+}
+
+public enum ArtifactCategory
+{
+    None, // 기본값
+    HP_Related, // 체력 관련
+    MP_Related, // 마나 관련
+    Mobility, // 이동 관련
+    TimeLimit, // 시간 제한 관련
+    Combat // 전투 관련
+}
+
+public enum ArtifactEffectType
+{
+    none, // 효과 없음
+    hpRegen, // 체력 회복
+    mpRegen, // 마나 회복
+    moveSpeedUp, // 이동 속도 증가
+    timeLimitSpeed, // 시간 제한 속도 증가
+    fireSpeedUp, // 공격 속도 증가
+    fireMPDown // 공격 시 마나 소모 감소
+}
+
+public enum SlotType
+{
+    inventory,  //인벤토리 슬롯
+    chest,      //상자 아이템 슬롯
+    artifact,   //장비 장착 슬롯
+    safe        //각성 보존 슬롯
 }

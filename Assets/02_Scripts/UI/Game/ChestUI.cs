@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -279,5 +279,20 @@ public class ChestUI : MonoBehaviour
         {
             slotUI.UpdateSlot(amount, loadedIcon);
         }
+    }
+
+    /// <summary>
+    ///   slotIndex번 칸에 등록된 아이템의 데이터를 추출합니다.
+    /// </summary>
+    public ItemData GetItemDataAt(int slotIndex)
+    {
+        if (itemBox == null)
+            return null;
+
+        BoxItemEntry entry = itemBox.GetItem(slotIndex);
+        if (entry == null || entry.itemData == null || entry.amount <= 0)
+            return null;
+
+        return itemRepo.GetItemDataByID(entry.itemData.TID);
     }
 }

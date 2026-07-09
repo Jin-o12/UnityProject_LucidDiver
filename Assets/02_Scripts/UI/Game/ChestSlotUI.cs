@@ -5,9 +5,9 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 체스트 슬롯 1칸의 표시와 입력을 담당한다.
-/// 더블클릭으로 인벤토리 이동, 드래그 앤 드롭으로 슬롯 지정 이동을 처리한다.
+/// 더블클릭으로 인벤토리 이동, 드래그 앤 드롭으로 슬롯 지정 이동, 포인터 호버로 툴팁 출력을 처리한다.
 /// </summary>
-public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Image itemImg;
     [SerializeField] private TMP_Text itemStack;
@@ -113,5 +113,17 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandle
 
         if (droppedObj.TryGetComponent<InventorySlotUI>(out var inventorySlot))
             chestUI.TryMoveFromInventorySlot(inventorySlot.slotIndex, slotIndex);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        //포인터가 슬롯 UI에 들어오면 아이템 데이터를 읽는다
+        GlobalEventBus.OnTooltipUIOpen?.Invoke(SlotType.chest, slotIndex);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        //포인터가 슬롯 UI에서 빠져나가면 슬롯 UI를 닫는다
+        GlobalEventBus.OnTooltipUIClose?.Invoke();
     }
 }

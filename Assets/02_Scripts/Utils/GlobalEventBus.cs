@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 글로벌 이벤트 버스 클래스
 /// 게임 내에서 발생하는 다양한 이벤트를 중앙에서 관리하고 전달하는 역할을 합니다.
 /// </summary>
@@ -36,6 +36,8 @@ public class GlobalEventBus
     public static Action<int, int> OnDropItemQuickSlot;             // 인벤토리에서 퀵슬롯에 아이템을 드래그 앤 드롭 할 시: Action<퀵슬롯 번호, 인벤토리 번호> | 인벤토리->퀵슬롯
     public static Action<int, int> OnSwapItemQuickSlot;             // 퀵슬롯에서 퀵슬롯으로 아이템을 드래그 앤 드롭 할 시: Action<1번 퀵슬롯 번호, 2번 퀵슬롯 번호)> | 2번슬롯->1번슬롯
     public static Action<int, int, Sprite, int> QuickSlotLoad;      // 퀵슬롯 데이터 불러오기 시: Action<퀵슬롯 번호, 아이템 TID, 아이템 아이콘, 아이템 개수)>
+    public static Action<int, int> OnArtifactEquipRequested;     // 아티팩트 장착 요청: Action<장착 슬롯 번호, 인벤토리 슬롯 번호>
+    public static Action<int> OnArtifactUnequipRequested;        // 아티팩트 해제 요청: Action<장착 슬롯 번호>
 
     /// <summary>
     /// 아이템 효과 이벤트
@@ -81,6 +83,8 @@ public class GlobalEventBus
     public static Action<string, CharacterTID> OnOpenRecordCardPopUpUI;     // 기록 카드 팝업 열기 요청: Action<기록 제목, 기록을 열 캐릭터의 ID>
     public static Action<int, bool, bool> RecordDataLoad;                   // 다이버 개인 심상 기록 데이터 전달 : Action<newLinkRateLevel, newMemoryLogUnlocked, newHasNewMemoryLog>
     public static Action OnRecordRead;                                      // 다이버 개인 심상 기록 읽음
+    public static Action<SlotType, int> OnTooltipUIOpen;                    // 아이템 툴팁 UI를 출력: Action<슬롯 종류, itemIndex>
+    public static Action OnTooltipUIClose;                                  // 아이템 툴팁 UI를 닫음
 
     /// <summary>
     /// 씬 전환 이벤트

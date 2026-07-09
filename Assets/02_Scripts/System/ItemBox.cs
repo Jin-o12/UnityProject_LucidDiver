@@ -19,12 +19,52 @@ public class ItemBox : MonoBehaviour, IInteractable
     [SerializeField] private bool allowDuplicateLoot = false;         // 같은 후보 아이템의 중복 생성 허용 여부
     [SerializeField] private List<BoxLootOption> lootOptions = new(); // 랜덤 생성 후보 목록
 
+    [Header("Category Loot Settings")]
+    [SerializeField] private bool useCategoryLoot = true; // true면 카테고리 확률표를 사용하고, false면 기존 lootOptions를 사용합니다.
+    [SerializeField] private List<BoxLootCategoryOption> categoryLootOptions = new()
+    {
+        new BoxLootCategoryOption
+        {
+            category = itemCategory.consume,
+            weight = 60,
+            minAmount = 1,
+            maxAmount = 1,
+            itemTids = new List<int> { 301, 302 }
+        },
+        new BoxLootCategoryOption
+        {
+            category = itemCategory.memory,
+            weight = 30,
+            minAmount = 1,
+            maxAmount = 1,
+            itemTids = new List<int> { 401 }
+        },
+        new BoxLootCategoryOption
+        {
+            category = itemCategory.artifact,
+            weight = 10,
+            minAmount = 1,
+            maxAmount = 1
+        }
+    };
+
+    [Header("Artifact Grade Loot Settings")]
+    [SerializeField] private List<BoxArtifactLootOption> artifactLootOptions = new()
+    {
+        new BoxArtifactLootOption { grade = ItemGrade.normal, itemTid = 1001, weight = 55 },
+        new BoxArtifactLootOption { grade = ItemGrade.uncommon, itemTid = 1002, weight = 25 },
+        new BoxArtifactLootOption { grade = ItemGrade.rare, itemTid = 1003, weight = 12 },
+        new BoxArtifactLootOption { grade = ItemGrade.epic, itemTid = 1004, weight = 6 },
+        new BoxArtifactLootOption { grade = ItemGrade.legend, itemTid = 1005, weight = 2 }
+    };
+
     [Header("Noise Settings")]
     // 상자를 열면 주변 적을 끌 수 있는 디코이성 소음을 함께 발생시킵니다.
     [SerializeField] private float openNoiseRange = 30.0f;
     [SerializeField] private float openNoiseDuration = 1.8f;
 
     private bool isOpened = false;                                    // 현재 다른 플레이어가 열어 둔 상태인지 여부
+    private IItemDataRepository itemRepo;                              // TID 기반 랜덤 루트 생성을 위한 아이템 데이터 저장소
 
     /// <summary>
     /// 체스트 UI에서 읽어갈 슬롯 데이터 목록입니다.
@@ -39,6 +79,8 @@ public class ItemBox : MonoBehaviour, IInteractable
 
     private void Awake()
     {
+        itemRepo = new LocalJsonItemRepository();
+
         EnsureSlotCapacity();
 
         // 랜덤 루트 사용이 켜져 있고, 아직 상자가 비어 있다면 시작 시 아이템을 생성합니다.
@@ -259,6 +301,16 @@ public class ItemBox : MonoBehaviour, IInteractable
 
         int createMin = Mathf.Max(1, minCreateCount);
         int createMax = Mathf.Max(createMin, maxCreateCount);
+        int createCount = Random.Range(createMin, createMax + 1);
+
+        // 고정 슬롯 구조이므로 먼저 모든 슬롯을 비웁니다.
+        ClearAllSlots();
+
+        if (useCategoryLoot)
+        {
+            GenerateCategoryRandomItems(createCount);
+            return;
+        }
 
         // 유효한 후보만 따로 풀에 담습니다.
         List<BoxLootOption> pool = new List<BoxLootOption>();
@@ -274,14 +326,9 @@ public class ItemBox : MonoBehaviour, IInteractable
         if (pool.Count == 0)
             return;
 
-        int createCount = Random.Range(createMin, createMax + 1);
-
         // 중복 불가일 때는 후보 수보다 많이 만들 수 없습니다.
         if (!allowDuplicateLoot)
             createCount = Mathf.Min(createCount, pool.Count);
-
-        // 고정 슬롯 구조이므로 먼저 모든 슬롯을 비웁니다.
-        ClearAllSlots();
 
         for (int i = 0; i < createCount; i++)
         {
@@ -304,6 +351,154 @@ public class ItemBox : MonoBehaviour, IInteractable
             if (!allowDuplicateLoot)
                 pool.Remove(selectedOption);
         }
+    }
+
+    /// <summary>
+    /// 카테고리 확률표를 기준으로 아이템 종류를 먼저 뽑고, 해당 카테고리의 TID를 다시 뽑아 슬롯에 채웁니다.
+    /// </summary>
+    private void GenerateCategoryRandomItems(int createCount)
+    {
+        if (itemRepo == null)
+            itemRepo = new LocalJsonItemRepository();
+
+        List<int> createdTids = new List<int>();
+        int createdCount = 0;
+        int attemptCount = 0;
+        int maxAttemptCount = Mathf.Max(1, createCount * 10);
+
+        while (createdCount < createCount && attemptCount < maxAttemptCount)
+        {
+            attemptCount++;
+
+            BoxLootCategoryOption selectedCategory = PickRandomCategoryOption();
+
+            if (selectedCategory == null)
+                return;
+
+            int selectedTid = PickTidByCategory(selectedCategory);
+
+            if (selectedTid == 0)
+                continue;
+
+            if (!allowDuplicateLoot && createdTids.Contains(selectedTid))
+                continue;
+
+            ItemData selectedItem = itemRepo.GetItemDataByID(selectedTid);
+
+            if (selectedItem == null)
+                continue;
+
+            int minAmount = Mathf.Max(1, selectedCategory.minAmount);
+            int maxAmount = Mathf.Max(minAmount, selectedCategory.maxAmount);
+            int amount = Random.Range(minAmount, maxAmount + 1);
+
+            TryAddItem(selectedItem, amount);
+            createdTids.Add(selectedTid);
+            createdCount++;
+        }
+    }
+
+    /// <summary>
+    /// consume/memory/artifact 같은 카테고리 후보를 weight 값 기준으로 선택합니다.
+    /// </summary>
+    private BoxLootCategoryOption PickRandomCategoryOption()
+    {
+        if (categoryLootOptions == null || categoryLootOptions.Count == 0)
+            return null;
+
+        int totalWeight = 0;
+
+        for (int i = 0; i < categoryLootOptions.Count; i++)
+        {
+            if (categoryLootOptions[i] == null)
+                continue;
+
+            totalWeight += Mathf.Max(0, categoryLootOptions[i].weight);
+        }
+
+        if (totalWeight <= 0)
+            return null;
+
+        int randomValue = Random.Range(0, totalWeight);
+        int currentWeight = 0;
+
+        for (int i = 0; i < categoryLootOptions.Count; i++)
+        {
+            if (categoryLootOptions[i] == null)
+                continue;
+
+            currentWeight += Mathf.Max(0, categoryLootOptions[i].weight);
+
+            if (randomValue < currentWeight)
+                return categoryLootOptions[i];
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// 선택된 카테고리 후보에서 실제 아이템 TID를 뽑습니다.
+    /// 아티팩트는 등급 확률표를 한 번 더 거쳐 TID를 결정합니다.
+    /// </summary>
+    private int PickTidByCategory(BoxLootCategoryOption categoryOption)
+    {
+        if (categoryOption == null)
+            return 0;
+
+        if (categoryOption.category == itemCategory.artifact)
+            return PickArtifactTidByGrade();
+
+        return PickRandomTid(categoryOption.itemTids);
+    }
+
+    /// <summary>
+    /// TID 후보 목록에서 같은 확률로 하나를 선택합니다.
+    /// </summary>
+    private int PickRandomTid(List<int> tids)
+    {
+        if (tids == null || tids.Count == 0)
+            return 0;
+
+        int index = Random.Range(0, tids.Count);
+        return tids[index];
+    }
+
+    /// <summary>
+    /// 아티팩트가 선택된 경우 등급별 weight를 기준으로 실제 아티팩트 TID를 선택합니다.
+    /// </summary>
+    private int PickArtifactTidByGrade()
+    {
+        if (artifactLootOptions == null || artifactLootOptions.Count == 0)
+            return 0;
+
+        int totalWeight = 0;
+
+        for (int i = 0; i < artifactLootOptions.Count; i++)
+        {
+            if (artifactLootOptions[i] == null)
+                continue;
+
+            totalWeight += Mathf.Max(0, artifactLootOptions[i].weight);
+        }
+
+        if (totalWeight <= 0)
+            return 0;
+
+        int randomValue = Random.Range(0, totalWeight);
+        int currentWeight = 0;
+
+        for (int i = 0; i < artifactLootOptions.Count; i++)
+        {
+            if (artifactLootOptions[i] == null)
+                continue;
+
+            currentWeight += Mathf.Max(0, artifactLootOptions[i].weight);
+
+            if (randomValue < currentWeight)
+                return artifactLootOptions[i].itemTid;
+        }
+
+        return 0;
     }
 
     /// <summary>

@@ -276,6 +276,12 @@ public class ResultManager : MonoBehaviour, IResultService
         _playerSaveData.quickSlots.Add(_inven.quickSlots[1].TID);
         _playerSaveData.quickSlots.Add(_inven.quickSlots[2].TID);
 
+        // 장착 중인 아티팩트는 인벤토리 슬롯에서 빠져 있으므로 별도 장착 슬롯 데이터로 저장한다.
+        // 이 동기화가 없으면 탈출 성공 후 장착 상태의 아티팩트가 저장 목록에 남지 않아 사라질 수 있다.
+        PlayerArtifactEquipment artifactEquipment = FindObjectOfType<PlayerArtifactEquipment>();
+        if (artifactEquipment != null)
+            artifactEquipment.WriteToSave(_playerSaveData);
+
         // 갱신 후 DataManager에서 playerData를 저장
         //DataManager.Instance.SaveGame();
     }
@@ -481,6 +487,10 @@ public class ResultManager : MonoBehaviour, IResultService
         // {각성 보존 슬롯 리스트가 없으면 새로 만든다}
         if (_playerSaveData.safeSlots == null)
             _playerSaveData.safeSlots = new List<SaveSlotData>();
+
+        // {아티팩트 장착 슬롯 리스트가 없으면 새로 만든다}
+        if (_playerSaveData.artifactSlots == null)
+            _playerSaveData.artifactSlots = new List<SaveSlotData>();
 
         // {퀵슬롯 리스트가 없으면 새로 만든다}
         if (_playerSaveData.quickSlots == null)
