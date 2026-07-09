@@ -34,6 +34,9 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     public float sprintMP;                                  // 달리기 중 초당 마나 소비량
     public float evadeMP;                                   // 구르기 시 마나 소비량
 
+    private float artifactHpRegenBonus;                     // 아티팩트로 추가되는 초당 체력 회복량
+    private float artifactMpRegenBonus;                     // 아티팩트로 추가되는 초당 마나 회복량
+
     [Header("Lucid Mark")]
     [SerializeField] private PlayerLucidMarkController lucidMark = new PlayerLucidMarkController();
 
@@ -115,6 +118,8 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         mpMax = _mp;
         mpCurrent = mpMax;
         manaRegen = _regen;
+        artifactHpRegenBonus = 0.0f;
+        artifactMpRegenBonus = 0.0f;
         sprintMP = _sMP;
         cannotSprint = false;
         sprintRecoverTime = _sTime;
@@ -245,6 +250,16 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GetMp(-_useMana);
     }
 
+    /// <summary>
+    /// 아티팩트 장착 효과로 추가되는 HP/MP 회복 보정값을 갱신합니다.
+    /// 원본 manaRegen은 캐릭터 기본값으로 유지하고, 회복 틱에서 보정값만 더해 사용합니다.
+    /// </summary>
+    public void ApplyArtifactStatusBonus(float hpRegenBonus, float mpRegenBonus)
+    {
+        artifactHpRegenBonus = Mathf.Max(0.0f, hpRegenBonus);
+        artifactMpRegenBonus = Mathf.Max(0.0f, mpRegenBonus);
+    }
+
     /* 달리기 중 시간당 마나 사용 */
     public void UseSprintMana(float _useMana)
     {
@@ -282,7 +297,10 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     {
         while (nowState != livingState.gameover)
         {
-            GetMp(manaRegen);
+            if (artifactHpRegenBonus > 0.0f)
+                GetHp(artifactHpRegenBonus);
+
+            GetMp(manaRegen + artifactMpRegenBonus);
             yield return new WaitForSeconds(1.0f);
         }
     }

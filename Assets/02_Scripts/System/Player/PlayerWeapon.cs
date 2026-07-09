@@ -21,6 +21,7 @@ public class PlayerWeapon : MonoBehaviour
     public bool isEquipped => weaponData != null;                       // 무기 장착 여부
     public float nowUseMana => weaponData.useMana;                      // 현재 무기의 마나 사용량
     public float nowAttackPower => weaponData.AtkValue;                 // 무기의 공격력
+    public float nowFireRate => weaponData.fireRate;                    // 현재 무기의 기본 발사 간격
 
     private GameObject currentWeaponInstance;                           // 현재 무기 인스턴스
     private Coroutine shotTraceCoroutine;                               // 궤적 출력 코루틴

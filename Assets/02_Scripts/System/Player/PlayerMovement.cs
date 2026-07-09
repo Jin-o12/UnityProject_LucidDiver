@@ -18,6 +18,7 @@ public class PlayerMovement : MonoBehaviour
     private readonly float isometricYAngle = -45.0f;    // 쿼터뷰 기준 이동 방향 보정
     public float moveSpeed;                             // 이동 속도
     public float rotationSpeed = 1000f;                 // 회전 속도
+    private float artifactMoveSpeedRate;                // 아티팩트로 추가되는 이동 속도 증가율
 
     public float sprintSpeed;                           // 달리기 중 이동 속도
     public float sprintMP;                              // 달리기 중 초당 MP 소비
@@ -114,6 +115,17 @@ public class PlayerMovement : MonoBehaviour
 
         // 구르기 쿨타임 초기화
         evadeCooltime = _eCooltime;
+
+        artifactMoveSpeedRate = 0.0f;
+    }
+
+    /// <summary>
+    /// 아티팩트 장착 효과로 추가되는 이동 속도 증가율을 갱신합니다.
+    /// 원본 moveSpeed/sprintSpeed를 직접 바꾸지 않고, 실제 이동 계산에서만 배율로 적용합니다.
+    /// </summary>
+    public void ApplyArtifactMoveSpeedBonus(float moveSpeedRate)
+    {
+        artifactMoveSpeedRate = Mathf.Max(0.0f, moveSpeedRate);
     }
 
     /* 플레이어 이동 입력 갱신 */
@@ -132,7 +144,11 @@ public class PlayerMovement : MonoBehaviour
         Quaternion isoRotation = Quaternion.Euler(0f, isometricYAngle, 0f);
         Vector3 movement = (isoRotation * inputDir).normalized;
 
-        Vector3 targetPosition = rb.position + movement * (isEvading ? evadeSpeed : (sprintInput ? sprintSpeed : moveSpeed)) * Time.fixedDeltaTime;
+        float moveSpeedMultiplier = 1.0f + artifactMoveSpeedRate;
+        float currentMoveSpeed = moveSpeed * moveSpeedMultiplier;
+        float currentSprintSpeed = sprintSpeed * moveSpeedMultiplier;
+        float finalMoveSpeed = isEvading ? evadeSpeed : (sprintInput ? currentSprintSpeed : currentMoveSpeed);
+        Vector3 targetPosition = rb.position + movement * finalMoveSpeed * Time.fixedDeltaTime;
 
         // 달리기 중 MP 소비 이벤트 전달
         if (movement.sqrMagnitude > 0.001f && sprintInput)
