@@ -7,7 +7,7 @@ using TMPro;
 /// 인벤토리 UI 안의 아티팩트 장착 슬롯 1칸을 담당합니다.
 /// 직접 인벤토리 데이터를 수정하지 않고, 이벤트를 통해 Presenter에 장착/해제를 요청합니다.
 /// </summary>
-public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("장착 슬롯 설정")]
     [SerializeField] private int equipSlotIndex; // 0, 1, 2 중 이 UI가 담당하는 장착 슬롯 번호
@@ -239,5 +239,17 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
             return;
 
         GlobalEventBus.OnArtifactUnequipRequested?.Invoke(equipSlotIndex);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        //포인터가 슬롯 UI에 들어오면 아이템 데이터를 읽는다
+        GlobalEventBus.OnTooltipUIOpen?.Invoke(SlotType.artifact, equipSlotIndex);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        //포인터가 슬롯 UI에서 빠져나가면 슬롯 UI를 닫는다
+        GlobalEventBus.OnTooltipUIClose?.Invoke();
     }
 }
