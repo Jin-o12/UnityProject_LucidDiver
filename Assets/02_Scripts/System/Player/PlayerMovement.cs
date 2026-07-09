@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 플레이어의 이동과 커서 방향 회전을 처리하는 스크립트
 /// </summary>
 using UnityEngine;
@@ -15,7 +15,7 @@ public class PlayerMovement : MonoBehaviour
     private bool sprintInput;                           // 플레이어의 달리기 입력
     private Vector2 currentMousePos;                    // 현재 마우스 화면 좌표
 
-    private readonly float isometricYAngle = -45.0f;    // 쿼터뷰 기준 이동 방향 보정
+    private readonly float isometricYAngle = +45.0f;    // 쿼터뷰 기준 이동 방향 보정
     public float moveSpeed;                             // 이동 속도
     public float rotationSpeed = 1000f;                 // 회전 속도
     private float artifactMoveSpeedRate;                // 아티팩트로 추가되는 이동 속도 증가율
