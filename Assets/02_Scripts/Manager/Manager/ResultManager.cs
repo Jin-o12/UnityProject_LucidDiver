@@ -29,6 +29,7 @@ public class ResultManager : MonoBehaviour, IResultService
     // 인벤토리 기록에 관한 필드
     private PlayerSaveData _playerSaveData;             //인벤토리 기록이 저장된 플레이어 세이브 데이터
     private PlayerInventory _inven;                     //현재 인게임 세션의 플레이어 인벤토리 데이터
+    private PlayerArtifactEquipment artifactEquipment;  //플레이어가 장착한 아티팩트 데이터
     private ItemData potionData;                        //변질된 붕대 아이템 데이터
     private ItemData manaStoneData;                     //기묘한 사탕 아이템 데이터
     private ItemData memoryFragmentData;                //기억 파편 아이템 데이터
@@ -215,11 +216,18 @@ public class ResultManager : MonoBehaviour, IResultService
         LinkRateUp(_extractionResult);
         // 심상 기록 읽기 상태 저장
         // _playerSaveData.hasNewMemoryLog = hasNewMemoryLog;
-        // 탈출 실패 시 소비 기물 아이템을 인벤토리에서 제거
+        // 탈출 실패 시 인벤토리 및 아티팩트 슬롯의 아이템을 인벤토리에서 제거
         if (!_extractionResult)
         {
-            RemoveFromInventory(301);
-            RemoveFromInventory(302);
+            foreach (var slot in _inven.slots)
+            {
+                RemoveFromInventory(slot.TID);
+            }
+
+            foreach (var eSlot in artifactEquipment.equippedArtifacts)
+            {
+                if (eSlot != null) RemoveFromInventory(eSlot.TID);
+            }
         }
         // 모든 처리 완료 후 후 DataManager에서 playerData를 저장
         DataManager.Instance.SaveGame();
@@ -276,7 +284,7 @@ public class ResultManager : MonoBehaviour, IResultService
 
         // 장착 중인 아티팩트는 인벤토리 슬롯에서 빠져 있으므로 별도 장착 슬롯 데이터로 저장한다.
         // 이 동기화가 없으면 탈출 성공 후 장착 상태의 아티팩트가 저장 목록에 남지 않아 사라질 수 있다.
-        PlayerArtifactEquipment artifactEquipment = FindObjectOfType<PlayerArtifactEquipment>();
+        artifactEquipment = FindObjectOfType<PlayerArtifactEquipment>();
         if (artifactEquipment != null)
             artifactEquipment.WriteToSave(_playerSaveData);
 
@@ -344,6 +352,9 @@ public class ResultManager : MonoBehaviour, IResultService
 
         // {지정한 TID의 아이템을 인벤토리 저장 슬롯에서 제거한다}
         _playerSaveData.inventorySlots.RemoveAll(slot => slot != null && slot.TID == _tid);
+
+        // {지정한 TID의 아이템을 아티팩트 장착 슬롯에서 제거한다}
+        _playerSaveData.artifactSlots.RemoveAll(slot => slot != null && slot.TID == _tid);
     }
 
     // 결과 창 패널 출력 메소드

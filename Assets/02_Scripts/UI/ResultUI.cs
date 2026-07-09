@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -176,7 +176,7 @@ public class ResultUI : MonoBehaviour
     public void UpdateSafeSlot(int slotNum, InventorySlotData slotData)
     {
         InventorySlotUI slotUI = safeSlotsObj[slotNum].GetComponent<InventorySlotUI>();
-        slotUI.UpdateSlot(slotData.amount, slotData.icon);
+        slotUI.UpdateSlot(slotData.amount, slotData.icon, SlotType.safe);
     }
 
     private string Dialogue_Return()  //결과 창 말풍선 대사를 DB에서 추출해 출력하는 메소드
