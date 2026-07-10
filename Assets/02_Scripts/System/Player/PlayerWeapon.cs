@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -28,8 +28,9 @@ public class PlayerWeapon : MonoBehaviour
     private WaitForSeconds shotTraceWait;                               // 궤적 출력 코루틴 WS
 
     [Header("Aim")]
-    [SerializeField] private float aimOriginHeight = 1.0f;        // 1차 조준 레이를 쏠 높이
-    [SerializeField] private float muzzleBackstepDistance = 0.3f; // 총구가 벽 안에 들어갔을 때 시작점을 뒤로 물릴 거리
+    [SerializeField] private float aimOriginHeight = 1.0f;              // 1차 조준 레이를 쏠 높이
+    [SerializeField] private float muzzleBackstepDistance = 0.3f;       // 총구가 벽 안에 들어갔을 때 시작점을 뒤로 물릴 거리
+    [SerializeField] private float aimSuccessParallex = 0.1f;           // 1차 조준 레이가 적에게 명중 시 적 body 내부를 조준하기 위한 보정 거리
 
     [SerializeField] public apPortrait apPort;
 
@@ -81,7 +82,8 @@ public class PlayerWeapon : MonoBehaviour
             hitMask,
             QueryTriggerInteraction.Ignore))
         {
-            targetPoint = aimHit.point;
+            // 표면 히트 지점보다 약간 안쪽을 조준한다.
+            targetPoint = aimHit.point - aimHit.normal * aimSuccessParallex;
         }
 
         // 2차: 총구에서 targetPoint까지 실제 발사 판정을 한다.
@@ -118,13 +120,27 @@ public class PlayerWeapon : MonoBehaviour
                 traceColor = hitTraceColor;
                 target.TakeDamage(weaponData.AtkValue);
             }
+
+            // 디버그 출력
+            Debug.Log($"{shotHit.collider.name}, {target}");
+            Debug.Log($"target faction: {target.EntityFaction}, hit? {target.EntityFaction != Faction.player}");
         }
+
+        // 1차 조준 vs 2차 히트 포인트 판정 디버그 레이
+        bool aimHitSuccess = Physics.Raycast(aimOrigin, aimDirection, out aimHit, weaponData.fireRange, hitMask, QueryTriggerInteraction.Ignore);
+        Debug.Log($"[AIM] hit={aimHitSuccess}, point={(aimHitSuccess ? aimHit.point.ToString() : "N/A")}, targetPoint={targetPoint}");
+        Debug.DrawLine(aimOrigin, targetPoint, Color.yellow, 2f);      // 1차 조준 레이
+
+        bool shotHitSuccess = Physics.Raycast(safeShotOrigin, shotDirection, out shotHit, safeShotDistance, hitMask, QueryTriggerInteraction.Ignore);
+        Debug.Log($"[SHOT] hit={shotHitSuccess}, origin={safeShotOrigin}, dir={shotDirection}, dist={safeShotDistance}, targetPoint={targetPoint}");
+        Debug.DrawLine(safeShotOrigin, safeShotOrigin + shotDirection * safeShotDistance, Color.red, 2f); // 2차 발사 레이
 
         // 궤적은 여전히 총구에서 시작해 보이게 한다.
         ShowShotTrace(muzzleOrigin, endPoint, traceColor);
 
         // 실제 오디오 재생과 별개로, AI는 이 총소리 이벤트를 통해 위치를 조사합니다.
         NoiseSystem.Emit(NoiseType.Gunshot, muzzleOrigin, gameObject);
+
     }
 
     // 리코일 애니메이션 출력
