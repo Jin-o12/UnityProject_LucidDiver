@@ -14,11 +14,17 @@ public class EnemyLocomotion
 
     // 플레이어와 같은 쿼터뷰 기준으로 적의 시각 방향을 판정하기 위한 보정 각도입니다.
     // 월드 forward를 그대로 쓰면 화면에서 보이는 좌우/상하와 어긋날 수 있어 애니메이션 동기화에 사용합니다.
+    [SerializeField] private LayerMask lungeObstacleMask; // 공격 돌진을 막는 벽/장애물 레이어
+    [SerializeField] private float lungeWallBuffer = 0.15f; // 벽 앞에서 멈추도록 남기는 여유 거리
+    [SerializeField] private float lungeCollisionRadius = 0.35f; // 돌진 경로를 검사할 때 사용할 반지름
+
     private const float VisualDirectionAngle = 45.0f;
 
     public void OnValidate()
     {
         moveSpeed = Mathf.Max(0.1f, moveSpeed);
+        lungeWallBuffer = Mathf.Max(0.0f, lungeWallBuffer);
+        lungeCollisionRadius = Mathf.Max(0.05f, lungeCollisionRadius);
     }
 
     /// <summary>
@@ -170,6 +176,8 @@ public class EnemyLocomotion
         Vector3 end = start + flatForward * distance;
         end.y = start.y;
 
+        end = GetSafeLungeDestination(start, end, distance);
+
         if (NavMesh.SamplePosition(end, out NavMeshHit hit, Mathf.Max(0.2f, distance), NavMesh.AllAreas))
         {
             end = hit.position;
@@ -202,6 +210,80 @@ public class EnemyLocomotion
             agent.Warp(self.position);
             agent.updatePosition = previousUpdatePosition;
         }
+    }
+
+    /// <summary>
+    /// 공격 돌진 목적지가 벽 또는 NavMesh 경계를 넘지 않도록 최종 이동 위치를 보정합니다.
+    /// NavMesh 경계와 실제 Wall Collider를 함께 검사해 벽 너머로 Lerp 이동되는 상황을 막습니다.
+    /// </summary>
+    private Vector3 GetSafeLungeDestination(Vector3 start, Vector3 desiredEnd, float distance)
+    {
+        Vector3 safeEnd = desiredEnd;
+
+        if (NavMesh.Raycast(start, desiredEnd, out NavMeshHit navHit, NavMesh.AllAreas))
+        {
+            safeEnd = GetBufferedPoint(start, navHit.position);
+        }
+
+        LayerMask obstacleMask = ResolveLungeObstacleMask();
+        if (obstacleMask.value == 0)
+        {
+            return safeEnd;
+        }
+
+        Vector3 direction = safeEnd - start;
+        direction.y = 0.0f;
+
+        float castDistance = Mathf.Min(distance, direction.magnitude);
+        if (castDistance <= 0.001f)
+        {
+            return safeEnd;
+        }
+
+        Vector3 castOrigin = start + Vector3.up * lungeCollisionRadius;
+        if (Physics.SphereCast(
+                castOrigin,
+                lungeCollisionRadius,
+                direction.normalized,
+                out RaycastHit wallHit,
+                castDistance,
+                obstacleMask,
+                QueryTriggerInteraction.Ignore))
+        {
+            safeEnd = start + direction.normalized * Mathf.Max(0.0f, wallHit.distance - lungeWallBuffer);
+            safeEnd.y = start.y;
+        }
+
+        return safeEnd;
+    }
+
+    private Vector3 GetBufferedPoint(Vector3 start, Vector3 hitPosition)
+    {
+        Vector3 direction = hitPosition - start;
+        direction.y = 0.0f;
+
+        if (direction.sqrMagnitude <= 0.001f)
+        {
+            return start;
+        }
+
+        Vector3 bufferedPoint = hitPosition - direction.normalized * lungeWallBuffer;
+        bufferedPoint.y = start.y;
+        return bufferedPoint;
+    }
+
+    /// <summary>
+    /// 인스펙터에서 따로 지정하지 않았으면 프로젝트의 Wall 레이어를 기본 돌진 차단 레이어로 사용합니다.
+    /// </summary>
+    private LayerMask ResolveLungeObstacleMask()
+    {
+        if (lungeObstacleMask.value != 0)
+        {
+            return lungeObstacleMask;
+        }
+
+        int wallLayer = LayerMask.NameToLayer("Wall");
+        return wallLayer >= 0 ? 1 << wallLayer : 0;
     }
 
     /// <summary>

@@ -29,6 +29,10 @@ public class PlayerMovement : MonoBehaviour
     public float evadeMP;                               // 구르기 MP 소비
     public float evadeCooltime;                         // 구르기 쿨타임
 
+    [Header("Collision Guard")]
+    [SerializeField] private LayerMask movementObstacleMask; // 이동/구르기 중 관통을 막을 벽 레이어
+    [SerializeField] private float movementWallBuffer = 0.05f; // 벽 앞에서 멈추도록 남기는 여유 거리
+
     [Header("Noise Settings")]
     // 발소리는 "플레이어 이동 입력"이 아니라 실제 이동 중일 때 일정 간격으로만 발생시킵니다.
     [SerializeField] private float walkNoiseRange = 15.0f;
@@ -117,6 +121,7 @@ public class PlayerMovement : MonoBehaviour
         evadeCooltime = _eCooltime;
 
         artifactMoveSpeedRate = 0.0f;
+        movementWallBuffer = Mathf.Max(0.0f, movementWallBuffer);
     }
 
     /// <summary>
@@ -149,6 +154,7 @@ public class PlayerMovement : MonoBehaviour
         float currentSprintSpeed = sprintSpeed * moveSpeedMultiplier;
         float finalMoveSpeed = isEvading ? evadeSpeed : (sprintInput ? currentSprintSpeed : currentMoveSpeed);
         Vector3 targetPosition = rb.position + movement * finalMoveSpeed * Time.fixedDeltaTime;
+        targetPosition = GetSafeMovePosition(targetPosition);
 
         // 달리기 중 MP 소비 이벤트 전달
         if (movement.sqrMagnitude > 0.001f && sprintInput)
@@ -172,6 +178,55 @@ public class PlayerMovement : MonoBehaviour
 
         AimTowardsMouse();
         ImageTowardsMouse();
+    }
+
+    /// <summary>
+    /// 이동 전에 Rigidbody가 실제로 지나갈 경로를 검사해 벽을 관통하지 않도록 목표 위치를 보정합니다.
+    /// 걷기/달리기/구르기 모두 같은 MovePosition 경로를 사용하므로 여기서 한 번에 방어합니다.
+    /// </summary>
+    private Vector3 GetSafeMovePosition(Vector3 targetPosition)
+    {
+        Vector3 moveDelta = targetPosition - rb.position;
+        moveDelta.y = 0.0f;
+
+        if (moveDelta.sqrMagnitude <= 0.0001f)
+        {
+            return targetPosition;
+        }
+
+        LayerMask obstacleMask = ResolveMovementObstacleMask();
+        if (obstacleMask.value == 0)
+        {
+            return targetPosition;
+        }
+
+        Vector3 direction = moveDelta.normalized;
+        float distance = moveDelta.magnitude;
+
+        if (rb.SweepTest(direction, out RaycastHit hit, distance, QueryTriggerInteraction.Ignore) &&
+            ((1 << hit.collider.gameObject.layer) & obstacleMask.value) != 0)
+        {
+            float safeDistance = Mathf.Max(0.0f, hit.distance - movementWallBuffer);
+            Vector3 safePosition = rb.position + direction * safeDistance;
+            safePosition.y = rb.position.y;
+            return safePosition;
+        }
+
+        return targetPosition;
+    }
+
+    /// <summary>
+    /// 인스펙터에서 따로 지정하지 않았으면 프로젝트의 Wall 레이어를 기본 이동 차단 레이어로 사용합니다.
+    /// </summary>
+    private LayerMask ResolveMovementObstacleMask()
+    {
+        if (movementObstacleMask.value != 0)
+        {
+            return movementObstacleMask;
+        }
+
+        int wallLayer = LayerMask.NameToLayer("Wall");
+        return wallLayer >= 0 ? 1 << wallLayer : 0;
     }
 
     private void EmitMovementNoise(bool isMoving)

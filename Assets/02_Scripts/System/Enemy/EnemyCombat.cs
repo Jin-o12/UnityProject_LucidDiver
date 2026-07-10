@@ -10,6 +10,8 @@ using UnityEngine.AI;
 [Serializable]
 public class EnemyCombat
 {
+    [SerializeField] private LayerMask attackObstacleMask;             // 공격 판정을 막는 벽/장애물 레이어
+
     [SerializeField] private float attackStartRange = 3.0f;            // 공격 코루틴을 시작할 수 있는 거리
     [SerializeField] private float attackHitRange = 1.2f;              // 실제 데미지가 들어가는 근접 판정 거리
     [SerializeField] private float attackCooldown = 2.0f;              // 한 번의 콤보 후 다시 공격 가능한 시간
@@ -163,6 +165,11 @@ public class EnemyCombat
             return;
         }
 
+        if (IsAttackBlockedByObstacle(origin, target.position))
+        {
+            return;
+        }
+
         IEffectReceiver damageable = target.GetComponentInParent<IEffectReceiver>();
         if (damageable == null)
         {
@@ -180,5 +187,40 @@ public class EnemyCombat
     {
         currentSlashDamage = 0.0f;
         hasAppliedCurrentSlashDamage = false;
+    }
+
+    /// <summary>
+    /// 공격 상태에 들어간 뒤 대상이 벽 뒤로 이동한 경우 데미지가 적용되지 않도록 검사합니다.
+    /// </summary>
+    private bool IsAttackBlockedByObstacle(Vector3 origin, Vector3 targetPosition)
+    {
+        LayerMask obstacleMask = ResolveAttackObstacleMask();
+        if (obstacleMask.value == 0)
+        {
+            return false;
+        }
+
+        Vector3 start = origin + Vector3.up * 0.5f;
+        Vector3 end = targetPosition + Vector3.up * 0.5f;
+
+        return Physics.Linecast(
+            start,
+            end,
+            obstacleMask,
+            QueryTriggerInteraction.Ignore);
+    }
+
+    /// <summary>
+    /// 인스펙터에서 따로 지정하지 않았으면 프로젝트의 Wall 레이어를 기본 공격 차단 레이어로 사용합니다.
+    /// </summary>
+    private LayerMask ResolveAttackObstacleMask()
+    {
+        if (attackObstacleMask.value != 0)
+        {
+            return attackObstacleMask;
+        }
+
+        int wallLayer = LayerMask.NameToLayer("Wall");
+        return wallLayer >= 0 ? 1 << wallLayer : 0;
     }
 }
