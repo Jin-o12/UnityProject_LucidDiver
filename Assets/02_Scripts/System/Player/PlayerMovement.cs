@@ -32,6 +32,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("Collision Guard")]
     [SerializeField] private LayerMask movementObstacleMask; // 이동/구르기 중 관통을 막을 벽 레이어
     [SerializeField] private float movementWallBuffer = 0.05f; // 벽 앞에서 멈추도록 남기는 여유 거리
+    [SerializeField] private float evadeCornerProbeRadius = 0.25f; // 벽 모서리 관통을 막기 위한 보조 검사 반지름
+    [SerializeField] private float evadeCornerProbeHeight = 0.5f; // 보조 검사를 시작할 플레이어 높이
 
     [Header("Noise Settings")]
     // 발소리는 "플레이어 이동 입력"이 아니라 실제 이동 중일 때 일정 간격으로만 발생시킵니다.
@@ -122,6 +124,8 @@ public class PlayerMovement : MonoBehaviour
 
         artifactMoveSpeedRate = 0.0f;
         movementWallBuffer = Mathf.Max(0.0f, movementWallBuffer);
+        evadeCornerProbeRadius = Mathf.Max(0.05f, evadeCornerProbeRadius);
+        evadeCornerProbeHeight = Mathf.Max(0.0f, evadeCornerProbeHeight);
     }
 
     /// <summary>
@@ -154,7 +158,10 @@ public class PlayerMovement : MonoBehaviour
         float currentSprintSpeed = sprintSpeed * moveSpeedMultiplier;
         float finalMoveSpeed = isEvading ? evadeSpeed : (sprintInput ? currentSprintSpeed : currentMoveSpeed);
         Vector3 targetPosition = rb.position + movement * finalMoveSpeed * Time.fixedDeltaTime;
-        targetPosition = GetSafeMovePosition(targetPosition);
+        if (isEvading)
+        {
+            targetPosition = GetSafeMovePosition(targetPosition);
+        }
 
         // 달리기 중 MP 소비 이벤트 전달
         if (movement.sqrMagnitude > 0.001f && sprintInput)
@@ -164,6 +171,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         rb.MovePosition(targetPosition);
+        ClearHorizontalVelocity();
         EmitMovementNoise(movement.sqrMagnitude > 0.001f);
 
         // 이동 방향에 따라 바라보는 방향 회전
@@ -181,8 +189,21 @@ public class PlayerMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// 이동 전에 Rigidbody가 실제로 지나갈 경로를 검사해 벽을 관통하지 않도록 목표 위치를 보정합니다.
-    /// 걷기/달리기/구르기 모두 같은 MovePosition 경로를 사용하므로 여기서 한 번에 방어합니다.
+    /// MovePosition 이후 Rigidbody에 남은 수평 속도를 정리합니다.
+    /// 벽에 비비며 구른 뒤 입력을 떼었을 때 충돌 분리 속도 때문에 미끄러지는 현상을 줄입니다.
+    /// </summary>
+    private void ClearHorizontalVelocity()
+    {
+        Vector3 velocity = rb.velocity;
+        velocity.x = 0.0f;
+        velocity.z = 0.0f;
+        rb.velocity = velocity;
+        rb.angularVelocity = Vector3.zero;
+    }
+
+    /// <summary>
+    /// 구르기 이동 전에 Rigidbody가 실제로 지나갈 경로를 검사해 벽을 관통하지 않도록 목표 위치를 보정합니다.
+    /// 일반 이동까지 막으면 문/벽 근처 상호작용 거리 진입이 어려워질 수 있으므로 회피 중에만 사용합니다.
     /// </summary>
     private Vector3 GetSafeMovePosition(Vector3 targetPosition)
     {
@@ -207,6 +228,21 @@ public class PlayerMovement : MonoBehaviour
             ((1 << hit.collider.gameObject.layer) & obstacleMask.value) != 0)
         {
             float safeDistance = Mathf.Max(0.0f, hit.distance - movementWallBuffer);
+            Vector3 safePosition = rb.position + direction * safeDistance;
+            safePosition.y = rb.position.y;
+            return safePosition;
+        }
+
+        if (Physics.SphereCast(
+                rb.position + Vector3.up * evadeCornerProbeHeight,
+                evadeCornerProbeRadius,
+                direction,
+                out RaycastHit cornerHit,
+                distance,
+                obstacleMask,
+                QueryTriggerInteraction.Ignore))
+        {
+            float safeDistance = Mathf.Max(0.0f, cornerHit.distance - movementWallBuffer);
             Vector3 safePosition = rb.position + direction * safeDistance;
             safePosition.y = rb.position.y;
             return safePosition;
