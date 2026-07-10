@@ -72,6 +72,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d06773f9b60f49ef85ce0558bd0d2c2e
+    m_Address: UI_Icon_Epic_FrozenClockwork
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f0a5bc6a6ea5449ca237901c942ac0fe
     m_Address: UI_Icon_Rare_CartWheel
     m_ReadOnly: 0
