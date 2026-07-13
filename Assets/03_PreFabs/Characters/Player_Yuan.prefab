@@ -433,8 +433,14 @@ MonoBehaviour:
   evadeTime: 0
   evadeMP: 0
   evadeCooltime: 0
-  walkNoiseRange: 10
-  runNoiseRange: 15
+  movementObstacleMask:
+    serializedVersion: 2
+    m_Bits: 0
+  movementWallBuffer: 0.05
+  evadeCornerProbeRadius: 0.25
+  evadeCornerProbeHeight: 0.5
+  walkNoiseRange: 5
+  runNoiseRange: 10
   walkNoiseInterval: 0.55
   runNoiseInterval: 0.3
   animator: {fileID: 8452265435733818460}
@@ -464,6 +470,7 @@ MonoBehaviour:
   missTraceColor: {r: 1, g: 0, b: 0, a: 1}
   aimOriginHeight: 1
   muzzleBackstepDistance: 0.3
+  aimSuccessParallex: 0.1
   apPort: {fileID: 988471778850770418}
 --- !u!114 &3306482627033573694
 MonoBehaviour:

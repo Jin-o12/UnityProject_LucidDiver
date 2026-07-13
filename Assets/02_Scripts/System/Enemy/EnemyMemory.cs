@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.AI;
 
 /// <summary>
 /// 적 AI가 순찰과 추적 중에 기억해야 하는 런타임 상태를 보관합니다.
@@ -33,6 +34,11 @@ public class EnemyMemory
     [SerializeField] private ChaseMoveMode currentChaseMoveMode;      // 현재 추적이 직선 추적인지 차단 추적인지
     [SerializeField] private Vector3 currentChaseDestination;         // 현재 프레임에 목표로 삼은 추적 목적지
 
+    [Header("Random Patrol")]
+    [SerializeField] private bool hasPatrolDestination;       // 현재 랜덤 배회 목적지가 만들어졌는지 여부
+    [SerializeField] private Vector3 patrolDestination;       // NavMesh 위에서 선택된 현재 배회 목적지
+    [SerializeField] private int remainingWanderCount;        // 다음 패트롤 포인트로 넘어가기 전 남은 배회 횟수
+
     public Vector3 HomePosition => homePosition;
     public int PatrolIndex => patrolIndex;
     public bool NeedsReturnToPatrol => needsReturnToPatrol;
@@ -45,6 +51,8 @@ public class EnemyMemory
     public bool HasTargetMotionSample => hasTargetMotionSample;
     public ChaseMoveMode CurrentChaseMoveMode => currentChaseMoveMode;
     public Vector3 CurrentChaseDestination => currentChaseDestination;
+    public bool HasPatrolDestination => hasPatrolDestination;
+    public Vector3 PatrolDestination => patrolDestination;
 
     /// <summary>
     /// 스폰 직후 순찰과 추적 관련 초기 상태를 설정합니다.
@@ -65,6 +73,7 @@ public class EnemyMemory
         ClearTargetTracking();
         ClearChasePlan();
         currentChaseDestination = spawnPosition;
+        ClearRandomPatrol();
 
         if (!HasPatrolRoute)
         {
@@ -105,6 +114,114 @@ public class EnemyMemory
     }
 
     /// <summary>
+    /// 전달된 위치에서 현재 루트의 가장 가까운 활성 패트롤 포인트까지 평면 거리를 반환합니다.
+    /// 추적 허용 반경과 강제 복귀 반경을 같은 루트 기준으로 계산할 때 사용합니다.
+    /// </summary>
+    public float GetClosestPatrolPointDistance(Vector3 position)
+    {
+        return HasPatrolRoute ? patrolRoute.GetClosestPointDistance(position) : float.MaxValue;
+    }
+
+    /// <summary>
+    /// 전달된 위치에서 가장 가까운 패트롤 포인트를 복귀 지점으로 선택합니다.
+    /// 기존 랜덤 배회 목적지는 새 복귀 지점과 충돌하지 않도록 함께 초기화합니다.
+    /// </summary>
+    public void SelectClosestPatrolPoint(Vector3 position)
+    {
+        if (!HasPatrolRoute)
+        {
+            return;
+        }
+
+        patrolIndex = patrolRoute.GetClosestPointIndex(position);
+        returnPatrolIndex = patrolIndex;
+        Transform point = patrolRoute.GetPoint(patrolIndex);
+        if (point != null)
+        {
+            hasReturnAnchor = true;
+            returnAnchorPosition = point.position;
+        }
+
+        ClearRandomPatrol();
+    }
+
+    /// <summary>
+    /// 현재 포인트에서 수행할 랜덤 배회 횟수가 없을 때 루트 설정으로 새 횟수를 생성합니다.
+    /// </summary>
+    public void EnsureWanderCount()
+    {
+        if (remainingWanderCount <= 0 && HasPatrolRoute)
+        {
+            remainingWanderCount = patrolRoute.GetRandomWanderCount(patrolIndex);
+        }
+    }
+
+    /// <summary>
+    /// 현재 패트롤 포인트 주변의 도달 가능한 NavMesh 위치를 새 배회 목적지로 선택합니다.
+    /// 유효한 목적지를 찾지 못하면 false를 반환해 에너미가 안전하게 대기하도록 합니다.
+    /// </summary>
+    public bool TryCreatePatrolDestination(NavMeshAgent agent)
+    {
+        EnsureWanderCount();
+        if (!HasPatrolRoute || !patrolRoute.TryGetRandomWanderDestination(patrolIndex, agent, out Vector3 destination))
+        {
+            return false;
+        }
+
+        patrolDestination = destination;
+        hasPatrolDestination = true;
+        return true;
+    }
+
+    /// <summary>
+    /// 현재 패트롤 포인트의 개별 설정 또는 루트 기본값에서 랜덤 대기 시간을 반환합니다.
+    /// </summary>
+    public float GetRandomPatrolWaitTime()
+    {
+        return HasPatrolRoute ? patrolRoute.GetRandomWaitTime(patrolIndex) : 0f;
+    }
+
+    /// <summary>
+    /// 현재 배회 목적지 도착을 완료 처리하고 남은 배회 횟수를 하나 차감합니다.
+    /// </summary>
+    public void CompleteWanderDestination()
+    {
+        hasPatrolDestination = false;
+        remainingWanderCount = Mathf.Max(0, remainingWanderCount - 1);
+    }
+
+    /// <summary>
+    /// 현재 포인트에서 계획한 배회를 모두 마쳐 다음 패트롤 포인트를 선택해야 하는지 나타냅니다.
+    /// </summary>
+    public bool ShouldAdvancePatrolPoint => remainingWanderCount <= 0;
+
+    /// <summary>
+    /// 현재 포인트와 가까운 후보 중 하나를 무작위로 골라 다음 패트롤 포인트로 전환합니다.
+    /// </summary>
+    public void AdvanceToRandomNearbyPoint()
+    {
+        if (!HasPatrolRoute)
+        {
+            return;
+        }
+
+        patrolIndex = patrolRoute.GetRandomNearbyPointIndex(patrolIndex);
+        remainingWanderCount = 0;
+        hasPatrolDestination = false;
+    }
+
+    /// <summary>
+    /// 생성된 랜덤 목적지와 남은 배회 횟수를 모두 초기화합니다.
+    /// 추적 시작, 복귀 지점 변경, 스폰 초기화 시 이전 배회 상태가 남지 않게 합니다.
+    /// </summary>
+    public void ClearRandomPatrol()
+    {
+        hasPatrolDestination = false;
+        patrolDestination = Vector3.zero;
+        remainingWanderCount = 0;
+    }
+
+    /// <summary>
     /// 적이 순찰 루트에서 처음 벗어나는 시점의 위치와 순찰 인덱스를 저장합니다.
     /// 이미 이탈 기준점을 저장한 상태라면 기존 값을 유지해 복귀 기준점이 흔들리지 않게 합니다.
     /// </summary>
@@ -131,6 +248,21 @@ public class EnemyMemory
             return;
         }
 
+        needsReturnToPatrol = true;
+        ClearPatrolWait();
+    }
+
+    /// <summary>
+    /// 현재 위치에서 가장 가까운 패트롤 포인트를 선택하고 순찰 복귀 상태로 전환합니다.
+    /// </summary>
+    public void MarkNeedsReturnToPatrol(Vector3 currentPosition)
+    {
+        if (!HasPatrolRoute)
+        {
+            return;
+        }
+
+        SelectClosestPatrolPoint(currentPosition);
         needsReturnToPatrol = true;
         ClearPatrolWait();
     }
@@ -168,6 +300,23 @@ public class EnemyMemory
     public void BeginPatrolWait()
     {
         float waitDuration = GetWaitTimeAtPoint();
+        if (waitDuration <= 0.0f)
+        {
+            isWaitingAtPatrolPoint = false;
+            patrolWaitUntilTime = 0.0f;
+            return;
+        }
+
+        isWaitingAtPatrolPoint = true;
+        patrolWaitUntilTime = Time.time + waitDuration;
+    }
+
+    /// <summary>
+    /// 랜덤으로 결정된 시간만큼 현재 배회 목적지에서 대기합니다.
+    /// 0 이하의 시간이 전달되면 대기 상태를 만들지 않습니다.
+    /// </summary>
+    public void BeginPatrolWait(float waitDuration)
+    {
         if (waitDuration <= 0.0f)
         {
             isWaitingAtPatrolPoint = false;
