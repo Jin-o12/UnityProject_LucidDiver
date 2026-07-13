@@ -157,6 +157,4 @@ MonoBehaviour:
       cameraFieldOfView: 60
   materials:
   - {fileID: 2100000, guid: fd3f28898aa4320409895499ca6515fe, type: 2}
-  - {fileID: 2100000, guid: 7579916655ffd0b4591a184e976cbb6e, type: 2}
-  - {fileID: 2100000, guid: ddfa37988dfb3d44da49171d3c5dce72, type: 2}
   autoReferenceMaterials: 1
