@@ -15,6 +15,7 @@ public class GlobalEventBus
     public static Action<Vector2> OnPlayerMove;                     // 플레이어 이동 버튼 입력: Action<이동 버튼 입력 벡터>
     public static Action OnAttackInput;                             // 공격 버튼 입력
     public static Action OnMainActiveSkillRequested;                // 다이버 액티브 스킬 버튼 입력
+    public static Action OnMainActiveSkillCasted;                   // 다이버 액티브 스킬 사용 성공 시
     public static Action OnInteractionInput;                        // 상호작용 버튼 입력
     public static Action<bool> OnSprintInput;                       // 달리기 버튼 입력: Action<isSprint>
     public static Action<bool> SendCanSprint;                       // 달리기 여부 계산 전달: Action<canSprint>
@@ -35,6 +36,8 @@ public class GlobalEventBus
     public static Action<int, int> OnDropItemQuickSlot;             // 인벤토리에서 퀵슬롯에 아이템을 드래그 앤 드롭 할 시: Action<퀵슬롯 번호, 인벤토리 번호> | 인벤토리->퀵슬롯
     public static Action<int, int> OnSwapItemQuickSlot;             // 퀵슬롯에서 퀵슬롯으로 아이템을 드래그 앤 드롭 할 시: Action<1번 퀵슬롯 번호, 2번 퀵슬롯 번호)> | 2번슬롯->1번슬롯
     public static Action<int, int, Sprite, int> QuickSlotLoad;      // 퀵슬롯 데이터 불러오기 시: Action<퀵슬롯 번호, 아이템 TID, 아이템 아이콘, 아이템 개수)>
+    public static Action<int, int> OnArtifactEquipRequested;     // 아티팩트 장착 요청: Action<장착 슬롯 번호, 인벤토리 슬롯 번호>
+    public static Action<int> OnArtifactUnequipRequested;        // 아티팩트 해제 요청: Action<장착 슬롯 번호>
 
     /// <summary>
     /// 아이템 효과 이벤트
@@ -50,13 +53,18 @@ public class GlobalEventBus
     public static Action<float, float> OnPlayerManaChanged;         // 플레이어 마나 변동: Action<현재 마나, 전체 마나>
     public static Action<float> OnSprintManaConsume;                // 플레이어 달리기 시 마나 소비: Action<소모량>
     public static Func<float, bool> OnRequestManaConsume;           // 플레이어 마나 소비 요청: Func<소모량, 성공여부>
+    public static Action<float> OnTimePenaltyRequested;             // 루시드 낙인 등으로 남은 제한 시간 감소 요청: Action<감소 초>
     public static Action<int, float, float> OnEnemyHealthChanged;   // 적의 체력 변동: Action<고유 번호, 현재 체력, 전체 체력>
     public static Action<int> OnEnemyDead;                          // 적의 사망 여부: Action<고유 번호>
+    public static Action<float> OnTimerChanged;                     // 남은 제한 시간 변동: Action<남은 시간>
+    public static Action OnHitAnimate;                              // 플레이어 피격 애니메이션 발생
 
     /// <summary>
     /// 게임 시스템 관련 이벤트
     /// </summary>
     public static Action<bool> OnEscapeRequest;                     // 탈출 판정 발생 시: Action<탈출 성공 여부>
+    public static Action<int> OnEscapeFailure;                      // 탈출 취소 판정 발생: Action<플레이어 ID>
+    public static Action OnTimeOver;                                // 제한 시간 종료 시
     public static Action OnReturnToLobby;                           // 로비로 돌아가기 이벤트 발생
     public static Action<IInteractable, int> OnItemBoxOpened;       // 상자와 상호작용하여 UI를 열었을 시: Action<열린 상자, 상호작용한 플레이어 ID>
     public static Action<NoiseStimulus> OnNoiseRequested;           // 노이즈 시스템에 소음 발생을 요청: Action<요청된 소음 데이터>
@@ -75,6 +83,8 @@ public class GlobalEventBus
     public static Action<string, CharacterTID> OnOpenRecordCardPopUpUI;     // 기록 카드 팝업 열기 요청: Action<기록 제목, 기록을 열 캐릭터의 ID>
     public static Action<int, bool, bool> RecordDataLoad;                   // 다이버 개인 심상 기록 데이터 전달 : Action<newLinkRateLevel, newMemoryLogUnlocked, newHasNewMemoryLog>
     public static Action OnRecordRead;                                      // 다이버 개인 심상 기록 읽음
+    public static Action<SlotType, int> OnTooltipUIOpen;                    // 아이템 툴팁 UI를 출력: Action<슬롯 종류, itemIndex>
+    public static Action OnTooltipUIClose;                                  // 아이템 툴팁 UI를 닫음
 
     /// <summary>
     /// 씬 전환 이벤트

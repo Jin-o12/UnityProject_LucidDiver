@@ -17,6 +17,9 @@ public class InventoryUI : MonoBehaviour
     [Header("Drop Zone UI")]
     [SerializeField] private InventoryDropZoneUI dropZone;
 
+    [Header("Artifact Equip UI")]
+    [SerializeField] private ArtifactEquipSlotUI[] artifactEquipSlots; // 인벤토리 상단의 아티팩트 장착 슬롯 UI 목록
+
     private CanvasGroup dropZoneCanvasGroup;
     private bool canUseDropZone = true;
 
@@ -57,7 +60,7 @@ public class InventoryUI : MonoBehaviour
     }
 
     // 각성 보존 슬롯 생성
-    public void CreateSafeSlots(int count)
+    public void CreateSafeSlots(int count, int slotIndexOffset)
     {
         if (safeSlotsObj.Count == count)
             return;
@@ -87,13 +90,15 @@ public class InventoryUI : MonoBehaviour
     public void UpdateSlot(int slotNum, InventorySlotData slotData)
     {
         InventorySlotUI slotUI = slotsObj[slotNum].GetComponent<InventorySlotUI>();
-        slotUI.UpdateSlot(slotData.amount, slotData.icon);
+        ItemGrade grade = slotData.itemData != null ? slotData.itemData.itemGrade : ItemGrade.empty;
+        slotUI.UpdateSlot(slotData.amount, slotData.icon, grade, SlotType.inventory);
     }
 
     public void UpdateSafeSlot(int slotNum, InventorySlotData slotData)
     {
         InventorySlotUI slotUI = safeSlotsObj[slotNum].GetComponent<InventorySlotUI>();
-        slotUI.UpdateSlot(slotData.amount, slotData.icon);
+        ItemGrade grade = slotData.itemData != null ? slotData.itemData.itemGrade : ItemGrade.empty;
+        slotUI.UpdateSlot(slotData.amount, slotData.icon, grade, SlotType.inventory);
     }
 
     public void SetDropZoneAvailable(bool available)
@@ -122,5 +127,30 @@ public class InventoryUI : MonoBehaviour
         dropZoneCanvasGroup.alpha = 0f;
         dropZoneCanvasGroup.blocksRaycasts = false;
         dropZoneCanvasGroup.interactable = false;
+    }
+
+    public void UpdateArtifactSlot(int slotIndex, ArtifactItemData artifact)
+    {
+        if (artifactEquipSlots == null || slotIndex < 0 || slotIndex >= artifactEquipSlots.Length)
+            return;
+
+        if (artifactEquipSlots[slotIndex] == null)
+            return;
+
+        artifactEquipSlots[slotIndex].UpdateSlot(artifact);
+    }
+
+    /// <summary>
+    /// 인벤토리를 열 때 현재 플레이어가 장착 중인 아티팩트 상태를 장착 슬롯 UI에 반영합니다.
+    /// </summary>
+    public void UpdateArtifactSlots(PlayerArtifactEquipment equipment)
+    {
+        if (equipment == null || artifactEquipSlots == null)
+            return;
+
+        for (int i = 0; i < artifactEquipSlots.Length; i++)
+        {
+            UpdateArtifactSlot(i, equipment.GetEquippedArtifact(i));
+        }
     }
 }

@@ -104,7 +104,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 1.8, y: 1.2, z: 1.8}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1314301668546184600
 GameObject:
@@ -694,18 +694,69 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06ed57334439a514fb514083fd226332, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 3
-  sightLength: 10
-  awarenessRange: 20
-  hearingRange: 40
-  sightAngle: 120
-  eyeHeight: 1.4
-  attackLength: 3
-  attackCooldown: 2
-  checkInterval: 0.2
-  investigateStopDistance: 1
-  investigateDuration: 2
-  investigateNavMeshSampleDistance: 2.5
+  brain:
+    checkInterval: 0.2
+  memory:
+    homePosition: {x: 0, y: 0, z: 0}
+    patrolRoute: {fileID: 0}
+    patrolIndex: 0
+    needsReturnToPatrol: 0
+    isWaitingAtPatrolPoint: 0
+    patrolWaitUntilTime: 0
+    hasReturnAnchor: 0
+    returnAnchorPosition: {x: 0, y: 0, z: 0}
+    returnPatrolIndex: 0
+    lastKnownTargetPosition: {x: 0, y: 0, z: 0}
+    estimatedTargetVelocity: {x: 0, y: 0, z: 0}
+    lastTargetSampleTime: 0
+    hasTargetMotionSample: 0
+    trackedTargetInstanceId: 0
+    currentChaseMoveMode: 0
+    currentChaseDestination: {x: 0, y: 0, z: 0}
+  perception:
+    sightRange: 10
+    awarenessRange: 15
+    hearingRange: 45
+    sightAngle: 100
+    eyeHeight: 1.4
+    requireLineOfHearing: 0
+    hearingObstacleMask:
+      serializedVersion: 2
+      m_Bits: 1024
+    soundSampleHeight: 1.2
+  noiseListener:
+    maxInvestigateMoveTime: 3
+    investigateStopDistance: 1
+    investigateDuration: 2
+    investigateNavMeshSampleDistance: 2.5
+  locomotion:
+    moveSpeed: 4
+  combat:
+    attackStartRange: 5
+    attackHitRange: 1.2
+    attackCooldown: 2
+    firstSlashTelegraphTime: 0.35
+    attackAnimationDuration: 2
+    attackRecoveryTime: 0.65
+    firstSlashLungeDistance: 3
+    secondSlashLungeDistance: 5
+    firstSlashLungeDuration: 0.15
+    secondSlashLungeDuration: 0.18
+    firstSlashDamage: 8
+    secondSlashDamage: 12
+    secondSlashTurnLimit: 25
+  interceptPlanner:
+    enableInterceptChase: 1
+    minInterceptDistance: 4
+    maxInterceptDistance: 18
+    minTargetMoveSpeed: 0.8
+    predictionTime: 0.9
+    minLeadDistance: 1.8
+    maxLeadDistance: 6.5
+    awayDotThreshold: 0
+    interceptNavMeshSampleDistance: 2.5
+    minInterceptAdvanceDistance: 0.75
+  attackOrigin: {fileID: 56568208924813218}
 --- !u!195 &7557683503473658478
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -716,8 +767,8 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
-  m_Acceleration: 8
+  m_Speed: 4
+  m_Acceleration: 12
   avoidancePriority: 50
   m_AngularSpeed: 120
   m_StoppingDistance: 0

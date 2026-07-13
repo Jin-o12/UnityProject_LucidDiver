@@ -21,8 +21,9 @@ public abstract class ItemData : ScriptableObject
     public itemCategory category;                 // 아이템 분류
     public int effectID;                          // 아이템 효과 ID
     public int itemMultiple;                      // 최대 스택 수량
+    public ItemGrade itemGrade;                   // 아이템 등급
 
     [Header("연관 파일 주소")]
-    public AssetReferenceSprite icon;                   // 아이템 아이콘
-    public AssetReferenceGameObject itemPrefabRef;      // 아이템 프리팹 주소
+    public string iconAddress;                   // 아이템 아이콘 AssetReferenceSprite
+    //public string itemPrefabRef;      // 아이템 프리팹 주소 AssetReferenceGameObject
 }

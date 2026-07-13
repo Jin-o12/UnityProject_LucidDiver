@@ -87,7 +87,7 @@ MonoBehaviour:
   items: []
   useRandomLoot: 1
   minCreateCount: 1
-  maxCreateCount: 2
+  maxCreateCount: 5
   allowDuplicateLoot: 0
   lootOptions:
   - itemData: {fileID: 11400000, guid: e1f045e6d1c51e143a76ad1a32e8bf41, type: 2}
@@ -102,6 +102,39 @@ MonoBehaviour:
     weight: 0
     minAmount: 1
     maxAmount: 5
+  useCategoryLoot: 1
+  categoryLootOptions:
+  - category: 3
+    weight: 60
+    minAmount: 1
+    maxAmount: 1
+    itemTids: 2d0100002e010000
+  - category: 4
+    weight: 30
+    minAmount: 1
+    maxAmount: 1
+    itemTids: 91010000
+  - category: 5
+    weight: 10
+    minAmount: 1
+    maxAmount: 1
+    itemTids: 
+  artifactLootOptions:
+  - grade: 1
+    itemTid: 1001
+    weight: 55
+  - grade: 2
+    itemTid: 1002
+    weight: 25
+  - grade: 3
+    itemTid: 1003
+    weight: 12
+  - grade: 4
+    itemTid: 1004
+    weight: 6
+  - grade: 5
+    itemTid: 1005
+    weight: 2
   openNoiseRange: 20
   openNoiseDuration: 1.8
 --- !u!65 &8379933475469959545
@@ -227,7 +260,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 01429738b251678418108029a8f8d1a8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -492,7 +525,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 01429738b251678418108029a8f8d1a8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -597,7 +630,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 01429738b251678418108029a8f8d1a8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

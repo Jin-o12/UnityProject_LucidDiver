@@ -15,9 +15,10 @@ public class PlayerMovement : MonoBehaviour
     private bool sprintInput;                           // 플레이어의 달리기 입력
     private Vector2 currentMousePos;                    // 현재 마우스 화면 좌표
 
-    private readonly float isometricYAngle = -45.0f;    // 쿼터뷰 기준 이동 방향 보정
+    private readonly float isometricYAngle = +45.0f;    // 쿼터뷰 기준 이동 방향 보정
     public float moveSpeed;                             // 이동 속도
     public float rotationSpeed = 1000f;                 // 회전 속도
+    private float artifactMoveSpeedRate;                // 아티팩트로 추가되는 이동 속도 증가율
 
     public float sprintSpeed;                           // 달리기 중 이동 속도
     public float sprintMP;                              // 달리기 중 초당 MP 소비
@@ -27,6 +28,10 @@ public class PlayerMovement : MonoBehaviour
     public float evadeTime;                             // 구르기 동작 시간
     public float evadeMP;                               // 구르기 MP 소비
     public float evadeCooltime;                         // 구르기 쿨타임
+
+    [Header("Collision Guard")]
+    [SerializeField] private LayerMask movementObstacleMask; // 이동/구르기 중 관통을 막을 벽 레이어
+    [SerializeField] private float movementWallBuffer = 0.05f; // 벽 앞에서 멈추도록 남기는 여유 거리
 
     [Header("Noise Settings")]
     // 발소리는 "플레이어 이동 입력"이 아니라 실제 이동 중일 때 일정 간격으로만 발생시킵니다.
@@ -66,6 +71,8 @@ public class PlayerMovement : MonoBehaviour
         GlobalEventBus.SendCanSprint += PlayerSprint;
         GlobalEventBus.SendCannotSprint += PlayerSprint;
         GlobalEventBus.OnMousePositionInput += UpdateMousePos;
+        GlobalEventBus.OnMainActiveSkillCasted += SkillAnimate;
+        GlobalEventBus.OnHitAnimate += HitAnimate;
         GlobalEventBus.onPlayerDead += PlayerDie;
     }
 
@@ -75,16 +82,24 @@ public class PlayerMovement : MonoBehaviour
         GlobalEventBus.SendCanSprint -= PlayerSprint;
         GlobalEventBus.SendCannotSprint -= PlayerSprint;
         GlobalEventBus.OnMousePositionInput -= UpdateMousePos;
+        GlobalEventBus.OnMainActiveSkillCasted -= SkillAnimate;
+        GlobalEventBus.OnHitAnimate -= HitAnimate;
         GlobalEventBus.onPlayerDead -= PlayerDie;
         moveNoiseTimer = 0.0f;
     }
 
     private void FixedUpdate()
     {
+        // 메인 카메라 연결이 끊겼다면 갱신
+        if (mainCamera == null && Camera.main != null)
+        {
+            mainCamera = Camera.main;
+        }
+
         MoveAndRotate();
     }
 
-    public void initialize(float _speed, float _sSpeed, float _sMana, float _eSpeed, float _eTime,  float _eMana, float _eCooltime)
+    public void initialize(float _speed, float _sSpeed, float _sMana, float _eSpeed, float _eTime, float _eMana, float _eCooltime)
     {
         // 기본 이동 속도 초기화
         moveSpeed = _speed;
@@ -104,6 +119,18 @@ public class PlayerMovement : MonoBehaviour
 
         // 구르기 쿨타임 초기화
         evadeCooltime = _eCooltime;
+
+        artifactMoveSpeedRate = 0.0f;
+        movementWallBuffer = Mathf.Max(0.0f, movementWallBuffer);
+    }
+
+    /// <summary>
+    /// 아티팩트 장착 효과로 추가되는 이동 속도 증가율을 갱신합니다.
+    /// 원본 moveSpeed/sprintSpeed를 직접 바꾸지 않고, 실제 이동 계산에서만 배율로 적용합니다.
+    /// </summary>
+    public void ApplyArtifactMoveSpeedBonus(float moveSpeedRate)
+    {
+        artifactMoveSpeedRate = Mathf.Max(0.0f, moveSpeedRate);
     }
 
     /* 플레이어 이동 입력 갱신 */
@@ -122,10 +149,15 @@ public class PlayerMovement : MonoBehaviour
         Quaternion isoRotation = Quaternion.Euler(0f, isometricYAngle, 0f);
         Vector3 movement = (isoRotation * inputDir).normalized;
 
-        Vector3 targetPosition = rb.position + movement * (isEvading ? evadeSpeed : (sprintInput ? sprintSpeed : moveSpeed) ) * Time.fixedDeltaTime;
+        float moveSpeedMultiplier = 1.0f + artifactMoveSpeedRate;
+        float currentMoveSpeed = moveSpeed * moveSpeedMultiplier;
+        float currentSprintSpeed = sprintSpeed * moveSpeedMultiplier;
+        float finalMoveSpeed = isEvading ? evadeSpeed : (sprintInput ? currentSprintSpeed : currentMoveSpeed);
+        Vector3 targetPosition = rb.position + movement * finalMoveSpeed * Time.fixedDeltaTime;
+        targetPosition = GetSafeMovePosition(targetPosition);
 
         // 달리기 중 MP 소비 이벤트 전달
-        if (sprintInput)
+        if (movement.sqrMagnitude > 0.001f && sprintInput)
         {
             GlobalEventBus.OnSprintManaConsume?.Invoke(sprintMP);
             GlobalEventBus.OnSprintInput?.Invoke(sprintInput);
@@ -135,17 +167,66 @@ public class PlayerMovement : MonoBehaviour
         EmitMovementNoise(movement.sqrMagnitude > 0.001f);
 
         // 이동 방향에 따라 바라보는 방향 회전
-        if(movementInput.x>0)
+        if (movementInput.x > 0)
         {
             Body.transform.localScale = new Vector3(-1, 1, 1);
         }
-        else if(movementInput.x<0)
+        else if (movementInput.x < 0)
         {
             Body.transform.localScale = new Vector3(1, 1, 1);
         }
 
         AimTowardsMouse();
         ImageTowardsMouse();
+    }
+
+    /// <summary>
+    /// 이동 전에 Rigidbody가 실제로 지나갈 경로를 검사해 벽을 관통하지 않도록 목표 위치를 보정합니다.
+    /// 걷기/달리기/구르기 모두 같은 MovePosition 경로를 사용하므로 여기서 한 번에 방어합니다.
+    /// </summary>
+    private Vector3 GetSafeMovePosition(Vector3 targetPosition)
+    {
+        Vector3 moveDelta = targetPosition - rb.position;
+        moveDelta.y = 0.0f;
+
+        if (moveDelta.sqrMagnitude <= 0.0001f)
+        {
+            return targetPosition;
+        }
+
+        LayerMask obstacleMask = ResolveMovementObstacleMask();
+        if (obstacleMask.value == 0)
+        {
+            return targetPosition;
+        }
+
+        Vector3 direction = moveDelta.normalized;
+        float distance = moveDelta.magnitude;
+
+        if (rb.SweepTest(direction, out RaycastHit hit, distance, QueryTriggerInteraction.Ignore) &&
+            ((1 << hit.collider.gameObject.layer) & obstacleMask.value) != 0)
+        {
+            float safeDistance = Mathf.Max(0.0f, hit.distance - movementWallBuffer);
+            Vector3 safePosition = rb.position + direction * safeDistance;
+            safePosition.y = rb.position.y;
+            return safePosition;
+        }
+
+        return targetPosition;
+    }
+
+    /// <summary>
+    /// 인스펙터에서 따로 지정하지 않았으면 프로젝트의 Wall 레이어를 기본 이동 차단 레이어로 사용합니다.
+    /// </summary>
+    private LayerMask ResolveMovementObstacleMask()
+    {
+        if (movementObstacleMask.value != 0)
+        {
+            return movementObstacleMask;
+        }
+
+        int wallLayer = LayerMask.NameToLayer("Wall");
+        return wallLayer >= 0 ? 1 << wallLayer : 0;
     }
 
     private void EmitMovementNoise(bool isMoving)
@@ -179,6 +260,9 @@ public class PlayerMovement : MonoBehaviour
     {
         isEvading = true;
 
+        // 구르기 입력을 애니메이터에 전달
+        animator.SetTrigger("Evade");
+
         // 구르기 상태 종료는 코루틴으로 처리
         StartCoroutine(EvadeComplete());
     }
@@ -188,6 +272,25 @@ public class PlayerMovement : MonoBehaviour
     {
         yield return new WaitForSeconds(evadeTime);
         isEvading = false;
+    }
+
+    /* 스킬 사용 애니메이션 트리거 */
+    public void SkillAnimate()
+    {
+        animator.SetTrigger("UseSkill");
+    }
+
+    /* 피격 애니메이션 코루틴 */
+    public void HitAnimate() => StartCoroutine(HitFaceAnimation());
+    public IEnumerator HitFaceAnimation()
+    {
+        if (apPort != null)
+        {
+            // 히트 시 이벤트를 받아서 Hit_Face 변수를 1로 만듦
+            apPort.SetControlParamFloat("Yuan_Hit_Face", 1);
+            yield return new WaitForSeconds(0.75f);
+            apPort.SetControlParamFloat("Yuan_Hit_Face", 0);
+        }
     }
 
     /* 마우스 커서가 가리키는 월드 위치 계산 */
@@ -275,6 +378,9 @@ public class PlayerMovement : MonoBehaviour
         lookDir = aimVisualDir.z > 0 ? 1 : 0;
 
         animator.SetInteger("LookDir", lookDir);
+
+        // 달리기 입력이 있으면 true, 없으면 false
+        animator.SetBool("IsSprint", sprintInput);
     }
 
     /* 플레이어 사망 시 이동 및 회전 비활성화 */

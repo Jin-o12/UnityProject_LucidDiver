@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -19,19 +20,8 @@ public class StorageInventoryUI : MonoBehaviour
         SafeSlotPanel
     }
 
-    //[System.Serializable]
-    //private class ItemMeta
-    //{
-    //    public int TID;
-    //    public string itemName;
-    //    [TextArea] public string description;
-    //    public Sprite icon;
-    //    public int maxStack = 5;
-    //}
-    private readonly Dictionary<int, ItemData> itemDataCache = new();    // {TID별 ItemData 캐시}
     private readonly Dictionary<int, Sprite> iconCache = new();          // {TID별 로드 완료 아이콘 캐시}
     private readonly HashSet<int> loadingIconTIDs = new();               // {아이콘 로드 중복 요청 방지}
-    private bool itemDataLoaded = false;                                 // 아이템 데이터 로드 여부를 저장한다
 
     [Header("Slot Roots")]
     [SerializeField] private Transform storageSlotRoot;
@@ -77,6 +67,8 @@ public class StorageInventoryUI : MonoBehaviour
     private readonly List<int> quickSlotTIDs = new();
 
     private LocalSaveRepository saveRepo;
+    private IItemDataRepository itemRepo;
+
     private PlayerSaveData currentSaveData;
 
     private AreaType draggingArea;
@@ -86,6 +78,7 @@ public class StorageInventoryUI : MonoBehaviour
     {
         // {로컬 세이브 저장소 연결}
         saveRepo = new LocalSaveRepository();
+        itemRepo = new LocalJsonItemRepository();
 
         // {드래그 미리보기 아이콘을 띄울 최상위 Canvas를 찾음}
         mainCanvas = GetComponentInParent<Canvas>();
@@ -143,34 +136,6 @@ public class StorageInventoryUI : MonoBehaviour
         RefreshAll();
     }
 
-    private void EnsureItemDataLoaded()
-    {
-        // {이미 아이템 데이터를 로드했다면 다시 로드하지 않는다}
-        if (itemDataLoaded)
-        {
-            return;
-        }
-
-        // {Resources 폴더에서 ItemData ScriptableObject를 모두 로드한다}
-        ItemData[] itemDatas = Resources.LoadAll<ItemData>("ScriptableObjects/Item");
-
-        // {로드한 ItemData를 TID 기준으로 캐싱한다}
-        foreach (ItemData data in itemDatas)
-        {
-            if (data == null)
-            {
-                continue;
-            }
-
-            itemDataCache[data.TID] = data;
-        }
-
-        // {아이템 데이터 로드 완료 상태로 변경한다}
-        itemDataLoaded = true;
-
-        // {로드 결과를 콘솔에 출력한다}
-        Debug.Log($"StorageInventoryUI: ItemData {itemDataCache.Count}개 로드 완료");
-    }
 
     private void LoadFromPlayerData()
     {
@@ -927,18 +892,14 @@ public class StorageInventoryUI : MonoBehaviour
             return null;
         }
 
-        // {ItemData가 아직 로드되지 않았으면 Resources에서 로드한다}
-        EnsureItemDataLoaded();
-
-        // {캐시에서 TID에 해당하는 아이템 데이터를 찾는다}
-        if (itemDataCache.TryGetValue(tid, out ItemData itemData))
+        // {리포지토리에서 TID에 해당하는 아이템 데이터를 찾는다}
+        ItemData itemData = itemRepo.GetItemDataByID(tid);
+        if (itemData == null)
         {
-            return itemData;
+            Debug.LogWarning($"StorageInventoryUI: ItemData TID {tid}를 찾을 수 없습니다.");
         }
 
-        // {해당 TID의 아이템 데이터가 없으면 경고를 출력한다}
-        Debug.LogWarning($"StorageInventoryUI: ItemData TID {tid}를 찾을 수 없습니다.");
-        return null;
+        return itemData;
     }
 
     private Sprite GetIcon(int tid)
@@ -959,7 +920,7 @@ public class StorageInventoryUI : MonoBehaviour
         ItemData itemData = GetItemData(tid);
 
         // {아이템 데이터나 아이콘 참조가 없으면 아이콘을 반환하지 않는다}
-        if (itemData == null || itemData.icon == null || !itemData.icon.RuntimeKeyIsValid())
+        if (itemData == null || string.IsNullOrEmpty(itemData.iconAddress))
         {
             return null;
         }
@@ -973,30 +934,32 @@ public class StorageInventoryUI : MonoBehaviour
         // {아이콘 로드 중 상태를 기록한다}
         loadingIconTIDs.Add(tid);
 
-        // {Addressables 아이콘 로드를 시작한다}
-        AsyncOperationHandle<Sprite> handle = itemData.icon.LoadAssetAsync();
-
-        handle.Completed += operation =>
-        {
-            // {아이콘 로드 중 상태를 해제한다}
-            loadingIconTIDs.Remove(tid);
-
-            // {아이콘 로드 성공 시 캐시에 저장한다}
-            if (operation.Status == AsyncOperationStatus.Succeeded)
-            {
-                iconCache[tid] = operation.Result;
-
-                // {아이콘 로드 후 슬롯 UI를 다시 갱신한다}
-                RefreshAll();
-            }
-            else
-            {
-                Debug.LogWarning($"StorageInventoryUI: 아이콘 로드 실패 TID {tid}");
-            }
-        };
+        // {AddressableLoader를 통해 비동기로 아이콘 로드 시작 (Fire-and-Forget)}
+        _ = LoadIconAsync(tid, itemData.iconAddress);
 
         // {로드 완료 전에는 임시로 빈 아이콘을 반환한다}
         return null;
+    }
+
+    private async Task LoadIconAsync(int tid, string address)
+    {
+        Sprite loadedIcon = await AddressableLoader.LoadAssetAsync<Sprite>(address);
+
+        // {아이콘 로드 중 상태를 해제한다}
+        loadingIconTIDs.Remove(tid);
+
+        // {아이콘 로드 성공 시 캐시에 저장한다}
+        if (loadedIcon != null)
+        {
+            iconCache[tid] = loadedIcon;
+
+            // {아이콘 로드 후 슬롯 UI를 다시 갱신한다}
+            RefreshAll();
+        }
+        else
+        {
+            Debug.LogWarning($"StorageInventoryUI: 아이콘 로드 실패 TID {tid}");
+        }
     }
 
     private int GetMaxStack(int tid)

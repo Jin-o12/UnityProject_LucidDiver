@@ -1,0 +1,33 @@
+[
+  {
+    "TID": 1,
+    "skillName": "프리즘 유탄",
+    "skillDesc": "소비 MP: 20\n15m 거리 내에서 지정한 지점에 프리즘 유탄을 발사합니다. 발사한 유탄은 0.5초 후에 폭발하여 반경 3m 내의 적에게 플레이어 공격력의 150%의 피해를 주고, 2.5초 동안 반경 18m 범위 내의 적을 유인하는 소음 디코이를 생성합니다.\n재사용 대기시간: 5초",
+    "skillIcon": "Image_YuanSkill",
+    "skillPrefab": "Prefab_1_PrismGrenade",
+    "mpCost": 20,
+    "skillCooltime": 5,
+    "fireRange": 15,
+    "activateTime": 0.2,
+    "activateSFX": "P0.5_Skill_Activate_SFX",
+    "activateVFX": "P0.5_Skill_Activate_VFX",
+    "targetType": "cursorPoint",
+    "targetObjectCategory": "none",
+    "effectType_0": "damage",
+    "areaType_0": "circle",
+    "areaWidth_0": 3,
+    "effectTarget_0": "opponent",
+    "effectDelay_0": 0.5,
+    "effectValue_0": 1.5,
+    "effectHitSFX_0": "P0.5_Skill_Hit_SFX",
+    "effectHitVFX_0": "P0.5_Skill_Hit_VFX",
+    "effectType_1": "aggro",
+    "areaType_1": "single",
+    "areaWidth_1": 18,
+    "effectTarget_1": "opponent",
+    "effectDelay_1": 0.5,
+    "effectValue_1": 2.5,
+    "effectHitSFX_1": "P0.5_Skill_Decoy_SFX",
+    "effectHitVFX_1": "P0.5_Skill_Decoy_VFX"
+  }
+]

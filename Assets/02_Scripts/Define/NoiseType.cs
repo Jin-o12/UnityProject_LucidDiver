@@ -12,5 +12,6 @@ public enum NoiseType
     EnemyAlertCry,
     HitReaction,
     CombatImpact,
-    Decoy
+    Decoy,
+    LucidLeak
 }

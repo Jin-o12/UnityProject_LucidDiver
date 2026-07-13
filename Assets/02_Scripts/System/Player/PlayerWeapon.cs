@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -20,14 +20,17 @@ public class PlayerWeapon : MonoBehaviour
 
     public bool isEquipped => weaponData != null;                       // 무기 장착 여부
     public float nowUseMana => weaponData.useMana;                      // 현재 무기의 마나 사용량
+    public float nowAttackPower => weaponData.AtkValue;                 // 무기의 공격력
+    public float nowFireRate => weaponData.fireRate;                    // 현재 무기의 기본 발사 간격
 
     private GameObject currentWeaponInstance;                           // 현재 무기 인스턴스
     private Coroutine shotTraceCoroutine;                               // 궤적 출력 코루틴
     private WaitForSeconds shotTraceWait;                               // 궤적 출력 코루틴 WS
 
     [Header("Aim")]
-    [SerializeField] private float aimOriginHeight = 1.0f;        // 1차 조준 레이를 쏠 높이
-    [SerializeField] private float muzzleBackstepDistance = 0.3f; // 총구가 벽 안에 들어갔을 때 시작점을 뒤로 물릴 거리
+    [SerializeField] private float aimOriginHeight = 1.0f;              // 1차 조준 레이를 쏠 높이
+    [SerializeField] private float muzzleBackstepDistance = 0.3f;       // 총구가 벽 안에 들어갔을 때 시작점을 뒤로 물릴 거리
+    [SerializeField] private float aimSuccessParallex = 0.1f;           // 1차 조준 레이가 적에게 명중 시 적 body 내부를 조준하기 위한 보정 거리
 
     [SerializeField] public apPortrait apPort;
 
@@ -47,6 +50,11 @@ public class PlayerWeapon : MonoBehaviour
         }
 
         HideShotTrace();
+    }
+
+    public void initialize(WeaponItemData _weapon)
+    {
+        weaponData = _weapon;
     }
 
     public void PlayerAttack()
@@ -74,7 +82,8 @@ public class PlayerWeapon : MonoBehaviour
             hitMask,
             QueryTriggerInteraction.Ignore))
         {
-            targetPoint = aimHit.point;
+            // 표면 히트 지점보다 약간 안쪽을 조준한다.
+            targetPoint = aimHit.point - aimHit.normal * aimSuccessParallex;
         }
 
         // 2차: 총구에서 targetPoint까지 실제 발사 판정을 한다.
@@ -103,7 +112,7 @@ public class PlayerWeapon : MonoBehaviour
         {
             endPoint = shotHit.point;
 
-            IDamageable target = shotHit.collider.GetComponentInParent<IDamageable>();
+            IEffectReceiver target = shotHit.collider.GetComponentInParent<IEffectReceiver>();
 
             // 실제로 데미지를 줄 수 있는 적을 맞았을 때만 흰색으로 바꾸고 피해를 준다.
             if (target != null && target.EntityFaction != Faction.player)
@@ -111,13 +120,27 @@ public class PlayerWeapon : MonoBehaviour
                 traceColor = hitTraceColor;
                 target.TakeDamage(weaponData.AtkValue);
             }
+
+            // 디버그 출력
+            Debug.Log($"{shotHit.collider.name}, {target}");
+            Debug.Log($"target faction: {target.EntityFaction}, hit? {target.EntityFaction != Faction.player}");
         }
+
+        // 1차 조준 vs 2차 히트 포인트 판정 디버그 레이
+        bool aimHitSuccess = Physics.Raycast(aimOrigin, aimDirection, out aimHit, weaponData.fireRange, hitMask, QueryTriggerInteraction.Ignore);
+        Debug.Log($"[AIM] hit={aimHitSuccess}, point={(aimHitSuccess ? aimHit.point.ToString() : "N/A")}, targetPoint={targetPoint}");
+        Debug.DrawLine(aimOrigin, targetPoint, Color.yellow, 2f);      // 1차 조준 레이
+
+        bool shotHitSuccess = Physics.Raycast(safeShotOrigin, shotDirection, out shotHit, safeShotDistance, hitMask, QueryTriggerInteraction.Ignore);
+        Debug.Log($"[SHOT] hit={shotHitSuccess}, origin={safeShotOrigin}, dir={shotDirection}, dist={safeShotDistance}, targetPoint={targetPoint}");
+        Debug.DrawLine(safeShotOrigin, safeShotOrigin + shotDirection * safeShotDistance, Color.red, 2f); // 2차 발사 레이
 
         // 궤적은 여전히 총구에서 시작해 보이게 한다.
         ShowShotTrace(muzzleOrigin, endPoint, traceColor);
 
         // 실제 오디오 재생과 별개로, AI는 이 총소리 이벤트를 통해 위치를 조사합니다.
         NoiseSystem.Emit(NoiseType.Gunshot, muzzleOrigin, gameObject);
+
     }
 
     // 리코일 애니메이션 출력
@@ -149,7 +172,7 @@ public class PlayerWeapon : MonoBehaviour
         weaponData = weaponItemData;
 
         // 무기 프리팹 주소가 비어 있을 시 실패
-        if(!weaponData.itemPrefabRef.RuntimeKeyIsValid()) return;
+        //if(!weaponData.itemPrefabRef.RuntimeKeyIsValid()) return;
         // Addressble을 통해 비동기로 무기를 소환, 손 위치에 부착함
         // 2D 캐릭터를 사용하기 때문에 3D 무기 장착 코드는 사용하지 않습니다
         // Addressables.InstantiateAsync(weaponData.itemPrefabRef, handPos).Completed += OnWeaponLoaded;

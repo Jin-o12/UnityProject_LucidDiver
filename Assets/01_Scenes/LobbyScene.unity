@@ -453,6 +453,8 @@ MonoBehaviour:
   - {fileID: 5112121294421879094, guid: c5bf2558b448f314b93deec6475703cf, type: 3}
   - {fileID: 2838638639429370787, guid: 11913553fbac33348b64af24ef6e3f2b, type: 3}
   - {fileID: 1625286815563743019, guid: a49f6e1a3a95bb14f9c1e452bbdc1252, type: 3}
+  - {fileID: 304085410330346154, guid: 3504b6c206946784d9274301299c9a4f, type: 3}
+  - {fileID: 8372227223916743333, guid: 5c44a7108387eaf43bddb46a1e74d272, type: 3}
 --- !u!114 &8254926602543662880
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -481,9 +483,12 @@ MonoBehaviour:
   lobbyScene:
     sceneAsset: {fileID: 102900000, guid: c67beebbfb6b5ad47b3fa2ef3f658b3d, type: 3}
     sceneName: LobbyScene
+  levelScene:
+    sceneAsset: {fileID: 102900000, guid: 60e8107b5568ec54786114359f3c8ad7, type: 3}
+    sceneName: LevelDesignScene
   gameScene:
-    sceneAsset: {fileID: 102900000, guid: 99c9720ab356a0642a771bea13969a05, type: 3}
-    sceneName: DemoScene
+    sceneAsset: {fileID: 102900000, guid: 35067dad38e9b394cb846a37067e052a, type: 3}
+    sceneName: DemoScene Additive
   LoadScene:
     sceneAsset: {fileID: 102900000, guid: a6fff15a1e907ef43a982704c405cfee, type: 3}
     sceneName: LoadScene

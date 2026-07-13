@@ -23,9 +23,13 @@ public class InventoryPresenter : MonoBehaviour
     private InventoryUI inventoryUI;                    // 인벤토리 UI 캐시
     private ResultUI resultUI;                          // 결과 UI 캐시
     private ChestUI chestUI;                            // 상자 UI 캐시
+    private ItemTooltipUI itemTooltipUI;                // 툴팁 UI 캐시
 
     // 저장 데이터 인터페이스
     private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
+
+    // 아티팩트 장착 상태 관리
+    private PlayerArtifactEquipment playerArtifactEquipment;       // 플레이어 아티팩트 장착 상태
 
     private void Awake()
     {
@@ -34,16 +38,18 @@ public class InventoryPresenter : MonoBehaviour
         localInputReader = GetComponent<LocalInputReader>();
         identity = GetComponent<EntityIdentity>();
         playerStatus = GetComponent<PlayerStatus>();
+        playerArtifactEquipment = GetComponent<PlayerArtifactEquipment>();
 
-        if (playerWeapon == null || playerInventory == null || playerStatus == null || localInputReader == null || identity == null)
+        if (playerWeapon == null || playerInventory == null || playerStatus == null ||
+            localInputReader == null || identity == null || playerArtifactEquipment == null)
         {
             enabled = false;
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
             return;
         }
-        
+
         // 인터페이스 구현부 연결
-        itemRepo = new SOItemRepository();
+        itemRepo = new LocalJsonItemRepository();
 
         // 인벤토리 슬롯 초기화
         PlayerSaveData playerData = DataManager.Instance.playerData;
@@ -68,6 +74,15 @@ public class InventoryPresenter : MonoBehaviour
 
         // 인벤토리 드랍존으로 버리기 요청이 들어오면 월드 드랍으로 처리한다.
         GlobalEventBus.OnInventoryDropRequested += HandleInventoryDropRequested;
+
+        // 아티팩트 장착/해제 요청 이벤트를 구독한다.
+        GlobalEventBus.OnArtifactEquipRequested += HandleArtifactEquipRequested;
+        GlobalEventBus.OnArtifactUnequipRequested += HandleArtifactUnequipRequested;
+        playerArtifactEquipment.OnArtifactSlotChanged += HandleArtifactSlotChanged;
+
+        // 아이템 툴팁 UI 열기/닫기 요청이 들어오면 Presenter가 처리한다.
+        GlobalEventBus.OnTooltipUIOpen += OpenTooltipUI;
+        GlobalEventBus.OnTooltipUIClose += CloseTooltipUI;
     }
 
     private void OnDisable()
@@ -83,13 +98,16 @@ public class InventoryPresenter : MonoBehaviour
         playerInventory.OnSafeSlotChanged -= HandleSafeSlotChanged;
 
         GlobalEventBus.OnInventoryDropRequested -= HandleInventoryDropRequested;
-    }
 
-    /// <summary>
-    /// 인벤토리 UI에서 추후 직접 장착 버튼을 연결할 때를 위한 확장 지점.
-    /// </summary>
-    // public void OnRequestEquipWeapon(string weaponTID)
-    // {}
+        GlobalEventBus.OnArtifactEquipRequested -= HandleArtifactEquipRequested;
+        GlobalEventBus.OnArtifactUnequipRequested -= HandleArtifactUnequipRequested;
+
+        GlobalEventBus.OnTooltipUIOpen -= OpenTooltipUI;
+        GlobalEventBus.OnTooltipUIClose -= CloseTooltipUI;
+
+        if (playerArtifactEquipment != null)
+            playerArtifactEquipment.OnArtifactSlotChanged -= HandleArtifactSlotChanged;
+    }
 
     /// <summary>
     /// 기존 이벤트 기반 아이템 습득 진입점.
@@ -100,7 +118,7 @@ public class InventoryPresenter : MonoBehaviour
         if (identity.entityID != pickerID)
             return;
 
-        ItemData data = itemRepo.GetItemData(pickedItemTID);
+        ItemData data = itemRepo.GetItemDataByID(pickedItemTID);
         if (data == null)
             return;
 
@@ -152,6 +170,11 @@ public class InventoryPresenter : MonoBehaviour
         {
             remain = playerInventory.AddItem(data, remain);
         }
+        // TID 1000대는 아티팩트
+        else if (1000 <= pickedItemTID && pickedItemTID < 1100)
+        {
+            remain = playerInventory.AddItem(data, remain);
+        }
         else
         {
             Debug.LogWarning("Unknown item TID: " + pickedItemTID);
@@ -166,9 +189,7 @@ public class InventoryPresenter : MonoBehaviour
         return remain;
     }
 
-    /// <summary>
-    /// 상자와 상호작용했을 때 상자 UI와 인벤토리 UI를 함께 연다.
-    /// </summary>
+    /* 상자와 상호작용했을 때 상자 UI와 인벤토리 UI를 함께 연다 */
     private void HandleItemBoxOpened(IInteractable interactable, int playerID)
     {
         // 다른 플레이어가 연 상자면 무시한다.
@@ -240,7 +261,7 @@ public class InventoryPresenter : MonoBehaviour
 
         // 슬롯 개수에 맞춰 인벤토리 및 각성 보존 슬롯 UI를 생성한다.
         inventoryUI.CreatSlots(playerInventory.slots.Count);
-        inventoryUI.CreateSafeSlots(playerInventory.safeSlots.Count);
+        inventoryUI.CreateSafeSlots(playerInventory.safeSlots.Count, playerInventory.slotNum);
 
         // 현재 인벤토리 데이터를 슬롯 UI에 반영한다.
         for (int i = 0; i < playerInventory.slotNum; i++)
@@ -248,12 +269,14 @@ public class InventoryPresenter : MonoBehaviour
         for (int k = 0; k < playerInventory.safeSlotNum; k++)
             inventoryUI.UpdateSafeSlot(k, playerInventory.safeSlots[k]);
 
+        inventoryUI.UpdateArtifactSlots(playerArtifactEquipment);
+
         // 일반 인벤토리는 Player 액션맵을 유지한다.
     }
 
     /// <summary>
     /// 인벤토리 UI를 닫는다.
-    /// 상자 UI가 열려 있으면 컨테이너 UI 전체를 함께 닫는다.
+    /// 상자 UI나 툴팁 UI가 열려 있으면 컨테이너 UI 전체를 함께 닫는다.
     /// </summary>
     public void CloseInventoryUI()
     {
@@ -268,6 +291,9 @@ public class InventoryPresenter : MonoBehaviour
             return;
         }
 
+        // 툴팁 UI가 열려 있으면 닫아준다.
+        UIManager.Instance.Close<ItemTooltipUI>();
+
         UIManager.Instance.Close<InventoryUI>();
         inventoryUI = null;
         localInputReader.SetInventoryOpenState(false);
@@ -277,7 +303,74 @@ public class InventoryPresenter : MonoBehaviour
     }
 
     /// <summary>
-    /// 상자 UI와 인벤토리 UI를 함께 닫는다.
+    /// 아이템 툴팁 UI를 연다.
+    /// </summary>
+    public void OpenTooltipUI(SlotType slot, int slotIndex)
+    {
+        // 툴팁 UI의 출력 위치를 isOpenFromInventory 변수로 전달
+        itemTooltipUI = UIManager.Instance.Open<ItemTooltipUI>();
+        bool isFromInventory = (slot == SlotType.inventory || slot == SlotType.artifact || slot == SlotType.safe);
+        itemTooltipUI.isFromInventory = isFromInventory;
+        // slotIndex를 참조하여 아이템 데이터를 불러온다.
+        ItemData _item;
+
+        switch (slot)
+        {
+            case SlotType.inventory:  // 인벤토리 슬롯 index를 참조해 아이템 데이터를 전달
+                {
+                    _item = playerInventory.GetSlotItemData(slotIndex);
+                    break;
+                }
+            case SlotType.chest:  // 상자 슬롯 index를 참조해 아이템 데이터를 전달
+                {
+                    // 현재 캐시된 chestUI 우선, 없으면 ActiveUI 사용
+                    ChestUI activeChestUI = chestUI ?? ChestUI.ActiveUI;
+                    if (activeChestUI != null)
+                        _item = activeChestUI.GetItemDataAt(slotIndex);
+                    else
+                        _item = null;
+
+                    break;
+                }
+            case SlotType.artifact:  // 장비 장착 칸 index를 참조해 아이템 데이터를 전달
+                {
+                    _item = playerArtifactEquipment.GetEquippedArtifact(slotIndex);
+                    break;
+                }
+            case SlotType.safe:  // 각성 보존 슬롯 index를 참조해 아이템 데이터를 전달
+                {
+                    _item = playerInventory.GetSlotItemData(slotIndex + playerInventory.slots.Count);
+                    break;
+                }
+            default:  // 기본값으로 null 처리
+                {
+                    _item = null;
+                    break;
+                }
+        }
+
+        // 슬롯에 저장된 아이템 데이터가 null이 아니면 UI 출력을 갱신
+        if (_item != null)
+        {
+            itemTooltipUI.RefreshData(isFromInventory, _item);
+        }
+        else  // 슬롯의 아이템 데이터가 null이면 슬롯 UI를 닫음
+        {
+            UIManager.Instance.Close<ItemTooltipUI>();
+        }
+    }
+
+    /// <summary>
+    /// 아이템 툴팁 UI를 닫는다.
+    /// </summary>
+    public void CloseTooltipUI()
+    {
+        UIManager.Instance.Close<ItemTooltipUI>();
+        itemTooltipUI = null;
+    }
+
+    /// <summary>
+    /// 상자 UI와 인벤토리 UI, 아이템 툴팁 UI를 함께 닫는다.
     /// </summary>
     public void CloseContainerUI()
     {
@@ -287,6 +380,7 @@ public class InventoryPresenter : MonoBehaviour
 
         UIManager.Instance.Close<ChestUI>();
         UIManager.Instance.Close<InventoryUI>();
+        UIManager.Instance.Close<ItemTooltipUI>();
 
         // 캐시와 상태를 초기화한다.
         chestUI = null;
@@ -334,5 +428,59 @@ public class InventoryPresenter : MonoBehaviour
         // {인게임 드롭 후에는 즉시 저장하지 않는다}
         // {최종 저장은 결과 정산 시점에 처리한다}
         playerInventory.TryDropSlotToWorld(slotIndex, dropPosition);
+    }
+
+    private void HandleArtifactEquipRequested(int equipSlotIndex, int inventorySlotIndex)
+    {
+        // UI는 슬롯 번호만 전달하고, Presenter가 실제 아이템 타입과 장착 가능 여부를 검증한다.
+        ItemData itemData = playerInventory.GetSlotItemData(inventorySlotIndex);
+        ArtifactItemData artifactData = itemData as ArtifactItemData;
+
+        if (artifactData == null)
+        {
+            Debug.LogWarning("아티팩트 아이템만 장착할 수 있습니다.");
+            return;
+        }
+
+        if (!playerArtifactEquipment.EquipArtifact(equipSlotIndex, artifactData, out ArtifactItemData previousArtifact))
+            return;
+
+        // 새 아티팩트는 인벤토리에서 빠지고, 기존 장착 아티팩트가 있으면 같은 인벤토리 슬롯으로 돌려보낸다.
+        // 이렇게 하면 인벤토리가 가득 찬 상태에서도 장착 교체가 가능하다.
+        playerInventory.ClearSlot(inventorySlotIndex);
+
+        if (previousArtifact != null)
+        {
+            playerInventory.TryAddToSlot(inventorySlotIndex, previousArtifact, 1);
+        }
+
+        inventoryUI?.UpdateArtifactSlot(equipSlotIndex, artifactData);
+    }
+
+    private void HandleArtifactUnequipRequested(int equipSlotIndex)
+    {
+        // 해제는 먼저 장착 슬롯에서 빼 본 뒤, 인벤토리에 넣을 수 없으면 다시 장착 상태로 복구한다.
+        if (!playerArtifactEquipment.UnequipArtifact(equipSlotIndex, out ArtifactItemData removedArtifact))
+            return;
+
+        int remain = playerInventory.AddItem(removedArtifact, 1);
+
+        if (remain > 0)
+        {
+            playerArtifactEquipment.EquipArtifact(equipSlotIndex, removedArtifact, out _);
+            Debug.Log("인벤토리가 가득 차서 아티팩트를 해제할 수 없습니다.");
+            return;
+        }
+
+        inventoryUI?.UpdateArtifactSlot(equipSlotIndex, null);
+    }
+
+    private void HandleArtifactSlotChanged(int slotIndex, ArtifactItemData artifact)
+    {
+        if (inventoryUI == null || !inventoryUI.gameObject.activeInHierarchy)
+            return;
+
+        // 장착 상태가 바뀐 슬롯만 갱신하여 인벤토리 UI 전체 재생성을 피한다.
+        inventoryUI.UpdateArtifactSlot(slotIndex, artifact);
     }
 }

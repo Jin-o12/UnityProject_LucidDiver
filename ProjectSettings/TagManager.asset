@@ -6,6 +6,9 @@ TagManager:
   tags:
   - DropItem
   - Enemy
+  - PlayerSpawnPool
+  - EnemySpawnPool
+  - BoxSpawnPool
   layers:
   - Default
   - TransparentFX
@@ -19,7 +22,7 @@ TagManager:
   - Sensor
   - Wall
   - Body
-  - 
+  - Grenade
   - 
   - 
   - 

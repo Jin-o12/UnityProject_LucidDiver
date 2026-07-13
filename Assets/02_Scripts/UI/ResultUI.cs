@@ -6,6 +6,8 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.Threading.Tasks;
+
 public class ResultUI : MonoBehaviour
 {
     [Header("변수 리스트")]
@@ -50,18 +52,11 @@ public class ResultUI : MonoBehaviour
     public Sprite Banner_Failed;    //강제 각성(탈출 실패) 시 패널 타이틀 스프라이트
     public GameObject slotPrefab;   //각성 보존 슬롯 칸 프리팹
 
-    // Addressable Assets 불러오기
-    private List<AsyncOperationHandle<Sprite>> loadHandles = new();    // 메모리 관리를 위해 로드 상태를 저장할 핸들
+
 
     private void OnEnable()
     {
         RefreshResult();
-    }
-    private void OnDestroy()
-    {
-        foreach (var h in loadHandles)
-            if (h.IsValid()) Addressables.Release(h);
-        loadHandles.Clear();
     }
 
     public void UpdateResultUI(bool _result)
@@ -92,30 +87,22 @@ public class ResultUI : MonoBehaviour
 
     private void PrintItemIcons()  // 아이템 아이콘 스프라이트 가져오기 메소드
     {
-        LoadSprite(potionData, image_potionIcon);
-        LoadSprite(manaStoneData, image_manaStoneIcon);
-        LoadSprite(memoryFragmentData, image_memoryFragmentIcon);
+        _ = LoadSpriteAsync(potionData, image_potionIcon);
+        _ = LoadSpriteAsync(manaStoneData, image_manaStoneIcon);
+        _ = LoadSpriteAsync(memoryFragmentData, image_memoryFragmentIcon);
     }
 
-    private void LoadSprite(ItemData _data, Image _image)
+    private async Task LoadSpriteAsync(ItemData _data, Image _image)
     {
         if (_data == null || _image == null) return;  // null 체크
-        var loadHandle = Addressables.LoadAssetAsync<Sprite>(_data.icon);
-        loadHandles.Add(loadHandle);
-        loadHandle.Completed += (handle) =>
+        if (string.IsNullOrEmpty(_data.iconAddress)) return;
+
+        Sprite loadedIcon = await AddressableLoader.LoadAssetAsync<Sprite>(_data.iconAddress);
+
+        if (loadedIcon != null && _image != null)
         {
-            // 성공적으로 가져왔는지 확인
-            if (handle.Status == AsyncOperationStatus.Succeeded)
-            {
-                // handle.Result에 실제 Sprite 데이터가 들어있음
-                //Debug.Log("스프라이트 로드 성공");
-                _image.sprite = handle.Result;
-            }
-            else
-            {
-                //Debug.LogError("스프라이트를 불러오는 데 실패했습니다.");
-            }
-        };
+            _image.sprite = loadedIcon;
+        }
     }
 
     private void PrintTime(float playTime)  //플레이 시간 텍스트를 mm:ss 단위로 출력하는 메소드
@@ -189,7 +176,7 @@ public class ResultUI : MonoBehaviour
     public void UpdateSafeSlot(int slotNum, InventorySlotData slotData)
     {
         InventorySlotUI slotUI = safeSlotsObj[slotNum].GetComponent<InventorySlotUI>();
-        slotUI.UpdateSlot(slotData.amount, slotData.icon);
+        slotUI.UpdateSlot(slotData.amount, slotData.icon, SlotType.safe);
     }
 
     private string Dialogue_Return()  //결과 창 말풍선 대사를 DB에서 추출해 출력하는 메소드

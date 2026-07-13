@@ -9,11 +9,20 @@ EditorBuildSettings:
     path: Assets/01_Scenes/LobbyScene.unity
     guid: c67beebbfb6b5ad47b3fa2ef3f658b3d
   - enabled: 1
+    path: Assets/01_Scenes/LevelDesignScene.unity
+    guid: 60e8107b5568ec54786114359f3c8ad7
+  - enabled: 1
     path: Assets/01_Scenes/DemoScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
     path: Assets/01_Scenes/LoadScene.unity
     guid: a6fff15a1e907ef43a982704c405cfee
+  - enabled: 1
+    path: Assets/01_Scenes/LevelDesignScene Additive.unity
+    guid: 8c36779eaef1e344bb12278c70f768d6
+  - enabled: 1
+    path: Assets/01_Scenes/DemoScene Additive.unity
+    guid: 35067dad38e9b394cb846a37067e052a
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 1b961f4fb2f2d1a4d96c340ee28604e7,
       type: 2}

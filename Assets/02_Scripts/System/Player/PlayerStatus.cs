@@ -1,12 +1,14 @@
-﻿/// <summary>
+
+/// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
 /// </summary>
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerStatus : MonoBehaviour, IDamageable
+public class PlayerStatus : MonoBehaviour, IEffectReceiver
 {
     // 플레이어 상태
     public enum livingState { idle, escape, gameover }      // 플레이어가 가질 수 있는 상태의 종류
@@ -32,8 +34,19 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     public float sprintMP;                                  // 달리기 중 초당 마나 소비량
     public float evadeMP;                                   // 구르기 시 마나 소비량
 
+    private float artifactHpRegenBonus;                     // 아티팩트로 추가되는 초당 체력 회복량
+    private float artifactMpRegenBonus;                     // 아티팩트로 추가되는 초당 마나 회복량
+
+    [Header("Lucid Mark")]
+    [SerializeField] private PlayerLucidMarkController lucidMark = new PlayerLucidMarkController();
+
     private LocalInputReader _input;                        // 플레이어 인게임 조작 입력
     private PlayerMovement _movement;                       // 플레이어 이동 조작
+
+    private void OnValidate()
+    {
+        lucidMark?.OnValidate();
+    }
 
     void Awake()
     {
@@ -42,6 +55,7 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         // 플레이어의 조작 관련 컴포넌트를 가져옴
         _input = GetComponent<LocalInputReader>();
         _movement = GetComponent<PlayerMovement>();
+        lucidMark?.OnValidate();
     }
 
     private void OnEnable()
@@ -51,6 +65,8 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         GlobalEventBus.OnHealRequested += HealingHealth;
         GlobalEventBus.OnSprintInput += CanSprint;
         GlobalEventBus.OnSprintManaConsume += UseSprintMana;
+        GlobalEventBus.OnRequestManaConsume += RequestUseMana;
+        GlobalEventBus.OnTimeOver += TimeOver;
     }
 
     private void OnDisable()
@@ -60,6 +76,12 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         GlobalEventBus.OnHealRequested -= HealingHealth;
         GlobalEventBus.OnSprintInput -= CanSprint;
         GlobalEventBus.OnSprintManaConsume -= UseSprintMana;
+        GlobalEventBus.OnRequestManaConsume -= RequestUseMana;
+        GlobalEventBus.OnTimeOver -= TimeOver;
+
+        // 플레이어가 비활성화되면 새 흔적 생성만 멈추고,
+        // 이미 바닥에 떨어진 의식누출 흔적은 각자 수명만큼 남아 적을 유도합니다.
+        lucidMark?.StopLeakEmission();
     }
 
     void Start()
@@ -80,6 +102,9 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         bool canInput = (nowState == livingState.idle);
         if (_input != null) _input.enabled = canInput;
         if (_movement != null) _movement.enabled = canInput;
+
+        // 루시드 낙인 유지 시간, 2중첩 의식누출 시간, 이동 경로 흔적 생성을 공통 틱에서 갱신합니다.
+        lucidMark?.Tick(transform, gameObject);
     }
 
     #region Status Management
@@ -93,12 +118,17 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         mpMax = _mp;
         mpCurrent = mpMax;
         manaRegen = _regen;
+        artifactHpRegenBonus = 0.0f;
+        artifactMpRegenBonus = 0.0f;
         sprintMP = _sMP;
         cannotSprint = false;
         sprintRecoverTime = _sTime;
         evadeMP = _eMana;
         evadeCooltime = _eCooltime;
         lastEvadeTime = Time.time;
+
+        // 새 스폰마다 낙인 상태를 초기화해 이전 런타임 정보가 남지 않게 합니다.
+        lucidMark?.ResetRuntime(transform);
     }
 
     /* 피격 시 자신의 타입을 반환 */
@@ -116,26 +146,40 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         GlobalEventBus.OnPlayerManaChanged?.Invoke(mpCurrent, mpMax);
     }
 
+#region 플레이어 상태 변화 및 수치 조절에 사용되는 메소드
     /* 체력 변화 */
     private void GetHp(float _val)
     {
         hpCurrent = Mathf.Clamp(hpCurrent + _val, 0, hpMax);
         UpdateHp();
-        // 플레이어 체력이 0이 되었을 때 사망 처리 이벤트 및 게임오버 메소드를 발동
-        if (hpCurrent <= 0)
+        // 플레이어 체력이 0이 되었을 때 idle 상태이면 사망 처리 이벤트 및 게임오버 메소드를 발동
+        if (hpCurrent <= 0 && nowState == livingState.idle)
         {
             GlobalEventBus.onPlayerDead?.Invoke(playerID);
             GameOver(playerID);
         }
     }
 
+    /* 마나 변화 */
+    private void GetMp(float _val)
+    {
+        mpCurrent = Mathf.Clamp(mpCurrent + _val, 0, mpMax);
+        UpdateMp();
+    }
+#endregion
+
+    /* 제한 시간 종료 이벤트에 게임 오버 처리를 연결 */
+    public void TimeOver()
+    {
+        _movement.enabled = false;
+        GameOver(playerID);
+    }
+
     /* 게임 오버 처리 */
     public void GameOver(int _playerID)
     {
-        // 플레이어 상태가 idle이 아니면 탈출 판정을 시작하지 않음
-        if (!IsPlayerIdle(_playerID)) return;
         // 플레이어 상태를 gameover로 변경
-        ResultServiceLocator.Instance.HandleEscapeFail(_playerID);
+        SetPlayerState(livingState.gameover);
         // 코루틴 정지
         StopAllCoroutines();
         // 탈출 실패 판정 이벤트를 전송
@@ -168,13 +212,6 @@ public class PlayerStatus : MonoBehaviour, IDamageable
         return comp.nowState == livingState.idle;
     }
 
-    /* 마나 변화 */
-    private void GetMp(float _val)
-    {
-        mpCurrent = Mathf.Clamp(mpCurrent + _val, 0, mpMax);
-        UpdateMp();
-    }
-
     /* 현재 달리기 가능한 상태인지 체크 */
     public void CanSprint(bool _isSprint)
     {
@@ -191,15 +228,36 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     public void TakeDamage(float dmg)
     {
         // 구르기 도중에는 플레이어가 피해를 받아 HP가 감소하지 않음
-        if (_movement.isEvading) return;
+        if (_movement != null && _movement.isEvading) return;
 
         GetHp(-dmg);
+
+        // 루시드 낙인은 "실제 피해를 입은 피격"에만 반응합니다.
+        // 생존해 있다면 중첩, 시간 감소, 의식누출 시작/갱신을 여기서 처리합니다.
+        if (hpCurrent > 0.0f)
+        {
+            lucidMark?.ApplyHit(transform, gameObject);
+        }
+        // 피해 입을 시 애니메이션 재생 이벤트
+        GlobalEventBus.OnHitAnimate?.Invoke();
+        // 피해 입을 시 탈출 실패 처리
+        GlobalEventBus.OnEscapeFailure?.Invoke(playerID);
     }
 
     /* 공격 시 마나 사용 */
     public void UseAttackMana(float _useMana)
     {
         GetMp(-_useMana);
+    }
+
+    /// <summary>
+    /// 아티팩트 장착 효과로 추가되는 HP/MP 회복 보정값을 갱신합니다.
+    /// 원본 manaRegen은 캐릭터 기본값으로 유지하고, 회복 틱에서 보정값만 더해 사용합니다.
+    /// </summary>
+    public void ApplyArtifactStatusBonus(float hpRegenBonus, float mpRegenBonus)
+    {
+        artifactHpRegenBonus = Mathf.Max(0.0f, hpRegenBonus);
+        artifactMpRegenBonus = Mathf.Max(0.0f, mpRegenBonus);
     }
 
     /* 달리기 중 시간당 마나 사용 */
@@ -237,9 +295,12 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     /* 초당 마나 회복 코루틴 */
     private IEnumerator HealingManaPerSeconds()
     {
-        while(nowState != livingState.gameover)
+        while (nowState != livingState.gameover)
         {
-            GetMp(manaRegen);
+            if (artifactHpRegenBonus > 0.0f)
+                GetHp(artifactHpRegenBonus);
+
+            GetMp(manaRegen + artifactMpRegenBonus);
             yield return new WaitForSeconds(1.0f);
         }
     }
@@ -247,14 +308,14 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void HealingHealth(GameObject _target, float _effectValue)
     {
         // 대상이 내가 아니라면 리턴
-        if(_target!=this.gameObject) return;
+        if (_target != this.gameObject) return;
         GetHp(_effectValue);
     }
 
     private void GainMana(GameObject _target, float _effectValue)
     {
         // 대상이 내가 아니라면 리턴
-        if(_target!=this.gameObject) return;
+        if (_target != this.gameObject) return;
         GetMp(_effectValue);
     }
 
@@ -262,5 +323,374 @@ public class PlayerStatus : MonoBehaviour, IDamageable
     private void UpdateFaceImage()
     {
         /// 플레이어 데이터 구조가 구축되면 연동하여 업데이트 할 것 ///
+    }
+
+    /* 아이템을 사용해 체력 회복 */
+    public void HealthRecoverInst(float _amount)
+    {
+        GetHp(_amount);
+    }
+
+    /* 아이템을 사용해 마나 회복 */
+    public void ManaRecoverInst(float _amount)
+    {
+        GetMp(_amount);
+    }
+
+    public bool RequestUseMana(float _useMana)
+    {
+        // 소모값에 비해 마나량이 부족할 시
+        if(mpCurrent<_useMana)
+        {
+            return false;
+        }
+        // 마나가 충분하다면 소모 후 성공 여부를 리턴
+        else
+        {
+            GetMp(-_useMana);
+            return true;
+        }
+    }
+
+    public void ApplyAggro(UnityEngine.Transform target, float duration)
+    {
+        // 플레이어는 타겟 강제 추적(어그로) 효과를 받지 않으므로 무시합니다.
+    }
+}
+
+/// <summary>
+/// 플레이어에게 쌓이는 루시드 낙인을 관리하는 런타임 모듈입니다.
+/// 피격 중첩, 남은 시간 감소, 2중첩 시 의식누출 흔적 생성 시작/종료를 한곳에서 처리합니다.
+/// </summary>
+[Serializable]
+public class PlayerLucidMarkController
+{
+    [Header("Mark Settings")]
+    [SerializeField, Min(1)] private int maxStack = 2;                   // 루시드 낙인 최대 중첩 수
+    [SerializeField, Min(1)] private int leakRequiredStack = 2;          // 의식누출이 시작되는 최소 중첩 수
+    [SerializeField] private float hitTimePenaltySeconds = 5.0f;         // 피격 1회당 고정으로 감소시킬 남은 제한 시간
+    [SerializeField] private float markDuration = 8.0f;                  // 낙인 중첩이 유지되는 기본 시간
+    [SerializeField] private float leakDuration = 8.0f;                  // 2중첩 의식누출이 유지되는 기본 시간
+
+    [Header("Leak Trace Settings")]
+    [SerializeField] private float traceSpawnDistance = 1.8f;            // 마지막 흔적에서 이 거리 이상 이동했을 때 새 흔적 생성
+    [SerializeField] private float traceSpawnMinInterval = 0.25f;        // 흔적이 너무 촘촘히 찍히지 않도록 막는 최소 간격
+    [SerializeField] private float traceLifeTime = 4.0f;                 // 바닥에 남은 의식누출 흔적 오브젝트의 수명
+    [SerializeField] private float traceNoisePulseInterval = 1.0f;       // 흔적이 자기 자리에서 소음을 다시 뿜는 간격
+    [SerializeField] private float traceNoiseRadius = 45.0f;             // 흔적이 적을 유인하는 소음 반경
+    [SerializeField] private float traceNoiseDuration = 3.0f;            // 흔적이 방출한 소음을 조사 대상으로 유지하는 시간
+    [SerializeField] private int traceNoisePriority = 50;                // 흔적 소음 우선순위 (총성보다 높은 강한 유인용)
+    [SerializeField] private bool traceCanInterruptChase = false;        // 현재 추적을 끊고 흔적을 조사하게 만들지 여부
+    [SerializeField] private GameObject traceVisualPrefab;               // 바닥 흔적 데칼/VFX를 따로 붙이고 싶을 때 사용할 선택 프리팹
+    [SerializeField] private Vector3 traceVisualLocalOffset = new Vector3(0.0f, 0.05f, 0.0f); // 시각 프리팹 위치 보정
+    [SerializeField] private Vector3 traceVisualLocalScale = Vector3.one;                      // 시각 프리팹 크기 보정
+    [SerializeField] private Color traceDebugColor = new Color(0.85f, 0.15f, 0.2f, 1.0f);    // Scene Gizmo 확인용 색상
+
+    [Header("Runtime Debug")]
+    [SerializeField] private int currentStack;                           // 현재 낙인 중첩
+    [SerializeField] private bool isLeakEmissionActive;                  // 현재 새 누출 흔적 생성이 활성화되어 있는지 여부
+    [SerializeField] private float markExpireTime;                       // 낙인 중첩이 만료되는 시각
+    [SerializeField] private float leakExpireTime;                       // 의식누출 생성 상태가 만료되는 시각
+    [SerializeField] private Vector3 lastTraceSpawnPosition;             // 마지막으로 흔적을 생성한 위치
+    [SerializeField] private float lastTraceSpawnTime;                   // 마지막 흔적 생성 시각
+    [SerializeField] private bool hasLastTraceSpawnPosition;             // 마지막 흔적 위치가 유효한지 여부
+    [SerializeField] private int spawnedTraceCount;                      // 현재까지 생성한 흔적 개수 (디버그용)
+
+    public void OnValidate()
+    {
+        maxStack = Mathf.Max(1, maxStack);
+        leakRequiredStack = Mathf.Clamp(leakRequiredStack, 1, maxStack);
+        hitTimePenaltySeconds = Mathf.Max(0.0f, hitTimePenaltySeconds);
+        markDuration = Mathf.Max(0.1f, markDuration);
+        leakDuration = Mathf.Max(0.1f, leakDuration);
+        traceSpawnDistance = Mathf.Max(0.1f, traceSpawnDistance);
+        traceSpawnMinInterval = Mathf.Max(0.05f, traceSpawnMinInterval);
+        traceLifeTime = Mathf.Max(0.1f, traceLifeTime);
+        traceNoisePulseInterval = Mathf.Max(0.1f, traceNoisePulseInterval);
+        traceNoiseRadius = Mathf.Max(0.1f, traceNoiseRadius);
+        traceNoiseDuration = Mathf.Max(0.1f, traceNoiseDuration);
+    }
+
+    /// <summary>
+    /// 플레이어 스폰 직후 낙인 런타임 상태를 초기화합니다.
+    /// 이전 전투에서 남아 있던 중첩/누출 시간이 다음 스폰으로 넘어가지 않게 막습니다.
+    /// </summary>
+    public void ResetRuntime(Transform owner)
+    {
+        currentStack = 0;
+        isLeakEmissionActive = false;
+        markExpireTime = 0.0f;
+        leakExpireTime = 0.0f;
+        lastTraceSpawnTime = 0.0f;
+        hasLastTraceSpawnPosition = false;
+        spawnedTraceCount = 0;
+
+        if (owner != null)
+        {
+            lastTraceSpawnPosition = owner.position;
+        }
+    }
+
+    /// <summary>
+    /// 플레이어가 활성화된 동안 낙인 유지 시간과 의식누출 흔적 생성을 업데이트합니다.
+    /// 2중첩 상태에서는 일정 거리마다 바닥에 새 흔적 오브젝트를 남깁니다.
+    /// </summary>
+    public void Tick(Transform owner, GameObject source)
+    {
+        if (currentStack <= 0)
+        {
+            return;
+        }
+
+        if (Time.time >= markExpireTime)
+        {
+            ClearMarkRuntime();
+            return;
+        }
+
+        if (!isLeakEmissionActive || currentStack < leakRequiredStack)
+        {
+            return;
+        }
+
+        if (Time.time >= leakExpireTime)
+        {
+            StopLeakEmission();
+            return;
+        }
+
+        TrySpawnTrace(owner, source, false);
+    }
+
+    /// <summary>
+    /// 플레이어가 피격될 때마다 낙인 중첩과 시간을 갱신합니다.
+    /// 2중첩에 도달하면 의식누출 흔적 생성을 시작하고,
+    /// 이미 2중첩이면 새 중첩은 추가하지 않고 유지 시간만 갱신합니다.
+    /// </summary>
+    public void ApplyHit(Transform owner, GameObject source)
+    {
+        if (hitTimePenaltySeconds > 0.0f)
+        {
+            GlobalEventBus.OnTimePenaltyRequested?.Invoke(hitTimePenaltySeconds);
+        }
+
+        currentStack = Mathf.Min(currentStack + 1, maxStack);
+        markExpireTime = Time.time + markDuration;
+
+        if (currentStack < leakRequiredStack)
+        {
+            return;
+        }
+
+        leakExpireTime = Time.time + leakDuration;
+        isLeakEmissionActive = true;
+
+        // 2중첩 진입 시점이나 2중첩 상태 재피격 시점에도 현재 자리에서 흔적 하나를 즉시 떨궈,
+        // "맞은 위치부터 누출이 시작된다"는 체감을 주도록 만듭니다.
+        TrySpawnTrace(owner, source, true);
+    }
+
+    /// <summary>
+    /// 플레이어 비활성화나 2중첩 종료 시 새 흔적 생성만 중단합니다.
+    /// 이미 바닥에 떨어진 흔적은 각자 수명이 끝날 때까지 남아 적을 유도합니다.
+    /// </summary>
+    public void StopLeakEmission()
+    {
+        isLeakEmissionActive = false;
+        leakExpireTime = 0.0f;
+        hasLastTraceSpawnPosition = false;
+        lastTraceSpawnTime = 0.0f;
+    }
+
+    private void ClearMarkRuntime()
+    {
+        currentStack = 0;
+        markExpireTime = 0.0f;
+        StopLeakEmission();
+    }
+
+    private void TrySpawnTrace(Transform owner, GameObject source, bool forceSpawn)
+    {
+        if (owner == null || !isLeakEmissionActive)
+        {
+            return;
+        }
+
+        Vector3 spawnPosition = owner.position;
+
+        if (!forceSpawn)
+        {
+            if (Time.time < lastTraceSpawnTime + traceSpawnMinInterval)
+            {
+                return;
+            }
+
+            float spawnDistanceSqr = traceSpawnDistance * traceSpawnDistance;
+            if (hasLastTraceSpawnPosition &&
+                GetPlanarSqrDistance(spawnPosition, lastTraceSpawnPosition) < spawnDistanceSqr)
+            {
+                return;
+            }
+        }
+
+        SpawnTraceObject(spawnPosition, source);
+        lastTraceSpawnPosition = spawnPosition;
+        lastTraceSpawnTime = Time.time;
+        hasLastTraceSpawnPosition = true;
+    }
+
+    private void SpawnTraceObject(Vector3 spawnPosition, GameObject source)
+    {
+        spawnedTraceCount++;
+
+        GameObject traceObject = new($"LucidLeakTrace_{spawnedTraceCount}");
+        traceObject.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
+
+        LucidLeakTraceRuntime traceRuntime = traceObject.AddComponent<LucidLeakTraceRuntime>();
+        traceRuntime.Initialize(
+            source,
+            traceLifeTime,
+            traceNoisePulseInterval,
+            traceNoiseRadius,
+            traceNoiseDuration,
+            traceNoisePriority,
+            traceCanInterruptChase,
+            traceVisualPrefab,
+            traceVisualLocalOffset,
+            traceVisualLocalScale,
+            traceDebugColor);
+    }
+
+    private static float GetPlanarSqrDistance(Vector3 a, Vector3 b)
+    {
+        float deltaX = a.x - b.x;
+        float deltaZ = a.z - b.z;
+        return deltaX * deltaX + deltaZ * deltaZ;
+    }
+}
+
+/// <summary>
+/// 루시드 의식누출 흔적 1개를 나타내는 런타임 오브젝트입니다.
+/// 생성된 자리에 남아 일정 시간 동안 반복적으로 소음을 방출해,
+/// 적이 플레이어 본체가 아니라 지나간 흔적을 따라 조사하도록 만듭니다.
+/// </summary>
+public class LucidLeakTraceRuntime : MonoBehaviour
+{
+    [SerializeField] private bool drawDebugRadius = true;               // Scene Gizmo로 유인 범위를 표시할지 여부
+
+    private GameObject sourceObject;                                    // 이 누출이 어떤 플레이어에게서 떨어졌는지 기록
+    private float lifeTime;                                             // 흔적 오브젝트 전체 수명
+    private float noisePulseInterval;                                   // 소음 재방출 간격
+    private float noiseRadius;                                          // 소음 유인 반경
+    private float noiseDuration;                                        // 각 소음 펄스가 유지되는 시간
+    private int noisePriority;                                          // 현재 조사 중인 다른 약한 소음을 덮어쓸 우선순위
+    private bool canInterruptChase;                                     // 적의 현재 추적을 끊을지 여부
+    private GameObject traceVisualPrefab;                               // 선택적으로 붙일 데칼/VFX 프리팹
+    private Vector3 traceVisualLocalOffset;                             // 시각 프리팹 위치 보정
+    private Vector3 traceVisualLocalScale;                              // 시각 프리팹 크기 보정
+    private Color debugColor = Color.red;                               // Scene Gizmo 색상
+    private GameObject spawnedVisual;                                   // 현재 생성된 시각 프리팹 인스턴스
+
+    /// <summary>
+    /// 런타임 생성 직후 누출 흔적의 동작 데이터를 주입합니다.
+    /// Awake/Start를 기다리지 않고 바로 초기 펄스를 시작할 수 있게 수동 초기화 방식을 사용합니다.
+    /// </summary>
+    public void Initialize(
+        GameObject newSourceObject,
+        float newLifeTime,
+        float newNoisePulseInterval,
+        float newNoiseRadius,
+        float newNoiseDuration,
+        int newNoisePriority,
+        bool newCanInterruptChase,
+        GameObject newTraceVisualPrefab,
+        Vector3 newTraceVisualLocalOffset,
+        Vector3 newTraceVisualLocalScale,
+        Color newDebugColor)
+    {
+        sourceObject = newSourceObject;
+        lifeTime = Mathf.Max(0.1f, newLifeTime);
+        noisePulseInterval = Mathf.Max(0.1f, newNoisePulseInterval);
+        noiseRadius = Mathf.Max(0.1f, newNoiseRadius);
+        noiseDuration = Mathf.Max(0.1f, newNoiseDuration);
+        noisePriority = newNoisePriority;
+        canInterruptChase = newCanInterruptChase;
+        traceVisualPrefab = newTraceVisualPrefab;
+        traceVisualLocalOffset = newTraceVisualLocalOffset;
+        traceVisualLocalScale = newTraceVisualLocalScale;
+        debugColor = newDebugColor;
+
+        AttachVisualIfNeeded();
+        StartCoroutine(PulseNoiseRoutine());
+        Destroy(gameObject, lifeTime);
+    }
+
+    private IEnumerator PulseNoiseRoutine()
+    {
+        float endTime = Time.time + lifeTime;
+
+        // 첫 흔적은 생성 즉시 한 번 소음을 내보내 "맞은 자리에서 누출이 시작된다"는 감각을 줍니다.
+        EmitLeakNoise();
+
+        while (Time.time < endTime)
+        {
+            yield return new WaitForSeconds(noisePulseInterval);
+
+            if (this == null)
+            {
+                yield break;
+            }
+
+            EmitLeakNoise();
+        }
+    }
+
+    private void EmitLeakNoise()
+    {
+        // 일반 소음은 NoiseManager가 임시 오브젝트를 만들어 기준점을 잡지만,
+        // 의식누출은 "바닥에 남은 흔적 그 자체"가 소음원이어야 하므로
+        // 이 런타임 오브젝트를 AnchorTransform으로 직접 브로드캐스트합니다.
+        GlobalEventBus.OnNoiseEmitted?.Invoke(new NoiseStimulus(
+            NoiseType.LucidLeak,
+            transform.position,
+            sourceObject != null ? sourceObject : gameObject,
+            noiseRadius,
+            noiseDuration,
+            canInterruptChase,
+            noisePriority,
+            Time.time,
+            transform));
+    }
+
+    private void AttachVisualIfNeeded()
+    {
+        if (traceVisualPrefab == null)
+        {
+            return;
+        }
+
+        spawnedVisual = Instantiate(traceVisualPrefab, transform);
+        spawnedVisual.transform.localPosition = traceVisualLocalOffset;
+        spawnedVisual.transform.localRotation = Quaternion.identity;
+        spawnedVisual.transform.localScale = traceVisualLocalScale;
+    }
+
+    private void OnDestroy()
+    {
+        if (spawnedVisual != null)
+        {
+            Destroy(spawnedVisual);
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (!drawDebugRadius || noiseRadius <= 0.0f)
+        {
+            return;
+        }
+
+        Gizmos.color = debugColor;
+        Gizmos.DrawWireSphere(transform.position, noiseRadius);
     }
 }
