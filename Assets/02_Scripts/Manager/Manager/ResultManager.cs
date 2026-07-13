@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 인게임 세션 종료 시 데이터 변동을 관리하는 클래스
 /// (탈출 성공 여부, 플레이 타임, 인벤토리 및 퀵슬롯, 동조율 단계)
 /// </summary>
@@ -48,8 +48,8 @@ public class ResultManager : MonoBehaviour, IResultService
     public int slotCount3;                              //3번 슬롯 아이템의 개수 데이터를 받아옴
 
     // 저장 데이터 인터페이스
-    private ISaveRepository saveRepo;                   // 플레이어 데이터 접근 인터페이스
     private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
+    private ICharDataRepository charRepo;               // 캐릭터 데이터 접근 인터페이스
     
     private void Awake()
     {
@@ -62,9 +62,10 @@ public class ResultManager : MonoBehaviour, IResultService
         
         // ResultServiceLocator에 자신을 등록
         ResultServiceLocator.Instance = this;
-        // 인터페이스 구현부 연결
-        saveRepo = new LocalSaveRepository();
+        // 인터페이스 등록
+        
         itemRepo = new LocalJsonItemRepository();
+        charRepo = new SOCharacterRepository();
 
         // 씬에 이미 존재하는 PlayerStatus를 찾아 등록 (타이밍 안전성 보장)
         foreach (var p in FindObjectsOfType<PlayerStatus>())
@@ -195,7 +196,7 @@ public class ResultManager : MonoBehaviour, IResultService
         // {StorageInventoryUI가 저장한 최신 창고 데이터를 파일에서 다시 불러온다}
         DataManager.Instance.LoadGame();
         // 플레이어 세이브 데이터를 가져옴
-        _playerSaveData = DataManager.Instance.playerData;
+        _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         // {저장 리스트가 null이면 보정한다}
         EnsureSaveLists();
         // 플레이어 오브젝트에서 PlayerInventory 컴포넌트를 찾아 데이터 동기화
@@ -214,8 +215,6 @@ public class ResultManager : MonoBehaviour, IResultService
         FindItemCountAndData(401, out memoryFragmentCount, out memoryFragmentData);
         // 기억 파편을 사용해 동조율 상승 → 심상 기록 해금 처리를 실행
         LinkRateUp(_extractionResult);
-        // 심상 기록 읽기 상태 저장
-        // _playerSaveData.hasNewMemoryLog = hasNewMemoryLog;
         // 탈출 실패 시 인벤토리 및 아티팩트 슬롯의 아이템을 인벤토리에서 제거
         if (!_extractionResult)
         {
@@ -310,40 +309,74 @@ public class ResultManager : MonoBehaviour, IResultService
     private void LinkRateUp(bool _extractionResult)
     {
         // 현재 선택한 캐릭터의 세이브 데이터를 가져옴
-        SaveCharacterData charData = _playerSaveData.myCharacters.Find(x => x.TID == _playerSaveData.SelectCharID);
+        SaveCharacterData saveCharData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+        // 현재 선택한 캐릭터의 데이터(레벨별 요구 경험치 등)를 불러옴
+        CharacterData charData = charRepo.GetCharacterData(PlayerSaveDataSO.Instance.currentData.SelectCharID);
+
         // 세이브 데이터에서 이전 동조율 단계 값을 불러와 저장
-        prevLinkRateLevel = charData.linkRateLevel;
+        prevLinkRateLevel = saveCharData.linkRateLevel;
+        
         // 탈출 성공 시 기억 파편 개수만큼 동조율 경험치 값 증가
         if (_extractionResult)
         {
             float linkRatePointAdd = memoryFragmentCount * linkRatePoint;
-            charData.TotallinkRateValue += linkRatePointAdd;
+            saveCharData.TotallinkRateValue += linkRatePointAdd;
         }
-        // 다음 동조율 단계 값 계산 (P0: 탈출 성공 시 일괄 증가)
-        int nextLinkRateLevel = prevLinkRateLevel + linkRateGain;
-        // '동조율 단계 상승=true' 조건 계산 (P0: 기억 파편 획득 AND 탈출 성공)
-        linkRateUp = memoryFragmentCount > 0 && _extractionResult;
-        // 동조율 단계 값 갱신
-        linkRateLevel = linkRateUp ? nextLinkRateLevel : prevLinkRateLevel;
+
+        /// 경험치 정산 로직 ///
+        float[] requiredExpPerLevel = charData.requireLinkRatePerLevel;
+        int currentLevel = saveCharData.linkRateLevel;
+        float currentExp = saveCharData.TotallinkRateValue;
+        
+        int maxLevel = requiredExpPerLevel.Length - 1;
+
+        // 경험치가 다음 레벨 요구치를 충족할 경우 레벨업 및 남은 경험치 이월 처리
+        while (currentLevel < maxLevel)
+        {
+            // 현재 레벨에서 다음 레벨로 가기 위한 요구 경험치
+            float requiredExp = requiredExpPerLevel[currentLevel + 1];
+
+            if (currentExp >= requiredExp)
+            {
+                currentExp -= requiredExp;
+                currentLevel++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        // 정산된 경험치 업데이트
+        saveCharData.TotallinkRateValue = currentExp;
+
+        // 다음 동조율 단계 값 갱신
+        linkRateLevel = currentLevel;
+        
+        // 레벨업 증가량 계산
+        linkRateGain = linkRateLevel - prevLinkRateLevel;
+
+        // '동조율 단계 상승=true' 조건 계산
+        linkRateUp = linkRateGain > 0;
+        
         // 기억 파편을 사용해 동조율 단계가 상승했거나 이미 해금 상태(이전 동조율 단계 > 0)라면 '해금됨=true' 전달
         MemoryLogUnlocked = linkRateUp || prevLinkRateLevel > 0;
+        
         // 기억 파편을 인벤토리에서 제거 (성공/실패 양쪽 모두 제거 처리는 실행함)
         RemoveFromInventory(401);
+        
         // 각성 보존 슬롯의 기억 파편을 제거
         _playerSaveData.safeSlots.RemoveAll(slot => slot != null && slot.TID == 401);
+        
         // 동조율 단계 값을 세이브 데이터에 전달
-        charData.linkRateLevel = linkRateLevel;
+        saveCharData.linkRateLevel = linkRateLevel;
+        
+        // 세이브 데이터를 저장
+        // DataManager.Instance.SaveGame()은 GameResult 끝부분에서 호출됨
     }
 
     private void RemoveFromInventory(int _tid)  //아이템 ID별로 인벤토리에서 제거
     {
-        //foreach (SaveSlotData slot in _playerSaveData.inventorySlots)
-        //{
-        //    if (slot.TID == _tid)
-        //    {
-        //        slot.amount = 0;
-        //    }
-        //}
         // {저장 데이터나 인벤토리 슬롯 리스트가 없으면 중단한다}
         if (_playerSaveData == null || _playerSaveData.inventorySlots == null)
         {
@@ -366,7 +399,7 @@ public class ResultManager : MonoBehaviour, IResultService
         resultPanel = UIManager.Instance.Open<ResultUI>();
         if (resultPanel == null) yield break;
         // 인게임 세션에서 저장된 데이터를 resultPanel에 전달해 UI 갱신
-        _playerSaveData = DataManager.Instance.playerData;
+        _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         resultPanel.extractionResult = extractionResult;
         resultPanel.playTime = playTime;
         resultPanel.potionCount = potionCount;
@@ -436,7 +469,7 @@ public class ResultManager : MonoBehaviour, IResultService
     // 다이버/기록 패널 오픈 시 심상 기록 해금 상태 전달 이벤트를 발송
     public void SendLinkRecordData()
     {
-        _playerSaveData = DataManager.Instance.playerData;
+        _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         GlobalEventBus.RecordDataLoad?.Invoke(linkRateLevel, MemoryLogUnlocked, hasNewMemoryLog);
     }
 
@@ -444,7 +477,7 @@ public class ResultManager : MonoBehaviour, IResultService
     public void NewMemoryRead()
     {
         hasNewMemoryLog = false;
-        _playerSaveData = DataManager.Instance.playerData;
+        _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         //_playerSaveData.hasNewMemoryLog = false;
         DataManager.Instance.SaveGame();
     }

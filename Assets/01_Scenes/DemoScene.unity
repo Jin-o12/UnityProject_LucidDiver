@@ -31493,6 +31493,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   saveFilePath: 
+  playerRuntimeDataSO: {fileID: 11400000, guid: fa24d9c9857070545bf4a1ecd531daa4,
+    type: 2}
 --- !u!114 &8254926602438052759
 MonoBehaviour:
   m_ObjectHideFlags: 0

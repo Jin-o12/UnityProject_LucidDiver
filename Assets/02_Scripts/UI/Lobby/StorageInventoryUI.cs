@@ -5,7 +5,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class StorageInventoryUI : MonoBehaviour
 {
@@ -66,7 +65,6 @@ public class StorageInventoryUI : MonoBehaviour
     private readonly List<InventorySlotData> safeSlotData = new();
     private readonly List<int> quickSlotTIDs = new();
 
-    private LocalSaveRepository saveRepo;
     private IItemDataRepository itemRepo;
 
     private PlayerSaveData currentSaveData;
@@ -76,8 +74,7 @@ public class StorageInventoryUI : MonoBehaviour
 
     private void Awake()
     {
-        // {로컬 세이브 저장소 연결}
-        saveRepo = new LocalSaveRepository();
+        // {로컬 세이브 저장소 연결 (DataManager가 로드한 인스턴스 참조)}
         itemRepo = new LocalJsonItemRepository();
 
         // {드래그 미리보기 아이콘을 띄울 최상위 Canvas를 찾음}
@@ -139,14 +136,8 @@ public class StorageInventoryUI : MonoBehaviour
 
     private void LoadFromPlayerData()
     {
-        // {세이브 저장소가 없으면 새로 생성한다}
-        if (saveRepo == null)
-        {
-            saveRepo = new LocalSaveRepository();
-        }
-
         // {플레이어 저장 데이터를 불러온다}
-        PlayerSaveData saveData = saveRepo.LoadSaveData();
+        PlayerSaveData saveData = PlayerSaveDataSO.Instance.LoadSaveData();
 
         if (saveData == null)
         {
@@ -227,12 +218,7 @@ public class StorageInventoryUI : MonoBehaviour
 
     private void SaveToPlayerData()
     {
-        if (saveRepo == null)
-        {
-            saveRepo = new LocalSaveRepository();
-        }
-
-        PlayerSaveData saveData = currentSaveData ?? saveRepo.LoadSaveData();
+        PlayerSaveData saveData = currentSaveData ?? PlayerSaveDataSO.Instance.LoadSaveData();
         if (saveData == null)
         {
             return;
@@ -255,7 +241,7 @@ public class StorageInventoryUI : MonoBehaviour
             saveData.quickSlots.Add(i < quickSlotTIDs.Count ? quickSlotTIDs[i] : 0);
         }
 
-        saveRepo.SaveGameData(saveData);
+        PlayerSaveDataSO.Instance.SaveGameData(saveData);
     }
 
     private void WriteSaveSlots(List<InventorySlotData> source, List<SaveSlotData> target)

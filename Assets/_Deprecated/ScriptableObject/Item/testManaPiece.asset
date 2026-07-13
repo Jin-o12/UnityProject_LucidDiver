@@ -18,18 +18,10 @@ MonoBehaviour:
   category: 3
   effectID: 0
   itemMultiple: 5
-  icon:
-    m_AssetGUID: faab77ee407a7e041bbf4527bec04be9
-    m_SubObjectName: 
-    m_SubObjectType: 
-    m_EditorAssetChanged: 0
-  itemPrefabRef:
-    m_AssetGUID: 69d5691a300e73d48807dd8d4dad4f01
-    m_SubObjectName: 
-    m_SubObjectType: 
-    m_EditorAssetChanged: 0
+  itemGrade: 0
+  iconAddress: 
   useType: 0
   useRange: 0
   useDelay: 0
-  useEffect:
-  - {fileID: 11400000, guid: 40c2460df4e28a44181198c5d964259d, type: 2}
+  useValue: 0
+  useEffect: []
