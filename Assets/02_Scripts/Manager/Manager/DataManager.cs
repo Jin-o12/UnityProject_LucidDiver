@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 게임 데이터들을 불러오고 관리하는 인스턴스 클래스
 /// </summary>
 using System.Collections;
@@ -9,11 +9,10 @@ using System.IO;
 public class DataManager : MonoBehaviour
 {
     public static DataManager Instance { get; private set; }
-    
-    public PlayerSaveData playerData { get; private set; }          // 계정 데이터 보관소
-    [SerializeField] private string saveFilePath;                   // 세이브 파일 경로
 
-    // 저장 데이터 인터페이스
+    // 플레이어 저장 데이터
+    public PlayerSaveData playerData { get; private set; }          // 계정 데이터 보관소
+    public PlayerSaveDataSO playerRuntimeDataSO;                 // 데이터 일시적 저장 및 관리 SO
     private ISaveRepository saveRepo;   
 
     private void Awake()
@@ -29,45 +28,26 @@ public class DataManager : MonoBehaviour
         }
         DontDestroyOnLoad(gameObject);
 
-        // 저장 경로 설정
-        saveFilePath = Path.Combine(Application.persistentDataPath, "SaveFile.json");
-        LoadGame();
-
-        // 캐릭터를 고르는 로비 씬과 연결이 되지 않았으므로 캐릭터 데이터를 코드에서 설정
-        // playerData.SelectCharID = 1;
-
         // 인터페이스 구현부 연결
-        saveRepo = new LocalSaveRepository();
+        saveRepo = playerRuntimeDataSO;
+        
         // 플레이어 데이터 불러오기
         playerData = saveRepo.LoadSaveData();
+
+        // 전역 로케이터에 등록하여 UI 등 하위 계층에서 접근할 수 있도록 함
+        DataServiceLocator.SaveRepo = saveRepo;
     }
 
     /* 플레이어 게임 데이터 저장하기 */
     public void SaveGame()
     {
-        if (playerData == null)
-        {
-            playerData = new PlayerSaveData();
-        }
-
-        string json = JsonUtility.ToJson(playerData, true);
-        File.WriteAllText(saveFilePath, json);
+        saveRepo.SaveGameData(playerRuntimeDataSO.currentData);
         Debug.Log("Game Saved");
     }
 
     /* 플레이어 게임 데이터 불러오기 */
     public void LoadGame()
     {
-        if (File.Exists(saveFilePath))
-        {
-            string json = File.ReadAllText(saveFilePath);
-            playerData = JsonUtility.FromJson<PlayerSaveData>(json);
-        }
-        else
-        {
-            // 세이브 파일이 없으면 새 데이터 생성
-            playerData = new PlayerSaveData();
-            SaveGame();
-        }
+        playerData = saveRepo.LoadSaveData();
     }
 }

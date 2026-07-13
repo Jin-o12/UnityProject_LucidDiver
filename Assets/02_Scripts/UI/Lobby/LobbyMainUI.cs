@@ -26,21 +26,15 @@ public class LobbyMainUI : MonoBehaviour
 
     // 대사 출력 인터페이스
     private IDialogueRepository dialogueRepo;
-    // 플레이어 정보 인터페이스
-    private ISaveRepository saveRepo;
     // 캐릭터 정보 인터페이스
     private ICharDataRepository charRepo;
 
-    private void Start()
+    private void Awake()
     {
         // 대사 출력 인터페이스 연결
         dialogueRepo = new LocalJsonDialogueRepository();
-        // 플레이어 정보 인터페이스 연결
-        saveRepo = new LocalSaveRepository();
         // 캐릭터 정보 인터페이스 연결
         charRepo = new SOCharacterRepository();
-        // 로비 UI가 켜질 때마다 표시 정보를 갱신
-        Refresh();
     }
 
     private void OnEnable()
@@ -57,6 +51,9 @@ public class LobbyMainUI : MonoBehaviour
         buttonSortie.onClick.AddListener(OpenSortiePrepare);
         buttonDiverRecord.onClick.AddListener(OpenDiverRecord);
         buttonStorage.onClick.AddListener(OpenStorageInventory);
+
+        // UI 활성화 시에도 정보 업데이트
+        Refresh();
     }
 
     private void OnDestroy()
@@ -70,10 +67,10 @@ public class LobbyMainUI : MonoBehaviour
     /* 로비의 정보들을 갱신 */
     public void Refresh()
     {
-        // 플레이어 저장 데이터
-        PlayerSaveData saveData = saveRepo.LoadSaveData();
+        // 플레이어 저장 데이터 SO
+        PlayerSaveData saveData = PlayerSaveDataSO.Instance.currentData;
         // 플레이어가 선택 한 캐릭터의 세이브 데이터 추출
-        SaveCharacterData charSaveData = saveData.myCharacters.Find(x => x.TID == saveData.SelectCharID);
+        SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
         // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터 추출
         CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
 
@@ -83,16 +80,20 @@ public class LobbyMainUI : MonoBehaviour
     
         // {현재 동조율 단계를 표시한다}
         if (textLinkRateLevel != null)
-            textLinkRateLevel.text = $"동조율 Lv.{saveRepo.GetLinkRateLevel()}";
+            textLinkRateLevel.text = $"동조율 Lv.{charSaveData.linkRateLevel}";
+
+        int currentLevel = PlayerSaveDataSO.Instance.GetLinkRateLevel();
+        int maxLevel = charData.requireLinkRatePerLevel.Length - 1;
 
         if (sliderLinkRateLevel != null)
         {
-            // 최대 레벨 미만일 경우 비율 계산, 최대 레벨일 경우 슬라이더를 꽉 채움(1.0f)
-            if (charSaveData.linkRateLevel < charData.requireLinkRatePerLevel.Length)
+            // 최대 레벨 미만일 경우 비율 계산, 최대 레벨일 경우 슬라이더를 꽉 채움
+            if (currentLevel < maxLevel)
             {
-                float requireExp = charData.requireLinkRatePerLevel[charSaveData.linkRateLevel];
-                // 0으로 나누기 방지
-                sliderLinkRateLevel.value = requireExp > 0 ? charSaveData.TotallinkRateValue / requireExp : 1.0f;
+                float requireExp = charData.requireLinkRatePerLevel[charSaveData.linkRateLevel+1];
+                
+                sliderLinkRateLevel.maxValue = requireExp;
+                sliderLinkRateLevel.value = PlayerSaveDataSO.Instance.GetlinkRatePoint();
             }
             else
             {

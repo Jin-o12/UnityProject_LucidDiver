@@ -14,6 +14,7 @@ public class SortiePrepareUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textDiverName;         // 다이버 이름
     [SerializeField] private TextMeshProUGUI textDiverRole;         // 
     [SerializeField] private TextMeshProUGUI textLinkRate;          // 동조율
+    [SerializeField] private Slider sliderLinkRate;                 // 경험치 슬라이더
 
     [Header("Slot 1")]
     [SerializeField] private Image imageSlotIcon1;
@@ -39,6 +40,10 @@ public class SortiePrepareUI : MonoBehaviour
     public Sprite slotSprite3;  //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
     public int slotCount3;      //2번 슬롯 아이템의 개수 데이터를 받아옴
 
+    // 캐릭터 정보 인터페이스
+    private ICharDataRepository charRepo;
+
+
     [Header("Temporary Test Data")]
     [SerializeField] private int testLinkRateLevel = 0;
 
@@ -55,6 +60,9 @@ public class SortiePrepareUI : MonoBehaviour
         buttonBackTop.onClick.AddListener(OnClickBack);
         buttonStartSortie.onClick.AddListener(OnClickStartSortie);
         buttonChangeFromStorage.onClick.AddListener(OnClickChangeFromStorage);
+
+        // 캐릭터 정보 인터페이스 연결
+        charRepo = new SOCharacterRepository();
     }
 
     private void OnEnable()
@@ -119,9 +127,35 @@ public class SortiePrepareUI : MonoBehaviour
 
     public void Refresh()
     {
-        if (textDiverName != null) textDiverName.text = "유안";
+        // 플레이어 저장 데이터 SO
+        PlayerSaveData saveData = PlayerSaveDataSO.Instance.currentData;
+        // 플레이어가 선택 한 캐릭터의 세이브 데이터 추출
+        SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+        // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터 추출
+        CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
+
+        if (textDiverName != null) textDiverName.text = charData.charName;
         if (textDiverRole != null) textDiverRole.text = "메인 다이버";
-        if (textLinkRate != null) textLinkRate.text = $"동조율 Lv.{testLinkRateLevel}";
+        if (textLinkRate != null) textLinkRate.text = $"동조율 Lv.{charSaveData.linkRateLevel}";
+
+        int currentLevel = PlayerSaveDataSO.Instance.GetLinkRateLevel();
+        int maxLevel = charData.requireLinkRatePerLevel.Length - 1;
+        if(sliderLinkRate != null)
+        {
+            // 최대 레벨 미만일 경우 비율 계산, 최대 레벨일 경우 슬라이더를 꽉 채움
+            if (currentLevel < maxLevel)
+            {
+                float requireExp = charData.requireLinkRatePerLevel[charSaveData.linkRateLevel+1];
+                
+                sliderLinkRate.maxValue = requireExp;
+                sliderLinkRate.value = PlayerSaveDataSO.Instance.GetlinkRatePoint();
+            }
+            else
+            {
+                sliderLinkRate.value = 1.0f;
+            }
+        }
+
 
         SetSlotUI(slotTID1, slotSprite1, slotCount1, imageSlotIcon1, textSlotName1, textSlotCount1, "슬롯 1");
         SetSlotUI(slotTID2, slotSprite2, slotCount2, imageSlotIcon2, textSlotName2, textSlotCount2, "슬롯 2");

@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 인게임 전반의 시스템을 관리하는 인스턴스 클래스
 /// </summary>
 using UnityEngine;
@@ -17,7 +17,6 @@ public class GameManager : MonoBehaviour
     private readonly string[] playScenes = { "DemoScene", "DemoScene Patrol", "DemoScene Additive" }; //인게임 세션으로 취급할 씬 목록
 
     // 저장 데이터 인터페이스
-    private ISaveRepository saveRepo;                   // 플레이어 데이터 접근 인터페이스
     private ICharDataRepository charRepo;               // 캐릭터 데이터 접근 인터페이스
     private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
 
@@ -28,7 +27,6 @@ public class GameManager : MonoBehaviour
             Instance = this;
 
         // 인터페이스 구현부 연결
-        saveRepo = new LocalSaveRepository();
         charRepo = new SOCharacterRepository();
         itemRepo = new LocalJsonItemRepository();
 
@@ -50,7 +48,7 @@ public class GameManager : MonoBehaviour
             timeTrack = true;       //시간 기록 시작
 
             // 캐릭터 데이터 가져오기
-            PlayerSaveData playerData = saveRepo.LoadSaveData();
+            PlayerSaveData playerData = PlayerSaveDataSO.Instance.currentData;
             _playerSaveData = playerData;
             CharacterData charData = charRepo.GetCharacterData(playerData.SelectCharID);
 

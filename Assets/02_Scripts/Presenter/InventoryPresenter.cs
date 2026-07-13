@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 아이템과 인벤토리에 관한 상호작용을 중재하는 Presenter.
 /// 아이템 습득, 인벤토리 UI 열기/닫기, 체스트 UI 연결, 월드 드랍을 담당한다.
 /// </summary>
@@ -52,7 +52,7 @@ public class InventoryPresenter : MonoBehaviour
         itemRepo = new LocalJsonItemRepository();
 
         // 인벤토리 슬롯 초기화
-        PlayerSaveData playerData = DataManager.Instance.playerData;
+        PlayerSaveData playerData = PlayerSaveDataSO.Instance.currentData;
         playerInventory.Initialize(playerData.invenSlotNum, playerData.quickSlotsNum, playerData.safeSlotNum);
     }
 
