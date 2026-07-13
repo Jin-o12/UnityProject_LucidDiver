@@ -118,7 +118,7 @@ public class PlayerCombatPresenter : MonoBehaviour
         // 플레이어 상태가 idle이 아니면 스킬을 사용할 수 없음
         if (playerStatus.nowState != PlayerStatus.livingState.idle) return;
 
-        CharacterData charData = charRepo.GetCharacterData(DataManager.Instance.playerData.SelectCharID);
+        CharacterData charData = charRepo.GetCharacterData(PlayerSaveDataSO.Instance.currentData.SelectCharID);
         SkillData skill = skillRepo.GetSkillData(charData.skillNum);
 
         // 스킬 시전 딜레이 시간이 지나지 않았으면 스킬을 사용하지 않음

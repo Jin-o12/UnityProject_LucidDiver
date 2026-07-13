@@ -20,6 +20,12 @@ MonoBehaviour:
   manaMax: 100
   manaRegen: 1
   weaponNum: 101
+  requireLinkRatePerLevel:
+  - 0
+  - 3
+  - 5
+  - 12
+  - 15
   chatIcon:
     m_AssetGUID: 558d6aded3a52c0408bea40507abdfa1
     m_SubObjectName: 

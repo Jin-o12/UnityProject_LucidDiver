@@ -3625,6 +3625,7 @@ MonoBehaviour:
   textDiverName: {fileID: 4302065023887187593}
   textDiverRole: {fileID: 8319592335210829563}
   textLinkRate: {fileID: 1557701807971332124}
+  sliderLinkRate: {fileID: 6269588091043485773}
   imageSlotIcon1: {fileID: 1969267021942001645}
   textSlotName1: {fileID: 5939687267126509818}
   textSlotCount1: {fileID: 1166896368705155323}
