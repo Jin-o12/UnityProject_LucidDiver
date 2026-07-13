@@ -14,9 +14,11 @@ public class EnemyCombat
 
     [SerializeField] private float attackStartRange = 3.0f;            // 공격 코루틴을 시작할 수 있는 거리
     [SerializeField] private float attackHitRange = 1.2f;              // 실제 데미지가 들어가는 근접 판정 거리
+    [SerializeField] private float closeCombatAwarenessRange = 6.0f;   // 교전 후 시야각 없이 타겟을 유지할 근접 거리
     [SerializeField] private float attackCooldown = 2.0f;              // 한 번의 콤보 후 다시 공격 가능한 시간
 
     [SerializeField] private float firstSlashTelegraphTime = 0.35f;    // 공격 애니메이션을 시작하기 전 선딜 시간
+    [SerializeField] private float telegraphTurnSpeed = 360.0f;        // 선딜 중 플레이어를 따라 회전할 초당 최대 각도
     [SerializeField] private float attackAnimationDuration = 1.3333f;  // 공격 애니메이션 1회 전체 길이
     [SerializeField] private float attackRecoveryTime = 0.65f;         // 2타 종료 후 회복 시간
 
@@ -31,6 +33,7 @@ public class EnemyCombat
 
     [NonSerialized] private float attackStartRangeSqr;                 // 공격 시작 거리 제곱값 캐시
     [NonSerialized] private float attackHitRangeSqr;                   // 실제 타격 거리 제곱값 캐시
+    [NonSerialized] private float closeCombatAwarenessRangeSqr;        // 근접 타겟 유지 거리 제곱값 캐시
     [NonSerialized] private float nextAttackAvailableTime;             // 다음 공격 가능 시각
     [NonSerialized] private float currentSlashDamage;                  // 현재 공격 단계에서 적용할 피해량
     [NonSerialized] private bool hasAppliedCurrentSlashDamage;         // 현재 타격 단계 피해 적용 여부
@@ -39,8 +42,10 @@ public class EnemyCombat
     {
         attackStartRange = Mathf.Max(0.1f, attackStartRange);
         attackHitRange = Mathf.Max(0.1f, attackHitRange);
+        closeCombatAwarenessRange = Mathf.Max(attackStartRange, closeCombatAwarenessRange);
         attackCooldown = Mathf.Max(0.0f, attackCooldown);
         firstSlashTelegraphTime = Mathf.Max(0.0f, firstSlashTelegraphTime);
+        telegraphTurnSpeed = Mathf.Max(0.0f, telegraphTurnSpeed);
         attackAnimationDuration = Mathf.Max(0.1f, attackAnimationDuration);
         attackRecoveryTime = Mathf.Max(0.0f, attackRecoveryTime);
         firstSlashLungeDistance = Mathf.Max(0.0f, firstSlashLungeDistance);
@@ -53,6 +58,7 @@ public class EnemyCombat
 
         attackStartRangeSqr = attackStartRange * attackStartRange;
         attackHitRangeSqr = attackHitRange * attackHitRange;
+        closeCombatAwarenessRangeSqr = closeCombatAwarenessRange * closeCombatAwarenessRange;
     }
 
     /// <summary>
@@ -61,6 +67,15 @@ public class EnemyCombat
     public bool CanStartAttack(float sqrDistToTarget)
     {
         return Time.time >= nextAttackAvailableTime && sqrDistToTarget <= attackStartRangeSqr;
+    }
+
+    /// <summary>
+    /// 이미 교전 중인 타겟을 시야각과 무관하게 유지할 수 있는 근접 거리인지 확인합니다.
+    /// 최초 감지에는 사용하지 않으며, 플레이어가 에너미 주위를 돌 때 전투가 끊기는 현상만 방지합니다.
+    /// </summary>
+    public bool IsWithinCloseCombatAwareness(float sqrDistToTarget)
+    {
+        return sqrDistToTarget <= closeCombatAwarenessRangeSqr;
     }
 
     /// <summary>
@@ -76,7 +91,7 @@ public class EnemyCombat
         Action<int, int> onLookDirEvent,
         Action onAttackEvent)
     {
-        if (target == null)
+        if (!EnemyPerception.IsTargetAvailable(target))
         {
             yield break;
         }
@@ -91,7 +106,30 @@ public class EnemyCombat
 
         if (firstSlashTelegraphTime > 0.0f)
         {
-            yield return new WaitForSeconds(firstSlashTelegraphTime);
+            float elapsed = 0.0f;
+            while (elapsed < firstSlashTelegraphTime)
+            {
+                if (!EnemyPerception.IsTargetAvailable(target))
+                {
+                    FinishAttack(agent, status);
+                    yield break;
+                }
+
+                elapsed += Time.deltaTime;
+                locomotion.FacePositionLimited(
+                    self,
+                    target.position,
+                    telegraphTurnSpeed * Time.deltaTime,
+                    onLookDirEvent);
+                yield return null;
+            }
+        }
+
+        // 예고 동작 도중 타겟이 사망했을 수 있으므로 공격 애니메이션을 시작하기 직전에 다시 검사합니다.
+        if (!EnemyPerception.IsTargetAvailable(target))
+        {
+            FinishAttack(agent, status);
+            yield break;
         }
 
         onAttackEvent?.Invoke();
@@ -99,16 +137,22 @@ public class EnemyCombat
         float comboRecovery = attackAnimationDuration + attackRecoveryTime;
         if (comboRecovery > 0.0f)
         {
-            yield return new WaitForSeconds(comboRecovery);
+            float elapsed = 0.0f;
+            while (elapsed < comboRecovery)
+            {
+                // 공격 애니메이션 도중 타겟이 사망하면 남은 콤보를 즉시 취소합니다.
+                if (!EnemyPerception.IsTargetAvailable(target))
+                {
+                    FinishAttack(agent, status);
+                    yield break;
+                }
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
         }
 
-        ClearRuntimeState();
-        status.SetIsAttacking(false);
-
-        if (agent != null)
-        {
-            agent.isStopped = false;
-        }
+        FinishAttack(agent, status);
     }
 
     /// <summary>
@@ -124,7 +168,7 @@ public class EnemyCombat
         Action<int, int> onLookDirEvent,
         int swingIndex)
     {
-        if (self == null || target == null)
+        if (self == null || !EnemyPerception.IsTargetAvailable(target))
         {
             yield break;
         }
@@ -146,6 +190,12 @@ public class EnemyCombat
             yield return locomotion.PerformLunge(self, agent, lungeDistance, lungeDuration);
         }
 
+        // 돌진 중 타겟이 사망하거나 탈출했다면 실제 피해 판정을 실행하지 않습니다.
+        if (!EnemyPerception.IsTargetAvailable(target))
+        {
+            yield break;
+        }
+
         TryApplyCurrentSlashDamage(self, target, attackOrigin);
     }
 
@@ -154,7 +204,7 @@ public class EnemyCombat
     /// </summary>
     public void TryApplyCurrentSlashDamage(Transform self, Transform target, Transform attackOrigin)
     {
-        if (hasAppliedCurrentSlashDamage || currentSlashDamage <= 0.0f || target == null)
+        if (hasAppliedCurrentSlashDamage || currentSlashDamage <= 0.0f || !EnemyPerception.IsTargetAvailable(target))
         {
             return;
         }
@@ -187,6 +237,24 @@ public class EnemyCombat
     {
         currentSlashDamage = 0.0f;
         hasAppliedCurrentSlashDamage = false;
+    }
+
+    /// <summary>
+    /// 공격 종료와 중도 취소가 같은 정리 절차를 사용하도록 런타임 상태와 NavMeshAgent를 복구합니다.
+    /// </summary>
+    private void FinishAttack(NavMeshAgent agent, EnemyStatus status)
+    {
+        ClearRuntimeState();
+
+        if (status != null)
+        {
+            status.SetIsAttacking(false);
+        }
+
+        if (agent != null && agent.enabled)
+        {
+            agent.isStopped = false;
+        }
     }
 
     /// <summary>

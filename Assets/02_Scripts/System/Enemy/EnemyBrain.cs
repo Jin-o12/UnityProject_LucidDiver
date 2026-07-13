@@ -143,12 +143,26 @@ public class EnemyBrain
         }
 
         bool isInsideChaseArea = !memory.HasPatrolRoute || farthestRouteDistance <= chaseLeashDistance;
+        float sqrDistToTarget = EnemyMathUtility.GetPlanarSqrDistance(self.position, currentTarget.position);
         bool canSeeTarget = perception.CanSeeTrackedTarget(self, currentTarget);
-        if (canSeeTarget && isInsideChaseArea)
+        bool canMaintainCloseCombatTarget =
+            isInsideChaseArea &&
+            combat.IsWithinCloseCombatAwareness(sqrDistToTarget) &&
+            perception.HasClearLineOfSight(self, currentTarget);
+        bool hasTargetAwareness = canSeeTarget || canMaintainCloseCombatTarget;
+
+        if (hasTargetAwareness && isInsideChaseArea)
         {
             memory.UpdateTargetTracking(currentTarget);
             sightLostStartTime = -1f;
             currentAggro = Mathf.Min(maxAggro, currentAggro + aggroRecoveryPerSecond * tickDelta);
+
+            // 근접 교전에서는 이동 속도가 거의 0이어도 플레이어를 향해 회전해
+            // 원형 이동 중 공격 시야가 영구적으로 끊기지 않게 합니다.
+            if (canMaintainCloseCombatTarget)
+            {
+                locomotion.FacePosition(self, currentTarget.position, onLookDirEvent);
+            }
         }
         else if (!isInsideChaseArea)
         {
@@ -182,8 +196,7 @@ public class EnemyBrain
             return;
         }
 
-        float sqrDistToTarget = EnemyMathUtility.GetPlanarSqrDistance(self.position, currentTarget.position);
-        if (canSeeTarget && isInsideChaseArea && combat.CanStartAttack(sqrDistToTarget))
+        if (hasTargetAwareness && isInsideChaseArea && combat.CanStartAttack(sqrDistToTarget))
         {
             memory.ClearChasePlan();
             locomotion.Stop(agent, onWalkEvent);
@@ -200,7 +213,7 @@ public class EnemyBrain
         }
 
         {
-            Vector3 chaseDestination = canSeeTarget && isInsideChaseArea
+            Vector3 chaseDestination = hasTargetAwareness && isInsideChaseArea
                 ? currentTarget.position
                 : memory.LastKnownTargetPosition;
             EnemyMemory.ChaseMoveMode chaseMoveMode = EnemyMemory.ChaseMoveMode.Direct;
@@ -256,6 +269,17 @@ public class EnemyBrain
         EnemyMemory memory,
         ICollection<GameObject> players)
     {
+        // 현재 플레이어가 사망하거나 탈출했다면 기존 어그로와 추적 기억을 즉시 제거합니다.
+        // 이후 같은 틱에서 다른 생존 플레이어를 다시 탐색하므로 멀티플레이에서도 시체를 계속 점유하지 않습니다.
+        if (currentTarget != null && !EnemyPerception.IsTargetAvailable(currentTarget))
+        {
+            currentTarget = null;
+            currentAggro = 0.0f;
+            sightLostStartTime = -1.0f;
+            memory.ClearTargetTracking();
+            memory.ClearChasePlan();
+        }
+
         bool hadTarget = currentTarget != null;
 
         // 강제 어그로도 추적 허용 구간을 벗어나면 갱신하지 않아 활동 반경 제한을 우회하지 못하게 합니다.

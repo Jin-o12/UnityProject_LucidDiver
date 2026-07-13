@@ -104,6 +104,10 @@ public class GameManager : MonoBehaviour
 
     private void ResultTime(bool _extractionResult)
     {
+        // 사망 후 후속 피격 등으로 종료 이벤트가 중복 발생해도 최초 플레이타임만 사용합니다.
+        if (!timeTrack)
+            return;
+
         //시간 기록을 중단하고 기록 고정
         timeTrack = false;
         //결과 계산 시작

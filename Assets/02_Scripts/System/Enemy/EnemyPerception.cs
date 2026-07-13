@@ -61,6 +61,12 @@ public class EnemyPerception
                 continue;
             }
 
+            // 사망하거나 탈출이 확정된 플레이어는 새 감지 대상으로 선택하지 않습니다.
+            if (!IsTargetAvailable(player.transform))
+            {
+                continue;
+            }
+
             float sqrDistance = EnemyMathUtility.GetPlanarSqrDistance(self.position, player.transform.position);
             if (sqrDistance > sightRangeSqr)
             {
@@ -87,7 +93,7 @@ public class EnemyPerception
     /// </summary>
     public bool CanKeepAwareness(Vector3 selfPosition, Transform target)
     {
-        if (target == null)
+        if (!IsTargetAvailable(target))
         {
             return false;
         }
@@ -114,12 +120,47 @@ public class EnemyPerception
     }
 
     /// <summary>
+    /// 시야각을 제외하고 에너미와 타겟 사이에 실제 장애물이 있는지만 확인합니다.
+    /// 이미 교전 중인 플레이어가 근접해서 주위를 돌 때 타겟 유지 여부를 판정하는 데 사용합니다.
+    /// </summary>
+    public bool HasClearLineOfSight(Transform self, Transform target)
+    {
+        if (self == null || !IsTargetAvailable(target))
+        {
+            return false;
+        }
+
+        Vector3 eyePosition = self.position + Vector3.up * eyeHeight;
+        Vector3 targetPosition = target.position + Vector3.up * eyeHeight;
+        Vector3 directionToTarget = targetPosition - eyePosition;
+        float targetDistance = directionToTarget.magnitude;
+
+        if (targetDistance <= 0.001f)
+        {
+            return true;
+        }
+
+        if (!Physics.Raycast(
+                eyePosition,
+                directionToTarget.normalized,
+                out RaycastHit hit,
+                targetDistance,
+                ~0,
+                QueryTriggerInteraction.Ignore))
+        {
+            return true;
+        }
+
+        return hit.transform == target || hit.transform.IsChildOf(target);
+    }
+
+    /// <summary>
     /// 지정된 거리 제곱값 안에서 시야각과 장애물 판정을 함께 수행합니다.
     /// 최초 감지와 추적 유지 판정이 동일한 시야 규칙을 공유하도록 만든 내부 공통 함수입니다.
     /// </summary>
     private bool CanSeeTargetWithinRange(Transform self, Transform target, float rangeSqr)
     {
-        if (self == null || target == null)
+        if (self == null || !IsTargetAvailable(target))
         {
             return false;
         }
@@ -184,7 +225,7 @@ public class EnemyPerception
     /// </summary>
     private bool IsTargetInSight(Transform self, Transform target)
     {
-        if (target == null)
+        if (!IsTargetAvailable(target))
         {
             return false;
         }
@@ -206,28 +247,22 @@ public class EnemyPerception
             return false;
         }
 
-        Vector3 eyePosition = self.position + Vector3.up * eyeHeight;
-        Vector3 targetPosition = target.position + Vector3.up * eyeHeight;
-        Vector3 directionToTarget = targetPosition - eyePosition;
-        float targetDistance = directionToTarget.magnitude;
+        return HasClearLineOfSight(self, target);
+    }
 
-        if (targetDistance <= 0.001f)
+    /// <summary>
+    /// 타겟 오브젝트가 현재 에너미에게 유효한 대상인지 공통으로 판정합니다.
+    /// PlayerStatus가 있는 대상은 생존/세션 상태를 검사하고, 소음 미끼 같은 비플레이어 강제 어그로 대상은 기존 동작을 유지합니다.
+    /// </summary>
+    public static bool IsTargetAvailable(Transform target)
+    {
+        if (target == null)
         {
-            return true;
+            return false;
         }
 
-        if (Physics.Raycast(
-                eyePosition,
-                directionToTarget.normalized,
-                out RaycastHit hit,
-                targetDistance,
-                ~0,
-                QueryTriggerInteraction.Ignore))
-        {
-            return hit.transform == target || hit.transform.IsChildOf(target);
-        }
-
-        return false;
+        PlayerStatus playerStatus = target.GetComponentInParent<PlayerStatus>();
+        return playerStatus == null || playerStatus.CanBeTargeted;
     }
 
     /// <summary>

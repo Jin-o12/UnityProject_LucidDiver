@@ -255,6 +255,12 @@ public class EnemyMovement : MonoBehaviour
             return;
         }
 
+        // 애니메이션 이벤트가 늦게 도착해도 사망하거나 탈출한 이전 타겟을 향한 스윙은 시작하지 않습니다.
+        if (!EnemyPerception.IsTargetAvailable(brain.CurrentTarget))
+        {
+            return;
+        }
+
         StartCoroutine(combat.ExecuteSwing(
             transform,
             brain.CurrentTarget,

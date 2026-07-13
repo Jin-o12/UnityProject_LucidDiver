@@ -13,6 +13,8 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     // 플레이어 상태
     public enum livingState { idle, escape, gameover }      // 플레이어가 가질 수 있는 상태의 종류
     public livingState nowState { get; private set; }       // 현재 플레이어
+    public bool IsSessionEnded { get; private set; }        // 사망 또는 탈출 결과가 확정된 세션 종료 상태
+    public bool CanBeTargeted => !IsSessionEnded && nowState != livingState.gameover && hpCurrent > 0.0f; // 에너미가 유효한 전투 대상으로 선택할 수 있는지 여부
     public void SetPlayerState(livingState _state) => nowState = _state;
     public bool isReloading { get; private set; }           // 재장전 실행 중 여부
     public bool canSprint { get; private set; }             // 달리기 실행 가능 여부
@@ -67,6 +69,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnSprintManaConsume += UseSprintMana;
         GlobalEventBus.OnRequestManaConsume += RequestUseMana;
         GlobalEventBus.OnTimeOver += TimeOver;
+        GlobalEventBus.OnEscapeRequest += HandleSessionEnded;
     }
 
     private void OnDisable()
@@ -78,6 +81,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnSprintManaConsume -= UseSprintMana;
         GlobalEventBus.OnRequestManaConsume -= RequestUseMana;
         GlobalEventBus.OnTimeOver -= TimeOver;
+        GlobalEventBus.OnEscapeRequest -= HandleSessionEnded;
 
         // 플레이어가 비활성화되면 새 흔적 생성만 멈추고,
         // 이미 바닥에 떨어진 의식누출 흔적은 각자 수명만큼 남아 적을 유도합니다.
@@ -112,6 +116,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     public void initialize(float _hp, float _mp, float _regen, float _sMP, float _sTime, float _eMana, float _eCooltime)
     {
         nowState = livingState.idle;
+        IsSessionEnded = false;
 
         hpMax = _hp;
         hpCurrent = hpMax;
@@ -178,6 +183,10 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     /* 게임 오버 처리 */
     public void GameOver(int _playerID)
     {
+        // 이미 종료된 세션에서 피격이나 종료 이벤트가 다시 들어와도 결과 정산을 반복하지 않습니다.
+        if (IsSessionEnded || nowState == livingState.gameover)
+            return;
+
         // 플레이어 상태를 gameover로 변경
         SetPlayerState(livingState.gameover);
         // 코루틴 정지
@@ -186,6 +195,21 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnEscapeRequest?.Invoke(false);
         // 스크립트 비활성화
         enabled = false;
+    }
+
+    /// <summary>
+    /// 사망 또는 탈출 성공이 확정된 즉시 플레이어의 전투 및 입력 처리를 잠급니다.
+    /// 탈출 채널링 중에는 이 이벤트가 아직 발생하지 않으므로 피격에 의한 탈출 취소는 유지됩니다.
+    /// </summary>
+    private void HandleSessionEnded(bool extractionResult)
+    {
+        IsSessionEnded = true;
+
+        if (_input != null)
+            _input.enabled = false;
+
+        if (_movement != null)
+            _movement.enabled = false;
     }
 
     // 플레이어가 idle 상태인지 확인
@@ -227,6 +251,11 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     /* 피해 입을 시 체력 감소 처리 */
     public void TakeDamage(float dmg)
     {
+        // 종료 결과가 확정됐거나 이미 사망한 플레이어에게 들어오는 후속 공격은 모두 무시합니다.
+        // 이를 통해 HP, 피격 애니메이션, 시간 패널티와 플레이타임 재정산이 다시 발생하지 않게 합니다.
+        if (IsSessionEnded || nowState == livingState.gameover || hpCurrent <= 0.0f)
+            return;
+
         // 구르기 도중에는 플레이어가 피해를 받아 HP가 감소하지 않음
         if (_movement != null && _movement.isEvading) return;
 
