@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -139,6 +139,15 @@ public class DiverRecordUI : MonoBehaviour
 
     public void Refresh()
     {
+        if (!useTestData)
+        {
+            // 세이브 데이터의 동조율 레벨을 기준으로 판별
+            SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+            linkRateLevel = charSaveData.linkRateLevel;
+            // 캐릭터가 레벨 1에 도달했을 때 심상기록 01 해금
+            memoryLogUnlocked = linkRateLevel >= 1;
+        }
+
         // {다이버 기본 정보 갱신}
         RefreshDiverInfo();
 
