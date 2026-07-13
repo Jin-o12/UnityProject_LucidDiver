@@ -742,8 +742,10 @@ MonoBehaviour:
   combat:
     attackStartRange: 5
     attackHitRange: 1.2
+    closeCombatAwarenessRange: 6
     attackCooldown: 2
     firstSlashTelegraphTime: 0.35
+    telegraphTurnSpeed: 360
     attackAnimationDuration: 2
     attackRecoveryTime: 0.65
     firstSlashLungeDistance: 3

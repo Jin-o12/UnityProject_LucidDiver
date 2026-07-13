@@ -83,6 +83,9 @@ public class InventoryPresenter : MonoBehaviour
         // 아이템 툴팁 UI 열기/닫기 요청이 들어오면 Presenter가 처리한다.
         GlobalEventBus.OnTooltipUIOpen += OpenTooltipUI;
         GlobalEventBus.OnTooltipUIClose += CloseTooltipUI;
+
+        // 사망 또는 탈출 확정 시 열려 있는 인벤토리 계열 UI를 즉시 정리한다.
+        GlobalEventBus.OnEscapeRequest += HandleSessionEnded;
     }
 
     private void OnDisable()
@@ -104,6 +107,7 @@ public class InventoryPresenter : MonoBehaviour
 
         GlobalEventBus.OnTooltipUIOpen -= OpenTooltipUI;
         GlobalEventBus.OnTooltipUIClose -= CloseTooltipUI;
+        GlobalEventBus.OnEscapeRequest -= HandleSessionEnded;
 
         if (playerArtifactEquipment != null)
             playerArtifactEquipment.OnArtifactSlotChanged -= HandleArtifactSlotChanged;
@@ -196,6 +200,10 @@ public class InventoryPresenter : MonoBehaviour
         if (identity.entityID != playerID)
             return;
 
+        // 탈출 채널링 중이거나 세션 종료가 확정된 뒤에는 새 컨테이너 UI를 열지 않는다.
+        if (playerStatus.nowState != PlayerStatus.livingState.idle || playerStatus.IsSessionEnded)
+            return;
+
         // 대상이 ItemBox가 아니면 무시한다.
         ItemBox box = interactable as ItemBox;
         if (box == null)
@@ -247,7 +255,7 @@ public class InventoryPresenter : MonoBehaviour
     public void OpenInventoryUI()
     {
         // 플레이어 상태가 idle이 아니면 인벤토리 조작을 막는다.
-        if (playerStatus.nowState != PlayerStatus.livingState.idle)
+        if (playerStatus.nowState != PlayerStatus.livingState.idle || playerStatus.IsSessionEnded)
             return;
 
         inventoryUI = UIManager.Instance.Open<InventoryUI>();
@@ -280,14 +288,10 @@ public class InventoryPresenter : MonoBehaviour
     /// </summary>
     public void CloseInventoryUI()
     {
-        // 플레이어 상태가 idle이 아니면 인벤토리 조작을 막는다.
-        if (playerStatus.nowState != PlayerStatus.livingState.idle)
-            return;
-
         // 상자 UI가 열려 있으면 컨테이너 UI 전체를 닫는다.
         if (isChestOpen)
         {
-            CloseContainerUI();
+            CloseContainerUI(!playerStatus.IsSessionEnded);
             return;
         }
 
@@ -298,8 +302,9 @@ public class InventoryPresenter : MonoBehaviour
         inventoryUI = null;
         localInputReader.SetInventoryOpenState(false);
 
-        // 일반 인벤토리를 닫으면 플레이어 입력으로 복귀한다.
-        localInputReader.SwitchToPlayerMap();
+        // 일반 플레이 중에 닫은 경우에만 플레이어 입력으로 복귀한다.
+        if (!playerStatus.IsSessionEnded)
+            localInputReader.SwitchToPlayerMap();
     }
 
     /// <summary>
@@ -307,6 +312,10 @@ public class InventoryPresenter : MonoBehaviour
     /// </summary>
     public void OpenTooltipUI(SlotType slot, int slotIndex)
     {
+        // 종료 처리와 동시에 남아 있던 UI 이벤트가 실행되어 툴팁을 다시 여는 것을 막는다.
+        if (playerStatus.IsSessionEnded)
+            return;
+
         // 툴팁 UI의 출력 위치를 isOpenFromInventory 변수로 전달
         itemTooltipUI = UIManager.Instance.Open<ItemTooltipUI>();
         bool isFromInventory = (slot == SlotType.inventory || slot == SlotType.artifact || slot == SlotType.safe);
@@ -374,6 +383,15 @@ public class InventoryPresenter : MonoBehaviour
     /// </summary>
     public void CloseContainerUI()
     {
+        CloseContainerUI(true);
+    }
+
+    /// <summary>
+    /// 컨테이너 UI를 닫고, 일반 플레이 중에만 Player 액션맵으로 복귀합니다.
+    /// 세션 종료 처리에서는 결과 UI 입력을 방해하지 않도록 액션맵을 되돌리지 않습니다.
+    /// </summary>
+    private void CloseContainerUI(bool restorePlayerInput)
+    {
         // 현재 열려 있던 상자의 열린 상태를 해제한다.
         if (currentBox != null)
             currentBox.CloseBox();
@@ -389,8 +407,18 @@ public class InventoryPresenter : MonoBehaviour
         isChestOpen = false;
         localInputReader.SetInventoryOpenState(false);
 
-        // 입력 맵을 다시 플레이어 모드로 전환한다.
-        localInputReader.SwitchToPlayerMap();
+        // 일반적인 닫기 요청에서만 입력 맵을 다시 플레이어 모드로 전환한다.
+        if (restorePlayerInput)
+            localInputReader.SwitchToPlayerMap();
+    }
+
+    /// <summary>
+    /// 사망 또는 탈출 확정 시 인벤토리, 상자, 툴팁을 강제로 닫고 입력 상태를 초기화합니다.
+    /// </summary>
+    private void HandleSessionEnded(bool extractionResult)
+    {
+        CloseContainerUI(false);
+        localInputReader.enabled = false;
     }
 
     private void OpenResultUI(bool _result)
