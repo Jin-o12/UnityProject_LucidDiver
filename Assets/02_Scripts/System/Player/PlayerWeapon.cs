@@ -123,7 +123,10 @@ public class PlayerWeapon : MonoBehaviour
 
             // 디버그 출력
             Debug.Log($"{shotHit.collider.name}, {target}");
-            Debug.Log($"target faction: {target.EntityFaction}, hit? {target.EntityFaction != Faction.player}");
+            if (target != null)
+            {
+                Debug.Log($"target faction: {target.EntityFaction}, hit? {target.EntityFaction != Faction.player}");
+            }
         }
 
         // 1차 조준 vs 2차 히트 포인트 판정 디버그 레이

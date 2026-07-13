@@ -20,11 +20,13 @@ public class TimeLimitController : MonoBehaviour
     private void OnEnable()
     {
         GlobalEventBus.OnTimePenaltyRequested += ApplyTimePenalty;
+        GlobalEventBus.OnEscapeRequest += StopTimeFlow;
     }
 
     private void OnDisable()
     {
         GlobalEventBus.OnTimePenaltyRequested -= ApplyTimePenalty;
+        GlobalEventBus.OnEscapeRequest -= StopTimeFlow;
     }
 
     private void FixedUpdate()
@@ -52,6 +54,15 @@ public class TimeLimitController : MonoBehaviour
         currentTimeLimit = Mathf.Max(0.0f, currentTimeLimit - penaltySeconds);
         BroadcastCurrentTime();
         TryFinishByTimeout();
+    }
+
+    /// <summary>
+    /// 사망 또는 탈출이 확정되면 제한 시간 진행과 이후의 모든 시간 패널티를 중단합니다.
+    /// 성공 여부와 관계없이 세션이 끝난 시점부터 남은 시간은 고정되어야 합니다.
+    /// </summary>
+    private void StopTimeFlow(bool extractionResult)
+    {
+        timeFlow = false;
     }
 
     /// <summary>

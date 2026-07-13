@@ -1,4 +1,5 @@
-﻿using TMPro;
+using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -14,6 +15,7 @@ public class SortiePrepareUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textDiverName;         // 다이버 이름
     [SerializeField] private TextMeshProUGUI textDiverRole;         // 
     [SerializeField] private TextMeshProUGUI textLinkRate;          // 동조율
+    [SerializeField] private Slider sliderLinkRate;                 // 경험치 슬라이더
 
     [Header("Slot 1")]
     [SerializeField] private Image imageSlotIcon1;
@@ -39,8 +41,10 @@ public class SortiePrepareUI : MonoBehaviour
     public Sprite slotSprite3;  //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
     public int slotCount3;      //2번 슬롯 아이템의 개수 데이터를 받아옴
 
-    [Header("Temporary Test Data")]
-    [SerializeField] private int testLinkRateLevel = 0;
+    // 캐릭터 정보 인터페이스
+    private ICharDataRepository charRepo;
+    // 아이템 정보 인터페이스
+    private IItemDataRepository itemRepo;
 
     private void Awake()
     {
@@ -55,20 +59,19 @@ public class SortiePrepareUI : MonoBehaviour
         buttonBackTop.onClick.AddListener(OnClickBack);
         buttonStartSortie.onClick.AddListener(OnClickStartSortie);
         buttonChangeFromStorage.onClick.AddListener(OnClickChangeFromStorage);
+
+        // 인터페이스 연결
+        charRepo = new SOCharacterRepository();
+        itemRepo = new LocalJsonItemRepository();
     }
 
     private void OnEnable()
     {
-        // {퀵슬롯 캐시 재전송 요청}
-        GlobalEventBus.OnRequestQuickSlotCache?.Invoke();
-        // (퀵슬롯 데이터 업데이트 이벤트 등록)
-        GlobalEventBus.QuickSlotLoad += UpdateQuickSlot;
-
         // 출격 준비 UI 오픈 이벤트 발생
         GlobalEventBus.PrepareUIOpen?.Invoke();
 
         // {출격 준비 UI가 열릴 때마다 표시 정보 갱신}
-        Refresh();
+        _ = Refresh();
     }
 
     private void OnDestroy()
@@ -95,37 +98,61 @@ public class SortiePrepareUI : MonoBehaviour
             slotTID1 = tid;
             slotSprite1 = icon;
             slotCount1 = count;
+            SetSlotUI(slotTID1, slotSprite1, slotCount1, imageSlotIcon1, textSlotName1, textSlotCount1, "슬롯 1");
         }
         else if (index == 1)
         {
             slotTID2 = tid;
             slotSprite2 = icon;
             slotCount2 = count;
+            SetSlotUI(slotTID2, slotSprite2, slotCount2, imageSlotIcon2, textSlotName2, textSlotCount2, "슬롯 2");
         }
         else if (index == 2)
         {
             slotTID3 = tid;
             slotSprite3 = icon;
             slotCount3 = count;
+            SetSlotUI(slotTID3, slotSprite3, slotCount3, imageSlotIcon3, textSlotName3, textSlotCount3, "슬롯 3");
         }
-
-        Refresh();
     }
 
     private void OnDisable()
     {
-        GlobalEventBus.QuickSlotLoad -= UpdateQuickSlot;
     }
 
-    public void Refresh()
+    public async Task Refresh()
     {
-        if (textDiverName != null) textDiverName.text = "유안";
-        if (textDiverRole != null) textDiverRole.text = "메인 다이버";
-        if (textLinkRate != null) textLinkRate.text = $"동조율 Lv.{testLinkRateLevel}";
+        // 플레이어 저장 데이터 SO
+        PlayerSaveData saveData = PlayerSaveDataSO.Instance.currentData;
+        // 플레이어가 선택 한 캐릭터의 세이브 데이터 추출
+        SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+        // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터 추출
+        CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
 
-        SetSlotUI(slotTID1, slotSprite1, slotCount1, imageSlotIcon1, textSlotName1, textSlotCount1, "슬롯 1");
-        SetSlotUI(slotTID2, slotSprite2, slotCount2, imageSlotIcon2, textSlotName2, textSlotCount2, "슬롯 2");
-        SetSlotUI(slotTID3, slotSprite3, slotCount3, imageSlotIcon3, textSlotName3, textSlotCount3, "슬롯 3");
+        if (textDiverName != null) textDiverName.text = charData.charName;
+        if (textDiverRole != null) textDiverRole.text = "메인 다이버";
+        if (textLinkRate != null) textLinkRate.text = $"동조율 Lv.{charSaveData.linkRateLevel}";
+
+        // 세이브 데이터에서 퀵슬롯 정보를 직접 로드하여 갱신
+        await LoadQuickSlotsFromSave(saveData);
+
+        int currentLevel = PlayerSaveDataSO.Instance.GetLinkRateLevel();
+        int maxLevel = charData.requireLinkRatePerLevel.Length - 1;
+        if(sliderLinkRate != null)
+        {
+            // 최대 레벨 미만일 경우 비율 계산, 최대 레벨일 경우 슬라이더를 꽉 채움
+            if (currentLevel < maxLevel)
+            {
+                float requireExp = charData.requireLinkRatePerLevel[charSaveData.linkRateLevel+1];
+                
+                sliderLinkRate.maxValue = requireExp;
+                sliderLinkRate.value = PlayerSaveDataSO.Instance.GetlinkRatePoint();
+            }
+            else
+            {
+                sliderLinkRate.value = 1.0f;
+            }
+        }
     }
 
     private void SetSlotUI(int tid, Sprite icon, int count, Image slotIcon, TextMeshProUGUI slotName, TextMeshProUGUI slotCount, string emptySlotName)
@@ -152,17 +179,7 @@ public class SortiePrepareUI : MonoBehaviour
     private ItemData GetItemDataByTID(int tid)
     {
         if (tid == 0) return null;
-
-        ItemData[] itemDatas = Resources.LoadAll<ItemData>("ScriptableObjects/Item");
-        foreach (ItemData itemData in itemDatas)
-        {
-            if (itemData != null && itemData.TID == tid)
-            {
-                return itemData;
-            }
-        }
-
-        return null;
+        return itemRepo.GetItemDataByID(tid);
     }
 
     private void OnClickStartSortie()
@@ -187,5 +204,36 @@ public class SortiePrepareUI : MonoBehaviour
     {
         // {창고 인벤토리 UI 열기 이벤트를 호출한다}
         GlobalEventBus.OnOpenStorageUI?.Invoke();
+    }
+
+    private async Task LoadQuickSlotsFromSave(PlayerSaveData saveData)
+    {
+        if (saveData == null || saveData.quickSlots == null) return;
+
+        // 인벤토리에서 해당 TID 아이템의 총 개수를 반환하는 로컬 함수
+        int GetItemCount(int tid)
+        {
+            if (tid == 0) return 0;
+            int count = 0;
+            if (saveData.inventorySlots != null)
+            {
+                foreach (var slot in saveData.inventorySlots)
+                {
+                    if (slot != null && slot.TID == tid) count += slot.amount;
+                }
+            }
+            return count;
+        }
+
+        // 최대 3개의 퀵슬롯에 대해 비동기 로드 후 UI 갱신
+        for (int i = 0; i < 3; i++)
+        {
+            int tid = i < saveData.quickSlots.Count ? saveData.quickSlots[i] : 0;
+            int count = GetItemCount(tid);
+            ItemData data = GetItemDataByTID(tid);
+            Sprite icon = data != null ? await AddressableLoader.LoadAssetAsync<Sprite>(data.iconAddress) : null;
+            
+            UpdateQuickSlot(i, tid, icon, count);
+        }
     }
 }

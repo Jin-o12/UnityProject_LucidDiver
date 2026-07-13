@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +14,7 @@ public class DiverRecordUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textDiverName;
     [SerializeField] private TextMeshProUGUI textDiverRole;
     [SerializeField] private TextMeshProUGUI textLinkRate;
+    [SerializeField] private Slider sliderLinkRate;
     [SerializeField] private RectTransform imageLinkRateBarFill;
     //[SerializeField] private float linkRateBarMaxWidth = 160f;
 
@@ -46,10 +47,12 @@ public class DiverRecordUI : MonoBehaviour
     private bool memoryLogUnlocked;
     private bool hasNewMemoryLog;
 
+    // 캐릭터 정보 인터페이스
+    private ICharDataRepository charRepo;
+
     // 대사 출력 인터페이스
     private IDialogueRepository dialogue;
 
-    private const string DiverName = "유안";
     private const string DiverRole = "메인 다이버";
     private const string Record01Title = "대외 경계 태도 및 면담 일지";
 
@@ -59,16 +62,16 @@ public class DiverRecordUI : MonoBehaviour
     private const string Record01LockedDesc =
         "기억 파편을 회수하고 탈출 성공 시\n개인 심상 기록 01이 해금된다.";
 
-    private const string Record01Body =
-        "[면담 요약서: 다이버 유안 (관리번호: D-004)]\n\n" +
-        "피실험자는 면담 시간 내내 극도의 긴장 상태를 유지했으며, " +
-        "탁자 위의 깨진 액정 화면에 비치는 나의 모습을 집요하게 시선으로 쫓는 기이한 행동을 보였다.\n\n" +
-        "이는 사건 발생 당일 내 눈에만 이상한 보랏빛 선이 보여서 피해야 한다고 주장했으나 " +
-        "아무도 믿어주지 않아 눈앞에서 가족을 잃었던 트라우마의 전형적인 방어 행동이다.\n\n" +
-        "피실험자는 바깥 세계의 일반적인 시선과 언어 정보를 적대시하고 있으며, " +
-        "자신이 직접 관찰하고 물리적으로 확인한 상만을 판단의 근거로 삼는다.\n\n" +
-        "특이점은 이러한 편집증적인 시각적 집착이 뇌파 안정기와 맞물렸을 때, " +
-        "주변 공간의 미세한 파동 굴절을 누구보다 빠르게 잡아내는 초감각으로 치환된다는 사실이다.";
+    // private const string Record01Body =
+    //     "[면담 요약서: 다이버 유안 (관리번호: D-004)]\n\n" +
+    //     "피실험자는 면담 시간 내내 극도의 긴장 상태를 유지했으며, " +
+    //     "탁자 위의 깨진 액정 화면에 비치는 나의 모습을 집요하게 시선으로 쫓는 기이한 행동을 보였다.\n\n" +
+    //     "이는 사건 발생 당일 내 눈에만 이상한 보랏빛 선이 보여서 피해야 한다고 주장했으나 " +
+    //     "아무도 믿어주지 않아 눈앞에서 가족을 잃었던 트라우마의 전형적인 방어 행동이다.\n\n" +
+    //     "피실험자는 바깥 세계의 일반적인 시선과 언어 정보를 적대시하고 있으며, " +
+    //     "자신이 직접 관찰하고 물리적으로 확인한 상만을 판단의 근거로 삼는다.\n\n" +
+    //     "특이점은 이러한 편집증적인 시각적 집착이 뇌파 안정기와 맞물렸을 때, " +
+    //     "주변 공간의 미세한 파동 굴절을 누구보다 빠르게 잡아내는 초감각으로 치환된다는 사실이다.";
 
     private void Awake()
     {
@@ -79,6 +82,9 @@ public class DiverRecordUI : MonoBehaviour
             Debug.Log("필수 오브젝트가 등록되지 않았습니다");
             return;
         }
+
+        // 캐릭터 정보 인터페이스 연결
+        charRepo = new SOCharacterRepository();
     }
 
     private void Start()
@@ -133,6 +139,15 @@ public class DiverRecordUI : MonoBehaviour
 
     public void Refresh()
     {
+        if (!useTestData)
+        {
+            // 세이브 데이터의 동조율 레벨을 기준으로 판별
+            SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+            linkRateLevel = charSaveData.linkRateLevel;
+            // 캐릭터가 레벨 1에 도달했을 때 심상기록 01 해금
+            memoryLogUnlocked = linkRateLevel >= 1;
+        }
+
         // {다이버 기본 정보 갱신}
         RefreshDiverInfo();
 
@@ -145,9 +160,16 @@ public class DiverRecordUI : MonoBehaviour
 
     private void RefreshDiverInfo()
     {
+        // 플레이어 저장 데이터 SO
+        PlayerSaveData saveData = PlayerSaveDataSO.Instance.currentData;
+        // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터 추출
+        CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
+        // 플레이어가 선택 한 캐릭터의 세이브 데이터 추출
+        SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+
         // {다이버 이름 표시}
         if (textDiverName != null)
-            textDiverName.text = DiverName;
+            textDiverName.text = charData.charName;
 
         // {다이버 역할 표시}
         if (textDiverRole != null)
@@ -157,9 +179,27 @@ public class DiverRecordUI : MonoBehaviour
         if (textLinkRate != null)
         {
             if (linkRateLevel >= 1)
-                textLinkRate.text = $"동조율 Lv.{linkRateLevel} ▲";
+                textLinkRate.text = $"동조율 Lv.{charSaveData.linkRateLevel} ▲";
             else
-                textLinkRate.text = $"동조율 Lv.{linkRateLevel}";
+                textLinkRate.text = $"동조율 Lv.{charSaveData.linkRateLevel}";
+        }
+
+        int currentLevel = PlayerSaveDataSO.Instance.GetLinkRateLevel();
+        int maxLevel = charData.requireLinkRatePerLevel.Length - 1;
+        if(sliderLinkRate != null)
+        {
+            // 최대 레벨 미만일 경우 비율 계산, 최대 레벨일 경우 슬라이더를 꽉 채움
+            if (currentLevel < maxLevel)
+            {
+                float requireExp = charData.requireLinkRatePerLevel[charSaveData.linkRateLevel+1];
+                
+                sliderLinkRate.maxValue = requireExp;
+                sliderLinkRate.value = PlayerSaveDataSO.Instance.GetlinkRatePoint();
+            }
+            else
+            {
+                sliderLinkRate.value = 1.0f;
+            }
         }
     }
 

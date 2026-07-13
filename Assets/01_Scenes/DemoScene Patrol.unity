@@ -13552,6 +13552,39 @@ MonoBehaviour:
   maxCreateCount: 2
   allowDuplicateLoot: 0
   lootOptions: []
+  useCategoryLoot: 1
+  categoryLootOptions:
+  - category: 3
+    weight: 60
+    minAmount: 1
+    maxAmount: 1
+    itemTids: 2d0100002e010000
+  - category: 4
+    weight: 30
+    minAmount: 1
+    maxAmount: 1
+    itemTids: 91010000
+  - category: 5
+    weight: 10
+    minAmount: 1
+    maxAmount: 1
+    itemTids: 
+  artifactLootOptions:
+  - grade: 1
+    itemTid: 1001
+    weight: 55
+  - grade: 2
+    itemTid: 1002
+    weight: 25
+  - grade: 3
+    itemTid: 1003
+    weight: 12
+  - grade: 4
+    itemTid: 1004
+    weight: 6
+  - grade: 5
+    itemTid: 1005
+    weight: 2
   openNoiseRange: 30
   openNoiseDuration: 1.8
 --- !u!1001 &730569933
@@ -39793,6 +39826,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   saveFilePath: 
+  playerRuntimeDataSO: {fileID: 11400000, guid: fa24d9c9857070545bf4a1ecd531daa4,
+    type: 2}
 --- !u!114 &8254926602438052759
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39808,6 +39843,9 @@ MonoBehaviour:
   lobbyScene:
     sceneAsset: {fileID: 102900000, guid: c67beebbfb6b5ad47b3fa2ef3f658b3d, type: 3}
     sceneName: LobbyScene
+  levelScene:
+    sceneAsset: {fileID: 0}
+    sceneName: 
   gameScene:
     sceneAsset: {fileID: 102900000, guid: 99c9720ab356a0642a771bea13969a05, type: 3}
     sceneName: DemoScene

@@ -105,6 +105,24 @@ public class EnemyMovement : MonoBehaviour
         aiRoutine = StartCoroutine(CheckRoutine());
     }
 
+    /// <summary>
+    /// NavMeshAgent가 실제로 이동한 방향과 속도를 매 프레임 애니메이터에 전달합니다.
+    /// AI 판단 주기와 분리해 코너 및 장애물 회피 중에도 스프라이트 방향이 이동과 어긋나지 않게 합니다.
+    /// </summary>
+    private void Update()
+    {
+        if (myStatus == null || myStatus.nowState == EnemyStatus.EnemyState.Dead)
+        {
+            return;
+        }
+
+        locomotion.SyncMovementAnimation(
+            transform,
+            navAgent,
+            RaiseWalkEvent,
+            RaiseLookDirEvent);
+    }
+
     private void OnDisable()
     {
         if (myStatus == null)
@@ -192,8 +210,7 @@ public class EnemyMovement : MonoBehaviour
         if (hasRegisteredNoise)
         {
             // 여러 번 소리를 들어도 첫 이탈 지점을 유지해 복귀 시 같은 기준점으로 돌아가게 합니다.
-            memory.CaptureReturnAnchor(transform.position);
-            memory.MarkNeedsReturnToPatrol();
+            memory.MarkNeedsReturnToPatrol(transform.position);
         }
     }
 
@@ -234,6 +251,12 @@ public class EnemyMovement : MonoBehaviour
     public void HandleAttackSwing(int swingIndex)
     {
         if (!enabled || myStatus == null || myStatus.nowState == EnemyStatus.EnemyState.Dead)
+        {
+            return;
+        }
+
+        // 애니메이션 이벤트가 늦게 도착해도 사망하거나 탈출한 이전 타겟을 향한 스윙은 시작하지 않습니다.
+        if (!EnemyPerception.IsTargetAvailable(brain.CurrentTarget))
         {
             return;
         }

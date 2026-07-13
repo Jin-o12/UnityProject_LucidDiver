@@ -12,11 +12,26 @@ public class EnemyBrain
 {
     [SerializeField] private float checkInterval = 0.2f;     // AI 판단 주기
 
+    [Header("Chase Aggro And Leash")]
+    [SerializeField, Min(1f)] private float maxAggro = 100f;                  // 추적을 완전히 유지하는 최대 어그로
+    [SerializeField, Min(0f)] private float sightLossGraceTime = 1f;         // 시야가 끊겨도 어그로 감소를 유예하는 시간
+    [SerializeField, Min(0f)] private float aggroDecayPerSecond = 25f;       // 일반 추적 구간에서 초당 감소하는 어그로
+    [SerializeField, Min(0f)] private float aggroRecoveryPerSecond = 50f;    // 추적 허용 구간에서 타겟을 볼 때 초당 회복하는 어그로
+    [SerializeField, Min(0f)] private float chaseLeashDistance = 16f;        // 루트에서 이 거리까지 새 추적과 어그로 회복을 허용
+    [SerializeField, Min(0f)] private float hardReturnDistance = 24f;        // 루트에서 이 거리를 넘으면 시야와 무관하게 즉시 복귀
+
     [NonSerialized] private WaitForSeconds checkingDelay;     // 판단 루프에서 재사용할 대기 객체
     [NonSerialized] private Transform currentTarget;          // 현재 추적 중인 플레이어
     [NonSerialized] private Transform aggroTarget;            // 강제 우선 추적 대상 (어그로)
     [NonSerialized] private float aggroEndTime;               // 강제 추적 종료 시간
+    [NonSerialized] private float currentAggro;                    // 현재 추적 유지에 남아 있는 어그로
+    [NonSerialized] private float sightLostStartTime = -1f;        // 시야가 최초로 끊긴 시각
+    [NonSerialized] private float lastTickTime;                     // 프레임 변화와 무관한 어그로 계산용 이전 판단 시각
 
+    /// <summary>
+    /// 지정한 타겟을 일정 시간 동안 강제 어그로 대상으로 등록합니다.
+    /// 실제 추적 갱신은 자기 순찰 루트의 추적 허용 구간 안에서만 이루어집니다.
+    /// </summary>
     public void ApplyAggro(Transform target, float duration)
     {
         aggroTarget = target;
@@ -29,6 +44,12 @@ public class EnemyBrain
     public void OnValidate()
     {
         checkInterval = Mathf.Max(0.05f, checkInterval);
+        maxAggro = Mathf.Max(1f, maxAggro);
+        sightLossGraceTime = Mathf.Max(0f, sightLossGraceTime);
+        aggroDecayPerSecond = Mathf.Max(0f, aggroDecayPerSecond);
+        aggroRecoveryPerSecond = Mathf.Max(0f, aggroRecoveryPerSecond);
+        chaseLeashDistance = Mathf.Max(0f, chaseLeashDistance);
+        hardReturnDistance = Mathf.Max(chaseLeashDistance, hardReturnDistance);
         checkingDelay = new WaitForSeconds(checkInterval);
     }
 
@@ -53,6 +74,8 @@ public class EnemyBrain
     public void ClearTarget()
     {
         currentTarget = null;
+        currentAggro = 0f;
+        sightLostStartTime = -1f;
     }
 
     /// <summary>
@@ -74,6 +97,10 @@ public class EnemyBrain
         Action<int, int> onLookDirEvent,
         Action onAttackEvent)
     {
+        float now = Time.time;
+        float tickDelta = lastTickTime > 0f ? Mathf.Max(0f, now - lastTickTime) : checkInterval;
+        lastTickTime = now;
+
         RefreshTarget(self, perception, noiseListener, memory, GlobalRuntimeData.GetPlayerList().Values);
 
         if (currentTarget == null)
@@ -103,7 +130,65 @@ public class EnemyBrain
         // 플레이어를 다시 보면 조사/복귀 흐름은 즉시 끊고 추적 정보로 전환합니다.
         noiseListener.Clear();
         memory.ClearPatrolWait();
-        memory.UpdateTargetTracking(currentTarget);
+
+        float enemyRouteDistance = memory.GetClosestPatrolPointDistance(self.position);
+        float targetRouteDistance = memory.GetClosestPatrolPointDistance(currentTarget.position);
+        float farthestRouteDistance = Mathf.Max(enemyRouteDistance, targetRouteDistance);
+
+        // 에너미 또는 타겟이 활동 한계를 넘으면 남은 어그로와 시야를 무시하고 즉시 복귀합니다.
+        if (memory.HasPatrolRoute && farthestRouteDistance > hardReturnDistance)
+        {
+            StopChaseAndReturn(self.position, agent, status, memory, locomotion, onWalkEvent);
+            return;
+        }
+
+        bool isInsideChaseArea = !memory.HasPatrolRoute || farthestRouteDistance <= chaseLeashDistance;
+        float sqrDistToTarget = EnemyMathUtility.GetPlanarSqrDistance(self.position, currentTarget.position);
+        bool canSeeTarget = perception.CanSeeTrackedTarget(self, currentTarget);
+        bool canMaintainCloseCombatTarget =
+            isInsideChaseArea &&
+            combat.IsWithinCloseCombatAwareness(sqrDistToTarget) &&
+            perception.HasClearLineOfSight(self, currentTarget);
+        bool hasTargetAwareness = canSeeTarget || canMaintainCloseCombatTarget;
+
+        if (hasTargetAwareness && isInsideChaseArea)
+        {
+            memory.UpdateTargetTracking(currentTarget);
+            sightLostStartTime = -1f;
+            currentAggro = Mathf.Min(maxAggro, currentAggro + aggroRecoveryPerSecond * tickDelta);
+
+            // 근접 교전에서는 이동 속도가 거의 0이어도 플레이어를 향해 회전해
+            // 원형 이동 중 공격 시야가 영구적으로 끊기지 않게 합니다.
+            if (canMaintainCloseCombatTarget)
+            {
+                locomotion.FacePosition(self, currentTarget.position, onLookDirEvent);
+            }
+        }
+        else if (!isInsideChaseArea)
+        {
+            // 완충 구간에서는 타겟이 보여도 어그로를 회복하지 않고 빠르게 소진합니다.
+            // 이때 새 위치 샘플도 저장하지 않아 루트 바깥으로 추적 목적지가 계속 늘어나는 것을 막습니다.
+            sightLostStartTime = sightLostStartTime < 0f ? now : sightLostStartTime;
+            currentAggro = Mathf.Max(0f, currentAggro - aggroDecayPerSecond * 2f * tickDelta);
+        }
+        else
+        {
+            if (sightLostStartTime < 0f)
+            {
+                sightLostStartTime = now;
+            }
+
+            if (now - sightLostStartTime >= sightLossGraceTime)
+            {
+                currentAggro = Mathf.Max(0f, currentAggro - aggroDecayPerSecond * tickDelta);
+            }
+        }
+
+        if (currentAggro <= 0f)
+        {
+            StopChaseAndReturn(self.position, agent, status, memory, locomotion, onWalkEvent);
+            return;
+        }
 
         if (status.isAttacking)
         {
@@ -111,8 +196,7 @@ public class EnemyBrain
             return;
         }
 
-        float sqrDistToTarget = EnemyMathUtility.GetPlanarSqrDistance(self.position, currentTarget.position);
-        if (combat.CanStartAttack(sqrDistToTarget))
+        if (hasTargetAwareness && isInsideChaseArea && combat.CanStartAttack(sqrDistToTarget))
         {
             memory.ClearChasePlan();
             locomotion.Stop(agent, onWalkEvent);
@@ -128,12 +212,13 @@ public class EnemyBrain
             return;
         }
 
-        if (perception.CanKeepAwareness(self.position, currentTarget))
         {
-            Vector3 chaseDestination = currentTarget.position;
+            Vector3 chaseDestination = hasTargetAwareness && isInsideChaseArea
+                ? currentTarget.position
+                : memory.LastKnownTargetPosition;
             EnemyMemory.ChaseMoveMode chaseMoveMode = EnemyMemory.ChaseMoveMode.Direct;
 
-            if (interceptPlanner != null &&
+            if (canSeeTarget && isInsideChaseArea && interceptPlanner != null &&
                 interceptPlanner.TryPlanIntercept(self, currentTarget, memory, out Vector3 interceptDestination))
             {
                 chaseDestination = interceptDestination;
@@ -151,11 +236,25 @@ public class EnemyBrain
                 onLookDirEvent);
             return;
         }
+    }
 
+    /// <summary>
+    /// 현재 추적 정보를 모두 정리하고 현 위치에서 가장 가까운 자기 순찰 포인트로 복귀를 예약합니다.
+    /// </summary>
+    private void StopChaseAndReturn(
+        Vector3 currentPosition,
+        NavMeshAgent agent,
+        EnemyStatus status,
+        EnemyMemory memory,
+        EnemyLocomotion locomotion,
+        Action<bool> onWalkEvent)
+    {
         currentTarget = null;
+        currentAggro = 0f;
+        sightLostStartTime = -1f;
         memory.ClearTargetTracking();
         memory.ClearChasePlan();
-        memory.MarkNeedsReturnToPatrol();
+        memory.MarkNeedsReturnToPatrol(currentPosition);
         locomotion.SetIdle(agent, status, onWalkEvent);
     }
 
@@ -170,14 +269,26 @@ public class EnemyBrain
         EnemyMemory memory,
         ICollection<GameObject> players)
     {
+        // 현재 플레이어가 사망하거나 탈출했다면 기존 어그로와 추적 기억을 즉시 제거합니다.
+        // 이후 같은 틱에서 다른 생존 플레이어를 다시 탐색하므로 멀티플레이에서도 시체를 계속 점유하지 않습니다.
+        if (currentTarget != null && !EnemyPerception.IsTargetAvailable(currentTarget))
+        {
+            currentTarget = null;
+            currentAggro = 0.0f;
+            sightLostStartTime = -1.0f;
+            memory.ClearTargetTracking();
+            memory.ClearChasePlan();
+        }
+
         bool hadTarget = currentTarget != null;
 
-        // 1. 어그로 타겟이 유효한 경우 최우선 타겟으로 덮어씌움
+        // 강제 어그로도 추적 허용 구간을 벗어나면 갱신하지 않아 활동 반경 제한을 우회하지 못하게 합니다.
         if (aggroTarget != null)
         {
-            if (Time.time < aggroEndTime)
+            if (Time.time < aggroEndTime && IsInsideChaseArea(memory, self.position, aggroTarget.position))
             {
                 currentTarget = aggroTarget;
+                currentAggro = maxAggro;
                 if (!hadTarget)
                 {
                     memory.CaptureReturnAnchor(self.position);
@@ -198,14 +309,27 @@ public class EnemyBrain
             return;
         }
 
-        if (currentTarget != null && perception.CanKeepAwareness(self.position, currentTarget))
+        if (currentTarget != null)
+        {
+            return;
+        }
+
+        // 복귀 완충 구간에서는 새 타겟을 획득하지 않아 복귀와 재추적이 매 틱 반복되는 현상을 막습니다.
+        if (!IsInsideChaseArea(memory, self.position))
         {
             return;
         }
 
         currentTarget = perception.FindVisibleTarget(self, players);
+        if (currentTarget != null && !IsInsideChaseArea(memory, self.position, currentTarget.position))
+        {
+            currentTarget = null;
+        }
+
         if (currentTarget != null)
         {
+            currentAggro = maxAggro;
+            sightLostStartTime = -1f;
             // 순찰이나 복귀 상태에서 처음 전투로 전환될 때만 복귀 기준점을 저장합니다.
             if (!hadTarget)
             {
@@ -215,6 +339,26 @@ public class EnemyBrain
             noiseListener.Clear();
             memory.ClearPatrolWait();
         }
+    }
+
+    /// <summary>
+    /// 에너미와 선택적 타겟이 모두 자기 순찰 루트의 추적 허용 반경 안에 있는지 확인합니다.
+    /// 루트가 없는 기존 에너미는 이전 동작을 유지하도록 거리 제한을 적용하지 않습니다.
+    /// </summary>
+    private bool IsInsideChaseArea(EnemyMemory memory, Vector3 enemyPosition, Vector3? targetPosition = null)
+    {
+        if (memory == null || !memory.HasPatrolRoute)
+        {
+            return true;
+        }
+
+        if (memory.GetClosestPatrolPointDistance(enemyPosition) > chaseLeashDistance)
+        {
+            return false;
+        }
+
+        return !targetPosition.HasValue ||
+               memory.GetClosestPatrolPointDistance(targetPosition.Value) <= chaseLeashDistance;
     }
 
     /// <summary>
@@ -280,27 +424,32 @@ public class EnemyBrain
             return false;
         }
 
-        if (locomotion.HasReachedDestination(self.position, patrolPoint.position, memory.GetPointReachDistance()))
+        if (!memory.HasPatrolDestination && !memory.TryCreatePatrolDestination(agent))
+        {
+            locomotion.SetIdle(agent, status, onWalkEvent);
+            return true;
+        }
+
+        Vector3 patrolDestination = memory.PatrolDestination;
+        if (locomotion.HasReachedDestination(self.position, patrolDestination, memory.GetPointReachDistance()))
         {
             locomotion.Stop(agent, onWalkEvent);
             status.SetNowState(EnemyStatus.EnemyState.Patrol);
 
             if (!memory.IsWaitingAtPatrolPoint)
             {
-                memory.BeginPatrolWait();
-
-                if (memory.HasCompletedPatrolWait())
-                {
-                    memory.AdvancePatrolIndex();
-                }
-
+                memory.BeginPatrolWait(memory.GetRandomPatrolWaitTime());
                 return true;
             }
 
             if (memory.HasCompletedPatrolWait())
             {
                 memory.ClearPatrolWait();
-                memory.AdvancePatrolIndex();
+                memory.CompleteWanderDestination();
+                if (memory.ShouldAdvancePatrolPoint)
+                {
+                    memory.AdvanceToRandomNearbyPoint();
+                }
             }
 
             return true;
@@ -310,7 +459,7 @@ public class EnemyBrain
         locomotion.MoveTo(
             self,
             agent,
-            patrolPoint.position,
+            patrolDestination,
             status,
             EnemyStatus.EnemyState.Patrol,
             onWalkEvent,

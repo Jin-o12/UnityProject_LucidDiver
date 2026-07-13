@@ -3,7 +3,7 @@
 /// </summary>
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "HealEffect_", menuName = "Item Data/Effects/Heal")]
+//[CreateAssetMenu(fileName = "HealEffect_", menuName = "Item Data/Effects/Heal")]
 public class HealEffect : ItemEffect
 {
     // public override void Execute(GameObject _target)
