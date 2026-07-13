@@ -696,6 +696,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   brain:
     checkInterval: 0.2
+    maxAggro: 100
+    sightLossGraceTime: 1
+    aggroDecayPerSecond: 25
+    aggroRecoveryPerSecond: 50
+    chaseLeashDistance: 16
+    hardReturnDistance: 24
   memory:
     homePosition: {x: 0, y: 0, z: 0}
     patrolRoute: {fileID: 0}
@@ -714,12 +720,12 @@ MonoBehaviour:
     currentChaseMoveMode: 0
     currentChaseDestination: {x: 0, y: 0, z: 0}
   perception:
-    sightRange: 10
-    awarenessRange: 15
-    hearingRange: 45
-    sightAngle: 100
+    sightRange: 8
+    awarenessRange: 12
+    hearingRange: 20
+    sightAngle: 90
     eyeHeight: 1.4
-    requireLineOfHearing: 0
+    requireLineOfHearing: 1
     hearingObstacleMask:
       serializedVersion: 2
       m_Bits: 1024
@@ -731,6 +737,8 @@ MonoBehaviour:
     investigateNavMeshSampleDistance: 2.5
   locomotion:
     moveSpeed: 4
+    visualDirectionAngle: 45
+    movingSpeedThreshold: 0.05
   combat:
     attackStartRange: 5
     attackHitRange: 1.2
