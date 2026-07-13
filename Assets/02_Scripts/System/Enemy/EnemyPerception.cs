@@ -96,6 +96,43 @@ public class EnemyPerception
     }
 
     /// <summary>
+    /// 현재 타겟이 최초 감지 거리, 시야각, 장애물 판정을 모두 통과하는지 확인합니다.
+    /// 추적 중인 타겟의 시야 상실 여부를 어그로와 분리해서 계산할 때 사용합니다.
+    /// </summary>
+    public bool CanSeeTarget(Transform self, Transform target)
+    {
+        return CanSeeTargetWithinRange(self, target, sightRangeSqr);
+    }
+
+    /// <summary>
+    /// 이미 발견한 타겟은 최초 발견 거리보다 넓은 인지 유지 거리 안에서 시야를 판정합니다.
+    /// 장애물과 시야각 판정은 그대로 적용되므로 벽 뒤 위치를 계속 아는 현상은 방지합니다.
+    /// </summary>
+    public bool CanSeeTrackedTarget(Transform self, Transform target)
+    {
+        return CanSeeTargetWithinRange(self, target, awarenessRangeSqr);
+    }
+
+    /// <summary>
+    /// 지정된 거리 제곱값 안에서 시야각과 장애물 판정을 함께 수행합니다.
+    /// 최초 감지와 추적 유지 판정이 동일한 시야 규칙을 공유하도록 만든 내부 공통 함수입니다.
+    /// </summary>
+    private bool CanSeeTargetWithinRange(Transform self, Transform target, float rangeSqr)
+    {
+        if (self == null || target == null)
+        {
+            return false;
+        }
+
+        if (EnemyMathUtility.GetPlanarSqrDistance(self.position, target.position) > rangeSqr)
+        {
+            return false;
+        }
+
+        return IsTargetInSight(self, target);
+    }
+
+    /// <summary>
     /// 전달된 소리가 청각 범위 안에 있고, 필요하면 벽 차단 판정까지 통과하는지 확인합니다.
     /// </summary>
     public bool CanHear(Transform self, NoiseStimulus stimulus)

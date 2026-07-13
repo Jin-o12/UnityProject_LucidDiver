@@ -12,17 +12,18 @@ public class EnemyLocomotion
 {
     [SerializeField] private float moveSpeed = 4.0f;     // 기본 추적 및 순찰 이동 속도
 
-    // 플레이어와 같은 쿼터뷰 기준으로 적의 시각 방향을 판정하기 위한 보정 각도입니다.
-    // 월드 forward를 그대로 쓰면 화면에서 보이는 좌우/상하와 어긋날 수 있어 애니메이션 동기화에 사용합니다.
+    [Header("Movement Animation Sync")]
+    [SerializeField] private float visualDirectionAngle = 45.0f;      // 월드 이동 방향을 쿼터뷰 화면 방향으로 변환할 보정 각도
+    [SerializeField, Min(0.01f)] private float movingSpeedThreshold = 0.05f; // 실제 걷기 애니메이션을 켤 최소 이동 속도
+
     [SerializeField] private LayerMask lungeObstacleMask; // 공격 돌진을 막는 벽/장애물 레이어
     [SerializeField] private float lungeWallBuffer = 0.15f; // 벽 앞에서 멈추도록 남기는 여유 거리
     [SerializeField] private float lungeCollisionRadius = 0.35f; // 돌진 경로를 검사할 때 사용할 반지름
 
-    private const float VisualDirectionAngle = 45.0f;
-
     public void OnValidate()
     {
         moveSpeed = Mathf.Max(0.1f, moveSpeed);
+        movingSpeedThreshold = Mathf.Max(0.01f, movingSpeedThreshold);
         lungeWallBuffer = Mathf.Max(0.0f, lungeWallBuffer);
         lungeCollisionRadius = Mathf.Max(0.05f, lungeCollisionRadius);
     }
@@ -36,6 +37,9 @@ public class EnemyLocomotion
         if (agent != null)
         {
             agent.speed = moveSpeed;
+            // 루트 회전과 스프라이트 방향을 같은 실제 이동 벡터로 갱신하기 위해
+            // NavMeshAgent의 자동 회전 대신 SyncMovementAnimation에서 회전을 단일 관리합니다.
+            agent.updateRotation = false;
         }
     }
 
@@ -71,8 +75,49 @@ public class EnemyLocomotion
         agent.isStopped = false;
         agent.SetDestination(destination);
         status.SetNowState(moveState);
-        onWalkEvent?.Invoke(true);
-        FacePosition(self, destination, onLookDirEvent);
+        // 걷기 여부와 방향은 목적지가 아니라 매 프레임 실제 NavMesh 이동 벡터로 갱신합니다.
+    }
+
+    /// <summary>
+    /// NavMeshAgent의 실제 속도와 경로 진행 방향을 걷기 및 방향 애니메이션에 동기화합니다.
+    /// 장애물 회피나 코너 이동 시 최종 목적지가 아닌 현재 경로 방향을 사용해 문워크 현상을 방지합니다.
+    /// </summary>
+    public void SyncMovementAnimation(
+        Transform self,
+        NavMeshAgent agent,
+        Action<bool> onWalkEvent,
+        Action<int, int> onLookDirEvent)
+    {
+        if (self == null || agent == null || !agent.enabled || !agent.isOnNavMesh)
+        {
+            onWalkEvent?.Invoke(false);
+            return;
+        }
+
+        Vector3 actualVelocity = agent.velocity;
+        actualVelocity.y = 0.0f;
+
+        float thresholdSqr = movingSpeedThreshold * movingSpeedThreshold;
+        bool isMoving = !agent.isStopped && actualVelocity.sqrMagnitude > thresholdSqr;
+        onWalkEvent?.Invoke(isMoving);
+
+        if (!isMoving)
+        {
+            return;
+        }
+
+        // desiredVelocity는 회피와 다음 코너가 반영된 진행 방향입니다.
+        // 경로 계산 직후 값이 아직 없으면 실제 속도를 사용해 방향 갱신이 끊기지 않게 합니다.
+        Vector3 movementDirection = agent.desiredVelocity;
+        movementDirection.y = 0.0f;
+        if (movementDirection.sqrMagnitude <= thresholdSqr)
+        {
+            movementDirection = actualVelocity;
+        }
+
+        movementDirection.Normalize();
+        self.rotation = Quaternion.LookRotation(movementDirection, Vector3.up);
+        UpdateLookDirection(movementDirection, onLookDirEvent);
     }
 
     /// <summary>
@@ -123,7 +168,7 @@ public class EnemyLocomotion
         }
 
         self.LookAt(lookTarget);
-        UpdateLookDirection(self, onLookDirEvent);
+        UpdateLookDirection(self.forward, onLookDirEvent);
     }
 
     /// <summary>
@@ -148,7 +193,7 @@ public class EnemyLocomotion
             0.0f);
 
         self.rotation = Quaternion.LookRotation(limitedForward, Vector3.up);
-        UpdateLookDirection(self, onLookDirEvent);
+        UpdateLookDirection(limitedForward, onLookDirEvent);
     }
 
     /// <summary>
@@ -291,9 +336,9 @@ public class EnemyLocomotion
     /// 쿼터니언 y값을 직접 쓰지 않고 self.forward를 쿼터뷰 화면 기준으로 보정해서
     /// 실제 적이 바라보는 방향과 스프라이트 애니메이션 방향이 어긋나지 않도록 맞춰줍니다.
     /// </summary>
-    private void UpdateLookDirection(Transform self, Action<int, int> onLookDirEvent)
+    private void UpdateLookDirection(Vector3 worldDirection, Action<int, int> onLookDirEvent)
     {
-        Vector3 flatForward = self.forward;
+        Vector3 flatForward = worldDirection;
         flatForward.y = 0.0f;
 
         if (flatForward.sqrMagnitude <= 0.001f)
@@ -301,11 +346,15 @@ public class EnemyLocomotion
             return;
         }
 
-        Quaternion visualRotation = Quaternion.Euler(0.0f, VisualDirectionAngle, 0.0f);
+        Quaternion visualRotation = Quaternion.Euler(0.0f, visualDirectionAngle, 0.0f);
         Vector3 visualForward = visualRotation * flatForward.normalized;
 
-        int lookUp = visualForward.z > 0.0f ? 1 : 0;
-        int lookRight = visualForward.x > 0.0f ? -1 : 1;
-        onLookDirEvent?.Invoke(lookUp, lookRight);
+        // Animator의 LookDir는 0이 뒷모습, 1이 눈이 보이는 정면 클립입니다.
+        // 화면 아래쪽 이동에서는 정면, 위쪽 이동에서는 뒷모습이 선택되도록 Z 부호를 변환합니다.
+        int lookDir = visualForward.z > 0.0f ? 0 : 1;
+        // 다크 스피릿 원본 스프라이트는 localScale.x가 1일 때 오른쪽을 바라봅니다.
+        // 화면 이동 방향의 X 부호를 그대로 스케일에 전달해 좌우 문워크를 방지합니다.
+        int horizontalScale = visualForward.x > 0.0f ? 1 : -1;
+        onLookDirEvent?.Invoke(lookDir, horizontalScale);
     }
 }
