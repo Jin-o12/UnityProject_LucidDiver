@@ -11,19 +11,11 @@ public class SessionManager : MonoBehaviour
     public static SessionManager Instance { get; private set; } 
     public GlobalRuntimeData runtimeData { get; private set; }      // 게임 내 지정된 오브젝트들에 대한 데이터
 
-    // 플레이어 데이터 (현재 미사용)
-    public PlayerSaveData playerData { get; private set; }          // 실질적인 플레이어 데이터
-
     private void Awake()
     {
         if(Instance==null)
             Instance = this;
         
         runtimeData = new GlobalRuntimeData();
-    }
-
-    public void SaveGame()
-    {
-        DataManager.Instance.SaveGame();
     }
 }
