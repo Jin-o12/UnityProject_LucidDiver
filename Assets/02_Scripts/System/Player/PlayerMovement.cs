@@ -283,11 +283,13 @@ public class PlayerMovement : MonoBehaviour
         if (sprintInput)
         {
             NoiseSystem.Emit(NoiseType.Run, transform.position, gameObject, runNoiseRange);
+            VFXService.Instance?.Play(GameplayVFXIds.PlayerFootstepRun, transform.position, transform.rotation);
             moveNoiseTimer = Mathf.Max(0.05f, runNoiseInterval);
             return;
         }
 
         NoiseSystem.Emit(NoiseType.Walk, transform.position, gameObject, walkNoiseRange);
+        VFXService.Instance?.Play(GameplayVFXIds.PlayerFootstepWalk, transform.position, transform.rotation);
         moveNoiseTimer = Mathf.Max(0.05f, walkNoiseInterval);
     }
 
@@ -295,6 +297,8 @@ public class PlayerMovement : MonoBehaviour
     public void PlayerEvade()
     {
         isEvading = true;
+
+        VFXService.Instance?.Play(GameplayVFXIds.PlayerEvade, transform.position, transform.rotation);
 
         // 구르기 입력을 애니메이터에 전달
         animator.SetTrigger("Evade");

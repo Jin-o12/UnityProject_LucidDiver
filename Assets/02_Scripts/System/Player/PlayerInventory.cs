@@ -294,6 +294,9 @@ public class PlayerInventory : MonoBehaviour
         }
 
         dropItem.Initialize(itemData, dropCount);
+
+        VFXService.Instance?.Play(GameplayVFXIds.ItemDrop, dropPosition);
+
         RemoveAmount(_slotIndex, dropCount);
 
         onDropped?.Invoke();

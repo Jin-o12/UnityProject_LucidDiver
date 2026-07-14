@@ -261,10 +261,16 @@ public class EnemyMovement : MonoBehaviour
             return;
         }
 
+        Transform swingOrigin = attackOrigin != null ? attackOrigin : transform;
+        string slashVfxId = swingIndex == 0
+            ? GameplayVFXIds.EnemySlash01
+            : GameplayVFXIds.EnemySlash02;
+        VFXService.Instance?.Play(slashVfxId, swingOrigin.position, transform.rotation);
+
         StartCoroutine(combat.ExecuteSwing(
             transform,
             brain.CurrentTarget,
-            attackOrigin != null ? attackOrigin : transform,
+            swingOrigin,
             navAgent,
             locomotion,
             RaiseLookDirEvent,

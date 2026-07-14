@@ -9,6 +9,8 @@ public class ExitPoint : MonoBehaviour, IInteractable
     [SerializeField] private GameObject timerCanvas;    //탈출 타이머 캔버스 (P0에서는 사용 안함)
     [SerializeField] private float escapeTime = 3.0f;   //탈출 채널링 시간 (즉시 탈출하려면 0초)
     private Coroutine escapeCoroutine;                  //탈출 채털링 코루틴
+    private PooledVFX activeEscapeVfx;                  //탈출 성공/취소까지 유지할 채널링 VFX
+    private int escapeVfxRequestVersion;                //비동기 로드 중 취소된 요청을 구분하는 버전
     public event Action<float> timerOn;                 //타이머 출력 이벤트 
 
     private void Awake()
@@ -28,6 +30,7 @@ public class ExitPoint : MonoBehaviour, IInteractable
     private void OnDisable()
     {
         GlobalEventBus.OnEscapeFailure -= EscapeFailure;
+        EndEscapeChannelVfx();
     }
 
     public bool Interact(int playerID) 
@@ -59,20 +62,29 @@ public class ExitPoint : MonoBehaviour, IInteractable
         //플레이어 상태를 escape로 변경하고 탈출 판정 시작
         ResultServiceLocator.Instance.HandleEscapeStart(_playerID);
         isEscaping = true;
+        BeginEscapeChannelVfx();
         // 탈출 채널링 시간 동안 대기
         yield return new WaitForSeconds(escapeTime);
         
         // 채널링 종료 후 탈출 성공 판정 이벤트를 발송
         Debug.Log("타이머 종료");
         SetTimerCanvasActive(false);
+        isEscaping = false;
+        EndEscapeChannelVfx();
+        VFXService.Instance?.Play(GameplayVFXIds.EscapeSuccess, transform.position, transform.rotation);
         GlobalEventBus.OnEscapeRequest?.Invoke(true);
     }
 
     private void EscapeFailure(int _playerID)  //플레이어의 탈출 채널링 코루틴을 중단하는 판정을 전달
     {
+        if (!isEscaping)
+            return;
+
         //플레이어 상태를 idle로 변경하고 탈출 판정 중단
         ResultServiceLocator.Instance.HandleEscapeIdle(_playerID);
         isEscaping = false;
+        EndEscapeChannelVfx();
+        VFXService.Instance?.Play(GameplayVFXIds.EscapeCancel, transform.position, transform.rotation);
 
         //탈출 타이머 출력 종료
         SetTimerCanvasActive(isEscaping);
@@ -83,6 +95,36 @@ public class ExitPoint : MonoBehaviour, IInteractable
             StopCoroutine(escapeCoroutine);
             escapeCoroutine = null;
         }
+    }
+
+    /// <summary>
+    /// Addressable 로드를 기다린 뒤 채널링이 여전히 진행 중일 때만 VFX 인스턴스를 유지합니다.
+    /// </summary>
+    private async void BeginEscapeChannelVfx()
+    {
+        VFXService service = VFXService.Instance;
+        if (service == null)
+            return;
+
+        int requestVersion = ++escapeVfxRequestVersion;
+        PooledVFX rentedVfx = await service.PlayAsync(
+            GameplayVFXIds.EscapeChannel,
+            VFXContext.At(transform.position, transform.rotation));
+
+        if (this == null || !isEscaping || requestVersion != escapeVfxRequestVersion)
+        {
+            rentedVfx?.Release();
+            return;
+        }
+
+        activeEscapeVfx = rentedVfx;
+    }
+
+    private void EndEscapeChannelVfx()
+    {
+        escapeVfxRequestVersion++;
+        activeEscapeVfx?.Release();
+        activeEscapeVfx = null;
     }
 
     private void ResolveTimerCanvasReference()

@@ -62,6 +62,9 @@ public class PlayerWeapon : MonoBehaviour
         if (weaponData == null || firePoint == null)
             return;
 
+        // 총구 위치와 방향을 기준으로 발사 VFX를 재생합니다.
+        VFXService.Instance?.Play(GameplayVFXIds.PlayerMuzzle, firePoint.position, firePoint.rotation);
+
         apPort.SetControlParamFloat("Yuan_Recoil", 1.0f);
         apPort.SetControlParamFloat("Yuan_B_Recoil", 1.0f);
         StartCoroutine(PlayRecoilAnimation(0.5f, "Yuan_Recoil"));
@@ -119,6 +122,18 @@ public class PlayerWeapon : MonoBehaviour
             {
                 traceColor = hitTraceColor;
                 target.TakeDamage(weaponData.AtkValue);
+                VFXService.Instance?.Play(
+                    GameplayVFXIds.BulletImpactEnemy,
+                    shotHit.point,
+                    Quaternion.LookRotation(shotHit.normal));
+            }
+            else
+            {
+                // 데미지 대상이 아닌 벽과 장애물은 월드 탄착 VFX로 구분합니다.
+                VFXService.Instance?.Play(
+                    GameplayVFXIds.BulletImpactWorld,
+                    shotHit.point,
+                    Quaternion.LookRotation(shotHit.normal));
             }
 
             // 디버그 출력

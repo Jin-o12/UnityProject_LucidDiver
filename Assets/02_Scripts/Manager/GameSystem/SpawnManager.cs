@@ -300,6 +300,8 @@ public class SpawnManager : MonoBehaviour
             movement.InitializeSpawnContext(pointTransform.position, patrolRoute, startPatrolIndex);
         }
 
+        VFXService.Instance?.Play(GameplayVFXIds.EnemySpawn, spawnedEnemy.transform.position, spawnedEnemy.transform.rotation);
+
         // 생성된 적 오브젝트를 런타임 데이터에 등록
         return true;
     }
