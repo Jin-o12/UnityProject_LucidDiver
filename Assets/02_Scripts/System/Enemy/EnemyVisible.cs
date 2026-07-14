@@ -7,11 +7,11 @@ public class EnemyVisible : MonoBehaviour
 {
     [Tooltip("apPortrait가 포함된 시각 오브젝트 (혹은 자기 자신)")]
     [SerializeField] private GameObject spriteObject;
-    private PlayerSight playerSight;    // 플레이어 시야 스크립트
-    private Rigidbody rb;               // 적 몸통 오브젝트
-    private apPortrait portrait;
-    private Renderer[] cachedRenderers;
-    private bool isSelfSpriteObject;
+    private PlayerSight playerSight;            // 플레이어 시야 스크립트
+    private Rigidbody rb;                       // 적 몸통 오브젝트
+    private apPortrait portrait;                // 스프라이트 포트레이트
+    private Renderer[] cachedRenderers;         // 스프라이트 렌더러
+    [SerializeField] private Canvas uiCanvas;   // 체력 바 캔버스
     private void Awake()
     {
         if (spriteObject == null) spriteObject = gameObject;
@@ -47,5 +47,7 @@ public class EnemyVisible : MonoBehaviour
             if (r != null && r.enabled != visible)
                 r.enabled = visible;
         }
+
+        uiCanvas.enabled = visible;
     }
 }
