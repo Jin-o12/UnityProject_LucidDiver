@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -19,13 +19,8 @@ public class ResultUI : MonoBehaviour
     public int linkRateGain = 1;                //세션 탈출 성공 시 가산되는 동조율 단계 증가치
     public bool linkRateUp = false;             //동조율 단계가 증가했는지 여부 체크
     public bool memoryLogUnlocked = false;      //개인 심상 기록 01의 해금 여부 플래그 (기본 false, 탈출 성공 시 기억 파편 수가 1개 이상이면 true)
-    public int manaStoneCount;                  //이번 세션에서 플레이어가 파밍하여 탈출 성공한 기묘한 사탕 개수
-    public int potionCount;                     //이번 세션에서 플레이어가 파밍하여 탈출 성공한 변질된 붕대 개수
     public string returnDialogueID;             //세션 종료 판정에 따라 로비 복귀 시 출력해야 할 귀환 대사 ID
     public int enemyKillCount;                  //이번 세션에서 플레이어가 처치한 적 개체의 누적 수.
-    public string _lobbySceneName;              //로비로 돌아가기 처리 시 돌아가는 신 이름
-    public ItemData potionData;                 //변질된 붕대 아이템 데이터
-    public ItemData manaStoneData;              //기묘한 사탕 아이템 데이터
     public ItemData memoryFragmentData;         //기억 파편 아이템 데이터
     public int invenSlotsCount;                //인벤토리 슬롯 개수 (각성 보존 슬롯 인덱스 값 보정)
 
@@ -37,13 +32,15 @@ public class ResultUI : MonoBehaviour
     public TMP_Text text_getMemoryFragment;         //기억 파편 획득 텍스트
     public TMP_Text text_linkRate;                  //동조율 상승 텍스트
     public TMP_Text text_memoryLogUnlocked;         //심상 기록 해금 텍스트
-    public Image image_manaStoneIcon;               //기묘한 사탕 아이콘 이미지
-    public TMP_Text text_manaStoneCount;            //기묘한 사탕 획득 텍스트
-    public Image image_potionIcon;                  //변질된 붕대 아이콘 이미지
-    public TMP_Text text_potionCount;               //변질된 붕대 획득 텍스트
     public Image image_manaStoneLost;               //탈출 실패 시 기묘한 사탕 유실 이펙트 이미지
     public Image image_potionLost;                  //탈출 실패 시 변질된 붕대 유실 이펙트 이미지
     public TMP_Text text_returnDialogue;            //귀환 대사 텍스트
+    
+    [Header("동적 슬롯 컨테이너 (UI 컴포넌트)")]
+    public Transform acquiredItemsContainer;             // 획득 아이템 목록 출력 콘테이너
+    public GameObject acquiredItemPrefab;                // 획득 아이템 슬롯 프리팹 (Image 1개, TMP_Text 1개 구조)
+    private List<GameObject> acquiredItemSlotsObj = new(); // 생성된 동적 슬롯 추적 리스트
+
     public Transform safeSlotContainer;             //각성 보존 슬롯 출력 콘테이너
     public List<GameObject> safeSlotsObj = new();   //각성 보존 슬롯 리스트
 
@@ -52,20 +49,18 @@ public class ResultUI : MonoBehaviour
     public Sprite Banner_Failed;    //강제 각성(탈출 실패) 시 패널 타이틀 스프라이트
     public GameObject slotPrefab;   //각성 보존 슬롯 칸 프리팹
 
-
+    // JSON 데이터 저장소 접근용 리포지토리 인스턴스
+    private IItemDataRepository itemRepo;
 
     private void OnEnable()
     {
+        itemRepo = new LocalJsonItemRepository();
         RefreshResult();
     }
 
     public void UpdateResultUI(bool _result)
     {
         extractionResult = _result;
-        /// ResultManager에서 데이터 베이스로부터 찾아 대입할 것이기 때문에 주석처리 
-        //potionCount = FindItemCount(301);
-        //manaStoneCount = FindItemCount(302);
-        //memoryFragmentCount = FindItemCount(401);
         RefreshResult();
     }
 
@@ -85,10 +80,8 @@ public class ResultUI : MonoBehaviour
         PrintItemIcons();  // 아이템 아이콘을 호출
     }
 
-    private void PrintItemIcons()  // 아이템 아이콘 스프라이트 가져오기 메소드
+    private void PrintItemIcons()  // 아이템 아이콘 스프라이트 가져오기 메소드 (기억 파편 유지)
     {
-        _ = LoadSpriteAsync(potionData, image_potionIcon);
-        _ = LoadSpriteAsync(manaStoneData, image_manaStoneIcon);
         _ = LoadSpriteAsync(memoryFragmentData, image_memoryFragmentIcon);
     }
 
@@ -128,23 +121,81 @@ public class ResultUI : MonoBehaviour
             : $"개인 심상 기록 해금 <color=#ff0000>실패</color>";
     }
 
-    private void InventoryUpdate()  //인벤토리에 파밍한 마나석과 회복약을 창고에 누적하는 메소드
+    private void InventoryUpdate()  //인벤토리에 파밍한 아이템들을 창고에 누적하는 동적 슬롯 생성 메소드
     {
-        if (extractionResult)  //탈출 성공 (extractionResult == true) 시 처리
+        // 기존 생성된 슬롯 삭제
+        foreach (var obj in acquiredItemSlotsObj)
         {
-            // 기묘한 사탕, 변질된 붕대 창고 저장 텍스트 출력
-            text_manaStoneCount.text = $"기묘한 사탕 ×{manaStoneCount}\n창고 저장";
-            text_potionCount.text = $"변질된 붕대 ×{potionCount}\n창고 저장";
+            if (obj != null) Destroy(obj);
         }
-        else  //강제 각성 (extractionResult == false) 시 처리
+        acquiredItemSlotsObj.Clear();
+
+        if (acquiredItemsContainer == null || acquiredItemPrefab == null)
         {
-            // 기묘한 사탕, 변질된 붕대 유실 텍스트 출력
-            text_manaStoneCount.text = $"기묘한 사탕 <color=#ff0000>전체 유실</color>\n(0개 저장)";
-            text_potionCount.text = $"변질된 붕대 <color=#ff0000>전체 유실</color>\n(0개 저장)";
+            Debug.LogWarning("ResultUI: acquiredItemsContainer 또는 acquiredItemPrefab이 할당되지 않았습니다.");
+            return;
         }
-        // 탈출 실패 시 인벤토리 아이템 유실 이펙트 이미지를 출력 (탈출 성공 시에는 출력하지 않음)
-        image_manaStoneLost.enabled = !extractionResult;
-        image_potionLost.enabled = !extractionResult;
+
+        // 획득 아이템이 아예 없는 경우 예외 처리
+        if (SessionDataSO.Instance.AcquiredItems == null || SessionDataSO.Instance.AcquiredItems.Count == 0)
+        {
+            GameObject emptySlot = Instantiate(acquiredItemPrefab, acquiredItemsContainer);
+            acquiredItemSlotsObj.Add(emptySlot);
+
+            TMP_Text emptyText = emptySlot.GetComponentInChildren<TMP_Text>();
+            Image emptyImage = emptySlot.GetComponentInChildren<Image>();
+
+            if (emptyText != null)
+            {
+                emptyText.text = extractionResult ? "획득한 아이템이 없습니다." : "유실할 아이템이 없습니다.";
+            }
+            if (emptyImage != null)
+            {
+                emptyImage.enabled = false; // 이미지는 숨김
+            }
+            return;
+        }
+
+        // 획득 아이템 목록 순회 (SessionDataSO에서 직접 가져옴)
+        foreach (var acqItem in SessionDataSO.Instance.AcquiredItems)
+        {
+            int tid = acqItem.Key;
+            int amount = acqItem.Value;
+            
+            // ItemRepository를 통해 ItemData 조회
+            ItemData itemData = itemRepo.GetItemDataByID(tid);
+            if (itemData == null) continue;
+
+            GameObject newSlot = Instantiate(acquiredItemPrefab, acquiredItemsContainer);
+            acquiredItemSlotsObj.Add(newSlot);
+
+            // 프리팹 내 UI 컴포넌트 찾기
+            Image itemImage = newSlot.GetComponentInChildren<Image>();
+            TMP_Text itemText = newSlot.GetComponentInChildren<TMP_Text>();
+
+            // 이미지 로드
+            if (itemImage != null && itemData != null)
+            {
+                _ = LoadSpriteAsync(itemData, itemImage);
+            }
+
+            // 텍스트 출력
+            if (itemText != null && itemData != null)
+            {
+                if (extractionResult)  // 탈출 성공 시
+                {
+                    itemText.text = $"{itemData.itemName} ×{amount}\n";
+                }
+                else  // 탈출 실패 시
+                {
+                    itemText.text = $"{itemData.itemName} ×{amount}\n";
+                    
+                    // 유실 이펙트가 있다면 추가로 켤 수 있지만, 
+                    // 프리팹 내부에 image_lost 가 별도로 있다면 다음과 같이 처리할 수 있습니다.
+                    // (기본적으로 text_manaStoneCount 구조를 따른다고 했으므로 생략)
+                }
+            }
+        }
     }
 
     public void CreateSafeSlots(int count)  // 각성 보존 슬롯 생성
