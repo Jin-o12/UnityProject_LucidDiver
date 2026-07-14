@@ -63,12 +63,17 @@ public sealed class VFXRuntimePool
         return instance;
     }
 
-    public void Release(PooledVFX instance)
+    /// <summary>
+    /// 일반 반환은 오브젝트를 비활성화하고, OnDisable 경로는 중복 비활성화 없이 풀 상태만 복원합니다.
+    /// </summary>
+    internal void Release(PooledVFX instance, bool deactivate)
     {
         if (instance == null || !instances.Contains(instance))
             return;
 
-        instance.gameObject.SetActive(false);
+        if (deactivate && instance.gameObject.activeSelf)
+            instance.gameObject.SetActive(false);
+
         instance.transform.SetParent(root, false);
         available.Enqueue(instance);
     }
