@@ -132,3 +132,10 @@ public enum SlotType
     artifact,   //장비 장착 슬롯
     safe        //각성 보존 슬롯
 }
+
+public enum AudioType
+{
+    BGM,    //배경 사운드
+    SFX,    //효과음
+    UI      //UI 사운드
+}
