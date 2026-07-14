@@ -12,8 +12,8 @@ public class DataManager : MonoBehaviour
 
     // 플레이어 저장 데이터
     public PlayerSaveData playerData { get; private set; }          // 계정 데이터 보관소
-    public PlayerSaveDataSO playerRuntimeDataSO;                 // 데이터 일시적 저장 및 관리 SO
-    private ISaveRepository saveRepo;   
+    // public PlayerSaveDataSO playerRuntimeDataSO;                 // 데이터 일시적 저장 및 관리 SO
+    // private ISaveRepository saveRepo;   
 
     private void Awake()
     {
@@ -28,26 +28,26 @@ public class DataManager : MonoBehaviour
         }
         DontDestroyOnLoad(gameObject);
 
-        // 인터페이스 구현부 연결
-        saveRepo = playerRuntimeDataSO;
+        // // 인터페이스 구현부 연결
+        // saveRepo = playerRuntimeDataSO;
         
-        // 플레이어 데이터 불러오기
-        playerData = saveRepo.LoadSaveData();
+        // // 플레이어 데이터 불러오기
+        // playerData = saveRepo.LoadSaveData();
 
-        // 전역 로케이터에 등록하여 UI 등 하위 계층에서 접근할 수 있도록 함
-        DataServiceLocator.SaveRepo = saveRepo;
+        // // 전역 로케이터에 등록하여 UI 등 하위 계층에서 접근할 수 있도록 함
+        // DataServiceLocator.SaveRepo = saveRepo;
     }
 
-    /* 플레이어 게임 데이터 저장하기 */
-    public void SaveGame()
-    {
-        saveRepo.SaveGameData(playerRuntimeDataSO.currentData);
-        Debug.Log("Game Saved");
-    }
+    // /* 플레이어 게임 데이터 저장하기 */
+    // public void SaveGame()
+    // {
+    //     saveRepo.SaveGameData(playerRuntimeDataSO.currentData);
+    //     Debug.Log("Game Saved");
+    // }
 
-    /* 플레이어 게임 데이터 불러오기 */
-    public void LoadGame()
-    {
-        playerData = saveRepo.LoadSaveData();
-    }
+    // /* 플레이어 게임 데이터 불러오기 */
+    // public void LoadGame()
+    // {
+    //     playerData = saveRepo.LoadSaveData();
+    // }
 }
