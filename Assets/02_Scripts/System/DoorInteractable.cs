@@ -46,6 +46,9 @@ public class DoorInteractable : MonoBehaviour
         // 문 열림 상태를 반전한다
         isOpen = !isOpen;
 
+        string doorVfxId = isOpen ? GameplayVFXIds.DoorOpen : GameplayVFXIds.DoorClose;
+        VFXService.Instance?.Play(doorVfxId, transform.position, transform.rotation);
+
         // Animator 파라미터를 변경해 문 애니메이션을 재생한다
         if (doorAnimator != null)
             doorAnimator.SetBool(openParameterName, isOpen);

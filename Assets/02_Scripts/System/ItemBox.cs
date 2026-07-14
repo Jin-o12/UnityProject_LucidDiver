@@ -109,6 +109,7 @@ public class ItemBox : MonoBehaviour, IInteractable
             return false;
 
         isOpened = true;
+        VFXService.Instance?.Play(GameplayVFXIds.ChestOpen, transform.position, transform.rotation);
 
         // Presenter가 이 이벤트를 받아 체스트 UI를 열고 데이터를 바인딩합니다.
         GlobalEventBus.OnItemBoxOpened?.Invoke(this, playerID);

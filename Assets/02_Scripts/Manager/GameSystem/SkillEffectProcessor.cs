@@ -15,6 +15,10 @@ public class SkillEffectProcessor : MonoBehaviour
 
     public async void UseSkillEffect(SkillData _skill, GameObject _user, CasterStatPayload _stats, Vector3 targetPosition)
     {
+        // Excel/JSON의 activateVFX ID만 전달하고 프리팹 로드와 재사용은 VFXService에 맡깁니다.
+        if (VFXService.Instance != null && !string.IsNullOrWhiteSpace(_skill.activateVFX))
+            VFXService.Instance.Play(_skill.activateVFX, _user.transform.position, _user.transform.rotation);
+
         if(_skill.effects[0].areaType == AreaType.circle)
         {
             if (string.IsNullOrEmpty(_skill.skillPrefab))

@@ -47,6 +47,7 @@ public class DropItem : MonoBehaviour, IInteractable
             return false;
         }
 
+        int previousCount = stackCount;
         int remain = InvokePickupHandler(pickupHandler);
         if (remain >= stackCount)
         {
@@ -55,6 +56,8 @@ public class DropItem : MonoBehaviour, IInteractable
         }
 
         stackCount = remain;
+        if (stackCount < previousCount)
+            VFXService.Instance?.Play(GameplayVFXIds.ItemPickup, transform.position, transform.rotation);
 
         // 전부 주웠으면 월드 아이템을 제거한다.
         if (stackCount <= 0)

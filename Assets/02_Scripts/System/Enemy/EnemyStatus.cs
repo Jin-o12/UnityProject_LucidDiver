@@ -36,7 +36,27 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
 
     public void SetNowState(EnemyState state)
     {
+        if (nowState == state)
+            return;
+
+        EnemyState previousState = nowState;
         nowState = state;
+
+        // AI Tick마다 반복하지 않고 실제 상태 전환 순간에만 인식 계열 VFX를 재생합니다.
+        switch (state)
+        {
+            case EnemyState.Chase:
+                // 공격 직후 Chase 복귀는 새로운 발견이 아니므로 경고 VFX를 반복하지 않습니다.
+                if (previousState != EnemyState.Attack)
+                    VFXService.Instance?.Play(GameplayVFXIds.EnemyDetected, transform.position, transform.rotation);
+                break;
+            case EnemyState.Investigate:
+                VFXService.Instance?.Play(GameplayVFXIds.EnemyInvestigate, transform.position, transform.rotation);
+                break;
+            case EnemyState.Attack:
+                VFXService.Instance?.Play(GameplayVFXIds.EnemyAttackTelegraph, transform.position, transform.rotation);
+                break;
+        }
     }
 
     private void Awake()
@@ -63,17 +83,26 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
 
     public void TakeDamage(float damage)
     {
+        if (nowState == EnemyState.Dead || damage <= 0.0f)
+            return;
+
         SyncRuntimeIdentity();
 
+        float previousHp = hpCurrent;
         hpCurrent = Mathf.Clamp(hpCurrent - damage, 0.0f, hpMax);
         BroadcastHealthChanged();
 
         if (hpCurrent <= 0.0f)
         {
             nowState = EnemyState.Dead;
+            VFXService.Instance?.Play(GameplayVFXIds.EnemyDeath, transform.position, transform.rotation);
             OnLocalDeath?.Invoke();
             GlobalEventBus.OnEnemyDead?.Invoke(objID);
+            return;
         }
+
+        if (hpCurrent < previousHp)
+            VFXService.Instance?.Play(GameplayVFXIds.EnemyHit, transform.position, transform.rotation);
     }
 
     public event Action<Transform, float> OnAggroApplied;       // 강제 추적 타겟 지정 이벤트

@@ -261,6 +261,12 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
 
         GetHp(-dmg);
 
+        // 치명타에서는 일반 피격 VFX 대신 사망 VFX만 재생해 두 연출이 겹치지 않게 합니다.
+        string damageVfxId = hpCurrent <= 0.0f
+            ? GameplayVFXIds.PlayerDeath
+            : GameplayVFXIds.PlayerHit;
+        VFXService.Instance?.Play(damageVfxId, transform.position, transform.rotation);
+
         // 루시드 낙인은 "실제 피해를 입은 피격"에만 반응합니다.
         // 생존해 있다면 중첩, 시간 감소, 의식누출 시작/갱신을 여기서 처리합니다.
         if (hpCurrent > 0.0f)
@@ -338,14 +344,20 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     {
         // 대상이 내가 아니라면 리턴
         if (_target != this.gameObject) return;
+        float previousHp = hpCurrent;
         GetHp(_effectValue);
+        if (hpCurrent > previousHp)
+            VFXService.Instance?.Play(GameplayVFXIds.PlayerHeal, transform.position, transform.rotation);
     }
 
     private void GainMana(GameObject _target, float _effectValue)
     {
         // 대상이 내가 아니라면 리턴
         if (_target != this.gameObject) return;
+        float previousMp = mpCurrent;
         GetMp(_effectValue);
+        if (mpCurrent > previousMp)
+            VFXService.Instance?.Play(GameplayVFXIds.PlayerManaGain, transform.position, transform.rotation);
     }
 
     /* 초상화 UI 업데이트 */
@@ -357,13 +369,19 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     /* 아이템을 사용해 체력 회복 */
     public void HealthRecoverInst(float _amount)
     {
+        float previousHp = hpCurrent;
         GetHp(_amount);
+        if (hpCurrent > previousHp)
+            VFXService.Instance?.Play(GameplayVFXIds.PlayerHeal, transform.position, transform.rotation);
     }
 
     /* 아이템을 사용해 마나 회복 */
     public void ManaRecoverInst(float _amount)
     {
+        float previousMp = mpCurrent;
         GetMp(_amount);
+        if (mpCurrent > previousMp)
+            VFXService.Instance?.Play(GameplayVFXIds.PlayerManaGain, transform.position, transform.rotation);
     }
 
     public bool RequestUseMana(float _useMana)
@@ -506,6 +524,11 @@ public class PlayerLucidMarkController
         currentStack = Mathf.Min(currentStack + 1, maxStack);
         markExpireTime = Time.time + markDuration;
 
+        string markVfxId = currentStack >= leakRequiredStack
+            ? GameplayVFXIds.LucidMark02
+            : GameplayVFXIds.LucidMark01;
+        VFXService.Instance?.Play(markVfxId, owner.position, owner.rotation);
+
         if (currentStack < leakRequiredStack)
         {
             return;
@@ -588,6 +611,8 @@ public class PlayerLucidMarkController
             traceVisualLocalOffset,
             traceVisualLocalScale,
             traceDebugColor);
+
+        VFXService.Instance?.Play(GameplayVFXIds.LucidLeak, spawnPosition);
     }
 
     private static float GetPlanarSqrDistance(Vector3 a, Vector3 b)
@@ -693,6 +718,13 @@ public class LucidLeakTraceRuntime : MonoBehaviour
 
     private void AttachVisualIfNeeded()
     {
+        // 공통 VFX 서비스가 활성화된 경우 Catalog의 VFX_LucidLeak을 사용합니다.
+        // 기존 직렬화 프리팹은 서비스가 없는 테스트 환경의 폴백으로만 유지합니다.
+        if (VFXService.Instance != null)
+        {
+            return;
+        }
+
         if (traceVisualPrefab == null)
         {
             return;

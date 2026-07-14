@@ -111,6 +111,7 @@ public class PlayerArtifactEquipment : MonoBehaviour
         equippedArtifacts[slotIndex] = newArtifact;
 
         OnArtifactSlotChanged?.Invoke(slotIndex, newArtifact);
+        VFXService.Instance?.Play(GameplayVFXIds.ArtifactEquip, transform.position, transform.rotation);
         return true;
     }
 
@@ -131,6 +132,7 @@ public class PlayerArtifactEquipment : MonoBehaviour
 
         equippedArtifacts[slotIndex] = null;
         OnArtifactSlotChanged?.Invoke(slotIndex, null);
+        VFXService.Instance?.Play(GameplayVFXIds.ArtifactUnequip, transform.position, transform.rotation);
         return true;
     }
 

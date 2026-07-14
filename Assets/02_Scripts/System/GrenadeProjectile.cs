@@ -62,6 +62,17 @@ public class GrenadeProjectile : MonoBehaviour
         float delay = skillData.effects.Count > 0 ? skillData.effects[0].effectDelay : 0.0f;
         yield return new WaitForSeconds(delay);
 
+        // 같은 폭발에 동일한 effectHitVFX ID가 여러 번 있어도 한 번만 재생합니다.
+        if (VFXService.Instance != null)
+        {
+            HashSet<string> playedVfxIds = new HashSet<string>();
+            foreach (SkillEffect effect in skillData.effects)
+            {
+                if (!string.IsNullOrWhiteSpace(effect.effectHitVFX) && playedVfxIds.Add(effect.effectHitVFX))
+                    VFXService.Instance.Play(effect.effectHitVFX, transform.position, transform.rotation);
+            }
+        }
+
         // 모든 효과 중 가장 넓은 범위와 최대 어그로 지속 시간을 탐색
         float maxRadius = 0f;
         float maxDuration = 0f;

@@ -1,0 +1,607 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51c095e201cc4d61bd35ed967dc18631, type: 3}
+  m_Name: VFXCatalog
+  m_EditorClassIdentifier: 
+  entries:
+  - vfxId: P0.5_Skill_Activate_VFX
+    prefabReference:
+      m_AssetGUID: 3f1557e38f9a7674ba50d5f57677ae65
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 4
+    attachType: 0
+    returnType: 0
+    duration: 1
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: P0.5_Skill_Hit_VFX
+    prefabReference:
+      m_AssetGUID: ed58507349914c842b10aaefe1af98b5
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 3
+    maxPoolSize: 6
+    attachType: 0
+    returnType: 0
+    duration: 1
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: P0.5_Skill_Decoy_VFX
+    prefabReference:
+      m_AssetGUID: c258dc9b0dc62244d9299e6afdcff1b1
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 1
+    maxPoolSize: 3
+    attachType: 0
+    returnType: 1
+    duration: 2.5
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Player_Spawn
+    prefabReference:
+      m_AssetGUID: 3ddecb89cc2411c4ca990b80fcadd59c
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 4
+    attachType: 0
+    returnType: 1
+    duration: 1.2
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Player_Muzzle
+    prefabReference:
+      m_AssetGUID: ed0da22508f7f5c449639019342ed67e
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 4
+    maxPoolSize: 8
+    attachType: 0
+    returnType: 0
+    duration: 0.2
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Bullet_Impact_Enemy
+    prefabReference:
+      m_AssetGUID: ba25e99e9bd40bb4a8f512631b70a1e9
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 10
+    maxPoolSize: 20
+    attachType: 0
+    returnType: 0
+    duration: 0.6
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Bullet_Impact_World
+    prefabReference:
+      m_AssetGUID: 0fccd39ae46226e4084c40f7f8f2cc0d
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 10
+    maxPoolSize: 20
+    attachType: 0
+    returnType: 0
+    duration: 0.6
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Player_Hit
+    prefabReference:
+      m_AssetGUID: f970de182f6e61a4cbfe879f6b82b89d
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 5
+    maxPoolSize: 10
+    attachType: 0
+    returnType: 0
+    duration: 0.8
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Player_Death
+    prefabReference:
+      m_AssetGUID: 922870f9504e6b0438e21b87a73fe631
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 1
+    maxPoolSize: 2
+    attachType: 0
+    returnType: 0
+    duration: 2.5
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Player_Evade
+    prefabReference:
+      m_AssetGUID: 15a2a89b5459d534894b0f7b460682f4
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 3
+    maxPoolSize: 6
+    attachType: 0
+    returnType: 0
+    duration: 0.8
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Player_Heal
+    prefabReference:
+      m_AssetGUID: 8612b29c6b4e23c4a9a6f4053f9a155b
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 4
+    attachType: 0
+    returnType: 0
+    duration: 1.5
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Player_ManaGain
+    prefabReference:
+      m_AssetGUID: 106e80406f0206648b7ccaf2a3d6d010
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 4
+    attachType: 0
+    returnType: 0
+    duration: 1.5
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Artifact_Equip
+    prefabReference:
+      m_AssetGUID: 53909c65e9869754c991c68c174a8c05
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 4
+    attachType: 0
+    returnType: 0
+    duration: 1
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Artifact_Unequip
+    prefabReference:
+      m_AssetGUID: 922870f9504e6b0438e21b87a73fe631
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 4
+    attachType: 0
+    returnType: 0
+    duration: 1
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_LucidMark_01
+    prefabReference:
+      m_AssetGUID: a9af36137c0e6d34f80adddb7d955da7
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 4
+    attachType: 0
+    returnType: 0
+    duration: 1
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_LucidMark_02
+    prefabReference:
+      m_AssetGUID: ce3ac9c82424bcd4a903dee161cc807d
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 4
+    attachType: 0
+    returnType: 0
+    duration: 1.5
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_LucidLeak
+    prefabReference:
+      m_AssetGUID: a9af36137c0e6d34f80adddb7d955da7
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 6
+    maxPoolSize: 12
+    attachType: 0
+    returnType: 0
+    duration: 2
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Enemy_Spawn
+    prefabReference:
+      m_AssetGUID: 6e2d5c22d6c4c9d4a8ff0ed264bec010
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 4
+    maxPoolSize: 14
+    attachType: 0
+    returnType: 1
+    duration: 1.2
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Enemy_Detected
+    prefabReference:
+      m_AssetGUID: 6bba270f8f35e1541a95abe10ad620a4
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 4
+    maxPoolSize: 14
+    attachType: 0
+    returnType: 0
+    duration: 0.8
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Enemy_Investigate
+    prefabReference:
+      m_AssetGUID: 8dbab8fb0b777164e8f58b48c3ac7efb
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 4
+    maxPoolSize: 14
+    attachType: 0
+    returnType: 1
+    duration: 0.8
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Enemy_AttackTelegraph
+    prefabReference:
+      m_AssetGUID: 7292a2bb23f74ca458f627ecac440374
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 4
+    maxPoolSize: 14
+    attachType: 0
+    returnType: 1
+    duration: 0.8
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Enemy_Slash_01
+    prefabReference:
+      m_AssetGUID: 0777bc22e9e6ace47a89e97740ea56e9
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 4
+    maxPoolSize: 8
+    attachType: 0
+    returnType: 0
+    duration: 0.8
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Enemy_Slash_02
+    prefabReference:
+      m_AssetGUID: d5154ec4507152843b0af4bb32531e61
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 4
+    maxPoolSize: 8
+    attachType: 0
+    returnType: 0
+    duration: 0.8
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Enemy_Hit
+    prefabReference:
+      m_AssetGUID: e6eb729988ef2f349a24b0b4ae8fea47
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 8
+    maxPoolSize: 16
+    attachType: 0
+    returnType: 0
+    duration: 0.7
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Enemy_Death
+    prefabReference:
+      m_AssetGUID: ebb8aafa1f5669b4dbae1bd94495215a
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 4
+    maxPoolSize: 14
+    attachType: 0
+    returnType: 0
+    duration: 2.5
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Item_Drop
+    prefabReference:
+      m_AssetGUID: 9430365d95bc1aa458a9168bf9c29c74
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 3
+    maxPoolSize: 6
+    attachType: 0
+    returnType: 0
+    duration: 0.8
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Item_Pickup
+    prefabReference:
+      m_AssetGUID: 8bbbc6a96ac32524985ae4c05872612c
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 3
+    maxPoolSize: 6
+    attachType: 0
+    returnType: 0
+    duration: 1
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Chest_Open
+    prefabReference:
+      m_AssetGUID: 8c360e33574a5184283cd31fcdce6c23
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 6
+    attachType: 0
+    returnType: 0
+    duration: 1.5
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Door_Open
+    prefabReference:
+      m_AssetGUID: 27b2b8d6393befa4ca5d9a5bc811bb32
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 6
+    attachType: 0
+    returnType: 0
+    duration: 1
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Door_Close
+    prefabReference:
+      m_AssetGUID: 1955d286c399ba945b5712766feafcb4
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 6
+    attachType: 0
+    returnType: 0
+    duration: 1
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Escape_Channel
+    prefabReference:
+      m_AssetGUID: 3ddecb89cc2411c4ca990b80fcadd59c
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 1
+    maxPoolSize: 2
+    attachType: 0
+    returnType: 2
+    duration: 3
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Escape_Cancel
+    prefabReference:
+      m_AssetGUID: 7780cbe44d3f3ef449a832e4b9b9c920
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 1
+    maxPoolSize: 2
+    attachType: 0
+    returnType: 0
+    duration: 1
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Escape_Success
+    prefabReference:
+      m_AssetGUID: 5d55615a23db03f468b6720772834d88
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 1
+    maxPoolSize: 2
+    attachType: 0
+    returnType: 0
+    duration: 2.5
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Time_Penalty
+    prefabReference:
+      m_AssetGUID: 39f137fb5ec4b614d88d8eb26e0439f5
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 2
+    maxPoolSize: 4
+    attachType: 0
+    returnType: 0
+    duration: 1
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Time_Over
+    prefabReference:
+      m_AssetGUID: 922870f9504e6b0438e21b87a73fe631
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 1
+    maxPoolSize: 2
+    attachType: 0
+    returnType: 0
+    duration: 2.5
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Player_Footstep_Walk
+    prefabReference:
+      m_AssetGUID: 5de378093d01f1748a644c9832d30c89
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 4
+    maxPoolSize: 8
+    attachType: 0
+    returnType: 0
+    duration: 0.8
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
+  - vfxId: VFX_Player_Footstep_Run
+    prefabReference:
+      m_AssetGUID: 91544527dbb4ce0409ed6598189a2f0b
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    preload: 0
+    initialPoolSize: 4
+    maxPoolSize: 8
+    attachType: 0
+    returnType: 0
+    duration: 0.8
+    useUnscaledTime: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scaleMultiplier: 1
