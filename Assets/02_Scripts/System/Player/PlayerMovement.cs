@@ -65,6 +65,12 @@ public class PlayerMovement : MonoBehaviour
             Debug.LogError("PlayerMovement: 필요한 컴포넌트가 없습니다.");
             return;
         }
+
+        if (apPort != null)
+        {
+            apPort.enabled = true;
+            if (apPort.gameObject != null) apPort.gameObject.SetActive(true);
+        }
     }
 
     private void OnEnable()

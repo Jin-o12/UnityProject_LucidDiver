@@ -1493,7 +1493,7 @@ MonoBehaviour:
   videoRenderImage: {fileID: 2091344334}
   initialPVClip: {fileID: 32900000, guid: bfe13100f0f744842b5764d03f72d6de, type: 3}
   loopTitleClip: {fileID: 32900000, guid: cc8f1797b19b000488c222c1759f5ac8, type: 3}
-  forcePlayPV: 1
+  forcePlayPV: 0
   skipGuidePanel: {fileID: 1903650880}
   titleUIPanel: {fileID: 1748444870}
   loadingOverlay: {fileID: 659523198}
