@@ -30,11 +30,7 @@ public class ResultManager : MonoBehaviour, IResultService
     private PlayerSaveData _playerSaveData;             //인벤토리 기록이 저장된 플레이어 세이브 데이터
     private PlayerInventory _inven;                     //현재 인게임 세션의 플레이어 인벤토리 데이터
     private PlayerArtifactEquipment artifactEquipment;  //플레이어가 장착한 아티팩트 데이터
-    private ItemData potionData;                        //변질된 붕대 아이템 데이터
-    private ItemData manaStoneData;                     //기묘한 사탕 아이템 데이터
     private ItemData memoryFragmentData;                //기억 파편 아이템 데이터
-    private int potionCount;                            //변질된 붕대 개수
-    private int mpStoneCount;                           //기묘한 사탕 개수
     private int memoryFragmentCount;                    //기억 파편 개수
     // 퀵슬롯 저장 필드
     public int slotTID1;                                //1번 슬롯 아이템의 ID값 데이터를 받아옴
@@ -96,8 +92,6 @@ public class ResultManager : MonoBehaviour, IResultService
 
     private void OnDestroy()  //IResultService 구현체 (로케이터에 등록)
     {
-        //if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
-        //if (Instance == this) Instance = null;
         GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
         GlobalEventBus.OnRequestQuickSlotCache -= SendQuickSlotCacheEvent;
         GlobalEventBus.PrepareUIOpen -= SendQuickSlotCacheEvent;
@@ -142,7 +136,6 @@ public class ResultManager : MonoBehaviour, IResultService
         if (idComp == null) return;
         // EntityIdentity에서 ID 값을 불러옴
         _players[playerID] = (PlayerStatus)ps;
-        //Debug.Log($"ResultManager.Register: playerID={playerID} registered (obj={ps.gameObject.name})");
     }
 
     // 플레이어 등록 해제
@@ -193,8 +186,9 @@ public class ResultManager : MonoBehaviour, IResultService
         // 이번 세션에서의 플레이 시간을 계산
         startTime = beginTime;
         playTime = Time.time - startTime;
+
         // {StorageInventoryUI가 저장한 최신 창고 데이터를 파일에서 다시 불러온다}
-        DataManager.Instance.LoadGame();
+        PlayerSaveDataSO.Instance.LoadSaveData();
         // 플레이어 세이브 데이터를 가져옴
         _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         // {저장 리스트가 null이면 보정한다}
@@ -209,10 +203,48 @@ public class ResultManager : MonoBehaviour, IResultService
         // 인벤토리 및 퀵슬롯 데이터를 불러와 동기화 갱신
         InventorySync();
         CacheQuickSlotData(_extractionResult);
-        // 아이템 ID에 따라 개수 및 데이터 값 추출
-        FindItemCountAndData(301, out potionCount, out potionData);
-        FindItemCountAndData(302, out mpStoneCount, out manaStoneData);
-        FindItemCountAndData(401, out memoryFragmentCount, out memoryFragmentData);
+
+        // 스냅샷 방식: (최종 인벤토리 상태) - (게임 시작 시점 상태) = 이번 세션 순수 획득량
+        SessionDataSO.Instance.AcquiredItems.Clear();
+
+        // 1. 현재 인벤토리의 모든 아이템을 TID 기준으로 합산
+        Dictionary<int, int> finalItems = new Dictionary<int, int>();
+        foreach (InventorySlotData slot in _inven.anySlots)
+        {
+            if (slot == null || slot.TID == 0 || slot.amount <= 0) continue;
+            
+            if (finalItems.ContainsKey(slot.TID))
+                finalItems[slot.TID] += slot.amount;
+            else
+                finalItems[slot.TID] = slot.amount;
+        }
+
+        // 2. 합산된 최종 수량에서 시작 수량을 뺀 순수 획득량만 기록
+        foreach (var kvp in finalItems)
+        {
+            int tid = kvp.Key;
+            int finalAmount = kvp.Value;
+            int startingAmount = 0;
+
+            if (SessionDataSO.Instance.StartingItems.TryGetValue(tid, out int amount))
+            {
+                startingAmount = amount;
+            }
+
+            int acquiredAmount = finalAmount - startingAmount;
+            if (acquiredAmount > 0)
+            {
+                SessionDataSO.Instance.AddAcquiredItem(tid, acquiredAmount);
+            }
+        }
+
+        // SessionDataSO에서 기억 파편(401) 개수 추출 및 데이터 설정
+        memoryFragmentCount = 0;
+        if (SessionDataSO.Instance.AcquiredItems.TryGetValue(401, out int count))
+        {
+            memoryFragmentCount = count;
+        }
+        memoryFragmentData = itemRepo.GetItemDataByID(401);
         // 기억 파편을 사용해 동조율 상승 → 심상 기록 해금 처리를 실행
         LinkRateUp(_extractionResult);
         // 탈출 실패 시 인벤토리 및 아티팩트 슬롯의 아이템을 인벤토리에서 제거
@@ -229,7 +261,7 @@ public class ResultManager : MonoBehaviour, IResultService
             }
         }
         // 모든 처리 완료 후 후 DataManager에서 playerData를 저장
-        DataManager.Instance.SaveGame();
+        PlayerSaveDataSO.Instance.SaveGameData();
 
         // 저장 처리 후 기존 코루틴을 중단
         if (resultCoroutine != null)
@@ -402,10 +434,7 @@ public class ResultManager : MonoBehaviour, IResultService
         _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         resultPanel.extractionResult = extractionResult;
         resultPanel.playTime = playTime;
-        resultPanel.potionCount = potionCount;
-        resultPanel.potionData = potionData;
-        resultPanel.manaStoneCount = mpStoneCount;
-        resultPanel.manaStoneData = manaStoneData;
+
         resultPanel.memoryFragmentCount = memoryFragmentCount;
         resultPanel.memoryFragmentData = memoryFragmentData;
         resultPanel.prevLinkRateLevel = prevLinkRateLevel;
@@ -479,7 +508,7 @@ public class ResultManager : MonoBehaviour, IResultService
         hasNewMemoryLog = false;
         _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         //_playerSaveData.hasNewMemoryLog = false;
-        DataManager.Instance.SaveGame();
+        PlayerSaveDataSO.Instance.SaveGameData();
     }
     private void EnsureSaveLists()
     {

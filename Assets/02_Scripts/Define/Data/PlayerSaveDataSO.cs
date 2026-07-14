@@ -1,11 +1,10 @@
 using System;
 using System.IO;
-using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "PlayerSaveDataSO", menuName = "Runtime Data/Player Save Data")]
 
-public class PlayerSaveDataSO : ScriptableObject, ISaveRepository
+public class PlayerSaveDataSO : ScriptableObject
 {
     // 싱글톤 선언
     private static PlayerSaveDataSO _instance;

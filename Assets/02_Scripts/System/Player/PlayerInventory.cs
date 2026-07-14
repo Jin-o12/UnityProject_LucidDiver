@@ -128,6 +128,8 @@ public class PlayerInventory : MonoBehaviour
                 remain = TryAddToSlot(i, _itemData, remain);
                 foundEmptySlot = true;
 
+                
+
                 // 추가 후 총 보유 수량을 퀵슬롯에 반영
                 if (beforeAmount != slots[i].amount)
                 {
@@ -296,6 +298,7 @@ public class PlayerInventory : MonoBehaviour
         VFXService.Instance?.Play(GameplayVFXIds.ItemDrop, dropPosition);
 
         RemoveAmount(_slotIndex, dropCount);
+
         onDropped?.Invoke();
     }
 
@@ -616,6 +619,9 @@ public class PlayerInventory : MonoBehaviour
                 _ = LoadQuickSlotSprite(itemData.iconAddress, i);
             }
         }
+
+        // 인벤토리 초기화 완료 후 시작 시점 스냅샷 저장
+        SessionDataSO.Instance.SnapshotStartingInventory(anySlots);
     }
 
     /* TID를 통해 저장소에서 아이템 데이터 찾기 */

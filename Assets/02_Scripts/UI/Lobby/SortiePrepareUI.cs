@@ -122,10 +122,10 @@ public class SortiePrepareUI : MonoBehaviour
 
     public async Task Refresh()
     {
-        // 플레이어 저장 데이터 SO
-        PlayerSaveData saveData = PlayerSaveDataSO.Instance.currentData;
         // 플레이어가 선택 한 캐릭터의 세이브 데이터 추출
         SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+        // 플레이어 저장 데이터 SO
+        PlayerSaveData saveData = PlayerSaveDataSO.Instance.currentData;
         // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터 추출
         CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
 
