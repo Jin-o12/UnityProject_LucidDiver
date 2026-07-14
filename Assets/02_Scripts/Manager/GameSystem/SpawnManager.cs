@@ -134,12 +134,12 @@ public class SpawnManager : MonoBehaviour
         {
             if (spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
             {
-                status.initialize(charData.hpMax, charData.manaMax, charData.manaRegen, charData.sprintMana, charData.sprintRecoverTime, charData.evadeMana, charData.evadeCooltime);
+                status.initialize(charData);
             }
 
             if (spawnedPlayer.TryGetComponent<PlayerMovement>(out var movement))
             {
-                movement.initialize(charData.moveSpeed, charData.sprintSpeed, charData.sprintMana, charData.evadeSpeed, charData.evadeTime, charData.evadeMana, charData.evadeCooltime);
+                movement.initialize(charData);
             }
 
             if (spawnedPlayer.TryGetComponent<PlayerWeapon>(out var weapon))

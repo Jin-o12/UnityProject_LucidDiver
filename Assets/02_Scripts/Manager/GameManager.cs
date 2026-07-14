@@ -68,6 +68,8 @@ public class GameManager : MonoBehaviour
             if (artifactEquipment != null)
             {
                 artifactEquipment.RestoreFromSave(playerData, itemRepo);
+                // 장착 중인 아티팩트를 시작 소지량에 합산하여 인벤토리 이동 시 새로 획득한 것으로 처리되는 것을 방지
+                SessionDataSO.Instance.AddStartingArtifacts(artifactEquipment.equippedArtifacts);
             }
 
             // 적 1회 생성

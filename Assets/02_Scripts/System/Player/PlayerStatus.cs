@@ -113,23 +113,23 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
 
     #region Status Management
     /* 플레이어 상태 및 스텟 초기화 */
-    public void initialize(float _hp, float _mp, float _regen, float _sMP, float _sTime, float _eMana, float _eCooltime)
+    public void initialize(CharacterData _charData)
     {
         nowState = livingState.idle;
         IsSessionEnded = false;
 
-        hpMax = _hp;
+        hpMax = _charData.hpMax;
         hpCurrent = hpMax;
-        mpMax = _mp;
+        mpMax = _charData.manaMax;
         mpCurrent = mpMax;
-        manaRegen = _regen;
+        manaRegen = _charData.manaRegen;
         artifactHpRegenBonus = 0.0f;
         artifactMpRegenBonus = 0.0f;
-        sprintMP = _sMP;
+        sprintMP = _charData.sprintMana;
         cannotSprint = false;
-        sprintRecoverTime = _sTime;
-        evadeMP = _eMana;
-        evadeCooltime = _eCooltime;
+        sprintRecoverTime = _charData.sprintRecoverTime;
+        evadeMP = _charData.evadeMana;
+        evadeCooltime = _charData.evadeCooltime;
         lastEvadeTime = Time.time;
 
         // 새 스폰마다 낙인 상태를 초기화해 이전 런타임 정보가 남지 않게 합니다.

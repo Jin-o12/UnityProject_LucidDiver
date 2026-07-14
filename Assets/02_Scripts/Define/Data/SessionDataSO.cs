@@ -60,6 +60,26 @@ public class SessionDataSO : ScriptableObject
         }
     }
 
+    // 장착 중인 아티팩트를 시작 스냅샷에 합산
+    public void AddStartingArtifacts(ArtifactItemData[] equippedArtifacts)
+    {
+        if (equippedArtifacts == null) return;
+        
+        foreach (var artifact in equippedArtifacts)
+        {
+            if (artifact == null || artifact.TID == 0) continue;
+
+            if (startingItems.ContainsKey(artifact.TID))
+            {
+                startingItems[artifact.TID] += 1;
+            }
+            else
+            {
+                startingItems.Add(artifact.TID, 1);
+            }
+        }
+    }
+
     // 아이템 획득 기록에 특정 아이템과 수량 추가
     public void AddAcquiredItem(int _itemTID, int _amount)
     {

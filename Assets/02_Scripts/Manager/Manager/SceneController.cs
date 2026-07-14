@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 모든 씬 전환을 관리하는 인스턴스 클래스
 /// </summary>
 using UnityEngine;
@@ -75,14 +75,34 @@ public class SceneController : MonoBehaviour
         // additive로 덮어쓸 씬 저장
         if (addScene != null) TargetSceneName_additive = addScene;
 
-        // 로딩 씬이 요구될 경우 로딩씬 실행
+        // 로딩 씬이 요구될 경우, 로딩 씬을 Additive로 먼저 띄운 뒤 이전 씬을 비동기 언로드
         if(useLoadingScene)
         {
-            SceneManager.LoadScene(LoadScene);
+            // 현재 활성 씬 이름을 저장 (로딩 씬에서 비동기 언로드할 대상)
+            PreviousSceneName = SceneManager.GetActiveScene().name;
+            StartCoroutine(LoadLoadingSceneAdditive());
         }
         else
         {
             SceneManager.LoadScene(scene);
         }
+    }
+
+    // 이전 씬 이름 (LoadManager가 비동기 언로드할 대상)
+    public string PreviousSceneName { get; private set; }
+
+    // 로딩 씬을 Additive로 띄우는 코루틴
+    private System.Collections.IEnumerator LoadLoadingSceneAdditive()
+    {
+        // 로딩 씬을 Additive로 로드 (이전 씬은 아직 살아있으므로 화면 끊김 없음)
+        AsyncOperation loadOp = SceneManager.LoadSceneAsync(LoadScene, LoadSceneMode.Additive);
+        while (!loadOp.isDone)
+        {
+            yield return null;
+        }
+
+        // 로딩 씬을 Active로 설정 (이후 LoadManager가 이전 씬 언로드를 진행)
+        Scene loadingScene = SceneManager.GetSceneByName(LoadScene);
+        SceneManager.SetActiveScene(loadingScene);
     }
 }

@@ -555,6 +555,17 @@ public class PlayerInventory : MonoBehaviour
         // 현재 런타임 슬롯 데이터를 모두 초기화
         ClearRuntimeSlots();
 
+        // 저장된 아티펙트 슬롯 데이터를 순서대로 복원
+        foreach(var savedSlot in saveData.artifactSlots)
+        {
+            if (savedSlot.index < 0 || savedSlot.index >= slotNum) continue;
+
+            slots[savedSlot.index].TID = savedSlot.TID;
+            slots[savedSlot.index].amount = savedSlot.amount;
+
+            ////////////////////////////
+        }
+
         // 저장된 인벤토리 슬롯 데이터를 순서대로 복원
         foreach (var savedSlot in saveData.inventorySlots)
         {

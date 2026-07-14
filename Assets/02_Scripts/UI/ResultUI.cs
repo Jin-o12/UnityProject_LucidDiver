@@ -1,10 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Threading.Tasks;
 
@@ -147,7 +143,7 @@ public class ResultUI : MonoBehaviour
 
             if (emptyText != null)
             {
-                emptyText.text = extractionResult ? "획득한 아이템이 없습니다." : "유실할 아이템이 없습니다.";
+                emptyText.enabled = false;
             }
             if (emptyImage != null)
             {
@@ -156,11 +152,14 @@ public class ResultUI : MonoBehaviour
             return;
         }
 
-        // 획득 아이템 목록 순회 (SessionDataSO에서 직접 가져옴)
+        // 획득/손실 아이템 목록 순회 (SessionDataSO에서 직접 가져옴)
         foreach (var acqItem in SessionDataSO.Instance.AcquiredItems)
         {
             int tid = acqItem.Key;
             int amount = acqItem.Value;
+
+            // 변화량이 0이면 출력하지 않음
+            if (amount == 0) continue;
             
             // ItemRepository를 통해 ItemData 조회
             ItemData itemData = itemRepo.GetItemDataByID(tid);
@@ -179,22 +178,34 @@ public class ResultUI : MonoBehaviour
                 _ = LoadSpriteAsync(itemData, itemImage);
             }
 
-            // 텍스트 출력
-            if (itemText != null && itemData != null)
+            // 세션 성공 시
+            if(extractionResult)
             {
-                if (extractionResult)  // 탈출 성공 시
+                // 텍스트 출력: 변화량 부호에 따라 색상 구분
+                if (itemText != null && itemData != null)
                 {
-                    itemText.text = $"{itemData.itemName} ×{amount}\n";
-                }
-                else  // 탈출 실패 시
-                {
-                    itemText.text = $"{itemData.itemName} ×{amount}\n";
-                    
-                    // 유실 이펙트가 있다면 추가로 켤 수 있지만, 
-                    // 프리팹 내부에 image_lost 가 별도로 있다면 다음과 같이 처리할 수 있습니다.
-                    // (기본적으로 text_manaStoneCount 구조를 따른다고 했으므로 생략)
+                    if (amount > 0)
+                    {
+                        // 획득: 초록색으로 표시
+                        itemText.text = $"{itemData.itemName} <color=#80ff00>+{amount}</color>\n";
+                    }
+                    else
+                    {
+                        // 손실: 붉은색으로 표시
+                        itemText.text = $"{itemData.itemName} <color=#ff0000>{amount}</color>\n";
+                    }
                 }
             }
+            // 세션 실패 시: 모든 아이템이 전량 손실
+            else
+            {
+                if (itemText != null && itemData != null)
+                {
+                    // 손실: 붉은색으로 표시 (amount는 음수이므로 절대값으로 표시)
+                    itemText.text = $"{itemData.itemName} <color=#ff0000>-{Mathf.Abs(amount)}</color>\n";
+                }
+            }
+            
         }
     }
 

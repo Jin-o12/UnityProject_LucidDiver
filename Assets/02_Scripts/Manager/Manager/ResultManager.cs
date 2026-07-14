@@ -219,22 +219,67 @@ public class ResultManager : MonoBehaviour, IResultService
                 finalItems[slot.TID] = slot.amount;
         }
 
-        // 2. 합산된 최종 수량에서 시작 수량을 뺀 순수 획득량만 기록
-        foreach (var kvp in finalItems)
+        // 1.5. 장착 중인 아티팩트도 최종 소지량에 합산
+        if (artifactEquipment != null && artifactEquipment.equippedArtifacts != null)
         {
-            int tid = kvp.Key;
-            int finalAmount = kvp.Value;
-            int startingAmount = 0;
-
-            if (SessionDataSO.Instance.StartingItems.TryGetValue(tid, out int amount))
+            foreach (var artifact in artifactEquipment.equippedArtifacts)
             {
-                startingAmount = amount;
+                if (artifact == null || artifact.TID == 0) continue;
+
+                if (finalItems.ContainsKey(artifact.TID))
+                    finalItems[artifact.TID] += 1;
+                else
+                    finalItems[artifact.TID] = 1;
+            }
+        }
+
+        if (_extractionResult)
+        {
+            // 탈출 성공: 합산된 최종 수량에서 시작 수량을 뺀 순수 변화량을 기록 (양수: 획득, 음수: 손실)
+            foreach (var kvp in finalItems)
+            {
+                int tid = kvp.Key;
+                int finalAmount = kvp.Value;
+                int startingAmount = 0;
+
+                if (SessionDataSO.Instance.StartingItems.TryGetValue(tid, out int amount))
+                {
+                    startingAmount = amount;
+                }
+
+                int acquiredAmount = finalAmount - startingAmount;
+                if (acquiredAmount != 0)
+                {
+                    SessionDataSO.Instance.AddAcquiredItem(tid, acquiredAmount);
+                }
             }
 
-            int acquiredAmount = finalAmount - startingAmount;
-            if (acquiredAmount > 0)
+            // 시작 시점에는 있었지만 최종 인벤토리에는 없는 아이템 = 전량 손실
+            foreach (var kvp in SessionDataSO.Instance.StartingItems)
             {
-                SessionDataSO.Instance.AddAcquiredItem(tid, acquiredAmount);
+                int tid = kvp.Key;
+                if (!finalItems.ContainsKey(tid))
+                {
+                    SessionDataSO.Instance.AddAcquiredItem(tid, -kvp.Value);
+                }
+            }
+        }
+        else
+        {
+            // 탈출 실패: 최종 인벤토리의 모든 아이템을 전량 손실로 기록
+            foreach (var kvp in finalItems)
+            {
+                SessionDataSO.Instance.AddAcquiredItem(kvp.Key, -kvp.Value);
+            }
+
+            // 시작 시점에는 있었지만 최종 인벤토리에는 없는 아이템도 손실로 기록
+            foreach (var kvp in SessionDataSO.Instance.StartingItems)
+            {
+                int tid = kvp.Key;
+                if (!finalItems.ContainsKey(tid))
+                {
+                    SessionDataSO.Instance.AddAcquiredItem(tid, -kvp.Value);
+                }
             }
         }
 
