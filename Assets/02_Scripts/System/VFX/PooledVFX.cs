@@ -58,6 +58,14 @@ public sealed class PooledVFX : MonoBehaviour
     /// </summary>
     public void Release()
     {
+        ReleaseToPool(true);
+    }
+
+    /// <summary>
+    /// 비활성화가 이미 진행 중이면 SetActive(false)를 반복하지 않고 풀 상태만 복원합니다.
+    /// </summary>
+    private void ReleaseToPool(bool deactivate)
+    {
         if (!isRented)
             return;
 
@@ -68,7 +76,7 @@ public sealed class PooledVFX : MonoBehaviour
             returnRoutine = null;
         }
 
-        owner?.Release(this);
+        owner?.Release(this, deactivate);
     }
 
     internal void DetachFromPool()
@@ -81,7 +89,7 @@ public sealed class PooledVFX : MonoBehaviour
     {
         // 부모 캐릭터가 비활성화돼 VFX도 함께 꺼진 경우 풀에서 유실되지 않도록 즉시 반환합니다.
         if (isRented)
-            Release();
+            ReleaseToPool(false);
     }
 
     private void OnDestroy()
