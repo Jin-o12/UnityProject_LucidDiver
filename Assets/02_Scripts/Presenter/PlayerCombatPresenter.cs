@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 플레이어의 전투 입력을 실제 전투 시스템에 연결하는 Presenter입니다.
@@ -67,6 +67,9 @@ public class PlayerCombatPresenter : MonoBehaviour
         playerWeapon.PlayerAttack();
         playerStatus.UseAttackMana(useMana);
         nextAttackAvailableTime = Time.time + GetModifiedFireInterval();
+
+        // 오디오 샘플: 오디오 매니저에 "AudioID = 11001인 사운드를 Play2DSound 함수로 재생"하는 이벤트를 보냄
+        GlobalEventBus.OnPlay2DSoundRequested?.Invoke(11001);
     }
 
     /// <summary>
@@ -109,6 +112,9 @@ public class PlayerCombatPresenter : MonoBehaviour
             return;
 
         playerStatus.UseEvadeMana(playerStatus.evadeMP);
+
+        // 오디오 샘플: 오디오 매니저에 "AudioID = 10702인 사운드를 playerStatus.gameObject.transform.position 위치에서 Play3DSound 함수로 재생"하는 이벤트를 보냄
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(10702, playerStatus.gameObject.transform.position);
     }
 
     private void TrySkill()

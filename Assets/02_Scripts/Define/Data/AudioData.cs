@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class AudioData
+public class AudioData : ScriptableObject
 {
     public int AudioID;         //사운드 ID
     public string AudioClip;    //오디오 클립 파일 이름
