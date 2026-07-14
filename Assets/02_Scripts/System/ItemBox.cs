@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -63,8 +63,9 @@ public class ItemBox : MonoBehaviour, IInteractable
     [SerializeField] private float openNoiseRange = 30.0f;
     [SerializeField] private float openNoiseDuration = 1.8f;
 
-    private bool isOpened = false;                                    // 현재 다른 플레이어가 열어 둔 상태인지 여부
-    private IItemDataRepository itemRepo;                              // TID 기반 랜덤 루트 생성을 위한 아이템 데이터 저장소
+    private bool isOpened = false;                                  // 현재 다른 플레이어가 열어 둔 상태인지 여부
+    private IItemDataRepository itemRepo;                           // TID 기반 랜덤 루트 생성을 위한 아이템 데이터 저장소
+    private PlayerSight playerSight;                                // 플레이어 시야 스크립트
 
     /// <summary>
     /// 체스트 UI에서 읽어갈 슬롯 데이터 목록입니다.
@@ -83,16 +84,31 @@ public class ItemBox : MonoBehaviour, IInteractable
 
         EnsureSlotCapacity();
 
+        // 플레이어 시야 스크립트를 찾는다
+        playerSight = FindObjectOfType<PlayerSight>();
+
         // 랜덤 루트 사용이 켜져 있고, 아직 상자가 비어 있다면 시작 시 아이템을 생성합니다.
         if (useRandomLoot && IsEmpty())
             GenerateRandomItems();
     }
 
-    /// <summary>
-    /// 인스펙터 우클릭 메뉴에서 랜덤 아이템 생성을 수동 실행합니다.
-    /// 테스트용 기능이며 현재 슬롯 구조에 맞게 다시 생성합니다.
-    /// </summary>
-    [ContextMenu("Generate Random Items")]
+    // 플레이어 시야 스크립트에 따라 렌더러 출력 상태 업데이트
+    private void FixedUpdate()
+    {
+        if (playerSight == null) return;
+        bool visible = playerSight.IsTargetInSight(playerSight.transform, transform);
+        Renderer[] _rend = GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in _rend)
+        {
+            renderer.enabled = visible;
+        }
+    }
+
+/// <summary>
+/// 인스펙터 우클릭 메뉴에서 랜덤 아이템 생성을 수동 실행합니다.
+/// 테스트용 기능이며 현재 슬롯 구조에 맞게 다시 생성합니다.
+/// </summary>
+[ContextMenu("Generate Random Items")]
     private void GenerateRandomItemsFromContextMenu()
     {
         GenerateRandomItems();

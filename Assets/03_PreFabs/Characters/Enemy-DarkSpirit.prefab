@@ -162,6 +162,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6094098991218286781}
+  - component: {fileID: 5557529460959935879}
   m_Layer: 6
   m_Name: Image
   m_TagString: Untagged
@@ -185,6 +186,20 @@ Transform:
   - {fileID: 3696226426896984074}
   m_Father: {fileID: 5684948916924126121}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5557529460959935879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3451571567445798448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6103544f9923ed046be2d5cf70cbc583, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spriteObject: {fileID: 0}
+  uiCanvas: {fileID: 7808511582653619376}
 --- !u!1 &3789977310427166511
 GameObject:
   m_ObjectHideFlags: 0
