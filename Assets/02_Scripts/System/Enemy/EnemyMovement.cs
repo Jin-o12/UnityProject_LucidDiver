@@ -232,7 +232,7 @@ public class EnemyMovement : MonoBehaviour
         navAgent.enabled = false;
         boxCollider.enabled = false;
 
-        Destroy(gameObject, 3.0f);
+        Destroy(gameObject, 0.0f);
     }
 
     /// <summary>

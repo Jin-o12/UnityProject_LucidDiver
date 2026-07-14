@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 플레이어의 이동과 커서 방향 회전을 처리하는 스크립트
 /// </summary>
 using UnityEngine;
@@ -88,6 +88,16 @@ public class PlayerMovement : MonoBehaviour
         GlobalEventBus.OnHitAnimate -= HitAnimate;
         GlobalEventBus.onPlayerDead -= PlayerDie;
         moveNoiseTimer = 0.0f;
+
+        // 비활성화 시 입력 상태를 초기화하여
+        // 재활성화 시 이전 입력 값이 남아 걷기 모션이 유지되는 것을 방지
+        movementInput = Vector2.zero;
+        sprintInput = false;
+        if (animator != null)
+        {
+            animator.SetBool("IsMoving", false);
+            animator.SetBool("IsSprint", false);
+        }
     }
 
     private void FixedUpdate()
@@ -101,26 +111,26 @@ public class PlayerMovement : MonoBehaviour
         MoveAndRotate();
     }
 
-    public void initialize(float _speed, float _sSpeed, float _sMana, float _eSpeed, float _eTime, float _eMana, float _eCooltime)
+    public void initialize(CharacterData _charData)
     {
         // 기본 이동 속도 초기화
-        moveSpeed = _speed;
+        moveSpeed = _charData.moveSpeed;
 
         // 달리기 속도 초기화
-        sprintSpeed = _sSpeed;
+        sprintSpeed = _charData.sprintSpeed;
 
         // 달리기 중 초당 MP 소비 초기화
-        sprintMP = _sMana;
+        sprintMP = _charData.sprintMana;
 
         // 구르기 이동 거리(속도 × 시간) 초기화
-        evadeSpeed = _eSpeed;
-        evadeTime = _eTime;
+        evadeSpeed = _charData.evadeSpeed;
+        evadeTime = _charData.evadeTime;
 
         // 구르기 MP 소비 초기화
-        evadeMP = _eMana;
+        evadeMP = _charData.evadeMana;
 
         // 구르기 쿨타임 초기화
-        evadeCooltime = _eCooltime;
+        evadeCooltime = _charData.evadeCooltime;
 
         artifactMoveSpeedRate = 0.0f;
         movementWallBuffer = Mathf.Max(0.0f, movementWallBuffer);
