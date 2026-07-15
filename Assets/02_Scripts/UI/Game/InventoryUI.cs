@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -151,6 +151,28 @@ public class InventoryUI : MonoBehaviour
         for (int i = 0; i < artifactEquipSlots.Length; i++)
         {
             UpdateArtifactSlot(i, equipment.GetEquippedArtifact(i));
+        }
+    }
+
+    /* 인벤토리 비활성화 될 때, 드래그 중이던 슬롯을 안전하게 복구 */
+    public void ResetAllSlotsDragState()
+    {
+        if (slotsObj != null)
+        {
+            foreach (var slotObj in slotsObj)
+            {
+                if (slotObj != null && slotObj.TryGetComponent<InventorySlotUI>(out var slotUI))
+                    slotUI.ResetDragState();
+            }
+        }
+        
+        if (safeSlotsObj != null)
+        {
+            foreach (var slotObj in safeSlotsObj)
+            {
+                if (slotObj != null && slotObj.TryGetComponent<InventorySlotUI>(out var slotUI))
+                    slotUI.ResetDragState();
+            }
         }
     }
 }

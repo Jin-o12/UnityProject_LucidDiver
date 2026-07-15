@@ -298,6 +298,12 @@ public class InventoryPresenter : MonoBehaviour
         // 툴팁 UI가 열려 있으면 닫아준다.
         UIManager.Instance.Close<ItemTooltipUI>();
 
+        // InventoryUI가 비활성화(OnDisable) 되기 직전에 안전하게 자식들을 원래 위치로 되돌림
+        if (inventoryUI != null)
+        {
+            inventoryUI.ResetAllSlotsDragState();
+        }
+
         UIManager.Instance.Close<InventoryUI>();
         inventoryUI = null;
         localInputReader.SetInventoryOpenState(false);
@@ -395,6 +401,12 @@ public class InventoryPresenter : MonoBehaviour
         // 현재 열려 있던 상자의 열린 상태를 해제한다.
         if (currentBox != null)
             currentBox.CloseBox();
+
+        // 비활성화 되기 전 드래그 중인 슬롯 안전하게 복구
+        if (inventoryUI != null)
+        {
+            inventoryUI.ResetAllSlotsDragState();
+        }
 
         UIManager.Instance.Close<ChestUI>();
         UIManager.Instance.Close<InventoryUI>();

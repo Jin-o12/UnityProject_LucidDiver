@@ -109,6 +109,8 @@ public class PlayerInventory : MonoBehaviour
                 {
                     QuickSlotRenew(_itemData);
                 }
+
+                if (remain <= 0) break;
             }
         }
 
@@ -135,6 +137,8 @@ public class PlayerInventory : MonoBehaviour
                 {
                     QuickSlotRenew(_itemData);
                 }
+
+                if (remain <= 0) break;
             }
 
             // 빈 슬롯이 없으면 루프 탈출
@@ -172,7 +176,7 @@ public class PlayerInventory : MonoBehaviour
             slot.itemData = _itemData;
 
             // 아이콘 로드는 비동기로 백그라운드에서 진행 (LoadSprite 내부에서 UI 갱신을 알아서 수행)
-            _ = LoadSprite(_itemData.iconAddress, _slotIndex);
+            _ = LoadSprite(_itemData.iconAddress, _slotIndex, _itemData.TID);
 
             // 수량부터 먼저 반영
             OnSlotChanged?.Invoke(_slotIndex);
@@ -326,7 +330,7 @@ public class PlayerInventory : MonoBehaviour
             // 등록은 유지하되 아이콘이 아직 없으면 다시 로드를 시도합니다.
             if (quickSlot.icon == null && quickSlot.itemData != null)
             {
-                _ = LoadQuickSlotSprite(quickSlot.itemData.iconAddress, i);
+                _ = LoadQuickSlotSprite(quickSlot.itemData.iconAddress, i, quickSlot.TID);
                 continue;
             }
 
@@ -335,10 +339,22 @@ public class PlayerInventory : MonoBehaviour
     }
 
     /* 아이템의 아이콘 Addressable 주소 해석 및 스프라이트 이미지 가져오기 */
-    private async Task LoadSprite(string iconRef, int slotIndex)
+    private async Task LoadSprite(string iconRef, int slotIndex, int expectedTID)
     {
         Sprite loadIcon = await AddressableLoader.LoadAssetAsync<Sprite>(iconRef);
         
+        int currentTID = -1;
+        if (slotIndex >= 0 && slotIndex < anySlots.Count)
+        {
+            currentTID = anySlots[slotIndex].TID;
+        }
+
+        if (currentTID != expectedTID || currentTID == 0)
+        {
+            // 그 사이에 슬롯 아이템이 바뀌었거나 지워졌으므로 덮어쓰기 취소
+            return;
+        }
+
         if (loadIcon == null)
         {
             // anySlots 헬퍼에서 먼저 기록 후 원본 슬롯에 각각 전달
@@ -461,7 +477,7 @@ public class PlayerInventory : MonoBehaviour
         }
         else if (qSlot.itemData != null)
         {
-            _ = LoadQuickSlotSprite(qSlot.itemData.iconAddress, _quickIndex);
+            _ = LoadQuickSlotSprite(qSlot.itemData.iconAddress, _quickIndex, qSlot.TID);
         }
         else
         {
@@ -579,7 +595,7 @@ public class PlayerInventory : MonoBehaviour
 
             if (itemData != null)
             {
-                _ = LoadSprite(itemData.iconAddress, savedSlot.index);
+                _ = LoadSprite(itemData.iconAddress, savedSlot.index, savedSlot.TID);
             }
 
             OnSlotChanged?.Invoke(savedSlot.index);
@@ -596,7 +612,7 @@ public class PlayerInventory : MonoBehaviour
             ItemData itemData = GetItemDataByTID(savedSlot.TID);
             safeSlots[savedSlot.index].itemData = itemData;
 
-            if (itemData != null) _ = LoadSprite(itemData.iconAddress, savedSlot.index + slots.Count);
+            if (itemData != null) _ = LoadSprite(itemData.iconAddress, savedSlot.index + slots.Count, savedSlot.TID);
 
             OnSafeSlotChanged?.Invoke(savedSlot.index);
         }
@@ -627,7 +643,7 @@ public class PlayerInventory : MonoBehaviour
 
             if (itemData != null)
             {
-                _ = LoadQuickSlotSprite(itemData.iconAddress, i);
+                _ = LoadQuickSlotSprite(itemData.iconAddress, i, tid);
             }
         }
 
@@ -644,10 +660,15 @@ public class PlayerInventory : MonoBehaviour
     }
 
     /* 퀵슬롯 아이콘 Addressable 주소 해석 및 스프라이트 이미지 가져오기 */
-    private async Task LoadQuickSlotSprite(string iconRef, int quickIndex)
+    private async Task LoadQuickSlotSprite(string iconRef, int quickIndex, int expectedTID)
     {
         Sprite loadIcon = await AddressableLoader.LoadAssetAsync<Sprite>(iconRef);
         
+        if (quickSlots[quickIndex].TID != expectedTID || quickSlots[quickIndex].TID == 0)
+        {
+            return;
+        }
+
         if (loadIcon == null)
         {
             quickSlots[quickIndex].icon = null;
