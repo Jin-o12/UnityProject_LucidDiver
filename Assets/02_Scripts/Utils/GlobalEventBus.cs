@@ -101,4 +101,5 @@ public class GlobalEventBus
     /// </summary>
     public static Action OnGoToLobbyScene;                                  // 로비 씬으로 이동
     public static Action OnGoToGameScene;                                   // 게임 씬으로 이동
+    public static Action OnGoToTutorialScene;                               // 튜토리얼 씬으로 이동
 }

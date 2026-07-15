@@ -13,10 +13,12 @@ public class SceneController : MonoBehaviour
     public SceneField TargetSceneName_additive { get; private set; }    //additive 로딩으로 덮어쓸 씬
 
     [Header("게임 씬 목록")]
-    public SceneField lobbyScene;   //로비 허브 씬
-    public SceneField levelScene;   //레벨 디자인 씬
-    public SceneField gameScene;    //게임플레이 씬
-    public SceneField LoadScene;    //로딩 씬
+    public SceneField lobbyScene;             //로비 허브 씬
+    public SceneField tutorialScene;          //튜토리얼 레벨 씬
+    public SceneField tutorialAdditiveScene;  //튜토리얼 런타임 Additive 씬
+    public SceneField levelScene;             //레벨 디자인 씬
+    public SceneField gameScene;              //게임플레이 씬
+    public SceneField LoadScene;              //로딩 씬
 
     private void Awake()
     {
@@ -37,12 +39,14 @@ public class SceneController : MonoBehaviour
     {
         GlobalEventBus.OnGoToLobbyScene += GoToLobbyScene;
         GlobalEventBus.OnGoToGameScene += GoToGameScene;
+        GlobalEventBus.OnGoToTutorialScene += GoToTutorialScene;
     }
 
     private void OnDisable()
     {
         GlobalEventBus.OnGoToLobbyScene -= GoToLobbyScene;
         GlobalEventBus.OnGoToGameScene -= GoToGameScene;
+        GlobalEventBus.OnGoToTutorialScene -= GoToTutorialScene;
     }
 
     public void GoToLobbyScene()
@@ -53,6 +57,11 @@ public class SceneController : MonoBehaviour
     public void GoToGameScene()
     {
         SceneLoader(levelScene, true, gameScene);
+    }
+
+    public void GoToTutorialScene()
+    {
+        SceneLoader(tutorialScene, true, tutorialAdditiveScene);
     }
 
     // 씬 전환 메서드 (넘어가고 싶은 씬 이름, 로딩 씬 사용 여부(사용이 기본), 로드할 추가 씬(기본값 null))
@@ -72,8 +81,8 @@ public class SceneController : MonoBehaviour
         // 이동 하고자 하는 씬 사전에 저장
         TargetSceneName = scene;
 
-        // additive로 덮어쓸 씬 저장
-        if (addScene != null) TargetSceneName_additive = addScene;
+        // 단일 씬 이동 시 이전 additive 대상이 남지 않도록 null도 저장합니다.
+        TargetSceneName_additive = addScene;
 
         // 로딩 씬이 요구될 경우, 로딩 씬을 Additive로 먼저 띄운 뒤 이전 씬을 비동기 언로드
         if(useLoadingScene)

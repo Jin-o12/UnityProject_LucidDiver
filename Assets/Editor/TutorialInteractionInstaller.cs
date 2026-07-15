@@ -59,6 +59,8 @@ public static class TutorialInteractionInstaller
             boxPoint.position - playerToBox * 4f, playerToBox);
         ConfigureTrigger(scene, triggerGroup, "Trigger_Attack", "TUTORIAL_ATTACK_001",
             enemyPoint.position - boxToEnemy * 5f, boxToEnemy);
+        ConfigureCompletionTrigger(scene, triggerGroup, "Trigger_TutorialComplete",
+            patrolRoute.position + boxToEnemy * 6f, boxToEnemy);
 
         ConfigureItemTutorialMessage();
 
@@ -110,6 +112,41 @@ public static class TutorialInteractionInstaller
         TutorialTrigger trigger = triggerObject.GetComponent<TutorialTrigger>();
         SerializedObject serializedTrigger = new SerializedObject(trigger);
         serializedTrigger.FindProperty("tutorialId").stringValue = tutorialId;
+        serializedTrigger.FindProperty("triggerOnce").boolValue = true;
+        serializedTrigger.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(triggerObject);
+    }
+
+    private static void ConfigureCompletionTrigger(
+        Scene scene,
+        Transform parent,
+        string objectName,
+        Vector3 position,
+        Vector3 forward)
+    {
+        Transform existing = FindTransform(scene, objectName);
+        GameObject triggerObject;
+        if (existing != null)
+        {
+            triggerObject = existing.gameObject;
+            triggerObject.transform.SetParent(parent, true);
+        }
+        else
+        {
+            triggerObject = new GameObject(objectName, typeof(BoxCollider), typeof(TutorialCompletionTrigger));
+            triggerObject.transform.SetParent(parent, true);
+            SceneManager.MoveGameObjectToScene(triggerObject, scene);
+        }
+
+        triggerObject.transform.position = new Vector3(position.x, position.y + 1f, position.z);
+        triggerObject.transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
+
+        BoxCollider collider = triggerObject.GetComponent<BoxCollider>();
+        collider.isTrigger = true;
+        collider.size = new Vector3(4f, 2f, 1.5f);
+
+        TutorialCompletionTrigger completionTrigger = triggerObject.GetComponent<TutorialCompletionTrigger>();
+        SerializedObject serializedTrigger = new SerializedObject(completionTrigger);
         serializedTrigger.FindProperty("triggerOnce").boolValue = true;
         serializedTrigger.ApplyModifiedPropertiesWithoutUndo();
         EditorUtility.SetDirty(triggerObject);

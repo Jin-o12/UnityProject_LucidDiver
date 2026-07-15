@@ -1241,6 +1241,12 @@ MonoBehaviour:
   lobbyScene:
     sceneAsset: {fileID: 102900000, guid: c67beebbfb6b5ad47b3fa2ef3f658b3d, type: 3}
     sceneName: LobbyScene
+  tutorialScene:
+    sceneAsset: {fileID: 102900000, guid: 6d0743ae57c0d9340a94c5a0cdfa9468, type: 3}
+    sceneName: TutorialScene
+  tutorialAdditiveScene:
+    sceneAsset: {fileID: 102900000, guid: d14e096a1e2b0ce4ab54cb4c3fa5902a, type: 3}
+    sceneName: DemoScene Tutorial
   levelScene:
     sceneAsset: {fileID: 102900000, guid: 8c36779eaef1e344bb12278c70f768d6, type: 3}
     sceneName: LevelDesignScene Additive
