@@ -3,15 +3,49 @@
     "CharacterTID": 101,
     "CharacterName": "Yuan",
     "Situation": "lobbyEnter",
+    "RequiredLevel": 0,
     "DialogID": 10101,
-    "Text": "로비 씬에서의 대사 1"
+    "Text": "로비 씬에서의 대사 0-1"
   },
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
     "Situation": "lobbyEnter",
+    "RequiredLevel": 0,
     "DialogID": 10102,
-    "Text": "로비 씬에서의 대사 2"
+    "Text": "로비 씬에서의 대사 0-2"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "lobbyEnter",
+    "RequiredLevel": 3,
+    "DialogID": 10103,
+    "Text": "로비 씬에서의 대사 3-1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "lobbyEnter",
+    "RequiredLevel": 3,
+    "DialogID": 10104,
+    "Text": "로비 씬에서의 대사 3-2"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "lobbyEnter",
+    "RequiredLevel": 5,
+    "DialogID": 10105,
+    "Text": "로비 씬에서의 대사 5-1"
+  },
+  {
+    "CharacterTID": 101,
+    "CharacterName": "Yuan",
+    "Situation": "lobbyEnter",
+    "RequiredLevel": 5,
+    "DialogID": 10106,
+    "Text": "로비 씬에서의 대사 5-2"
   },
   {
     "CharacterTID": 101,
