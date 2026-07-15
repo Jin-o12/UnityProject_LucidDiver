@@ -6929,10 +6929,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timerCanvas: {fileID: 1160705298}
   escapeTime: 3
-  Escape_Interact_AudioIDPool: 
-  Escape_Channeling_AudioIDPool: 
-  Escape_Success_AudioIDPool: 
-  Escape_Faild_AudioIDPool: 
+  Escape_Interact_AudioIDPool: a3280000
+  Escape_Channeling_AudioIDPool: a1280000
+  Escape_Success_AudioIDPool: a4280000
+  Escape_Faild_AudioIDPool: a2280000
   failAudioTime: 1.5
 --- !u!54 &1427747838
 Rigidbody:
