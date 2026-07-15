@@ -6,12 +6,13 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public sealed class TutorialTrigger : MonoBehaviour
 {
-    [SerializeField] private string tutorialId = "TUTORIAL_MOVE_001";
+    [SerializeField] private string triggerValue;
+    [SerializeField] private string fallbackTutorialId = "";
     [SerializeField] private bool triggerOnce = true;
 
     private bool consumed;
 
-    public string TutorialId => tutorialId;
+    public string TriggerValue => string.IsNullOrWhiteSpace(triggerValue) ? gameObject.name : triggerValue;
     public bool IsConsumed => consumed;
 
     private void Reset()
@@ -27,7 +28,13 @@ public sealed class TutorialTrigger : MonoBehaviour
             return;
 
         TutorialManager manager = TutorialManager.Instance ?? FindFirstObjectByType<TutorialManager>();
-        if (manager != null && manager.Show(tutorialId))
+        if (manager == null)
+            return;
+
+        bool handledByCondition = manager.NotifyTriggerEnter(TriggerValue);
+        bool handledByFallback = !handledByCondition && !string.IsNullOrWhiteSpace(fallbackTutorialId) && manager.Show(fallbackTutorialId);
+
+        if (handledByCondition || handledByFallback)
             consumed = triggerOnce;
     }
 

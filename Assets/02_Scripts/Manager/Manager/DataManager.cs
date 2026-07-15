@@ -23,7 +23,8 @@ public class DataManager : MonoBehaviour
         }
         else
         {
-            Destroy(gameObject);
+            // 같은 Manager 오브젝트에 다른 매니저 컴포넌트가 함께 붙어 있으므로 오브젝트 전체가 아니라 DataManager 컴포넌트만 제거합니다.
+            Destroy(this);
             return;
         }
         DontDestroyOnLoad(gameObject);

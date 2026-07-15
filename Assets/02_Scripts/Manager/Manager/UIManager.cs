@@ -1,29 +1,50 @@
-/// <summary>
-/// 게임 내 모든 UI들을 관리하는 인스턴스 클래스
-/// </summary>
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 게임 내 UI 프리팹을 생성, 캐싱, 열기, 닫기 처리하는 매니저입니다.
+/// 씬 전환 또는 Additive 씬 로드 중 UIManager가 중복 생성될 수 있습니다.
+/// 이 경우 중복 매니저의 UI 프리팹 등록값만 기존 매니저에 병합하고 중복 오브젝트는 제거합니다.
+/// </summary>
 public class UIManager : MonoBehaviour
 {
-    public static UIManager Instance { get; private set; }                          // 인스턴스
+    private static UIManager instance;
 
-    [Header("UI 프리팹 등록")]
-    [SerializeField] private List<GameObject> uiPrefabs = new();                    // UI 프리팹 목록
-    
-    private readonly Dictionary<Type, MonoBehaviour> uiInstances = new();           // 생성된 UI 캐시가 저장되는 딕셔너리
-    private readonly Stack<MonoBehaviour> uiStack = new();                          // UI 레이어 계층을 관리 할 스텍
+    // 파괴된 static 참조가 남았을 때 로드된 씬에서 살아있는 UIManager를 다시 찾아 복구합니다.
+    public static UIManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+#if UNITY_2023_1_OR_NEWER
+                instance = FindFirstObjectByType<UIManager>();
+#else
+                instance = FindObjectOfType<UIManager>();
+#endif
+            }
+
+            return instance;
+        }
+        private set => instance = value;
+    }
+
+    [Header("UI Prefab Registry")]
+    [SerializeField] private List<GameObject> uiPrefabs = new();
+
+    private readonly Dictionary<Type, MonoBehaviour> uiInstances = new();
+    private readonly Stack<MonoBehaviour> uiStack = new();
 
     private void Awake()
     {
-        // 인스턴스 생성 및 중복 방지
-        if(Instance != null && Instance != this)
+        UIManager currentInstance = Instance;
+        if(currentInstance != null && currentInstance != this)
         {
-            // 씬 전환/어디티브 로드로 UIManager가 중복 생성되면
-            // 먼저 살아남은 매니저에 현재 씬의 UI 프리팹 등록값을 합친 뒤 중복 오브젝트만 제거한다.
-            Instance.MergePrefabsFrom(uiPrefabs);
-            Destroy(gameObject);
+            // Additive 씬 로드로 중복 UIManager가 생성되면 프리팹 등록값만 병합하고 중복 오브젝트는 제거합니다.
+            currentInstance.MergePrefabsFrom(uiPrefabs);
+            // 같은 Manager 오브젝트에 다른 매니저 컴포넌트가 함께 붙어 있으므로 오브젝트 전체가 아니라 UIManager 컴포넌트만 제거합니다.
+            Destroy(this);
             return;
         }
 
@@ -31,61 +52,78 @@ public class UIManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    /* 원하는 타입의 UI를 실행: Open<열려는 UI타입>() */
+    private void OnDestroy()
+    {
+        // 자기 자신이 싱글톤 참조라면 파괴 시점에 참조를 비워 다음 접근 때 다시 찾을 수 있게 합니다.
+        if(instance == this)
+            instance = null;
+    }
+
+    /// <summary>
+    /// 지정한 타입의 UI를 열고 화면 최상단에 배치합니다.
+    /// </summary>
     public UiType Open<UiType>() where UiType: MonoBehaviour
     {
-        // 캐싱되있거나 새로 만들어진 ui를 받아옵니다
+        if(this == null)
+            return null;
+
         UiType ui = GetOrCreate<UiType>();
         if (ui == null) return null;
 
-        // 해당 UI 활성화
         ui.gameObject.SetActive(true);
-        // 하이라키의 가장 하단에 두어 UI가 가장 위에 그려지도록 합니다
         ui.transform.SetAsLastSibling();
-        // 스택에 없는 UI일 경우에만 UI를 스택에 추가합니다 (중복 push 방지)
+
         if (!uiStack.Contains(ui)) uiStack.Push(ui);
-        // 생성되어있는 UI 캐시를 반환합니다
+
         return ui;
     }
 
-    /* 원하는 UI를 닫음: Close<닫으려는 UI타입>() */
+    /// <summary>
+    /// 지정한 타입의 UI를 닫습니다.
+    /// </summary>
     public void Close<UiType>() where UiType: MonoBehaviour
     {
-        // 해당 타입의 UI가 존재하지 않는다면 아래의 과정을 생략함
+        if(this == null)
+            return;
+
         if(!uiInstances.TryGetValue(typeof(UiType), out var ui) || ui == null) return;
-        
-        // UI 비활성화, 스택에서 해당 UI 삭제
+
         ui.gameObject.SetActive(false);
         if(uiStack.Contains(ui)) RemoveFromStack(ui);
     }
 
-    /* 가장 최근 열린 UI를 닫음 */
+    /// <summary>
+    /// 가장 최근에 열린 UI를 닫습니다.
+    /// </summary>
     public void CloseNowUI()
     {
-        // 스택이 비어있는지 확인하는 동시에 맨 위 UI를 꺼냄
+        if(this == null)
+            return;
+
         if (uiStack.TryPop(out MonoBehaviour topUI))
         {
-            // 꺼낸 UI 비활성화
-            topUI.gameObject.SetActive(false);
+            if(topUI != null)
+                topUI.gameObject.SetActive(false);
         }
         else
         {
-            // 스택이 비어있을 때 (더 이상 닫을 창이 없을 때)의 예외 처리
-            Debug.LogWarning("현재 스택에 닫을 UI가 없습니다.");
+            Debug.LogWarning("현재 닫을 UI가 없습니다.");
         }
     }
 
-    /* UI가 열릴 때, 이미 캐싱된 UI를 찾고 그렇지 않다면 새로 생성함 */
+    /// <summary>
+    /// 캐시된 UI를 반환하거나, 등록된 프리팹에서 찾아 새로 생성합니다.
+    /// </summary>
     private UiType GetOrCreate<UiType>() where UiType: MonoBehaviour
     {
-        // UI 캐싱 목록에서 T 타입에 맞는 UI를 찾고 해당 UI가 존재할 시 해당 UI 리턴
-        if(uiInstances.TryGetValue(typeof(UiType), out var cached) && cached!=null)
+        if(this == null)
+            return null;
+
+        if(uiInstances.TryGetValue(typeof(UiType), out var cached) && cached != null)
             return (UiType)cached;
 
-        // 캐싱 되어 있지 않은, 즉 처음 생성되는 UI라면 첫 1회 생성
         foreach(var prefab in uiPrefabs)
         {
-            // 찾는 타입에 맞는 (해당 컴포넌트가 붙어있는) 프리팹이 존재한다면
             if(prefab != null && prefab.TryGetComponent<UiType>(out _))
             {
                 UiType ui = Instantiate(prefab, transform).GetComponent<UiType>();
@@ -93,11 +131,14 @@ public class UIManager : MonoBehaviour
                 return ui;
             }
         }
-        Debug.LogError($"UiManager: UI 프리팹이 등록되지 않았습니다. ({typeof(UiType).Name}) / 등록 수: {uiPrefabs.Count}", this);
+
+        Debug.LogError($"UIManager: UI 프리팹이 등록되지 않았습니다. ({typeof(UiType).Name}) / 등록 수: {uiPrefabs.Count}", this);
         return null;
     }
 
-    /* 중복 UIManager가 가진 UI 프리팹 등록값을 현재 싱글톤 매니저에 병합 */
+    /// <summary>
+    /// 중복 UIManager가 가진 UI 프리팹 등록값을 현재 싱글톤 매니저에 병합합니다.
+    /// </summary>
     private void MergePrefabsFrom(IEnumerable<GameObject> prefabs)
     {
         if(prefabs == null) return;
@@ -110,16 +151,16 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    /* 스택 내의 특정 UI를 제거 */
+    /// <summary>
+    /// UI 스택에서 특정 UI만 제거합니다.
+    /// </summary>
     private void RemoveFromStack(MonoBehaviour ui)
     {
-        // Stack의 데이터들을 임시로 가지고 있을 List를 만들어 데이터를 옮기고
         var temp = new List<MonoBehaviour>(uiStack);
-        // 지우고자 하는 UI만을 제거한 뒤
         temp.Remove(ui);
-        // Stack에 다시 UI 정보를 쌓습니다
+
         uiStack.Clear();
-        for(int i=0 ; i < temp.Count ; i++)
-            uiStack.Push(temp[i]);        
+        for(int i = 0 ; i < temp.Count ; i++)
+            uiStack.Push(temp[i]);
     }
 }

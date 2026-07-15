@@ -493,8 +493,9 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 597352699}
+  - {fileID: 4794280}
   m_Father: {fileID: 420978737}
-  m_LocalEulerAnglesHint: {x: 45, y: -45, z: 0}
+  m_LocalEulerAnglesHint: {x: 50, y: -50, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -594,6 +595,7 @@ MonoBehaviour:
   sphereRadius: 0.35
   playerHeightOffset: 1
   maxHitCount: 32
+  showDebugLog: 1
 --- !u!1 &331859819
 GameObject:
   m_ObjectHideFlags: 0
@@ -1184,8 +1186,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9085d86c646f8e74c8a839fde94049da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerRuntimeDataSO: {fileID: 11400000, guid: fa24d9c9857070545bf4a1ecd531daa4,
-    type: 2}
 --- !u!114 &8254926602438052759
 MonoBehaviour:
   m_ObjectHideFlags: 0

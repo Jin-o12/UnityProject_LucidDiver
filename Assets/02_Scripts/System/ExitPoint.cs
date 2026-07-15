@@ -52,8 +52,8 @@ public class ExitPoint : MonoBehaviour, IInteractable
         // 탈출 타이머 시작
         escapeCoroutine = StartCoroutine(StartEscapeTimer(playerID));
         // 사운드 재생 이벤트를 AudioManager에 전달하여 탈출 포인트 지점에서 3D 오디오 재생
-        int escapeInteractAudioID = Escape_Interact_AudioIDPool[UnityEngine.Random.Range(0, Escape_Interact_AudioIDPool.Length)];
-        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(escapeInteractAudioID, gameObject.transform.position);
+        if (TryGetRandomAudioId(Escape_Interact_AudioIDPool, out int escapeInteractAudioID))
+            GlobalEventBus.OnPlay3DSoundRequested?.Invoke(escapeInteractAudioID, gameObject.transform.position);
         // 상호작용 성공, 상호작용 리스트에서 삭제 요청
         return false;
     }
@@ -74,8 +74,9 @@ public class ExitPoint : MonoBehaviour, IInteractable
         isEscaping = true;
         BeginEscapeChannelVfx();
         // 사운드 재생 이벤트를 AudioManager에 전달하여 2D 오디오 재생
-        int escapeChannelingAudioID = Escape_Channeling_AudioIDPool[UnityEngine.Random.Range(0, Escape_Channeling_AudioIDPool.Length)];
-        GlobalEventBus.OnPlay2DSoundRequested?.Invoke(escapeChannelingAudioID);
+        bool hasChannelingAudio = TryGetRandomAudioId(Escape_Channeling_AudioIDPool, out int escapeChannelingAudioID);
+        if (hasChannelingAudio)
+            GlobalEventBus.OnPlay2DSoundRequested?.Invoke(escapeChannelingAudioID);
         // 탈출 채널링 시간 동안 대기
         yield return new WaitForSeconds(escapeTime);
 
@@ -88,11 +89,12 @@ public class ExitPoint : MonoBehaviour, IInteractable
         GlobalEventBus.OnEscapeRequest?.Invoke(true);
 
         // 탈출 성공 시 채널링 사운드 오디오 소스를 제거
-        GlobalEventBus.OnStop2DSoundRequested?.Invoke(escapeChannelingAudioID);
+        if (hasChannelingAudio)
+            GlobalEventBus.OnStop2DSoundRequested?.Invoke(escapeChannelingAudioID);
 
         // 사운드 재생 이벤트를 AudioManager에 전달하여 2D 오디오 재생
-        int escapeSuccessAudioID = Escape_Success_AudioIDPool[UnityEngine.Random.Range(0, Escape_Success_AudioIDPool.Length)];
-        GlobalEventBus.OnPlay2DSoundRequested?.Invoke(escapeSuccessAudioID);
+        if (TryGetRandomAudioId(Escape_Success_AudioIDPool, out int escapeSuccessAudioID))
+            GlobalEventBus.OnPlay2DSoundRequested?.Invoke(escapeSuccessAudioID);
     }
 
     private void EscapeFailure(int _playerID)  //플레이어의 탈출 채널링 코루틴을 중단하는 판정을 전달
@@ -122,12 +124,24 @@ public class ExitPoint : MonoBehaviour, IInteractable
     private IEnumerator EscapeFaildSound(float soundTime)
     {
         // 사운드 재생 이벤트를 AudioManager에 전달하여 2D 오디오 재생
-        int escapeFailAudioID = Escape_Faild_AudioIDPool[UnityEngine.Random.Range(0, Escape_Faild_AudioIDPool.Length)];
+        if (!TryGetRandomAudioId(Escape_Faild_AudioIDPool, out int escapeFailAudioID))
+            yield break;
+
         GlobalEventBus.OnPlay2DSoundRequested?.Invoke(escapeFailAudioID);
 
         // 정해진 시간 동안 재생 후 중단
         yield return new WaitForSeconds(soundTime);
         GlobalEventBus.OnStop2DSoundRequested?.Invoke(escapeFailAudioID);
+    }
+
+    private static bool TryGetRandomAudioId(int[] audioIdPool, out int audioId)
+    {
+        audioId = 0;
+        if (audioIdPool == null || audioIdPool.Length == 0)
+            return false;
+
+        audioId = audioIdPool[UnityEngine.Random.Range(0, audioIdPool.Length)];
+        return true;
     }
 
     /// <summary>

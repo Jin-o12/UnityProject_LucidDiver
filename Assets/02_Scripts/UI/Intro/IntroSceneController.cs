@@ -22,6 +22,7 @@ public class IntroSceneController : MonoBehaviour
 
     [Header("Tutorial Routing")]
     [SerializeField] private bool useTutorialScene = true; // 개발/테스트 중 튜토리얼을 우회하고 바로 로비로 보낼지 제어
+    [SerializeField] private bool resetTutorialCompletedOnIntro = false; // 개발/테스트 중 튜토리얼 완료 저장값만 false로 되돌릴지 제어
 
     [Header("UI Panels")]
     [SerializeField] private CanvasGroup skipGuidePanel; // 스킵 가이드 패널 (중앙 배치)
@@ -49,6 +50,8 @@ public class IntroSceneController : MonoBehaviour
 
     private void Awake()
     {
+        ResetTutorialCompletedFlagIfNeeded();
+
         // 씬 내 필수 UI 컴포넌트 자동 바인딩 및 예외 처리
         if (videoPlayer == null) videoPlayer = GetComponent<VideoPlayer>();
         if (videoPlayer == null) videoPlayer = gameObject.AddComponent<VideoPlayer>();
@@ -456,6 +459,47 @@ public class IntroSceneController : MonoBehaviour
     }
 
     // persistentDataPath/SaveFile.json 데이터를 파싱하여 최초 시작 유무 리턴
+    private void ResetTutorialCompletedFlagIfNeeded()
+    {
+        if (!resetTutorialCompletedOnIntro)
+            return;
+
+        string path = GetSaveFilePath();
+        PlayerSaveData data = null;
+
+        if (File.Exists(path))
+        {
+            try
+            {
+                string json = File.ReadAllText(path);
+                data = JsonUtility.FromJson<PlayerSaveData>(json);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[Intro] 튜토리얼 완료 플래그 리셋을 위한 세이브 로드 실패: {e.Message}");
+            }
+        }
+
+        data ??= new PlayerSaveData();
+
+        if (!data.isTutorialCompleted)
+            return;
+
+        data.isTutorialCompleted = false;
+
+        try
+        {
+            string json = JsonUtility.ToJson(data, true);
+            File.WriteAllText(path, json);
+            PlayerSaveDataSO.Instance?.Initialize(data);
+            Debug.Log("[Intro] 개발/테스트 옵션에 의해 isTutorialCompleted를 false로 변경했습니다.");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[Intro] 튜토리얼 완료 플래그 리셋 저장 실패: {e.Message}");
+        }
+    }
+
     private bool ShouldEnterTutorialScene()
     {
         if (!useTutorialScene)
