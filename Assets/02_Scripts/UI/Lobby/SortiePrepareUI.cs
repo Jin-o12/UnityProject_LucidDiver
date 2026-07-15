@@ -41,6 +41,21 @@ public class SortiePrepareUI : MonoBehaviour
     public Sprite slotSprite3;  //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
     public int slotCount3;      //2번 슬롯 아이템의 개수 데이터를 받아옴
 
+    [Header("Artifact Slot 1")]
+    [SerializeField] private Image imageArtifactIcon1;
+    [SerializeField] private TextMeshProUGUI textArtifactName1;
+    [SerializeField] private TextMeshProUGUI textArtifactCount1;
+
+    [Header("Artifact Slot 2")]
+    [SerializeField] private Image imageArtifactIcon2;
+    [SerializeField] private TextMeshProUGUI textArtifactName2;
+    [SerializeField] private TextMeshProUGUI textArtifactCount2;
+
+    [Header("Artifact Slot 3")]
+    [SerializeField] private Image imageArtifactIcon3;
+    [SerializeField] private TextMeshProUGUI textArtifactName3;
+    [SerializeField] private TextMeshProUGUI textArtifactCount3;
+
     // 캐릭터 정보 인터페이스
     private ICharDataRepository charRepo;
     // 아이템 정보 인터페이스
@@ -116,6 +131,24 @@ public class SortiePrepareUI : MonoBehaviour
         }
     }
 
+    private void UpdateArtifactSlot(int index, int tid, Sprite icon)
+    {
+        if (!gameObject.activeInHierarchy) return;
+
+        if (index == 0)
+        {
+            SetSlotUI(tid, icon, tid != 0 ? 1 : 0, imageArtifactIcon1, textArtifactName1, textArtifactCount1, "아티팩트 1", true);
+        }
+        else if (index == 1)
+        {
+            SetSlotUI(tid, icon, tid != 0 ? 1 : 0, imageArtifactIcon2, textArtifactName2, textArtifactCount2, "아티팩트 2", true);
+        }
+        else if (index == 2)
+        {
+            SetSlotUI(tid, icon, tid != 0 ? 1 : 0, imageArtifactIcon3, textArtifactName3, textArtifactCount3, "아티팩트 3", true);
+        }
+    }
+
     private void OnDisable()
     {
     }
@@ -136,6 +169,9 @@ public class SortiePrepareUI : MonoBehaviour
         // 세이브 데이터에서 퀵슬롯 정보를 직접 로드하여 갱신
         await LoadQuickSlotsFromSave(saveData);
 
+        // 세이브 데이터에서 아티팩트 정보를 로드하여 갱신
+        await LoadArtifactSlotsFromSave(saveData);
+
         int currentLevel = PlayerSaveDataSO.Instance.GetLinkRateLevel();
         int maxLevel = charData.requireLinkRatePerLevel.Length - 1;
         if(sliderLinkRate != null)
@@ -155,7 +191,7 @@ public class SortiePrepareUI : MonoBehaviour
         }
     }
 
-    private void SetSlotUI(int tid, Sprite icon, int count, Image slotIcon, TextMeshProUGUI slotName, TextMeshProUGUI slotCount, string emptySlotName)
+    private void SetSlotUI(int tid, Sprite icon, int count, Image slotIcon, TextMeshProUGUI slotName, TextMeshProUGUI slotCount, string emptySlotName, bool isArtifact = false)
     {
         if (tid == 0 || count <= 0)
         {
@@ -173,7 +209,7 @@ public class SortiePrepareUI : MonoBehaviour
 
         ItemData itemData = GetItemDataByTID(tid);
         if (slotName != null) slotName.text = itemData != null ? itemData.itemName : $"TID {tid}";
-        if (slotCount != null) slotCount.text = $"x{count}";
+        if (slotCount != null) slotCount.text = isArtifact ? "" : $"x{count}";
     }
 
     private ItemData GetItemDataByTID(int tid)
@@ -234,6 +270,29 @@ public class SortiePrepareUI : MonoBehaviour
             Sprite icon = data != null ? await AddressableLoader.LoadAssetAsync<Sprite>(data.iconAddress) : null;
             
             UpdateQuickSlot(i, tid, icon, count);
+        }
+    }
+
+    private async Task LoadArtifactSlotsFromSave(PlayerSaveData saveData)
+    {
+        if (saveData == null || saveData.artifactSlots == null) return;
+
+        // Initialize slots with empty state first
+        for (int i = 0; i < 3; i++)
+        {
+            UpdateArtifactSlot(i, 0, null);
+        }
+
+        // Load based on save data
+        foreach (var slot in saveData.artifactSlots)
+        {
+            if (slot == null || slot.index < 0 || slot.index >= 3) continue;
+
+            int tid = slot.TID;
+            ItemData data = GetItemDataByTID(tid);
+            Sprite icon = data != null ? await AddressableLoader.LoadAssetAsync<Sprite>(data.iconAddress) : null;
+            
+            UpdateArtifactSlot(slot.index, tid, icon);
         }
     }
 }

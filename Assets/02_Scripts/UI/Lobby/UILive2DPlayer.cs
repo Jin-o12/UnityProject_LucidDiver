@@ -19,13 +19,19 @@ public class UILive2DPlayer : MonoBehaviour
         rawImage = GetComponent<RawImage>();
     }
 
-    private void Start()
+    private void OnEnable()
     {
         if (playOnStart)
         {
             PlayVideo();
         }
     }
+
+    private void OnDisable()
+    {
+        StopVideo();
+    }
+
 
     /// <summary>
     /// 재생할 비디오 클립을 지정하여 재생을 구동합니다.

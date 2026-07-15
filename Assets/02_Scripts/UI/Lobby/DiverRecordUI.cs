@@ -10,6 +10,9 @@ public class DiverRecordUI : MonoBehaviour
     [SerializeField] private Button buttonRecordCard01;
     [SerializeField] private Button buttonRecordCard02;
 
+
+
+
     [Header("Diver Info")]
     [SerializeField] private TextMeshProUGUI textDiverName;
     [SerializeField] private TextMeshProUGUI textDiverRole;
@@ -121,9 +124,14 @@ public class DiverRecordUI : MonoBehaviour
 
     private void OnDisable()
     {
+        buttonBackTop.onClick.RemoveListener(OnClickBack);
+        buttonBackBottom.onClick.RemoveListener(OnClickBack);
         buttonRecordCard01.onClick.RemoveListener(OnClickRecord01);
         buttonRecordCard02.onClick.RemoveListener(OnClickRecord02);
+
+        GlobalEventBus.RecordDataLoad -= SetData;
     }
+
 
     public void SetData(int newLinkRateLevel, bool newMemoryLogUnlocked, bool newHasNewMemoryLog)
     {
@@ -160,12 +168,20 @@ public class DiverRecordUI : MonoBehaviour
 
     private void RefreshDiverInfo()
     {
-        // 플레이어 저장 데이터 SO
+        if (PlayerSaveDataSO.Instance == null) return;
         PlayerSaveData saveData = PlayerSaveDataSO.Instance.currentData;
+        if (saveData == null)
+        {
+            saveData = PlayerSaveDataSO.Instance.LoadSaveData();
+            if (saveData == null) return;
+        }
         // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터 추출
         CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
+        if (charData == null) return;
         // 플레이어가 선택 한 캐릭터의 세이브 데이터 추출
         SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+        if (charSaveData == null) return;
+
 
         // {다이버 이름 표시}
         if (textDiverName != null)
