@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEditor.iOS;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -80,6 +81,7 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnPlayBGMRequested += PlayBGM;
         GlobalEventBus.OnPlay2DSoundRequested += Play2DSound;
         GlobalEventBus.OnPlay3DSoundRequested += Play3DSound;
+        GlobalEventBus.OnPlay3DSoundRequestedWithHandle += Play3DSoundAndReturn;
 
         // 사운드 종료 요청 이벤트 구독
         GlobalEventBus.OnStopBGMRequested += StopBGM;
@@ -95,6 +97,7 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnPlayBGMRequested -= PlayBGM;
         GlobalEventBus.OnPlay2DSoundRequested -= Play2DSound;
         GlobalEventBus.OnPlay3DSoundRequested -= Play3DSound;
+        GlobalEventBus.OnPlay3DSoundRequestedWithHandle -= Play3DSoundAndReturn;
 
         GlobalEventBus.OnStopBGMRequested -= StopBGM;
         GlobalEventBus.OnStop2DSoundRequested -= Stop2DSound;
@@ -188,7 +191,7 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    // 3D 사운드 재생 요청 처리
+    // 3D 사운드 재생 요청 처리 (루프하지 않는 일회용 사운드 오브젝트를 생성)
     private void Play3DSound(int audioID, Vector3 sourcePosition)
     {
         FindAudio(audioID, out AudioData _data, out AudioClip _clip);
@@ -201,6 +204,10 @@ public class AudioManager : MonoBehaviour
         // 임시 오디오 소스 설정
         AudioSource _source = _tempObj.AddComponent<AudioSource>();
         _source.clip = _clip;
+        _source.spatialBlend = 1.0f; // 3D
+        _source.rolloffMode = AudioRolloffMode.Logarithmic;
+        _source.minDistance = 1f;
+        _source.maxDistance = Mathf.Max(10f, _data.Volume * 50f);
         _source.volume = _data.Volume * _data.AudioType switch
         {
             AudioType.BGM   => BGMSource.volume,
@@ -208,7 +215,6 @@ public class AudioManager : MonoBehaviour
             AudioType.UI    => UISource.volume,
             _               => SFXSource.volume
         };
-        _source.spatialBlend = 1f;
         _source.loop = _data.Loop;
 
         // 임시 오디오 소스 재생
@@ -216,6 +222,41 @@ public class AudioManager : MonoBehaviour
 
         // 루프 사운드가 아닌 경우 클립 길이만큼 경과 시 제거
         if (_data.Loop == false) Destroy(_tempObj, _clip.length);
+    }
+
+    // 3D 루프 사운드 재생 요청 처리 (루프 요청을 제거할 수 있도록 GameObject를 out으로 리턴합니다)
+    private GameObject Play3DSoundAndReturn(int audioID, Vector3 sourcePosition)
+    {
+        FindAudio(audioID, out AudioData _data, out AudioClip _clip);
+        if (_clip == null) return null;
+
+        // 임시 오디오 소스를 재생할 오브젝트를 생성
+        GameObject tempObj = new($"Temp3DSound_{audioID}");
+        tempObj.transform.position = sourcePosition;
+
+        // 임시 오디오 소스 설정
+        AudioSource src = tempObj.AddComponent<AudioSource>();
+        src.clip = _clip;
+        src.spatialBlend = 1.0f; // 3D
+        src.rolloffMode = AudioRolloffMode.Logarithmic;
+        src.minDistance = 1f;
+        src.maxDistance = Mathf.Max(10f, _data.Volume * 50f);
+        src.volume = _data.Volume * _data.AudioType switch
+        {
+            AudioType.BGM => BGMSource.volume,
+            AudioType.SFX => SFXSource.volume,
+            AudioType.UI => UISource.volume,
+            _ => SFXSource.volume
+        };
+        src.loop = _data.Loop;
+
+        // 임시 오디오 소스 재생
+        src.Play();
+
+        // 루프 사운드가 아닌 경우 클립 길이만큼 경과 시 제거
+        if (!_data.Loop) Destroy(tempObj, _clip.length);
+
+        return tempObj;
     }
 
     // BGM 재생 중단 처리

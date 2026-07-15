@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,6 +11,7 @@ public class GrenadeProjectile : MonoBehaviour
     [Header("투척 연출 설정")]
     public float flightDuration = 0.5f; // 목적지까지 날아가는 데 걸리는 시간
     public float arcHeight = 3.0f;      // 포물선의 최대 높이
+    private int Decoy_AudioID = 10801;  // 어그로 디코이 사운드 이펙트 
 
     public void SetupAndThrow(SkillData _skill, GameObject _skillUser, CasterStatPayload _stats, Vector3 _targetPosition)
     {
@@ -82,6 +83,20 @@ public class GrenadeProjectile : MonoBehaviour
             if (effect.effectType == EffectType.aggro && effect.effectValue > maxDuration) maxDuration = effect.effectValue;
         }
 
+        foreach (SkillEffect _effect in skillData.effects)
+        {
+            // 어그로 효과가 있다면 3D 사운드 오브젝트를 생성합니다
+            if (_effect.effectType == EffectType.aggro)
+            {
+                GameObject sfxObj = GlobalEventBus.OnPlay3DSoundRequestedWithHandle?.Invoke(Decoy_AudioID, transform.position);
+                if (sfxObj != null)
+                {
+                    // 어그로 효과의 지속시간이 끝나면 사운드 오브젝트가 소멸합니다
+                    StartCoroutine(StopAndDestroyTempSoundAfter(sfxObj, maxDuration));
+                }
+            }
+        }
+
         // 폭발 수행 및 범위 내 콜라이더 탐색
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, maxRadius);
 
@@ -117,6 +132,16 @@ public class GrenadeProjectile : MonoBehaviour
         }
 
         Destroy(gameObject);
+    }
+
+    // 정해진 지속 시간 후 소리 오브젝트를 소멸하는 코루틴
+    private IEnumerator StopAndDestroyTempSoundAfter(GameObject soundObj, float delay)
+    {
+        if (soundObj == null) yield break;
+
+        //delay 시간 동안 대기한 후 AudioSource 오브젝트를 제거합니다
+        yield return new WaitForSeconds(delay);
+        if (soundObj.TryGetComponent<AudioSource>(out var src)) GlobalEventBus.OnStop3DSoundRequested?.Invoke(src);
     }
 
     private void ApplySkillEffects(IEffectReceiver _receiver, float distance)

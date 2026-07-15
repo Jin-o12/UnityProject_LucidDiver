@@ -781,6 +781,9 @@ MonoBehaviour:
     firstSlashDamage: 8
     secondSlashDamage: 12
     secondSlashTurnLimit: 25
+    AttackCue_AudioIDPool: db270000
+    firstSlash_AudioIDPool: d9270000
+    secondSlash_AudioIDPool: da270000
   interceptPlanner:
     enableInterceptChase: 1
     minInterceptDistance: 4
@@ -793,6 +796,7 @@ MonoBehaviour:
     interceptNavMeshSampleDistance: 2.5
     minInterceptAdvanceDistance: 0.75
   attackOrigin: {fileID: 56568208924813218}
+  dissolve_AudioIDPool: dc270000
 --- !u!195 &7557683503473658478
 NavMeshAgent:
   m_ObjectHideFlags: 0

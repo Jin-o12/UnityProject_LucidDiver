@@ -11,6 +11,7 @@ public class DoorInteractable : MonoBehaviour
 
     [Header("Interaction")]
     [SerializeField] private GameObject interactionGuideUI;
+    public int DoorOpen_AudioID = 10303;  // 문 열기 사운드 ID 리스트
 
     private bool isPlayerInRange;
     private bool isOpen;
@@ -52,6 +53,9 @@ public class DoorInteractable : MonoBehaviour
         // Animator 파라미터를 변경해 문 애니메이션을 재생한다
         if (doorAnimator != null)
             doorAnimator.SetBool(openParameterName, isOpen);
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(DoorOpen_AudioID, transform.position);
 
         // 문이 열린 뒤 안내 UI를 숨긴다
         if (interactionGuideUI != null)

@@ -63,6 +63,10 @@ public class ItemBox : MonoBehaviour, IInteractable
     [SerializeField] private float openNoiseRange = 30.0f;
     [SerializeField] private float openNoiseDuration = 1.8f;
 
+    [Header("Audio Settings")]
+    // 상자를 열었을 때 사운드 이펙트를 출력합니다.
+    [SerializeField] private int[] Box_Open_AudioIDPool;
+
     private bool isOpened = false;                                  // 현재 다른 플레이어가 열어 둔 상태인지 여부
     private IItemDataRepository itemRepo;                           // TID 기반 랜덤 루트 생성을 위한 아이템 데이터 저장소
     private PlayerSight playerSight;                                // 플레이어 시야 스크립트
@@ -132,6 +136,10 @@ public class ItemBox : MonoBehaviour, IInteractable
 
         // 상자 오픈 소리는 일반 발소리보다 우선순위가 높고, 추적 중인 적도 끊어낼 수 있게 설정합니다.
         NoiseSystem.Emit(NoiseType.ChestOpen, transform.position, gameObject, openNoiseRange, openNoiseDuration, true, 40);
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 박스 위치에서 3D 오디오를 재생합니다.
+        int openAudioID = Box_Open_AudioIDPool[UnityEngine.Random.Range(0, Box_Open_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(openAudioID, gameObject.transform.position);
 
         // 현재 프로젝트 구조에서는 상호작용 후 별도 기본 동작을 막기 위해 false를 유지합니다.
         return false;

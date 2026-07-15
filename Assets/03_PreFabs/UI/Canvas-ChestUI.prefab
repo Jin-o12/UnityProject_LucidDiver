@@ -103,6 +103,7 @@ MonoBehaviour:
     type: 3}
   slotsObj: []
   closeButton: {fileID: 1532172716666132719}
+  box_rummag_AudioIdPool: 6b290000
 --- !u!114 &6818993471665691721
 MonoBehaviour:
   m_ObjectHideFlags: 0

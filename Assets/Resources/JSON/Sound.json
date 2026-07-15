@@ -366,42 +366,42 @@
   {
     "AudioID": 11001,
     "AudioClip": "GunshotPistol_1",
-    "AudioType": "UI",
+    "AudioType": "SFX",
     "Volume": 1,
     "Loop": false
   },
   {
     "AudioID": 11002,
     "AudioClip": "GunshotPistol_2",
-    "AudioType": "UI",
+    "AudioType": "SFX",
     "Volume": 1,
     "Loop": false
   },
   {
     "AudioID": 11003,
     "AudioClip": "GunshotPistol_3",
-    "AudioType": "UI",
+    "AudioType": "SFX",
     "Volume": 1,
     "Loop": false
   },
   {
     "AudioID": 11004,
     "AudioClip": "Indoor_GunshotPistol_1",
-    "AudioType": "UI",
+    "AudioType": "SFX",
     "Volume": 1,
     "Loop": false
   },
   {
     "AudioID": 11005,
     "AudioClip": "Indoor_GunshotPistol_2",
-    "AudioType": "UI",
+    "AudioType": "SFX",
     "Volume": 1,
     "Loop": false
   },
   {
     "AudioID": 11006,
     "AudioClip": "Indoor_GunshotPistol_3",
-    "AudioType": "UI",
+    "AudioType": "SFX",
     "Volume": 1,
     "Loop": false
   }

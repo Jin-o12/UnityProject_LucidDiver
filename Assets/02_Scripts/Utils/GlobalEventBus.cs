@@ -89,12 +89,13 @@ public class GlobalEventBus
     /// <summary>
     /// 사운드 관리 이벤트
     /// </summary>
-    public static Action<int> OnPlayBGMRequested;                               // BGM 재생 요청: Action<AudioID>
-    public static Action<int> OnPlay2DSoundRequested;                           // 2D 사운드 재생 요청: Action<AudioID>
-    public static Action<int, Vector3> OnPlay3DSoundRequested;                  // 3D 사운드 재생 요청: Action<AudioID, SourcePosition>
-    public static Action OnStopBGMRequested;                                    // BGM 종료 요청
-    public static Action<int> OnStop2DSoundRequested;                           // 2D 사운드 종료 요청: Action<AudioID>
-    public static Action<AudioSource> OnStop3DSoundRequested;                   // 3D 사운드 종료 요청: Action<AudioSource>
+    public static Action<int> OnPlayBGMRequested;                                   // BGM 재생 요청: Action<AudioID>
+    public static Action<int> OnPlay2DSoundRequested;                               // 2D 사운드 재생 요청: Action<AudioID>
+    public static Action<int, Vector3> OnPlay3DSoundRequested;                      // 3D 사운드 재생 요청: Action<AudioID, SourcePosition>
+    public static Func<int, Vector3, GameObject> OnPlay3DSoundRequestedWithHandle;  // 3D 루프 사운드 오브젝트 생성: Func<AudioID, SourcePosition, SourceObj>
+    public static Action OnStopBGMRequested;                                        // BGM 종료 요청
+    public static Action<int> OnStop2DSoundRequested;                               // 2D 사운드 종료 요청: Action<AudioID>
+    public static Action<AudioSource> OnStop3DSoundRequested;                       // 3D 사운드 종료 요청: Action<AudioSource>
 
     /// <summary>
     /// 씬 전환 이벤트

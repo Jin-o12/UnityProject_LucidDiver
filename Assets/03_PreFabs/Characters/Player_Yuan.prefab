@@ -440,6 +440,11 @@ MonoBehaviour:
   movementWallBuffer: 0.05
   evadeCornerProbeRadius: 0.25
   evadeCornerProbeHeight: 0.5
+  FootStep_AudioIDPool: 0a2900000b2900000c2900000d2900000e290000
+  InDoor_FootStep_AudioIDPool: 0529000006290000072900000829000009290000
+  Evade_AudioIDPool: ce290000
+  Throw_AudioIDPool: d1290000
+  FootStep_SoundTime: 2
   walkNoiseRange: 5
   runNoiseRange: 10
   walkNoiseInterval: 0.55
@@ -472,6 +477,8 @@ MonoBehaviour:
   aimOriginHeight: 1
   muzzleBackstepDistance: 0.3
   aimSuccessParallex: 0.1
+  GunshotPistol_AudioIDPool: f92a0000fa2a0000fb2a0000
+  Indoor_GunshotPistol_AudioIDPool: fc2a0000fd2a0000fe2a0000
   apPort: {fileID: 988471778850770418}
 --- !u!114 &3306482627033573694
 MonoBehaviour:
@@ -513,6 +520,8 @@ MonoBehaviour:
   manaRegen: 0
   sprintMP: 0
   evadeMP: 0
+  Hit_AudioIDPool: 75270000762700007727000078270000792700007a2700007b2700007c270000
+  Die_AudioIDPool: 41280000
   lucidMark:
     maxStack: 2
     leakRequiredStack: 2
@@ -772,8 +781,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tr: {fileID: 0}
-  portraitSelf: {fileID: 988471778850770418}
-  aimOriginHeight: 1
   mainCamera: {fileID: 0}
   sightRange: 10
   minCircleSight: 2.5
