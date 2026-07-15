@@ -11,6 +11,18 @@ public class TimeLimitController : MonoBehaviour
     private float artifactTimeLimitSpeedMultiplier = 1.0f; // 아티팩트로 적용되는 시간 감소 속도 배율
     private bool timeFlow;                  //제한 시간 진행 스위치
 
+    //제한 시간 루프 사운드 트리거
+    private bool lowTimeSFX_1 = false;
+    private bool lowTimeSFX_2 = false;
+
+    //제한 시간 루프 사운드 재생 시점
+    private float lowTimeTirggerRatio_1 = 0.5f;  //1차 사운드: 50% 이상 경과
+    private float lowTimeTirggerRatio_2 = 0.2f;  //2차 사운드: 80% 이상 경과
+
+    //제한 시간 루프 사운드 ID
+    private int lowTimeAudioID_1 = 10301;
+    private int lowTimeAudioID_2 = 10302;
+
     private void Awake()
     {
         currentTimeLimit = timeLimit;   //남은 제한 시간 초기화
@@ -38,6 +50,7 @@ public class TimeLimitController : MonoBehaviour
 
         BroadcastCurrentTime();
         TryFinishByTimeout();
+        TryTimeLoopSFX();
     }
 
     /// <summary>
@@ -88,7 +101,27 @@ public class TimeLimitController : MonoBehaviour
             return;
         }
 
+        // 루프 2번 사운드 종료
+        GlobalEventBus.OnStop2DSoundRequested(lowTimeAudioID_2);
+
         timeFlow = false;
         GlobalEventBus.OnTimeOver?.Invoke();
+    }
+    private void TryTimeLoopSFX()
+    {
+        // 50% 경과 시 루프 1번 사운드를 재생 시작
+        if (currentTimeLimit < lowTimeTirggerRatio_1 * timeLimit && !lowTimeSFX_1)
+        {
+            lowTimeSFX_1 = true;
+            GlobalEventBus.OnPlay2DSoundRequested(lowTimeAudioID_1);
+        }
+
+        // 80% 경과 시 루프 1번 사운드를 종료하고 루프 2번 사운드를 재생 시작
+        if (currentTimeLimit < lowTimeTirggerRatio_2 * timeLimit && !lowTimeSFX_2)
+        {
+            lowTimeSFX_2 = true;
+            GlobalEventBus.OnStop2DSoundRequested(lowTimeAudioID_1);
+            GlobalEventBus.OnPlay2DSoundRequested(lowTimeAudioID_2);
+        }
     }
 }

@@ -160,10 +160,25 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     {
         hpCurrent = Mathf.Clamp(hpCurrent + _val, 0, hpMax);
         UpdateHp();
+
+        // 플레이어 체력이 50% 이상이 되면 ambient 사운드 루프 중단
+        if (hpCurrent >= 0.5 * hpMax)
+        {
+            GlobalEventBus.OnStop2DSoundRequested?.Invoke(10304);
+        }
+        // 플레이어 체력이 50% 이하이고 idle 상태이면 ambient 사운드 루프 출력
+        else if (hpCurrent < 0.5* hpMax && nowState == livingState.idle)
+        {
+            GlobalEventBus.OnPlay2DSoundRequested?.Invoke(10304);
+        }
+
         // 플레이어 체력이 0이 되었을 때 idle 상태이면 사망 처리 이벤트 및 게임오버 메소드를 발동
         if (hpCurrent <= 0 && nowState == livingState.idle)
         {
             GlobalEventBus.onPlayerDead?.Invoke(playerID);
+
+            // 게임오버 사운드 이펙트를 출력
+            GlobalEventBus.OnPlay2DSoundRequested?.Invoke(10305);
             GameOver(playerID);
         }
     }
