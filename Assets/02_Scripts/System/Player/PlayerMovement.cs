@@ -1,9 +1,10 @@
+﻿using AnyPortrait;
+using System.Collections;
 /// <summary>
 /// 플레이어의 이동과 커서 방향 회전을 처리하는 스크립트
 /// </summary>
 using UnityEngine;
-using AnyPortrait;
-using System.Collections;
+using static AnyPortrait.apAnimPlayUnit;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Camera mainCamera;
 
-    private Vector2 movementInput;                       // 플레이어의 이동 입력
+    private Vector2 movementInput;                      // 플레이어의 이동 입력
     private bool sprintInput;                           // 플레이어의 달리기 입력
     private Vector2 currentMousePos;                    // 현재 마우스 화면 좌표
 
@@ -34,6 +35,15 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float movementWallBuffer = 0.05f; // 벽 앞에서 멈추도록 남기는 여유 거리
     [SerializeField] private float evadeCornerProbeRadius = 0.25f; // 벽 모서리 관통을 막기 위한 보조 검사 반지름
     [SerializeField] private float evadeCornerProbeHeight = 0.5f; // 보조 검사를 시작할 플레이어 높이
+
+    [Header("Movement Audio")]
+    public int[] FootStep_AudioIDPool = null;           // 이동 사운드 ID 리스트
+    public int[] InDoor_FootStep_AudioIDPool = null;    // 실내 이동 사운드 ID 리스트 (실외/실내 구분 가능한 경우 실내에서 사용)
+    public int[] Evade_AudioIDPool = null;              // 구르기 사운드 ID 리스트
+    public int[] Throw_AudioIDPool = null;              // 스킬 동작 사운드 ID 리스트
+
+    private float lastFootstepTime;                     // 최근 이동 사운드 출력 시점
+    public float FootStep_SoundTime = 10.0f;            // 이동 사운드 ID 출력 시간 기준 값
 
     [Header("Noise Settings")]
     // 발소리는 "플레이어 이동 입력"이 아니라 실제 이동 중일 때 일정 간격으로만 발생시킵니다.
@@ -71,6 +81,8 @@ public class PlayerMovement : MonoBehaviour
             apPort.enabled = true;
             if (apPort.gameObject != null) apPort.gameObject.SetActive(true);
         }
+
+        lastFootstepTime = Time.time;
     }
 
     private void OnEnable()
@@ -200,8 +212,30 @@ public class PlayerMovement : MonoBehaviour
             Body.transform.localScale = new Vector3(1, 1, 1);
         }
 
+        // 위치 이동 중 정해진 시간 간격마다 이동 사운드를 재생
+        if (movement.sqrMagnitude >= 0.1f) FootStepAudio();
+
         AimTowardsMouse();
         ImageTowardsMouse();
+    }
+
+    private void FootStepAudio()
+    {
+        float walkFootStepTime = FootStep_SoundTime / moveSpeed;      // 걷기 사운드 재생 간격(초)
+        float sprintFootStepTime = FootStep_SoundTime / sprintSpeed;  // 달리기 사운드 재생 간격(초)
+
+        // 달리기 중인지에 따라 사운드 재생 간격 선택
+        float footstepPeriod = sprintInput ? sprintFootStepTime : walkFootStepTime;
+
+        // 최근 사운드 재생 시점으로부터 재생 간격만큼 지났는지 확인
+        if (Time.time < lastFootstepTime + footstepPeriod) return;
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 구르기를 실행한 지점에서 3D 오디오 재생
+        int moveAudioID = FootStep_AudioIDPool[Random.Range(0, FootStep_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(moveAudioID, rb.gameObject.transform.position);
+
+        // 최근 사운드 재생 시점 갱신
+        lastFootstepTime = Time.time;
     }
 
     /// <summary>
@@ -319,6 +353,10 @@ public class PlayerMovement : MonoBehaviour
         // 구르기 입력을 애니메이터에 전달
         animator.SetTrigger("Evade");
 
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 구르기를 실행한 지점에서 3D 오디오 재생
+        int EvadeAudioID = Evade_AudioIDPool[Random.Range(0, Evade_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(EvadeAudioID, rb.gameObject.transform.position);
+
         // 구르기 상태 종료는 코루틴으로 처리
         StartCoroutine(EvadeComplete());
     }
@@ -334,6 +372,10 @@ public class PlayerMovement : MonoBehaviour
     public void SkillAnimate()
     {
         animator.SetTrigger("UseSkill");
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 스킬을 사용한 지점에서 3D 오디오 재생
+        int SkillAudioID = Throw_AudioIDPool[Random.Range(0, Throw_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(SkillAudioID, rb.gameObject.transform.position);
     }
 
     /* 피격 애니메이션 코루틴 */

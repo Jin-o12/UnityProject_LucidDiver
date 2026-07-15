@@ -14,5 +14,5 @@ public interface IDialogueRepository
     public int GetDialogueCount(int _charTID, DialogueType _type);
 
     /* 특정 상황의 캐릭터 대사 데이터 랜덤하게 가져오기 */
-    public string GetRandomDialogue(int _charTID, DialogueType _type);
+    public string GetRandomDialogue(int _charTID, DialogueType _type, int currentLevel = 0);
 }

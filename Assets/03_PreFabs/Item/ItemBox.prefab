@@ -137,6 +137,7 @@ MonoBehaviour:
     weight: 2
   openNoiseRange: 20
   openNoiseDuration: 1.8
+  Box_Open_AudioIDPool: 692900006a290000
 --- !u!65 &8379933475469959545
 BoxCollider:
   m_ObjectHideFlags: 0

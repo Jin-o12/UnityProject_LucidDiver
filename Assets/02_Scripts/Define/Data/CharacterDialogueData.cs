@@ -8,6 +8,7 @@ public class DialogueLine
 {
     public int ID;
     public string Text;
+    public int RequiredLevel;
 }
 
 [System.Serializable]

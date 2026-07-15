@@ -23,8 +23,15 @@ public class ChestUI : MonoBehaviour
     private PlayerInventory playerInventory;                    // 플레이어 인벤토리 스크립트
     private Action onCloseRequested;                            // 닫기 요청 이벤트
 
+    public int[] box_rummag_AudioIdPool;                        // 상자 UI 채널링 사운드 리스트
+
     // 저장 데이터 인터페이스
     private IItemDataRepository itemRepo;                       // 아이템 데이터 접근 인터페이스
+
+    // 사운드 리스트
+    private int RootSoundID_Legend = 10901;                     // 전설 아이템 획득 사운드
+    private int RootSoundID_Rare = 10903;                       // 레어 아이템 획득 사운드
+    private int RootSoundID_Normal = 10902;                     // 일반 아이템 획득 사운드
 
     public static ChestUI ActiveUI { get; private set; }        // 현재 상자 UI 캐시
 
@@ -36,8 +43,21 @@ public class ChestUI : MonoBehaviour
             closeButton.onClick.AddListener(CloseUI);
     }
 
+    private void OnEnable()
+    {
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 2D 오디오 중지
+        int boxRummagAudioID = box_rummag_AudioIdPool[UnityEngine.Random.Range(0, box_rummag_AudioIdPool.Length)];
+        GlobalEventBus.OnPlay2DSoundRequested?.Invoke(boxRummagAudioID);
+    }
+
     private void OnDisable()
     {
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 2D 오디오 중지
+        foreach (var _id in box_rummag_AudioIdPool)
+        {
+            GlobalEventBus.OnStop2DSoundRequested?.Invoke(_id);
+        }
+
         if (ActiveUI == this)
             ActiveUI = null;
     }
@@ -167,6 +187,18 @@ public class ChestUI : MonoBehaviour
 
         if (movedAmount <= 0)
             return;
+
+        // entry 아이템 등급에 따라 사운드를 재생
+        int soundID = entry.itemData.itemGrade switch
+        {
+            ItemGrade.normal    => RootSoundID_Normal,
+            ItemGrade.uncommon  => RootSoundID_Normal,
+            ItemGrade.rare      => RootSoundID_Rare,
+            ItemGrade.epic      => RootSoundID_Rare,
+            ItemGrade.legend    => RootSoundID_Legend,
+            _                   => RootSoundID_Normal
+        };
+        GlobalEventBus.OnPlay2DSoundRequested?.Invoke(soundID);
 
         itemBox.RemoveAmount(slotIndex, movedAmount);
         RefreshAll();
