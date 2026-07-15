@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
@@ -441,6 +441,9 @@ public class StorageInventoryUI : MonoBehaviour
         {
             return;
         }
+
+        // 클릭 시 사운드 재생
+        GlobalEventBus.OnClickAudio?.Invoke();
 
         ShowDescription(area, index);
 

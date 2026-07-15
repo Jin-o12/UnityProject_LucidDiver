@@ -135,7 +135,8 @@ public enum SlotType
 
 public enum AudioType
 {
-    BGM,    //배경 사운드
-    SFX,    //효과음
-    UI      //UI 사운드
+    BGM,        //배경 사운드
+    SFX,        //효과음
+    UI,         //UI 사운드
+    AMBIENT     //환경 사운드
 }

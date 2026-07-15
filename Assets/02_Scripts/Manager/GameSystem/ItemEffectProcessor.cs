@@ -1,10 +1,14 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class ItemEffectProcessor : MonoBehaviour
 {
     public static ItemEffectProcessor Instance { get; private set; }
+
+    // 아이템 사용 사운드 리스트
+    public int healthItemAudioID = 10701;  //붕대 소모품 사용 SFX
+    public int mpGainItemAudioID = 10704;  //사탕 소모품 사용 SFX
 
     private void Awake()
     {
@@ -18,6 +22,16 @@ public class ItemEffectProcessor : MonoBehaviour
         foreach(ItemEffect effect in _itemData.useEffect)
         {
             ApplyEffect(effect, _user, _target);
+        }
+
+        // 사운드 재생
+        if (_itemData.TID == 301)
+        {
+            GlobalEventBus.OnPlay3DSoundRequested?.Invoke(healthItemAudioID, _user.transform.position);
+        }
+        if (_itemData.TID == 302)
+        {
+            GlobalEventBus.OnPlay3DSoundRequested?.Invoke(mpGainItemAudioID, _user.transform.position);
         }
     }
 

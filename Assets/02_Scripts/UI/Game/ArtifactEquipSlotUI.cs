@@ -235,6 +235,12 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
     /// </summary>
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (eventData.button == PointerEventData.InputButton.Left)
+        {
+            // 클릭 시 사운드 재생
+            GlobalEventBus.OnClickAudio?.Invoke();
+        }
+
         if (eventData.button != PointerEventData.InputButton.Left || eventData.clickCount < 2)
             return;
 

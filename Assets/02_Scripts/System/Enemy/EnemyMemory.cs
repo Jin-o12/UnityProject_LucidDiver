@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -38,6 +38,10 @@ public class EnemyMemory
     [SerializeField] private bool hasPatrolDestination;       // 현재 랜덤 배회 목적지가 만들어졌는지 여부
     [SerializeField] private Vector3 patrolDestination;       // NavMesh 위에서 선택된 현재 배회 목적지
     [SerializeField] private int remainingWanderCount;        // 다음 패트롤 포인트로 넘어가기 전 남은 배회 횟수
+
+    // Audio Event를 생성하기 위해 발신자 위치를 파악
+    private Transform owner;
+    public void SetOwner(Transform ownerTransform) => owner = ownerTransform;
 
     public Vector3 HomePosition => homePosition;
     public int PatrolIndex => patrolIndex;
@@ -409,6 +413,10 @@ public class EnemyMemory
         estimatedTargetVelocity = Vector3.zero;
         lastTargetSampleTime = Time.time;
         hasTargetMotionSample = false;
+        if (owner != null)
+        {
+            GlobalEventBus.OnBeginTargetTracking?.Invoke(owner.position);
+        }
     }
 
     /// <summary>

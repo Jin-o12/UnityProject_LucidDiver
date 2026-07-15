@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 아이템과 인벤토리에 관한 상호작용을 중재하는 Presenter.
 /// 아이템 습득, 인벤토리 UI 열기/닫기, 체스트 UI 연결, 월드 드랍을 담당한다.
 /// </summary>
@@ -30,6 +30,9 @@ public class InventoryPresenter : MonoBehaviour
 
     // 아티팩트 장착 상태 관리
     private PlayerArtifactEquipment playerArtifactEquipment;       // 플레이어 아티팩트 장착 상태
+
+    // 인벤토리 열기 SFX ID
+    [SerializeField] private int inventoryOpenAudioID = 10703;
 
     private void Awake()
     {
@@ -278,6 +281,9 @@ public class InventoryPresenter : MonoBehaviour
             inventoryUI.UpdateSafeSlot(k, playerInventory.safeSlots[k]);
 
         inventoryUI.UpdateArtifactSlots(playerArtifactEquipment);
+
+        // 인벤토리 열기 SFX를 출력한다.
+        GlobalEventBus.OnPlay2DSoundRequested?.Invoke(inventoryOpenAudioID);
 
         // 일반 인벤토리는 Player 액션맵을 유지한다.
     }

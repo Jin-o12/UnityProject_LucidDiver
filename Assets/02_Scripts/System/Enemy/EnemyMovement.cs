@@ -66,6 +66,7 @@ public class EnemyMovement : MonoBehaviour
         locomotion.Initialize(navAgent);
         combat.OnValidate();
         interceptPlanner.OnValidate();
+        memory.SetOwner(transform);
     }
 
     private void OnValidate()

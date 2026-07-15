@@ -13,38 +13,49 @@ public class AudioManager : MonoBehaviour
     public const string BGMVolumeKey = "BGMVolume";         //BGM 음량 키
     public const string SFXVolumeKey = "SFXVolume";         //SFX 음량 키
     public const string UIVolumeKey = "UIVolume";           //UI 사운드 음량 키
+    public const string AmbVolumeKey = "AmbVolume";         //UI 사운드 음량 키
     public const string MasterMuteKey = "MasterMute";       //전체 사운드 음소거 키
     public const string BGMMuteKey = "BGMMute";             //BGM 음소거 키
     public const string SFXMuteKey = "SFXMute";             //SFX 음소거 키
     public const string UIMuteKey = "UIMute";               //UI 사운드 음소거 키
+    public const string AmbMuteKey = "AmbMute";             //UI 사운드 음소거 키
 
     [Header("오디오 컴포넌트")]
-    [SerializeField] private AudioSource BGMSource;       //BGM 오디오 소스
-    [SerializeField] private AudioSource SFXSource;       //SFX 오디오 소스
-    [SerializeField] private AudioSource UISource;        //UI 사운드 오디오 소스
+    [SerializeField] private AudioSource BGMSource;     //BGM 오디오 소스
+    [SerializeField] private AudioSource SFXSource;     //SFX 오디오 소스
+    [SerializeField] private AudioSource UISource;      //UI 사운드 오디오 소스
+    [SerializeField] private AudioSource AmbSource;     //환경 사운드 오디오 소스
 
     [Header("음량 조절")]
-    [Range(0f, 1f)][SerializeField] private float masterVolume = 1.0f;   //전체 사운드 음량
-    [Range(0f, 1f)][SerializeField] private float BGMVolume = 1.0f;      //BGM 음량
-    [Range(0f, 1f)][SerializeField] private float SFXVolume = 1.0f;      //SFX 음량
-    [Range(0f, 1f)][SerializeField] private float UIVolume = 1.0f;       //UI 사운드 음량
+    [Range(0f, 1f)][SerializeField] private float masterVolume = 1.0f;  //전체 사운드 음량
+    [Range(0f, 1f)][SerializeField] private float BGMVolume = 1.0f;     //BGM 음량
+    [Range(0f, 1f)][SerializeField] private float SFXVolume = 1.0f;     //SFX 음량
+    [Range(0f, 1f)][SerializeField] private float UIVolume = 1.0f;      //UI 사운드 음량
+    [Range(0f, 1f)][SerializeField] private float AmbVolume = 1.0f;     //환경 사운드 음량
     [Header("음량 기본값")]
     [Range(0f, 1f)][SerializeField] private float defaultMasterVolume = 1.0f;   //전체 사운드 음량 기본값
     [Range(0f, 1f)][SerializeField] private float defaultBGMVolume = 1.0f;      //BGM 음량 기본값
     [Range(0f, 1f)][SerializeField] private float defaultSFXVolume = 1.0f;      //SFX 음량 기본값
     [Range(0f, 1f)][SerializeField] private float defaultUIVolume = 1.0f;       //UI 사운드 음량 기본값
+    [Range(0f, 1f)][SerializeField] private float defaultAmbVolume = 1.0f;      //환경 사운드 음량 기본값
     [Header("음소거 체크")]
     public bool masterMute = false;     //전체 사운드 음소거
     public bool BGMMute = false;        //BGM 음소거
     public bool SFXMute = false;        //SFX 음소거
     public bool UIMute = false;         //UI 사운드 음소거
+    public bool AmbMute = false;        //환경 사운드 음소거
 
     [Header("오디오 믹서")]
     [SerializeField] private AudioMixer mixer;                  //오디오 믹서
     [SerializeField] private AudioMixerGroup BGMMixerGroup;     //BGM 믹서 그룹
     [SerializeField] private AudioMixerGroup SFXMixerGroup;     //SFX 믹서 그룹
     [SerializeField] private AudioMixerGroup UIMixerGroup;      //UI 사운드 믹서 그룹
+    [SerializeField] private AudioMixerGroup AmbMixerGroup;     //환경 사운드 믹서 그룹
     private AudioMixerSnapshot Snapshot;                        //믹서 스냅샷
+
+    [Header("UI 사운드")]
+    [SerializeField] private int[] Click_AudioIDPool;           //클릭 시 사운드 ID 풀
+    [SerializeField] private int[] Chase_AudioIDPool;           //추적 개시 사운드 ID 풀
 
     // <AudioID, AudioClip> 클립 딕셔너리
     public Dictionary<int, AudioClip> clipDict = new Dictionary<int, AudioClip>();
@@ -82,6 +93,9 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnPlay3DSoundRequested += Play3DSound;
         GlobalEventBus.OnPlay3DSoundRequestedWithHandle += Play3DSoundAndReturn;
 
+        GlobalEventBus.OnClickAudio += PlayClickSound;              // UI 클릭 사운드 재생 이벤트
+        GlobalEventBus.OnBeginTargetTracking += PlayChaseSound;     // 추적 개시 사운드 재생 이벤트
+
         // 사운드 종료 요청 이벤트 구독
         GlobalEventBus.OnStopBGMRequested += StopBGM;
         GlobalEventBus.OnStop2DSoundRequested += Stop2DSound;
@@ -97,6 +111,9 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnPlay2DSoundRequested -= Play2DSound;
         GlobalEventBus.OnPlay3DSoundRequested -= Play3DSound;
         GlobalEventBus.OnPlay3DSoundRequestedWithHandle -= Play3DSoundAndReturn;
+
+        GlobalEventBus.OnClickAudio -= PlayClickSound;
+        GlobalEventBus.OnBeginTargetTracking -= PlayChaseSound;
 
         GlobalEventBus.OnStopBGMRequested -= StopBGM;
         GlobalEventBus.OnStop2DSoundRequested -= Stop2DSound;
@@ -144,10 +161,11 @@ public class AudioManager : MonoBehaviour
     {
         return type switch
         {
-            AudioType.BGM   => BGMSource,
-            AudioType.SFX   => SFXSource,
-            AudioType.UI    => UISource,
-            _               => null         //Type 값이 없으면 null 처리
+            AudioType.BGM       => BGMSource,
+            AudioType.SFX       => SFXSource,
+            AudioType.UI        => UISource,
+            AudioType.AMBIENT   => AmbSource,
+            _                   => null         //Type 값이 없으면 null 처리
         };
     }
     #endregion
@@ -209,10 +227,11 @@ public class AudioManager : MonoBehaviour
         _source.maxDistance = Mathf.Max(10f, _data.Volume * 50f);
         _source.volume = _data.Volume * _data.AudioType switch
         {
-            AudioType.BGM   => BGMSource.volume,
-            AudioType.SFX   => SFXSource.volume,
-            AudioType.UI    => UISource.volume,
-            _               => SFXSource.volume
+            AudioType.BGM       => BGMSource.volume,
+            AudioType.SFX       => SFXSource.volume,
+            AudioType.UI        => UISource.volume,
+            AudioType.AMBIENT   => AmbSource.volume,
+            _                   => SFXSource.volume
         };
         _source.loop = _data.Loop;
 
@@ -242,9 +261,10 @@ public class AudioManager : MonoBehaviour
         src.maxDistance = Mathf.Max(10f, _data.Volume * 50f);
         src.volume = _data.Volume * _data.AudioType switch
         {
-            AudioType.BGM => BGMSource.volume,
-            AudioType.SFX => SFXSource.volume,
-            AudioType.UI => UISource.volume,
+            AudioType.BGM       => BGMSource.volume,
+            AudioType.SFX       => SFXSource.volume,
+            AudioType.UI        => UISource.volume,
+            AudioType.AMBIENT   => AmbSource.volume,
             _ => SFXSource.volume
         };
         src.loop = _data.Loop;
@@ -284,6 +304,7 @@ public class AudioManager : MonoBehaviour
         BGMSource.Stop();
         SFXSource.Stop();
         UISource.Stop();
+        AmbSource.Stop();
     }
     #endregion
 
@@ -295,6 +316,7 @@ public class AudioManager : MonoBehaviour
         if (BGMSource != null ) BGMSource.volume =  BGMVolume * (BGMMute ? 0 : 1);
         if (UISource != null) UISource.volume = UIVolume * (UIMute ? 0 : 1);
         if (SFXSource != null) SFXSource.volume = SFXVolume * (SFXMute ? 0 : 1);
+        if (AmbSource != null) AmbSource.volume = AmbVolume * (AmbMute ? 0 : 1);
     }
 
     // 사운드 설정 데이터 저장
@@ -305,12 +327,14 @@ public class AudioManager : MonoBehaviour
         PlayerPrefs.SetFloat(BGMVolumeKey, BGMVolume);
         PlayerPrefs.SetFloat(SFXVolumeKey, SFXVolume);
         PlayerPrefs.SetFloat(UIVolumeKey, UIVolume);
+        PlayerPrefs.SetFloat(AmbVolumeKey, AmbVolume);
 
         // 음소거 값 저장 (true = 1 / false = 0 번역)
         PlayerPrefs.SetInt(MasterMuteKey, masterMute ? 1 : 0);
         PlayerPrefs.SetInt(BGMMuteKey, BGMMute ? 1 : 0);
         PlayerPrefs.SetInt(SFXMuteKey, SFXMute ? 1 : 0);
         PlayerPrefs.SetInt(UIMuteKey, UIMute ? 1 : 0);
+        PlayerPrefs.SetInt(AmbMuteKey, AmbMute ? 1 : 0);
 
         // 저장한 값을 기기에 적용
         PlayerPrefs.Save();
@@ -324,12 +348,14 @@ public class AudioManager : MonoBehaviour
         BGMVolume = PlayerPrefs.GetFloat(BGMVolumeKey, defaultBGMVolume);
         SFXVolume = PlayerPrefs.GetFloat(SFXVolumeKey, defaultSFXVolume);
         UIVolume = PlayerPrefs.GetFloat(UIVolumeKey, defaultUIVolume);
+        AmbVolume = PlayerPrefs.GetFloat(AmbVolumeKey, defaultAmbVolume);
 
         //음소거 값 불러오기 (true = 1 / false = 0 번역)
         masterMute = PlayerPrefs.GetInt(MasterMuteKey, 0) == 1;
         BGMMute = PlayerPrefs.GetInt(BGMMuteKey, 0) == 1;
         SFXMute = PlayerPrefs.GetInt(SFXMuteKey, 0) == 1;
         UIMute = PlayerPrefs.GetInt(UIMuteKey, 0) == 1;
+        AmbMute = PlayerPrefs.GetInt(AmbMuteKey, 0) == 1;
 
         // 불러온 값으로 음량 설정 업데이트
         ApplyVolume();
@@ -340,9 +366,10 @@ public class AudioManager : MonoBehaviour
     {
         return data.AudioType switch
         {
-            AudioType.BGM   =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * BGMVolume * (BGMMute ? 0 : 1),
-            AudioType.SFX   =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * SFXVolume * (SFXMute ? 0 : 1),
-            AudioType.UI    =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * UIVolume * (UIMute ? 0 : 1),
+            AudioType.BGM       =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * BGMVolume * (BGMMute ? 0 : 1),
+            AudioType.SFX       =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * SFXVolume * (SFXMute ? 0 : 1),
+            AudioType.UI        =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * UIVolume * (UIMute ? 0 : 1),
+            AudioType.AMBIENT   =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * AmbVolume * (AmbMute ? 0 : 1),
             _               =>  0f
         };
     }
@@ -364,6 +391,10 @@ public class AudioManager : MonoBehaviour
         {
             UISource.outputAudioMixerGroup = UIMixerGroup;
         }
+        if (AmbSource != null && AmbMixerGroup != null)
+        {
+            AmbSource.outputAudioMixerGroup = AmbMixerGroup;
+        }
     }
 
     // 믹서 스냅샷 설정
@@ -377,5 +408,22 @@ public class AudioManager : MonoBehaviour
 
         Snapshot = mixer.FindSnapshot("Snapshot");
     }
+    #endregion
+
+    #region 공통 사운드 재생
+    private void PlayClickSound()
+    {
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
+        int ShotAudioID = Click_AudioIDPool[UnityEngine.Random.Range(0, Click_AudioIDPool.Length)];
+        Play2DSound(ShotAudioID);
+    }
+
+    private void PlayChaseSound(Vector3 pos)
+    {
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
+        int ShotAudioID = Chase_AudioIDPool[UnityEngine.Random.Range(0, Chase_AudioIDPool.Length)];
+        Play3DSound(ShotAudioID, pos);
+    }
+
     #endregion
 }

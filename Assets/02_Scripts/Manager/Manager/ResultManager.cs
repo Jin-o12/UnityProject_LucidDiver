@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 인게임 세션 종료 시 데이터 변동을 관리하는 클래스
 /// (탈출 성공 여부, 플레이 타임, 인벤토리 및 퀵슬롯, 동조율 단계)
 /// </summary>
@@ -527,6 +527,10 @@ public class ResultManager : MonoBehaviour, IResultService
             StopCoroutine(resultCoroutine);
             resultCoroutine = null;
         }
+
+        // 결과 창 닫기 시 게임오버 사운드 이펙트를 중단
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10304);
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10305);
 
         UIManager.Instance.Close<ResultUI>();
     }

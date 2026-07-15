@@ -100,14 +100,14 @@
   {
     "AudioID": 10301,
     "AudioClip": "Clock_Ticking_Dry_Loop",
-    "AudioType": "SFX",
+    "AudioType": "AMBIENT",
     "Volume": 1,
     "Loop": true
   },
   {
     "AudioID": 10302,
     "AudioClip": "Clock_Ticking_Wet_Loop",
-    "AudioType": "SFX",
+    "AudioType": "AMBIENT",
     "Volume": 1,
     "Loop": true
   },
@@ -121,7 +121,7 @@
   {
     "AudioID": 10304,
     "AudioClip": "HeartBeat_Loop",
-    "AudioType": "SFX",
+    "AudioType": "AMBIENT",
     "Volume": 1,
     "Loop": true
   },
@@ -248,7 +248,7 @@
     "AudioID": 10603,
     "AudioClip": "box_rummag_Loop",
     "AudioType": "SFX",
-    "Volume": 1,
+    "Volume": 0.3,
     "Loop": true
   },
   {
