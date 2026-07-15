@@ -14,12 +14,16 @@ public class EscapeTimer : MonoBehaviour
     private void OnEnable()
     {
         // 부모 오브젝트의 ExitPoint에서 timerOn 이벤트를 구독
-        GetComponentInParent<ExitPoint>().timerOn += EscapeTimer_timerOn;    
+        ExitPoint exitPoint = GetComponentInParent<ExitPoint>();
+        if (exitPoint != null)
+            exitPoint.timerOn += EscapeTimer_timerOn;
     }
 
     private void OnDisable()
     {
-        GetComponentInParent<ExitPoint>().timerOn -= EscapeTimer_timerOn;
+        ExitPoint exitPoint = GetComponentInParent<ExitPoint>();
+        if (exitPoint != null)
+            exitPoint.timerOn -= EscapeTimer_timerOn;
     }
 
     // 타이머 초기 값 설정

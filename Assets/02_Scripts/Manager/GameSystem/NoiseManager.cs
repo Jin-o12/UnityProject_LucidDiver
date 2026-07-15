@@ -60,7 +60,8 @@ public class NoiseManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject);
+            // 같은 Manager 오브젝트에 다른 매니저 컴포넌트가 함께 붙어 있으므로 오브젝트 전체가 아니라 NoiseManager 컴포넌트만 제거합니다.
+            Destroy(this);
             return;
         }
 

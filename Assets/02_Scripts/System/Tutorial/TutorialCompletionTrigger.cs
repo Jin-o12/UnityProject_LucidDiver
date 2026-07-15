@@ -1,14 +1,12 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 /// <summary>
-/// TutorialScene의 마지막 지점에서 튜토리얼 완료 상태를 저장하고 로비로 이동합니다.
+/// TutorialScene의 마지막 지점에서 튜토리얼 완료 상태만 저장합니다.
+/// 실제 로비 이동은 인게임과 동일하게 결과 화면의 버튼 흐름에서 처리합니다.
 /// </summary>
 [RequireComponent(typeof(BoxCollider))]
 public sealed class TutorialCompletionTrigger : MonoBehaviour
 {
-    private const string LobbySceneName = "LobbyScene";
-
     [SerializeField] private bool triggerOnce = true;
 
     private bool consumed;
@@ -26,10 +24,10 @@ public sealed class TutorialCompletionTrigger : MonoBehaviour
             return;
 
         consumed = true;
-        CompleteTutorialAndGoToLobby();
+        MarkTutorialCompleted();
     }
 
-    private void CompleteTutorialAndGoToLobby()
+    private void MarkTutorialCompleted()
     {
         PlayerSaveDataSO saveDataSO = PlayerSaveDataSO.Instance;
         PlayerSaveData saveData = saveDataSO != null
@@ -39,14 +37,7 @@ public sealed class TutorialCompletionTrigger : MonoBehaviour
         saveData.isTutorialCompleted = true;
         saveDataSO?.SaveGameData(saveData);
 
-        if (GlobalEventBus.OnGoToLobbyScene != null)
-        {
-            GlobalEventBus.OnGoToLobbyScene.Invoke();
-            return;
-        }
-
-        // TutorialScene만 단독 테스트해도 완료 후 흐름을 확인할 수 있도록 직접 로드합니다.
-        SceneManager.LoadScene(LobbySceneName);
+        // 튜토리얼 완료 여부만 저장하고, 로비 이동은 ResultUI의 로비 버튼에서 처리합니다.
     }
 
     private static bool IsPlayer(Collider other)

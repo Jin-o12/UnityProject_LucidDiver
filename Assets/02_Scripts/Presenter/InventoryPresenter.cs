@@ -261,7 +261,14 @@ public class InventoryPresenter : MonoBehaviour
         if (playerStatus.nowState != PlayerStatus.livingState.idle || playerStatus.IsSessionEnded)
             return;
 
-        inventoryUI = UIManager.Instance.Open<InventoryUI>();
+        UIManager uiManager = UIManager.Instance;
+        if (uiManager == null)
+        {
+            Debug.LogError("InventoryPresenter: UIManager가 준비되지 않아 인벤토리 UI를 열 수 없습니다.");
+            return;
+        }
+
+        inventoryUI = uiManager.Open<InventoryUI>();
         if (inventoryUI == null)
             return;
 

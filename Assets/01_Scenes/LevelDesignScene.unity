@@ -103881,7 +103881,7 @@ MonoBehaviour:
   wallRenderers:
   - {fileID: 1667546206}
   fadeMaterials:
-  - {fileID: 2100000, guid: dfde91fd4a3007a41a3e0244e9b0804a, type: 2}
+  - {fileID: 2100000, guid: 425026eb158d15940bbf92f95cb42ed6, type: 2}
   fadedAlpha: 0.25
   fadeSpeed: 3
   showDebugLog: 0
@@ -186837,6 +186837,7 @@ MonoBehaviour:
   Escape_Channeling_AudioIDPool: a1280000
   Escape_Success_AudioIDPool: a4280000
   Escape_Faild_AudioIDPool: a2280000
+  failAudioTime: 1.5
 --- !u!54 &1427747838
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -66,5 +66,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e33f3295eb252c4eb9a443180e2ef94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tutorialId: TUTORIAL_MOVE_001
+  triggerValue: 
+  fallbackTutorialId: 
   triggerOnce: 1

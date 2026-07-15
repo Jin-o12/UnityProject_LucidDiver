@@ -25,7 +25,8 @@ public class SceneController : MonoBehaviour
         // 인스턴스 중복 방지
         if(Instance!=null)
         {
-            Destroy(gameObject);
+            // 같은 Manager 오브젝트에 다른 매니저 컴포넌트가 함께 붙어 있으므로 오브젝트 전체가 아니라 SceneController 컴포넌트만 제거합니다.
+            Destroy(this);
             return;
         }
         else

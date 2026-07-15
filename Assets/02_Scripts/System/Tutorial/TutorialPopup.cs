@@ -40,13 +40,30 @@ public sealed class TutorialPopup : MonoBehaviour
         SetCanvasState(true);
     }
 
+    public void Show(TutorialGuideData guide, Action confirmed)
+    {
+        if (guide == null)
+            return;
+
+        onConfirmed = confirmed;
+
+        if (titleText != null)
+            titleText.text = guide.ResolvedTitle;
+        if (messageText != null)
+            messageText.text = guide.Message;
+        if (confirmText != null)
+            confirmText.text = guide.ResolvedConfirmText;
+
+        gameObject.SetActive(true);
+        SetCanvasState(true);
+    }
+
     public void Confirm()
     {
         if (!gameObject.activeSelf)
             return;
 
         Action callback = onConfirmed;
-        HideImmediate();
         callback?.Invoke();
     }
 

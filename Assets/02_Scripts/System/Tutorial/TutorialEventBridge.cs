@@ -1,67 +1,52 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 본편 시스템의 글로벌 이벤트를 튜토리얼 팝업 요청으로 변환합니다.
-/// TutorialScene에만 배치하여 다른 씬과 풀링 프리팹에는 영향을 주지 않습니다.
+/// 기존 게임플레이 이벤트를 튜토리얼 데이터 조건 이벤트로 전달하는 보조 브릿지입니다.
+/// TutorialManager도 동일 이벤트를 직접 구독하므로, 씬 세팅에 따라 브릿지가 없어도 동작합니다.
+/// 다만 기존 씬에 배치된 브릿지가 예전 ID 팝업을 중복 호출하지 않도록 문자열 이벤트만 전달합니다.
 /// </summary>
 public sealed class TutorialEventBridge : MonoBehaviour
 {
-    private const string ItemTutorialId = "TUTORIAL_ITEM_001";
-    private const string SkillTutorialId = "TUTORIAL_SKILL_001";
-
-    private readonly Queue<string> pendingTutorials = new Queue<string>();
-    private readonly HashSet<string> requestedTutorials = new HashSet<string>();
-
     private void OnEnable()
     {
         GlobalEventBus.OnItemBoxOpened += HandleItemBoxOpened;
-        GlobalEventBus.OnEnemyHealthChanged += HandleEnemyHealthChanged;
+        GlobalEventBus.OnEnemyDead += HandleEnemyDead;
+        GlobalEventBus.OnEscapeRequest += HandleEscapeRequest;
+        GlobalEventBus.OnMainActiveSkillCasted += HandleMainActiveSkillCasted;
     }
 
     private void OnDisable()
     {
         GlobalEventBus.OnItemBoxOpened -= HandleItemBoxOpened;
-        GlobalEventBus.OnEnemyHealthChanged -= HandleEnemyHealthChanged;
+        GlobalEventBus.OnEnemyDead -= HandleEnemyDead;
+        GlobalEventBus.OnEscapeRequest -= HandleEscapeRequest;
+        GlobalEventBus.OnMainActiveSkillCasted -= HandleMainActiveSkillCasted;
     }
 
-    private void Update()
-    {
-        if (pendingTutorials.Count == 0)
-            return;
-
-        TutorialManager manager = TutorialManager.Instance;
-        if (manager == null || manager.IsShowing)
-            return;
-
-        string tutorialId = pendingTutorials.Peek();
-        if (manager.Show(tutorialId))
-            pendingTutorials.Dequeue();
-    }
-
-    /// <summary>
-    /// 상자를 실제로 열었을 때 아이템 이동 방법을 한 번만 안내합니다.
-    /// </summary>
     private void HandleItemBoxOpened(IInteractable interactable, int playerId)
     {
         if (interactable is ItemBox)
-            RequestOnce(ItemTutorialId);
+            Notify(TutorialEventNames.ItemBoxOpened);
     }
 
-    /// <summary>
-    /// 첫 공격이 적에게 적중하면 다음 실습인 액티브 스킬 사용법을 안내합니다.
-    /// </summary>
-    private void HandleEnemyHealthChanged(int enemyId, float currentHealth, float maxHealth)
+    private void HandleEnemyDead(int enemyId)
     {
-        if (maxHealth > 0f && currentHealth > 0f && currentHealth < maxHealth)
-            RequestOnce(SkillTutorialId);
+        Notify(TutorialEventNames.EnemyDead);
     }
 
-    private void RequestOnce(string tutorialId)
+    private void HandleEscapeRequest(bool success)
     {
-        if (!requestedTutorials.Add(tutorialId))
-            return;
+        Notify(success ? TutorialEventNames.EscapeSucceeded : TutorialEventNames.EscapeFailed);
+    }
 
-        pendingTutorials.Enqueue(tutorialId);
+    private void HandleMainActiveSkillCasted()
+    {
+        Notify(TutorialEventNames.MainActiveSkillCasted);
+    }
+
+    private static void Notify(string eventName)
+    {
+        TutorialManager manager = TutorialManager.Instance;
+        manager?.NotifyEvent(eventName);
     }
 }
