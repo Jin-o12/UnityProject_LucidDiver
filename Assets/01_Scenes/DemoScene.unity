@@ -31215,6 +31215,7 @@ MonoBehaviour:
   - {fileID: 6617218257314298997, guid: cb5d7151e5247ba46b2058892439fc6b, type: 3}
   - {fileID: 5112121294421879094, guid: c5bf2558b448f314b93deec6475703cf, type: 3}
   - {fileID: 1625286815563743019, guid: a49f6e1a3a95bb14f9c1e452bbdc1252, type: 3}
+  - {fileID: 304085410330346154, guid: 3504b6c206946784d9274301299c9a4f, type: 3}
 --- !u!1001 &6224010907873196067
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31510,6 +31511,12 @@ MonoBehaviour:
   lobbyScene:
     sceneAsset: {fileID: 102900000, guid: c67beebbfb6b5ad47b3fa2ef3f658b3d, type: 3}
     sceneName: LobbyScene
+  tutorialScene:
+    sceneAsset: {fileID: 102900000, guid: 6d0743ae57c0d9340a94c5a0cdfa9468, type: 3}
+    sceneName: TutorialScene
+  tutorialAdditiveScene:
+    sceneAsset: {fileID: 102900000, guid: d14e096a1e2b0ce4ab54cb4c3fa5902a, type: 3}
+    sceneName: DemoScene Tutorial
   levelScene:
     sceneAsset: {fileID: 0}
     sceneName: 

@@ -18,10 +18,16 @@ public class UIManager : MonoBehaviour
     private void Awake()
     {
         // 인스턴스 생성 및 중복 방지
-        if(Instance!=null)
+        if(Instance != null && Instance != this)
+        {
+            // 씬 전환/어디티브 로드로 UIManager가 중복 생성되면
+            // 먼저 살아남은 매니저에 현재 씬의 UI 프리팹 등록값을 합친 뒤 중복 오브젝트만 제거한다.
+            Instance.MergePrefabsFrom(uiPrefabs);
             Destroy(gameObject);
-        else
-            Instance = this;
+            return;
+        }
+
+        Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
@@ -87,8 +93,21 @@ public class UIManager : MonoBehaviour
                 return ui;
             }
         }
-        Debug.LogError($"UiManager: UI 프리팹이 등록되지 않았습니다. ({typeof(UiType).Name})");
+        Debug.LogError($"UiManager: UI 프리팹이 등록되지 않았습니다. ({typeof(UiType).Name}) / 등록 수: {uiPrefabs.Count}", this);
         return null;
+    }
+
+    /* 중복 UIManager가 가진 UI 프리팹 등록값을 현재 싱글톤 매니저에 병합 */
+    private void MergePrefabsFrom(IEnumerable<GameObject> prefabs)
+    {
+        if(prefabs == null) return;
+
+        foreach(GameObject prefab in prefabs)
+        {
+            if(prefab == null || uiPrefabs.Contains(prefab)) continue;
+
+            uiPrefabs.Add(prefab);
+        }
     }
 
     /* 스택 내의 특정 UI를 제거 */

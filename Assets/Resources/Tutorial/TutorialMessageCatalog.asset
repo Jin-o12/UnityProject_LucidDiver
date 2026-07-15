@@ -18,7 +18,7 @@ MonoBehaviour:
     message: "WASD \uD0A4\uB97C \uC0AC\uC6A9\uD558\uC5EC \uCE90\uB9AD\uD130\uB97C
       \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
     confirmText: "\uD655\uC778"
-    pauseGame: 1
+    pauseGame: 0
   - tutorialId: TUTORIAL_INTERACT_001
     title: "\uC0C1\uD638\uC791\uC6A9"
     message: "\uC0C1\uD638\uC791\uC6A9 \uD0A4\uB97C \uB20C\uB7EC \uC8FC\uBCC0 \uC624\uBE0C\uC81D\uD2B8\uB97C

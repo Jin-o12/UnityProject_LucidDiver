@@ -8,12 +8,20 @@ using TMPro;
 
 public class IntroSceneController : MonoBehaviour
 {
+    private const string SaveFileName = "SaveFile.json";
+    private const string LobbySceneName = "LobbyScene";
+    private const string TutorialSceneName = "TutorialScene";
+    private const string TutorialAdditiveSceneName = "DemoScene Tutorial";
+
     [Header("Video Settings")]
     [SerializeField] private VideoPlayer videoPlayer;
     [SerializeField] private RawImage videoRenderImage;
     [SerializeField] private VideoClip initialPVClip; // Lucid_Diver_PV.mp4
     [SerializeField] private VideoClip loopTitleClip;  // Intro_PV.mp4
     [SerializeField] private bool forcePlayPV = true; // 테스트용 항시 PV 재생 모드
+
+    [Header("Tutorial Routing")]
+    [SerializeField] private bool useTutorialScene = true; // 개발/테스트 중 튜토리얼을 우회하고 바로 로비로 보낼지 제어
 
     [Header("UI Panels")]
     [SerializeField] private CanvasGroup skipGuidePanel; // 스킵 가이드 패널 (중앙 배치)
@@ -368,6 +376,7 @@ public class IntroSceneController : MonoBehaviour
         }
 
         // 씬 로더 전환 적용 (리플렉션을 통한 어셈블리 경계 우회)
+        bool shouldEnterTutorial = ShouldEnterTutorialScene();
         bool loadedByController = false;
         System.Type sceneControllerType = System.Type.GetType("SceneController, ManagerAD");
         if (sceneControllerType != null)
@@ -378,7 +387,8 @@ public class IntroSceneController : MonoBehaviour
                 var instance = instanceProp.GetValue(null);
                 if (instance != null)
                 {
-                    var method = sceneControllerType.GetMethod("GoToLobbyScene", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    string methodName = shouldEnterTutorial ? "GoToTutorialScene" : "GoToLobbyScene";
+                    var method = sceneControllerType.GetMethod(methodName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                     if (method != null)
                     {
                         method.Invoke(instance, null);
@@ -391,11 +401,35 @@ public class IntroSceneController : MonoBehaviour
         if (!loadedByController)
         {
             // 에디터 독립 구동 및 대비 Fallback
-            SceneManager.LoadScene("LobbyScene");
+            if (shouldEnterTutorial)
+            {
+                yield return LoadTutorialScenesDirectly();
+            }
+            else
+            {
+                SceneManager.LoadScene(LobbySceneName);
+            }
         }
     }
 
     // 점멸 및 페이드 효과 처리
+    private IEnumerator LoadTutorialScenesDirectly()
+    {
+        AsyncOperation tutorialLoad = SceneManager.LoadSceneAsync(TutorialSceneName, LoadSceneMode.Additive);
+        while (tutorialLoad != null && !tutorialLoad.isDone)
+            yield return null;
+
+        AsyncOperation additiveLoad = SceneManager.LoadSceneAsync(TutorialAdditiveSceneName, LoadSceneMode.Additive);
+        while (additiveLoad != null && !additiveLoad.isDone)
+            yield return null;
+
+        UnityEngine.SceneManagement.Scene tutorialScene = SceneManager.GetSceneByName(TutorialSceneName);
+        if (tutorialScene.IsValid())
+            SceneManager.SetActiveScene(tutorialScene);
+
+        yield return SceneManager.UnloadSceneAsync(gameObject.scene);
+    }
+
     private void UpdateVisualEffects()
     {
         // 스킵 패널 페이드
@@ -422,9 +456,41 @@ public class IntroSceneController : MonoBehaviour
     }
 
     // persistentDataPath/SaveFile.json 데이터를 파싱하여 최초 시작 유무 리턴
+    private bool ShouldEnterTutorialScene()
+    {
+        if (!useTutorialScene)
+            return false;
+
+        PlayerSaveData data = LoadSaveDataOrDefault();
+        return data == null || !data.isTutorialCompleted;
+    }
+
+    private PlayerSaveData LoadSaveDataOrDefault()
+    {
+        string path = GetSaveFilePath();
+        if (!File.Exists(path))
+            return null;
+
+        try
+        {
+            string json = File.ReadAllText(path);
+            return JsonUtility.FromJson<PlayerSaveData>(json);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[Intro] 세이브 파일 로드 실패: {e.Message}");
+            return null;
+        }
+    }
+
+    private static string GetSaveFilePath()
+    {
+        return Path.Combine(Application.persistentDataPath, SaveFileName);
+    }
+
     private bool CheckIsFirstPlay()
     {
-        string path = Path.Combine(Application.persistentDataPath, "SaveFile.json");
+        string path = GetSaveFilePath();
         if (File.Exists(path))
         {
             try
@@ -447,7 +513,7 @@ public class IntroSceneController : MonoBehaviour
     // 최초 실행 여부를 false로 업데이트 및 물리 세이브 저장
     private void UpdateFirstPlayFlag()
     {
-        string path = Path.Combine(Application.persistentDataPath, "SaveFile.json");
+        string path = GetSaveFilePath();
         PlayerSaveData data = null;
 
         if (File.Exists(path))

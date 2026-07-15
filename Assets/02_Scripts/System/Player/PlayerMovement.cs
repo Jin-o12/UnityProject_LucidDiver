@@ -68,8 +68,9 @@ public class PlayerMovement : MonoBehaviour
             mainCamera = Camera.main;
         }
 
-        // 필수 컴포넌트가 없으면 비활성화
-        if (rb == null || animator == null || mainCamera == null)
+        // 이동에 반드시 필요한 컴포넌트가 없으면 비활성화
+        // Additive 씬 로드 타이밍상 Camera.main은 플레이어보다 늦게 잡힐 수 있으므로 카메라 누락만으로 이동을 막지 않습니다.
+        if (rb == null || animator == null)
         {
             enabled = false;
             Debug.LogError("PlayerMovement: 필요한 컴포넌트가 없습니다.");
@@ -394,6 +395,17 @@ public class PlayerMovement : MonoBehaviour
     /* 마우스 커서가 가리키는 월드 위치 계산 */
     private bool TryGetMouseWorldPoint(out Vector3 worldPoint)
     {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (mainCamera == null)
+        {
+            worldPoint = Vector3.zero;
+            return false;
+        }
+
         Plane plane = new Plane(Vector3.up, transform.position);
         Ray ray = mainCamera.ScreenPointToRay(currentMousePos);
 

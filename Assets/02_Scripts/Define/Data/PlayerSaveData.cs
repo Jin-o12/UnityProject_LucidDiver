@@ -9,6 +9,7 @@ public class PlayerSaveData
     public List<SaveCharacterData> myCharacters = new();    // 보유 캐릭터 리스트
     public int SelectCharID;                                // 선택한 캐릭터 ID
     public bool isFirstPlay = true;                         // 최초 실행 여부 플래그
+    public bool isTutorialCompleted = false;                // 튜토리얼 완료 여부 플래그
     
     // 아이템 데이터
     public List<SaveSlotData> storageSlots = new();         // 창고

@@ -44,13 +44,18 @@ public class SpawnManager : MonoBehaviour
     /// 플레이어 스폰 포인트 캐시를 초기화합니다.
     /// 플레이어는 기존 구조를 유지하므로 단순히 자식 Transform만 읽어 옵니다.
     /// </summary>
-    private void CollectPlayerSpawnPoints()
+    private void CollectPlayerSpawnPoints(bool forceRefresh = false)
     {
         playerSpawnPoint.Clear();
-        if (playerSpawnPool == null)
+        if (forceRefresh)
+        {
+            playerSpawnPool = null;
+        }
+
+        if (playerSpawnPool == null || !playerSpawnPool.activeInHierarchy)
         {
             // LevelDesignTable에 추가한 풀을 태그로 찾아옴
-            playerSpawnPool = GameObject.FindGameObjectWithTag("PlayerSpawnPool");
+            playerSpawnPool = FindSpawnPoolWithChildren("PlayerSpawnPool");
             if (playerSpawnPool == null)  return;
         }
 
@@ -61,6 +66,25 @@ public class SpawnManager : MonoBehaviour
                 playerSpawnPoint.Add(point);
             }
         }
+    }
+
+    /// <summary>
+    /// 같은 태그의 스폰 풀이 여러 씬에 동시에 존재할 수 있으므로,
+    /// 실제 자식 스폰 포인트를 가진 활성 풀을 우선 선택합니다.
+    /// </summary>
+    private static GameObject FindSpawnPoolWithChildren(string tag)
+    {
+        GameObject[] candidates = GameObject.FindGameObjectsWithTag(tag);
+        for (int i = 0; i < candidates.Length; i++)
+        {
+            GameObject candidate = candidates[i];
+            if (candidate != null && candidate.activeInHierarchy && candidate.transform.childCount > 0)
+            {
+                return candidate;
+            }
+        }
+
+        return candidates.Length > 0 ? candidates[0] : null;
     }
 
     /// <summary>
@@ -101,6 +125,10 @@ public class SpawnManager : MonoBehaviour
 
     public void SpawnPlayer(CharacterData charData)
     {
+        // Additive 씬을 동시에 로드하면 SpawnManager.Awake()가 레벨 씬의 PlayerSpawnPointPool보다 먼저 실행될 수 있습니다.
+        // 실제 플레이어 생성 직전에 기존 캐시를 버리고 다시 수집해서 튜토리얼/인게임 레벨 씬의 스폰 포인트를 안정적으로 참조합니다.
+        CollectPlayerSpawnPoints(true);
+
         if (playerSpawnPoint.Count == 0)
         {
             Debug.LogError("Player spawn point list is empty");
@@ -119,15 +147,27 @@ public class SpawnManager : MonoBehaviour
 
         // 플레이어 오브젝트 생성
         Transform spawnPoint = playerSpawnPoint[spawnNum].transform;
-        GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
+        Vector3 spawnPosition = spawnPoint.position;
+        Quaternion spawnRotation = spawnPoint.rotation;
+        GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPosition, spawnRotation);
 
         // 스폰된 오브젝트를 게임 신에 배치 (LoadScene 언로드 방어)
         SceneManager.MoveGameObjectToScene(spawnedPlayer, gameObject.scene);
 
+        // 씬 이동/리지드바디 초기화 과정에서 위치가 원점으로 되돌아가는 상황을 방지하기 위해 생성 좌표를 한 번 더 확정합니다.
+        spawnedPlayer.transform.SetPositionAndRotation(spawnPosition, spawnRotation);
+        if (spawnedPlayer.TryGetComponent(out Rigidbody spawnedRigidbody))
+        {
+            spawnedRigidbody.position = spawnPosition;
+            spawnedRigidbody.rotation = spawnRotation;
+            spawnedRigidbody.velocity = Vector3.zero;
+            spawnedRigidbody.angularVelocity = Vector3.zero;
+        }
+
         // 플레이어 오브젝트 세션 데이터에 등록
         //GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
 
-        Debug.Log($"Player spawned at {spawnPoint.position} with ID: {spawnedPlayer.GetComponent<EntityIdentity>().entityID}");
+        Debug.Log($"Player spawned at {spawnPosition} from {spawnPoint.name} / actual: {spawnedPlayer.transform.position} with ID: {spawnedPlayer.GetComponent<EntityIdentity>().entityID}");
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if (charData != null)
