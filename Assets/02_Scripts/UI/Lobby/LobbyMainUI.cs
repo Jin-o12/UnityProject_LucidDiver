@@ -16,13 +16,31 @@ public class LobbyMainUI : MonoBehaviour
     [SerializeField] private Slider sliderLinkRateLevel;                // 동조율 경험치 슬라이더
     [SerializeField] private TextMeshProUGUI textSpeakerName;           // 로비 대사 화자 이름 텍스트
     [SerializeField] private TextMeshProUGUI textDialogue;              // 로비 대사 텍스트
-    [SerializeField] private Image CharacterStandingImage;              // 캐릭터 스텐딩 일러스트
+    [SerializeField] private RawImage CharacterStandingImage;           // 캐릭터 스텐딩 일러스트 (Live2D 비디오 재생용)
+
 
     [Header("Notification")]
     [SerializeField] private GameObject newMemoryLogMark;               // 새로운 메모리 알림 마크
 
     [Header("Temporary Test Data")]
     [SerializeField] private bool testHasNewMemoryLog = false;
+
+    [Header("Currencies (Top)")]
+    [SerializeField] private TextMeshProUGUI textGemAmount;             // 젬 수량
+    [SerializeField] private TextMeshProUGUI textShardAmount;           // 파편 수량
+    [SerializeField] private TextMeshProUGUI textGoldAmount;            // 골드 수량
+    [SerializeField] private Button buttonMail;                         // 우편함 버튼
+
+    [Header("Operator Panel (Left)")]
+    [SerializeField] private Image imageRingGauge;                      // 원형 링 게이지 (Filled)
+    [SerializeField] private TextMeshProUGUI textRingValue;             // 링 백분율 값 (42%)
+    [SerializeField] private TextMeshProUGUI textOperatorLevel;         // 관제사 레벨
+    [SerializeField] private Slider sliderOperatorExp;                  // 관제사 경험치 슬라이더
+    [SerializeField] private TextMeshProUGUI textOperatorStats;         // 상세 스탯 요약용 멀티라인
+    [SerializeField] private TextMeshProUGUI textSystemConsoleLogs;     // 콘솔 로그용 텍스트
+
+    [Header("Quick Alarm Panel (Top-Right)")]
+    [SerializeField] private GameObject panelQuickAlarm;                // 우상단 알림 패널
 
     // 대사 출력 인터페이스
     private IDialogueRepository dialogueRepo;
@@ -113,6 +131,41 @@ public class LobbyMainUI : MonoBehaviour
         // {신규 심상 기록 알림 표시 여부를 갱신한다}
         if (newMemoryLogMark != null)
             newMemoryLogMark.SetActive(testHasNewMemoryLog);
+
+        // {재화 가상 텍스트 표시}
+        if (textGemAmount != null) textGemAmount.text = "12,450";
+        if (textShardAmount != null) textShardAmount.text = "3,680";
+        if (textGoldAmount != null) textGoldAmount.text = "1,256,890";
+
+        // {좌측 관제사 패널 가상 정보 표시}
+        if (imageRingGauge != null)
+        {
+            imageRingGauge.type = Image.Type.Filled;
+            imageRingGauge.fillMethod = Image.FillMethod.Radial360;
+            imageRingGauge.fillOrigin = (int)Image.Origin360.Top;
+            imageRingGauge.fillAmount = 0.42f;
+        }
+        if (textRingValue != null) textRingValue.text = "42%";
+        if (textOperatorLevel != null) textOperatorLevel.text = "관제사 Lv.27";
+        if (sliderOperatorExp != null)
+        {
+            sliderOperatorExp.maxValue = 100f;
+            sliderOperatorExp.value = 42f;
+        }
+        if (textOperatorStats != null)
+        {
+            textOperatorStats.text = "탐사 구역 : CHAP.03\n탐사 진행도 : 42%\n통신 링크 : SECURE\n연결 상태 : 유안 (Main)";
+        }
+        if (textSystemConsoleLogs != null)
+        {
+            textSystemConsoleLogs.text = "[14:15:32] LINK ESTABLISHED\n[14:15:35] DEVIATION: 0.02%\n[14:16:01] SYNC SUCCESSFUL\n[14:16:12] SIGNAL STRENGTH: 99%\n<color=#10b981>[14:16:30] SYSTEM NORMAL</color>";
+        }
+
+        // {알림창 가상 활성화 처리 (새 기록이 있을 때만)}
+        if (panelQuickAlarm != null)
+        {
+            panelQuickAlarm.SetActive(testHasNewMemoryLog);
+        }
     }
 
     /* 출전 준비 씬 열기 */

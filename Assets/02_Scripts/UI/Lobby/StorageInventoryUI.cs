@@ -31,6 +31,12 @@ public class StorageInventoryUI : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button buttonBackTop;      // 상단 뒤로가기 버튼 참조
 
+    [Header("Sidebar Buttons")]
+    [SerializeField] private Button buttonNavSortie;    // 출격 버튼
+    [SerializeField] private Button buttonNavDiver;     // 다이버 버튼
+    [SerializeField] private Button buttonNavStorage;   // 창고 버튼
+    [SerializeField] private Button buttonNavLobby;     // 로비 버튼
+
     [Header("Capacity Text")]
     [SerializeField] private TMP_Text storageCapacityText;
     [SerializeField] private TMP_Text inventoryCapacityText;
@@ -93,6 +99,11 @@ public class StorageInventoryUI : MonoBehaviour
         if (buttonBackTop != null)
             buttonBackTop.onClick.AddListener(OnClickBack);
 
+        if (buttonNavSortie != null) buttonNavSortie.onClick.AddListener(OnClickNavSortie);
+        if (buttonNavDiver != null) buttonNavDiver.onClick.AddListener(OnClickNavDiver);
+        if (buttonNavStorage != null) buttonNavStorage.onClick.AddListener(OnClickNavStorage);
+        if (buttonNavLobby != null) buttonNavLobby.onClick.AddListener(OnClickNavLobby);
+
         LoadFromPlayerData();
     }
 
@@ -102,6 +113,11 @@ public class StorageInventoryUI : MonoBehaviour
         // {뒤로가기 버튼 클릭 이벤트를 해제하여 중복 등록을 방지한다}
         if (buttonBackTop != null)
             buttonBackTop.onClick.RemoveListener(OnClickBack);
+
+        if (buttonNavSortie != null) buttonNavSortie.onClick.RemoveListener(OnClickNavSortie);
+        if (buttonNavDiver != null) buttonNavDiver.onClick.RemoveListener(OnClickNavDiver);
+        if (buttonNavStorage != null) buttonNavStorage.onClick.RemoveListener(OnClickNavStorage);
+        if (buttonNavLobby != null) buttonNavLobby.onClick.RemoveListener(OnClickNavLobby);
     }
 
     private void OnClickBack()
@@ -109,6 +125,27 @@ public class StorageInventoryUI : MonoBehaviour
         // {로비 메인 UI 열기 이벤트를 호출한다}
         GlobalEventBus.OnOpenLobbyUI?.Invoke();
     }
+
+    private void OnClickNavSortie()
+    {
+        GlobalEventBus.OnOpenPrepareUI?.Invoke();
+    }
+
+    private void OnClickNavDiver()
+    {
+        GlobalEventBus.OnOpenRecordUI?.Invoke();
+    }
+
+    private void OnClickNavStorage()
+    {
+        // 이미 창고 화면이므로 무반응
+    }
+
+    private void OnClickNavLobby()
+    {
+        GlobalEventBus.OnOpenLobbyUI?.Invoke();
+    }
+
     private void InitializeEmptyData()
     {
         // {창고 데이터를 빈 슬롯으로 초기화한다}
