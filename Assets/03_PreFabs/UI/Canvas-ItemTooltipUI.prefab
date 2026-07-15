@@ -1210,4 +1210,5 @@ MonoBehaviour:
   textFlavor: {fileID: 311346901887530088}
   textPrice: {fileID: 7128564736887984435}
   textMultiple: {fileID: 56186576193507733}
+  currentItemTID: 0
   isFromInventory: 1
