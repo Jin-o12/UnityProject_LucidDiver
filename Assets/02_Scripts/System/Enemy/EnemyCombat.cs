@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
@@ -30,6 +30,10 @@ public class EnemyCombat
     [SerializeField] private float firstSlashDamage = 8.0f;            // 1타 피해량
     [SerializeField] private float secondSlashDamage = 12.0f;          // 2타 피해량
     [SerializeField] private float secondSlashTurnLimit = 25.0f;       // 2타 직전 보정 가능한 최대 회전 각도
+
+    [SerializeField] private int[] AttackCue_AudioIDPool;              // 공격 시작 사운드 ID 풀
+    [SerializeField] private int[] firstSlash_AudioIDPool;             // 1타 사운드 ID 풀
+    [SerializeField] private int[] secondSlash_AudioIDPool;            // 2타 사운드 ID 풀
 
     [NonSerialized] private float attackStartRangeSqr;                 // 공격 시작 거리 제곱값 캐시
     [NonSerialized] private float attackHitRangeSqr;                   // 실제 타격 거리 제곱값 캐시
@@ -125,6 +129,10 @@ public class EnemyCombat
             }
         }
 
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 예고 지점에서 3D 오디오 재생
+        int cueAudioID = AttackCue_AudioIDPool[UnityEngine.Random.Range(0, AttackCue_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(cueAudioID, self.transform.position);
+
         // 예고 동작 도중 타겟이 사망했을 수 있으므로 공격 애니메이션을 시작하기 직전에 다시 검사합니다.
         if (!EnemyPerception.IsTargetAvailable(target))
         {
@@ -181,6 +189,16 @@ public class EnemyCombat
         {
             locomotion.FacePositionLimited(self, target.position, secondSlashTurnLimit, onLookDirEvent);
         }
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 공격 이벤트 시작 지점에서 3D 오디오 재생
+        int[] atkAudioPool = swingIndex switch
+        {
+            0 => firstSlash_AudioIDPool,
+            1 => secondSlash_AudioIDPool,
+            _ => firstSlash_AudioIDPool
+        };
+        int atkAudioID = atkAudioPool[UnityEngine.Random.Range(0, atkAudioPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(atkAudioID, self.position);
 
         currentSlashDamage = swingDamage;
         hasAppliedCurrentSlashDamage = false;

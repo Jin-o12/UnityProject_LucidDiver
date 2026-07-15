@@ -14,7 +14,7 @@ public class PlayerWeapon : MonoBehaviour
     [Header("Shot Trace Visual")]
     [SerializeField] private bool showShotTrace = true;                 // 궤적 보이기 여부
     [SerializeField] private LineRenderer shotTraceRenderer;            // 궤적 렌더러
-    [SerializeField] private float shotTraceDuration = 0.3f;           // 궤적이 보이는 시간
+    [SerializeField] private float shotTraceDuration = 0.3f;            // 궤적이 보이는 시간
     [SerializeField] private Color hitTraceColor = Color.white;         // 적중 했을 시 궤적 색상
     [SerializeField] private Color missTraceColor = Color.red;          // 적중하지 않을 시 궤적 색상
 
@@ -31,6 +31,10 @@ public class PlayerWeapon : MonoBehaviour
     [SerializeField] private float aimOriginHeight = 1.0f;              // 1차 조준 레이를 쏠 높이
     [SerializeField] private float muzzleBackstepDistance = 0.3f;       // 총구가 벽 안에 들어갔을 때 시작점을 뒤로 물릴 거리
     [SerializeField] private float aimSuccessParallex = 0.1f;           // 1차 조준 레이가 적에게 명중 시 적 body 내부를 조준하기 위한 보정 거리
+
+    [Header("Shot Audio")]
+    public int[] GunshotPistol_AudioIDPool = null;                      // 실외 사격 사운드 ID 리스트
+    public int[] Indoor_GunshotPistol_AudioIDPool = null;               // 실내 사격 사운드 ID 리스트 (실외/실내 구분 가능한 경우 실내에서 사용)
 
     [SerializeField] public apPortrait apPort;
 
@@ -156,9 +160,12 @@ public class PlayerWeapon : MonoBehaviour
         // 궤적은 여전히 총구에서 시작해 보이게 한다.
         ShowShotTrace(muzzleOrigin, endPoint, traceColor);
 
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
+        int ShotAudioID = GunshotPistol_AudioIDPool[Random.Range(0, GunshotPistol_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(ShotAudioID, safeShotOrigin);
+
         // 실제 오디오 재생과 별개로, AI는 이 총소리 이벤트를 통해 위치를 조사합니다.
         NoiseSystem.Emit(NoiseType.Gunshot, muzzleOrigin, gameObject);
-
     }
 
     // 리코일 애니메이션 출력

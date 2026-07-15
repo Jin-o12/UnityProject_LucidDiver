@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
@@ -26,6 +26,8 @@ public class EnemyMovement : MonoBehaviour
     private NavMeshAgent navAgent;                                                        // 이동용 NavMeshAgent
     private Coroutine aiRoutine;                                                          // AI 판단 루프 코루틴 핸들
     private BoxCollider boxCollider;                                                      // 충돌 판정 콜라이더
+
+    [SerializeField] private int[] dissolve_AudioIDPool;                                  // 사망 사운드 ID 풀
 
     public float SightLength => perception.SightRange;
     public float AwarenessRange => perception.AwarenessRange;
@@ -231,6 +233,10 @@ public class EnemyMovement : MonoBehaviour
 
         navAgent.enabled = false;
         boxCollider.enabled = false;
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 사망 지점에서 3D 오디오 재생
+        int dieAudioID = dissolve_AudioIDPool[UnityEngine.Random.Range(0, dissolve_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(dieAudioID, gameObject.transform.position);
 
         Destroy(gameObject, 0.0f);
     }

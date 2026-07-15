@@ -1,4 +1,4 @@
-
+﻿
 /// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem.HID;
 
 public class PlayerStatus : MonoBehaviour, IEffectReceiver
 {
@@ -38,6 +39,8 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
 
     private float artifactHpRegenBonus;                     // 아티팩트로 추가되는 초당 체력 회복량
     private float artifactMpRegenBonus;                     // 아티팩트로 추가되는 초당 마나 회복량
+
+    public int[] Hit_AudioIDPool = null;                    // 플레이어 피격 사운드 ID 리스트
 
     [Header("Lucid Mark")]
     [SerializeField] private PlayerLucidMarkController lucidMark = new PlayerLucidMarkController();
@@ -275,6 +278,9 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         }
         // 피해 입을 시 애니메이션 재생 이벤트
         GlobalEventBus.OnHitAnimate?.Invoke();
+        // 피해 입을 시 사운드 재생 이벤트
+        int hitID = Hit_AudioIDPool[UnityEngine.Random.Range(0, Hit_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(hitID,transform.position);
         // 피해 입을 시 탈출 실패 처리
         GlobalEventBus.OnEscapeFailure?.Invoke(playerID);
     }
