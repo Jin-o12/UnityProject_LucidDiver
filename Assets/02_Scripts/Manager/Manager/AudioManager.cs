@@ -48,6 +48,7 @@ public class AudioManager : MonoBehaviour
 
     [Header("UI 사운드")]
     [SerializeField] private int[] Click_AudioIDPool;           //클릭 시 사운드 ID 풀
+    [SerializeField] private int[] Chase_AudioIDPool;           //추적 개시 사운드 ID 풀
 
     // <AudioID, AudioClip> 클립 딕셔너리
     public Dictionary<int, AudioClip> clipDict = new Dictionary<int, AudioClip>();
@@ -85,7 +86,8 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnPlay3DSoundRequested += Play3DSound;
         GlobalEventBus.OnPlay3DSoundRequestedWithHandle += Play3DSoundAndReturn;
 
-        GlobalEventBus.OnClickAudio += PlayClickSound;          // UI 클릭 사운드 재생 이벤트
+        GlobalEventBus.OnClickAudio += PlayClickSound;              // UI 클릭 사운드 재생 이벤트
+        GlobalEventBus.OnBeginTargetTracking += PlayChaseSound;     // 추적 개시 사운드 재생 이벤트
 
         // 사운드 종료 요청 이벤트 구독
         GlobalEventBus.OnStopBGMRequested += StopBGM;
@@ -104,6 +106,7 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnPlay3DSoundRequestedWithHandle -= Play3DSoundAndReturn;
 
         GlobalEventBus.OnClickAudio -= PlayClickSound;
+        GlobalEventBus.OnBeginTargetTracking -= PlayChaseSound;
 
         GlobalEventBus.OnStopBGMRequested -= StopBGM;
         GlobalEventBus.OnStop2DSoundRequested -= Stop2DSound;
@@ -392,6 +395,13 @@ public class AudioManager : MonoBehaviour
         // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
         int ShotAudioID = Click_AudioIDPool[UnityEngine.Random.Range(0, Click_AudioIDPool.Length)];
         Play2DSound(ShotAudioID);
+    }
+
+    private void PlayChaseSound(Vector3 pos)
+    {
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
+        int ShotAudioID = Chase_AudioIDPool[UnityEngine.Random.Range(0, Chase_AudioIDPool.Length)];
+        Play3DSound(ShotAudioID, pos);
     }
 
     #endregion
