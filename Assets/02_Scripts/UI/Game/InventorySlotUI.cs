@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 아이템 슬롯 하나의 역할을 수행합니다
 /// 인벤토리 슬롯 1칸의 표시와 입력을 담당한다.
 /// 인벤토리 슬롯끼리의 위치 교환, 체스트와의 우클릭 이동, 드래그 앤 드롭 이동, 포인터 호버로 툴팁 출력을 처리한다.
@@ -32,6 +32,9 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     private CanvasGroup canvasGroup;
     private Canvas mainCanvas;
+    
+    // 유니티 좀비 드래그(마우스를 떼지 않고 UI 재활성화 시 OnDrag가 이어지는 현상) 방지용 플래그
+    private bool isDragging = false;
 
     private void Awake()
     {
@@ -54,6 +57,21 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             enabled = false;
             Debug.LogError("InventorySlotUI: Canvas를 찾을 수 없습니다.");
         }
+    }
+
+    /* 외부(InventoryUI)에서 인벤토리가 닫히기 직전에 호출하여 비활성화 에러 피하면서 상호작용 초기화 */
+    public void ResetDragState()
+    {
+        isDragging = false; // 드래그 강제 취소 인식
+
+        if (mainCanvas != null && itemInfo != null && itemInfo.parent == mainCanvas.transform)
+        {
+            itemInfo.SetParent(transform, false);
+            itemInfo.localPosition = Vector3.zero;
+        }
+
+        if (canvasGroup != null)
+            canvasGroup.blocksRaycasts = true;
     }
 
     public void Initialize(int index)
@@ -163,6 +181,8 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         if (mainCanvas == null || itemInfo == null || !itemImg.enabled)
             return;
 
+        isDragging = true;
+        
         itemInfo.SetParent(mainCanvas.transform);
         itemInfo.SetAsLastSibling();
 
@@ -173,7 +193,8 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (itemInfo == null)
+        // OnBeginDrag를 정상적으로 거치지 않은 '좀비 드래그'는 철저히 무시
+        if (!isDragging || itemInfo == null)
             return;
 
         itemInfo.position = eventData.position;
@@ -181,6 +202,8 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        isDragging = false;
+
         if (canvasGroup != null)
             canvasGroup.blocksRaycasts = true;
 

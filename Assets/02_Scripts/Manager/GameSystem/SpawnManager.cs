@@ -165,7 +165,7 @@ public class SpawnManager : MonoBehaviour
         }
 
         // 플레이어 오브젝트 세션 데이터에 등록
-        //GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
+        GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
 
         Debug.Log($"Player spawned at {spawnPosition} from {spawnPoint.name} / actual: {spawnedPlayer.transform.position} with ID: {spawnedPlayer.GetComponent<EntityIdentity>().entityID}");
 
