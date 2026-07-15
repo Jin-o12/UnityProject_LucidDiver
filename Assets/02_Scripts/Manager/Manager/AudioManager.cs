@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEditor.iOS;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -47,6 +46,9 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioMixerGroup UIMixerGroup;      //UI 사운드 믹서 그룹
     private AudioMixerSnapshot Snapshot;                        //믹서 스냅샷
 
+    [Header("UI 사운드")]
+    [SerializeField] private int[] Click_AudioIDPool;           //클릭 시 사운드 ID 풀
+
     // <AudioID, AudioClip> 클립 딕셔너리
     public Dictionary<int, AudioClip> clipDict = new Dictionary<int, AudioClip>();
 
@@ -83,6 +85,8 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnPlay3DSoundRequested += Play3DSound;
         GlobalEventBus.OnPlay3DSoundRequestedWithHandle += Play3DSoundAndReturn;
 
+        GlobalEventBus.OnClickAudio += PlayClickSound;          // UI 클릭 사운드 재생 이벤트
+
         // 사운드 종료 요청 이벤트 구독
         GlobalEventBus.OnStopBGMRequested += StopBGM;
         GlobalEventBus.OnStop2DSoundRequested += Stop2DSound;
@@ -98,6 +102,8 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnPlay2DSoundRequested -= Play2DSound;
         GlobalEventBus.OnPlay3DSoundRequested -= Play3DSound;
         GlobalEventBus.OnPlay3DSoundRequestedWithHandle -= Play3DSoundAndReturn;
+
+        GlobalEventBus.OnClickAudio -= PlayClickSound;
 
         GlobalEventBus.OnStopBGMRequested -= StopBGM;
         GlobalEventBus.OnStop2DSoundRequested -= Stop2DSound;
@@ -378,5 +384,15 @@ public class AudioManager : MonoBehaviour
 
         Snapshot = mixer.FindSnapshot("Snapshot");
     }
+    #endregion
+
+    #region 공통 사운드 재생
+    private void PlayClickSound()
+    {
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
+        int ShotAudioID = Click_AudioIDPool[UnityEngine.Random.Range(0, Click_AudioIDPool.Length)];
+        Play2DSound(ShotAudioID);
+    }
+
     #endregion
 }

@@ -142,6 +142,9 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             return;
         }
 
+        // 클릭 시 사운드 재생
+        GlobalEventBus.OnClickAudio?.Invoke();
+
         // 1번만 클릭한 경우에는 처리하지 않기
         if (eventData.clickCount < 2)
         {

@@ -58,6 +58,7 @@ public class GlobalEventBus
     public static Action<int> OnEnemyDead;                          // 적의 사망 여부: Action<고유 번호>
     public static Action<float> OnTimerChanged;                     // 남은 제한 시간 변동: Action<남은 시간>
     public static Action OnHitAnimate;                              // 플레이어 피격 애니메이션 발생
+    public static Action<Vector3> OnBeginTargetTracking;            // 추적 개시 사운드 재생: <Action: 적 위치>
 
     /// <summary>
     /// 게임 시스템 관련 이벤트
@@ -85,6 +86,7 @@ public class GlobalEventBus
     public static Action OnRecordRead;                                      // 다이버 개인 심상 기록 읽음
     public static Action<SlotType, int> OnTooltipUIOpen;                    // 아이템 툴팁 UI를 출력: Action<슬롯 종류, itemIndex>
     public static Action OnTooltipUIClose;                                  // 아이템 툴팁 UI를 닫음
+    public static Action OnClickAudio;                                      // 클릭 시 오디오 출력 요청
 
     /// <summary>
     /// 사운드 관리 이벤트

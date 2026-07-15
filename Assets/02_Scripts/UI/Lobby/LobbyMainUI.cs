@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -171,18 +171,27 @@ public class LobbyMainUI : MonoBehaviour
     /* 출전 준비 씬 열기 */
     public void OpenSortiePrepare()
     {
+        // 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke();
+
         GlobalEventBus.OnOpenPrepareUI?.Invoke();
     }
 
     /* 다이버 기록 열기 */
     public void OpenDiverRecord()
     {
+        // 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke();
+
         GlobalEventBus.OnOpenRecordUI?.Invoke();
     }
 
     /* 창고 인벤토리 열기 */
     public void OpenStorageInventory()
     {
+        // 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke();
+
         GlobalEventBus.OnOpenStorageUI?.Invoke();
     }
 }

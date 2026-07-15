@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -250,6 +250,9 @@ public class DiverRecordUI : MonoBehaviour
 
     private void OnClickBack()
     {
+        // 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke();
+
         // {로비 Canvas를 다시 활성화}
         GlobalEventBus.OnOpenLobbyUI?.Invoke();
     }
@@ -262,6 +265,9 @@ public class DiverRecordUI : MonoBehaviour
             Debug.Log("DiverRecordUI: 기록 01은 아직 잠겨 있습니다.");
             return;
         }
+
+        // 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke();
 
         // {기록 카드 팝업 열기 이벤트를 호출한다}
         GlobalEventBus.OnOpenRecordCardPopUpUI?.Invoke(Record01Title, CharacterTID.Yuan);

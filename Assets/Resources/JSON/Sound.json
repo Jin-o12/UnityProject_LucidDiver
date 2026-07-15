@@ -248,7 +248,7 @@
     "AudioID": 10603,
     "AudioClip": "box_rummag_Loop",
     "AudioType": "SFX",
-    "Volume": 1,
+    "Volume": 0.3,
     "Loop": true
   },
   {

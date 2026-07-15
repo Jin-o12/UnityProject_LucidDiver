@@ -598,6 +598,7 @@ MonoBehaviour:
     type: 2}
   UIMixerGroup: {fileID: -8807980031735891100, guid: 457f0b17c866233459bf058ad2112051,
     type: 2}
+  Click_AudioIDPool: 982a0000992a00009a2a00009b2a00009c2a00009d2a0000
 --- !u!4 &918902358
 Transform:
   m_ObjectHideFlags: 0
