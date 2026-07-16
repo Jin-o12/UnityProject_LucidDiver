@@ -40,7 +40,19 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     private float artifactHpRegenBonus;                     // 아티팩트로 추가되는 초당 체력 회복량
     private float artifactMpRegenBonus;                     // 아티팩트로 추가되는 초당 마나 회복량
 
+    // 사운드 연출
     public int[] Hit_AudioIDPool = null;                    // 플레이어 피격 사운드 ID 리스트
+
+    // 환경음 ID
+    private int defaultTimeAudioID = 10306;     //기본 사운드
+    private int lowTimeAudioID_1 = 10301;       //1차 사운드: 제한 시간 50% 이상 경과
+    private int lowTimeAudioID_2 = 10302;       //2차 사운드: 제한 시간 80% 이상 경과
+    private int lowHPAudio_ID = 10304;          //체력 낮음 사운드
+
+    //제한 시간 루프 사운드 재생 시점
+    private float lowTimeTirggerRatio_1 = 0.5f;  //1차 사운드: 50% 이상 경과
+    private float lowTimeTirggerRatio_2 = 0.2f;  //2차 사운드: 80% 이상 경과
+
 
     [Header("Lucid Mark")]
     [SerializeField] private PlayerLucidMarkController lucidMark = new PlayerLucidMarkController();
@@ -73,6 +85,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnRequestManaConsume += RequestUseMana;
         GlobalEventBus.OnTimeOver += TimeOver;
         GlobalEventBus.OnEscapeRequest += HandleSessionEnded;
+        GlobalEventBus.OnTimerRatioChanged += PlayAmbientSound;
     }
 
     private void OnDisable()
@@ -85,6 +98,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnRequestManaConsume -= RequestUseMana;
         GlobalEventBus.OnTimeOver -= TimeOver;
         GlobalEventBus.OnEscapeRequest -= HandleSessionEnded;
+        GlobalEventBus.OnTimerRatioChanged -= PlayAmbientSound;
 
         // 플레이어가 비활성화되면 새 흔적 생성만 멈추고,
         // 이미 바닥에 떨어진 의식누출 흔적은 각자 수명만큼 남아 적을 유도합니다.
@@ -161,17 +175,6 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         hpCurrent = Mathf.Clamp(hpCurrent + _val, 0, hpMax);
         UpdateHp();
 
-        // 플레이어 체력이 50% 이상이 되면 ambient 사운드 루프 중단
-        if (hpCurrent >= 0.5 * hpMax)
-        {
-            GlobalEventBus.OnStop2DSoundRequested?.Invoke(10304);
-        }
-        // 플레이어 체력이 50% 이하이고 idle 상태이면 ambient 사운드 루프 출력
-        else if (hpCurrent < 0.5* hpMax && nowState == livingState.idle)
-        {
-            GlobalEventBus.OnPlay2DSoundRequested?.Invoke(10304);
-        }
-
         // 플레이어 체력이 0이 되었을 때 idle 상태이면 사망 처리 이벤트 및 게임오버 메소드를 발동
         if (hpCurrent <= 0 && nowState == livingState.idle)
         {
@@ -180,6 +183,23 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
             // 게임오버 사운드 이펙트를 출력
             GlobalEventBus.OnPlay2DSoundRequested?.Invoke(10305);
             GameOver(playerID);
+        }
+    }
+
+    /* 플레이어 체력과 남은 제한 시간에 따라 Ambient 사운드 재생 */
+    private void PlayAmbientSound(float timerRatio)
+    {
+        // 플레이어 체력이 50% 이상이고 idle 상태이면 남은 시간에 따른 사운드 루프를 출력
+        if (hpCurrent >= 0.5 * hpMax)
+        {
+            if (timerRatio < lowTimeTirggerRatio_2)  GlobalEventBus.OnPlay2DSoundRequested?.Invoke(lowTimeAudioID_2);
+            else if (timerRatio < lowTimeTirggerRatio_1) GlobalEventBus.OnPlay2DSoundRequested?.Invoke(lowTimeAudioID_1);
+            else GlobalEventBus.OnPlay2DSoundRequested?.Invoke(defaultTimeAudioID);
+        }
+        // 플레이어 체력이 50% 이하이고 idle 상태이면 ambient 사운드 루프 출력
+        else if (hpCurrent < 0.5 * hpMax && nowState == livingState.idle)
+        {
+            GlobalEventBus.OnPlay2DSoundRequested?.Invoke(lowHPAudio_ID);
         }
     }
 

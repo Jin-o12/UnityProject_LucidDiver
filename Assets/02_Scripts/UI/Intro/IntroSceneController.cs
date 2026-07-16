@@ -249,10 +249,10 @@ public class IntroSceneController : MonoBehaviour
                 titleUIPanel.interactable = true;
                 titleUIPanel.blocksRaycasts = true;
             }
-        }
 
-        // 타이틀 진입 시 인트로 BGM 실행
-        GlobalEventBus.OnPlayBGMRequested(introBGMAudioID);
+            // 타이틀 진입 시 인트로 BGM 실행
+            GlobalEventBus.OnPlayBGMRequested(introBGMAudioID);
+        }
     }
 
     // 화면 터치 제어 핸들러
@@ -346,6 +346,9 @@ public class IntroSceneController : MonoBehaviour
             titleUIPanel.interactable = true;
             titleUIPanel.blocksRaycasts = true;
         }
+
+        // 타이틀 진입 시 인트로 BGM 실행
+        GlobalEventBus.OnPlayBGMRequested(introBGMAudioID);
     }
 
     // 설정 팝업 열기

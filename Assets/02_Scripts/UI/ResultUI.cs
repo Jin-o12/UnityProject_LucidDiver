@@ -18,18 +18,16 @@ public class ResultUI : MonoBehaviour
     public string returnDialogueID;             //세션 종료 판정에 따라 로비 복귀 시 출력해야 할 귀환 대사 ID
     public int enemyKillCount;                  //이번 세션에서 플레이어가 처치한 적 개체의 누적 수.
     public ItemData memoryFragmentData;         //기억 파편 아이템 데이터
-    public int invenSlotsCount;                //인벤토리 슬롯 개수 (각성 보존 슬롯 인덱스 값 보정)
+    public int invenSlotsCount;                 //인벤토리 슬롯 개수 (각성 보존 슬롯 인덱스 값 보정)
 
     [Header("UI 컴포넌트")]
-    public Image image_Banner;                      //탈출 신 패널 타이틀 이미지
+    public TMP_Text text_Banner;                    //탈출 신 패널 타이틀 텍스트
     public TMP_Text text_playTime;                  //플레이 시간 텍스트
     public TMP_Text text_enemyKillCount;            //적 처치 수 텍스트
     public Image image_memoryFragmentIcon;          //기억 파편 아이콘 이미지
     public TMP_Text text_getMemoryFragment;         //기억 파편 획득 텍스트
     public TMP_Text text_linkRate;                  //동조율 상승 텍스트
     public TMP_Text text_memoryLogUnlocked;         //심상 기록 해금 텍스트
-    public Image image_manaStoneLost;               //탈출 실패 시 기묘한 사탕 유실 이펙트 이미지
-    public Image image_potionLost;                  //탈출 실패 시 변질된 붕대 유실 이펙트 이미지
     public TMP_Text text_returnDialogue;            //귀환 대사 텍스트
     
     [Header("동적 슬롯 컨테이너 (UI 컴포넌트)")]
@@ -41,8 +39,6 @@ public class ResultUI : MonoBehaviour
     public List<GameObject> safeSlotsObj = new();   //각성 보존 슬롯 리스트
 
     [Header("UI 리소스")]
-    public Sprite Banner_Success;   //탈출 성공 시 패널 타이틀 스프라이트
-    public Sprite Banner_Failed;    //강제 각성(탈출 실패) 시 패널 타이틀 스프라이트
     public GameObject slotPrefab;   //각성 보존 슬롯 칸 프리팹
 
     // JSON 데이터 저장소 접근용 리포지토리 인스턴스
@@ -63,8 +59,12 @@ public class ResultUI : MonoBehaviour
     /* 결과 창 패널의 출력 데이터 갱신 메소드 */
     public void RefreshResult()  
     {
-        //이미지 배너를 세션 성패 결과에 따라 탈출 성공 시 / 강제 각성 시로 나누어 출력
-        if (image_Banner != null) image_Banner.sprite = extractionResult ? Banner_Success : Banner_Failed;
+        //세션 성패 결과에 따라 텍스트 배너에 출력되는 탈출 성공 시 / 강제 각성 시 텍스트의 스트링 및 색을 나누어 출력
+        if (text_Banner != null)
+        {
+            text_Banner.text = extractionResult ? "탈출 성공" : "탈출 실패";
+            text_Banner.color = extractionResult ? Color.green : Color.red;
+        }
         PrintTime(playTime);  //플레이 시간 텍스트를 출력하는 메소드
         //적 처치 수 카운트를 출력
         if (text_enemyKillCount != null) text_enemyKillCount.text = $"Kills: {enemyKillCount}";
