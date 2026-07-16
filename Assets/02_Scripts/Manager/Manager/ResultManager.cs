@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 인게임 세션 종료 시 데이터 변동을 관리하는 클래스
 /// (탈출 성공 여부, 플레이 타임, 인벤토리 및 퀵슬롯, 동조율 단계)
 /// </summary>
@@ -237,6 +237,18 @@ public class ResultManager : MonoBehaviour, IResultService
             }
         }
 
+        // 1.6. 안전 금고(safeSlot) 아이템을 별도로 합산 (탈출 실패 시 분실물에서 제외하기 위함)
+        Dictionary<int, int> safeItems = new Dictionary<int, int>();
+        foreach (InventorySlotData slot in _inven.safeSlots)
+        {
+            if (slot == null || slot.TID == 0 || slot.amount <= 0) continue;
+
+            if (safeItems.ContainsKey(slot.TID))
+                safeItems[slot.TID] += slot.amount;
+            else
+                safeItems[slot.TID] = slot.amount;
+        }
+
         if (_extractionResult)
         {
             // 탈출 성공: 합산된 최종 수량에서 시작 수량을 뺀 순수 변화량을 기록 (양수: 획득, 음수: 손실)
@@ -270,19 +282,65 @@ public class ResultManager : MonoBehaviour, IResultService
         }
         else
         {
-            // 탈출 실패: 최종 인벤토리의 모든 아이템을 전량 손실로 기록
-            foreach (var kvp in finalItems)
+            // 탈출 실패: 안전 금고(safeSlot) 아이템은 분실로 처리하지 않는다.
+            // 1. 인벤토리(slots)의 아이템만 손실로 기록
+            Dictionary<int, int> lostItems = new Dictionary<int, int>();
+            foreach (InventorySlotData slot in _inven.slots)
+            {
+                if (slot == null || slot.TID == 0 || slot.amount <= 0) continue;
+
+                if (lostItems.ContainsKey(slot.TID))
+                    lostItems[slot.TID] += slot.amount;
+                else
+                    lostItems[slot.TID] = slot.amount;
+            }
+
+            // 1.5. 장착 중인 아티팩트도 손실에 포함
+            if (artifactEquipment != null && artifactEquipment.equippedArtifacts != null)
+            {
+                foreach (var artifact in artifactEquipment.equippedArtifacts)
+                {
+                    if (artifact == null || artifact.TID == 0) continue;
+
+                    if (lostItems.ContainsKey(artifact.TID))
+                        lostItems[artifact.TID] += 1;
+                    else
+                        lostItems[artifact.TID] = 1;
+                }
+            }
+
+            // 2. 인벤토리 + 아티팩트 아이템을 전량 손실로 기록
+            foreach (var kvp in lostItems)
             {
                 SessionDataSO.Instance.AddAcquiredItem(kvp.Key, -kvp.Value);
             }
 
-            // 시작 시점에는 있었지만 최종 인벤토리에는 없는 아이템도 손실로 기록
+            // 3. 시작 시점에는 있었지만 최종 인벤토리/아티팩트에도 없는 아이템도 손실로 기록
             foreach (var kvp in SessionDataSO.Instance.StartingItems)
             {
                 int tid = kvp.Key;
-                if (!finalItems.ContainsKey(tid))
+                if (!lostItems.ContainsKey(tid) && !safeItems.ContainsKey(tid))
                 {
                     SessionDataSO.Instance.AddAcquiredItem(tid, -kvp.Value);
+                }
+            }
+
+            // 4. 안전 금고 아이템 중 이번 세션에서 순수하게 획득한 수량만 기록
+            foreach (var kvp in safeItems)
+            {
+                int tid = kvp.Key;
+                int safeAmount = kvp.Value;
+                int startingAmount = 0;
+
+                if (SessionDataSO.Instance.StartingItems.TryGetValue(tid, out int amount))
+                {
+                    startingAmount = amount;
+                }
+
+                int acquiredAmount = safeAmount - startingAmount;
+                if (acquiredAmount > 0)
+                {
+                    SessionDataSO.Instance.AddAcquiredItem(tid, acquiredAmount);
                 }
             }
         }
