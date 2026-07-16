@@ -109,9 +109,11 @@ public class LobbyMainUI : MonoBehaviour
             if (currentLevel < maxLevel)
             {
                 float requireExp = charData.requireLinkRatePerLevel[charSaveData.linkRateLevel+1];
-                
+                float nowExp = PlayerSaveDataSO.Instance.GetlinkRatePoint();
+
                 sliderLinkRateLevel.maxValue = requireExp;
-                sliderLinkRateLevel.value = PlayerSaveDataSO.Instance.GetlinkRatePoint();
+                sliderLinkRateLevel.minValue = charData.requireLinkRatePerLevel[charSaveData.linkRateLevel];
+                sliderLinkRateLevel.value = nowExp;
             }
             else
             {
