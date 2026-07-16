@@ -617,6 +617,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da05d0bf87097d540ade1ab289363ec6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  healthItemAudioID: 10701
+  mpGainItemAudioID: 10704
 --- !u!1 &420978736
 GameObject:
   m_ObjectHideFlags: 0
@@ -1172,6 +1174,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da05d0bf87097d540ade1ab289363ec6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  healthItemAudioID: 10701
+  mpGainItemAudioID: 10704
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
