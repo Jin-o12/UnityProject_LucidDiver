@@ -143,6 +143,11 @@ public class LocalInputReader : MonoBehaviour
     /* 액션맵을 UI 모드로 전환 */
     public void SwitchToUIMap()
     {
+        // 튜토리얼/인벤토리 UI가 열릴 때 기존 이동 입력이 남아 캐릭터가 계속 움직이지 않도록 즉시 정지 값을 전달합니다.
+        isSprint = false;
+        GlobalEventBus.OnSprintInput?.Invoke(false);
+        GlobalEventBus.OnPlayerMove?.Invoke(Vector2.zero);
+
         playerInput.SwitchCurrentActionMap("UI");
     }
 

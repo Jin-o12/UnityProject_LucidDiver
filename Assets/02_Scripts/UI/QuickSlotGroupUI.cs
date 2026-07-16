@@ -37,13 +37,31 @@ public class QuickSlotGroupUI : MonoBehaviour
     {
         for(int i=0; i<slotDataList.Length; i++)
         {
+            if (slotDataList[i] == null)
+            {
+                Debug.LogWarning($"QuickSlotGroupUI: slotDataList[{i}]가 연결되지 않아 해당 퀵슬롯 초기화를 건너뜁니다.", this);
+                continue;
+            }
+
             slotDataList[i].Initialize(i);
         }
     }
 
     public void UpdateSlot(int index, Sprite icon, int count)
     {
+        if (slotDataList == null || index < 0 || index >= slotDataList.Length || slotDataList[index] == null)
+        {
+            Debug.LogWarning($"QuickSlotGroupUI: 유효하지 않은 퀵슬롯 인덱스입니다. index={index}", this);
+            return;
+        }
+
         var slotUI = slotDataList[index].GetComponent<QuickSlotUI>();
+        if (slotUI == null)
+        {
+            Debug.LogWarning($"QuickSlotGroupUI: slotDataList[{index}]에 QuickSlotUI 컴포넌트가 없습니다.", this);
+            return;
+        }
+
         slotUI.UpdateSlot(count, icon);
     }
 }

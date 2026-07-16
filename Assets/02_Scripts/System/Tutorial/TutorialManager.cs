@@ -26,6 +26,7 @@ public sealed class TutorialManager : MonoBehaviour
     private LocalInputReader inputReader;
     private TutorialGuideData currentGuide;
     private Coroutine durationRoutine;
+    private Coroutine restoreInputRoutine;
     private float previousTimeScale = 1f;
     private bool isShowing;
     private bool pausedByTutorial;
@@ -90,13 +91,7 @@ public sealed class TutorialManager : MonoBehaviour
         if (!isShowing || popup == null)
             return;
 
-        bool keyboardConfirmed = Keyboard.current != null &&
-            (Keyboard.current.enterKey.wasPressedThisFrame ||
-             Keyboard.current.spaceKey.wasPressedThisFrame ||
-             Keyboard.current.escapeKey.wasPressedThisFrame);
-        bool gamepadConfirmed = Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame;
-
-        if (keyboardConfirmed || gamepadConfirmed)
+        if (IsConfirmInputPressed())
             popup.Confirm();
     }
 
@@ -275,6 +270,37 @@ public sealed class TutorialManager : MonoBehaviour
         TryClearCurrent(TutorialConditionTypes.NextButton, string.Empty);
     }
 
+    private bool IsConfirmInputPressed()
+    {
+        // 관제사 무전은 화면 전체 클릭이나 단축키가 아니라, 무전 패널 자체를 눌렀을 때만 진행합니다.
+        if (IsCurrentOperatorDialogue())
+            return false;
+
+        bool keyboardConfirmed = Keyboard.current != null &&
+            (Keyboard.current.enterKey.wasPressedThisFrame ||
+             Keyboard.current.spaceKey.wasPressedThisFrame ||
+             Keyboard.current.escapeKey.wasPressedThisFrame);
+        bool gamepadConfirmed = Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame;
+
+        if (keyboardConfirmed || gamepadConfirmed)
+            return true;
+
+        // 무전/대화창은 별도 NEXT 버튼 없이 화면 클릭으로 다음 대사로 넘깁니다.
+        bool dialogueClicked = currentGuide != null &&
+                               IsSameContentType(currentGuide.ContentType, "Dialogue") &&
+                               Mouse.current != null &&
+                               Mouse.current.leftButton.wasPressedThisFrame;
+
+        return dialogueClicked;
+    }
+
+    private bool IsCurrentOperatorDialogue()
+    {
+        return currentGuide != null &&
+               IsSameContentType(currentGuide.ContentType, "Dialogue") &&
+               string.Equals(currentGuide.Speaker?.Trim(), "Operator", StringComparison.OrdinalIgnoreCase);
+    }
+
     private bool TryClearCurrent(string conditionType, string conditionValue)
     {
         if (!isShowing || currentGuide == null)
@@ -392,8 +418,19 @@ public sealed class TutorialManager : MonoBehaviour
         return normalized;
     }
 
+    private static bool IsSameContentType(string a, string b)
+    {
+        return string.Equals(a?.Trim(), b, StringComparison.OrdinalIgnoreCase);
+    }
+
     private void PauseGameplay()
     {
+        if (restoreInputRoutine != null)
+        {
+            StopCoroutine(restoreInputRoutine);
+            restoreInputRoutine = null;
+        }
+
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
         pausedByTutorial = true;
@@ -411,8 +448,29 @@ public sealed class TutorialManager : MonoBehaviour
         pausedByTutorial = false;
 
         if (inputReader != null)
-            inputReader.SwitchToPlayerMap();
+        {
+            LocalInputReader readerToRestore = inputReader;
+            inputReader = null;
+
+            // 확인 버튼을 누른 같은 프레임의 마우스/키 입력이 공격이나 이동으로 이어지지 않도록
+            // 플레이어 액션맵 복귀를 한 프레임 늦춥니다.
+            if (isActiveAndEnabled)
+                restoreInputRoutine = StartCoroutine(RestorePlayerInputMapNextFrame(readerToRestore));
+            else
+                readerToRestore.SwitchToPlayerMap();
+        }
+
         inputReader = null;
+    }
+
+    private IEnumerator RestorePlayerInputMapNextFrame(LocalInputReader readerToRestore)
+    {
+        yield return null;
+
+        if (readerToRestore != null)
+            readerToRestore.SwitchToPlayerMap();
+
+        restoreInputRoutine = null;
     }
 
     private void MarkTutorialCompleted()
