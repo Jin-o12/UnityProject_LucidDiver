@@ -41,9 +41,8 @@ public class LobbyUIPresenter : MonoBehaviour
     /* 로비 UI 전환 */
     public void OpenLobby()
     {
-        // 현재 열려있는 캔버스를 닫고 기존 BGM을 중단
+        // 현재 열려있는 캔버스를 닫는다
         uiManager.CloseNowUI();
-        GlobalEventBus.OnStopBGMRequested?.Invoke();
 
         // 로비 UI를 활성화하고 BGM 재생
         uiManager.Open<LobbyMainUI>();
@@ -53,9 +52,8 @@ public class LobbyUIPresenter : MonoBehaviour
     /* 준비 UI 전환 */
     public void OpenSortiePrepare()
     {
-        // 현재 열려있는 캔버스를 닫고 기존 BGM을 중단
+        // 현재 열려있는 캔버스를 닫는다
         uiManager.CloseNowUI();
-        GlobalEventBus.OnStopBGMRequested?.Invoke();
 
         // 준비 UI를 활성화하고 BGM 재생
         uiManager.Open<SortiePrepareUI>();
@@ -65,9 +63,8 @@ public class LobbyUIPresenter : MonoBehaviour
     /* 기록 UI 전환 */
     public void OpenDiverRecord()
     {
-        // 현재 열려있는 캔버스를 닫고 기존 BGM을 중단
+        // 현재 열려있는 캔버스를 닫는다
         uiManager.CloseNowUI();
-        GlobalEventBus.OnStopBGMRequested?.Invoke();
 
         // 기록 UI를 활성화하고 BGM 재생
         uiManager.Open<DiverRecordUI>();
@@ -77,9 +74,8 @@ public class LobbyUIPresenter : MonoBehaviour
     /* 창고 UI 전환 */
     public void OpenStorageInventory()
     {
-        // 현재 열려있는 캔버스를 닫고 기존 BGM을 중단
+        // 현재 열려있는 캔버스를 닫는다
         uiManager.CloseNowUI();
-        GlobalEventBus.OnStopBGMRequested?.Invoke();
 
         // 창고 UI를 활성화하고 BGM 재생
         uiManager.Open<StorageInventoryUI>();
@@ -89,9 +85,8 @@ public class LobbyUIPresenter : MonoBehaviour
     /* 기록 카드 팝업 UI 전환 */
     public void OpenRecordCardPopUp(string title, CharacterTID tid)
     {
-        // 현재 열려있는 캔버스를 닫고 기존 BGM을 중단
+        // 현재 열려있는 캔버스를 닫는다
         uiManager.CloseNowUI();
-        GlobalEventBus.OnStopBGMRequested?.Invoke();
 
         // 기록 카드 팝업 UI를 활성화하고 BGM 재생
         RecordCardPopUpUI popup = uiManager.Open<RecordCardPopUpUI>();
