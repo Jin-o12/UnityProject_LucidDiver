@@ -612,9 +612,12 @@ public class ResultManager : MonoBehaviour, IResultService
             resultCoroutine = null;
         }
 
-        // 결과 창 닫기 시 게임오버 사운드 이펙트를 중단
+        // 결과 창 닫기 시 환경음 및 게임오버 사운드 이펙트를 중단
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10301);
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10302);
         GlobalEventBus.OnStop2DSoundRequested?.Invoke(10304);
         GlobalEventBus.OnStop2DSoundRequested?.Invoke(10305);
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10306);
 
         UIManager.Instance.Close<ResultUI>();
     }
