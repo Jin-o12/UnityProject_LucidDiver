@@ -91,6 +91,9 @@ public class PlayerSight : MonoBehaviour
         // 최소 거리 이내에 있으면 보임(true 판정)
         if (flatDist.sqrMagnitude <= sqrCircleSight) return true;
 
+        // 시야 거리 바깥에 있으면 안 보임 (false 판정)
+        if (flatDist.magnitude > sightRange) return false;
+
         // 마우스 월드 포인트로부터 정면 벡터 계산 (viewer 기준 평면에 투영)
         Vector3 mouseWorld;
         Vector2 flatForward;
