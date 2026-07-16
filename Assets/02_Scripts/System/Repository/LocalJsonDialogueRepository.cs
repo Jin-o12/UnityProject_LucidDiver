@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
@@ -170,8 +170,12 @@ public class LocalJsonDialogueRepository : IDialogueRepository
             // 해당 캐릭터 데이터 내에 지정한 상황의 대사 리스트가 있는지 확인
             if(data.Dialogues.TryGetValue(_type, out List<DialogueLine> lines) && lines.Count > 0)
             {
-                // 현재 동조율 레벨이 대사별로 지정된 최소 동조율 레벨 이상이면 그 대사를 출력 가능 리스트에 추가
-                var availableLines = lines.Where(line => line.RequiredLevel <= currentLevel).ToList();
+                // 현재 레벨 이하의 대사 중 가장 높은 RequiredLevel의 대사만 출력 가능 리스트에 추가
+                int bestLevel = lines.Where(line => line.RequiredLevel <= currentLevel)
+                                     .Select(line => line.RequiredLevel)
+                                     .DefaultIfEmpty(-1)
+                                     .Max();
+                var availableLines = lines.Where(line => line.RequiredLevel == bestLevel).ToList();
 
                 if(availableLines.Count > 0)
                 {

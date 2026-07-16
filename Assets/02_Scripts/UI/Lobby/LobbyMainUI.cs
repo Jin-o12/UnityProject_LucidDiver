@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,9 +15,11 @@ public class LobbyMainUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textDiverName;             // 다이버 이름 텍스트
     [SerializeField] private TextMeshProUGUI textLinkRateLevel;         // 동조율 수치 텍스트
     [SerializeField] private Slider sliderLinkRateLevel;                // 동조율 경험치 슬라이더
+    [SerializeField] private GameObject dialogueTestBox;                // 로비 대사 박스
     [SerializeField] private TextMeshProUGUI textSpeakerName;           // 로비 대사 화자 이름 텍스트
     [SerializeField] private TextMeshProUGUI textDialogue;              // 로비 대사 텍스트
     [SerializeField] private RawImage CharacterStandingImage;           // 캐릭터 스텐딩 일러스트 (Live2D 비디오 재생용)
+    [SerializeField] private Button buttonCharInteraction;              // 캐릭터 스탠딩 일러스트 상호작용 버튼
 
 
     [Header("Notification")]
@@ -42,10 +45,19 @@ public class LobbyMainUI : MonoBehaviour
     [Header("Quick Alarm Panel (Top-Right)")]
     [SerializeField] private GameObject panelQuickAlarm;                // 우상단 알림 패널
 
+    private float showDialogueTime = 3.0f;                              // 대사 스크립트가 보여질 시간
+    private WaitForSeconds showDialogueWs;                              // 대사 스크립트 ws
+    private float DialogueShowTimer;                                    // 다이얼로그가 보일 최소한의 시간 타이머
+
     // 대사 출력 인터페이스
     private IDialogueRepository dialogueRepo;
     // 캐릭터 정보 인터페이스
     private ICharDataRepository charRepo;
+
+    SaveCharacterData charSaveData;         // 플레이어가 선택 한 캐릭터의 세이브 데이터
+    PlayerSaveData saveData;                // 플레이어 저장 데이터 SO
+    CharacterData charData;                 // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터
+
 
     private void Awake()
     {
@@ -53,6 +65,11 @@ public class LobbyMainUI : MonoBehaviour
         dialogueRepo = new LocalJsonDialogueRepository();
         // 캐릭터 정보 인터페이스 연결
         charRepo = new SOCharacterRepository();
+
+        // 대사 스크립트 출력 시간 지정
+        showDialogueWs = new WaitForSeconds(showDialogueTime);
+        // 타이머 초기화
+        DialogueShowTimer = Time.time;
     }
 
     private void OnEnable()
@@ -69,6 +86,7 @@ public class LobbyMainUI : MonoBehaviour
         buttonSortie.onClick.AddListener(OpenSortiePrepare);
         buttonDiverRecord.onClick.AddListener(OpenDiverRecord);
         buttonStorage.onClick.AddListener(OpenStorageInventory);
+        buttonCharInteraction.onClick.AddListener(ShowCharDialogue);
 
         // UI 활성화 시에도 정보 업데이트
         Refresh();
@@ -80,18 +98,40 @@ public class LobbyMainUI : MonoBehaviour
         buttonSortie.onClick.RemoveListener(OpenSortiePrepare);
         buttonDiverRecord.onClick.RemoveListener(OpenDiverRecord);
         buttonStorage.onClick.RemoveListener(OpenStorageInventory);
+        buttonCharInteraction.onClick.RemoveListener(ShowCharDialogue);
     }
 
     /* 로비의 정보들을 갱신 */
     public void Refresh()
     {
         // 플레이어가 선택 한 캐릭터의 세이브 데이터 추출
-        SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+        charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
         // 플레이어 저장 데이터 SO
-        PlayerSaveData saveData = PlayerSaveDataSO.Instance.currentData;
+        saveData = PlayerSaveDataSO.Instance.currentData;
         // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터 추출
-        CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
+        charData = charRepo.GetCharacterData(saveData.SelectCharID);
 
+        // 캐릭터 정보 갱신
+        UpdateCharInfo();
+        // 캐릭터 대화 창 정보 갱신
+        ShowCharDialogue();
+        // 관제사 정보 업데이트
+        UpdateOperatorInfo();
+
+        // {신규 심상 기록 알림 표시 여부를 갱신한다}
+        if (newMemoryLogMark != null)
+            newMemoryLogMark.SetActive(testHasNewMemoryLog);
+
+        // {알림창 가상 활성화 처리 (새 기록이 있을 때만)}
+        if (panelQuickAlarm != null)
+        {
+            panelQuickAlarm.SetActive(testHasNewMemoryLog);
+        }
+    }
+
+    /* 캐릭터 정보 UI 갱신 */
+    private void UpdateCharInfo()
+    {
         // {다이버 이름을 표시한다}
         if (textDiverName != null)
             textDiverName.text = charData.charName;
@@ -120,22 +160,44 @@ public class LobbyMainUI : MonoBehaviour
                 sliderLinkRateLevel.value = 1.0f;
             }
         }
-        
+    }
+
+    private void ShowCharDialogue()
+    {
+        // 대사가 출력 된(시작한) 시간을 기록
+        DialogueShowTimer = Time.time;
+        StartCoroutine(PrintDialogue());
+    }
+
+    /* 캐릭터 대화 창 정보 및 스크립트 보여주기 */
+    private IEnumerator PrintDialogue()
+    {
+        if (!dialogueTestBox.activeSelf)
+            dialogueTestBox.SetActive(true);
+
+        int currentLevel = PlayerSaveDataSO.Instance.GetLinkRateLevel();
+
         // {로비 기본 대사 화자 이름을 표시한다}
         if (textSpeakerName != null)
             textSpeakerName.text = charData.charName;
         
         // {캐릭터 동조율 단계에 따라 출력 가능한 대사를 가져온다}
         string log = dialogueRepo.GetRandomDialogue((int)CharacterTID.Yuan, DialogueType.lobbyEnter, currentLevel);
-        Debug.Log($"현재 동조율 단계 = {currentLevel}");
         // {로비 기본 대사를 표시한다}
         if (textDialogue != null)
             textDialogue.text = log;
 
-        // {신규 심상 기록 알림 표시 여부를 갱신한다}
-        if (newMemoryLogMark != null)
-            newMemoryLogMark.SetActive(testHasNewMemoryLog);
+        yield return showDialogueWs;
 
+        if(Time.time - DialogueShowTimer >= showDialogueTime)
+        {
+            dialogueTestBox.SetActive(false);
+        }
+    }
+
+    /* 관제사 정보 UI 갱신 */
+    private void UpdateOperatorInfo()
+    {
         // {재화 가상 텍스트 표시}
         if (textGemAmount != null) textGemAmount.text = "12,450";
         if (textShardAmount != null) textShardAmount.text = "3,680";
@@ -163,12 +225,6 @@ public class LobbyMainUI : MonoBehaviour
         if (textSystemConsoleLogs != null)
         {
             textSystemConsoleLogs.text = "[14:15:32] LINK ESTABLISHED\n[14:15:35] DEVIATION: 0.02%\n[14:16:01] SYNC SUCCESSFUL\n[14:16:12] SIGNAL STRENGTH: 99%\n<color=#10b981>[14:16:30] SYSTEM NORMAL</color>";
-        }
-
-        // {알림창 가상 활성화 처리 (새 기록이 있을 때만)}
-        if (panelQuickAlarm != null)
-        {
-            panelQuickAlarm.SetActive(testHasNewMemoryLog);
         }
     }
 
