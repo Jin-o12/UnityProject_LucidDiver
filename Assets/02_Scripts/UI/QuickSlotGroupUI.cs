@@ -35,8 +35,6 @@ public class QuickSlotGroupUI : MonoBehaviour
 
     public void InitializeSlots()
     {
-        weaponImage.enabled = false;
-
         for(int i=0; i<slotDataList.Length; i++)
         {
             slotDataList[i].Initialize(i);
