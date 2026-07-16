@@ -62,7 +62,7 @@ public class ItemTooltipUI : MonoBehaviour
             currentItemMultiple = item.itemMultiple;
 
             // 아이템 카테고리에 따라 효과 텍스트를 출력하는 메소드
-            RefreshItemEffect(item);
+            //RefreshItemEffect(item);
 
             // ItemData에 판매가 값이 정해질 때까지 임시로 값을 지정해 출력
             currentItemPrice = item.itemGrade switch

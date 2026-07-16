@@ -15,8 +15,8 @@
   },
   {
     "itemTID": 301,
-    "itemName": "회복약",
-    "desc": "체력을 10 회복",
+    "itemName": "변질된 붕대",
+    "desc": "섭취 시 캐릭터의 체력을 5 회복한다.",
     "category": "consume",
     "itemMultiple": 5,
     "itemGrade": "normal",
@@ -26,12 +26,13 @@
     "useDelay": 0,
     "useValue": 10,
     "useTarget": "self",
-    "effectType": "healHP"
+    "effectType": "healHP",
+    "itemFlavorText": "평범한 붕대가 아닌 것 같지만, 쓸 수 있을 것 같다."
   },
   {
     "itemTID": 302,
     "itemName": "이상한 사탕",
-    "desc": "섭취 시 마나 5 회복",
+    "desc": "섭취 시 캐릭터의 마나를 5 회복한다.",
     "category": "consume",
     "itemMultiple": 5,
     "itemGrade": "uncommon",
@@ -41,19 +42,21 @@
     "useDelay": 0,
     "useValue": 5,
     "useTarget": "self",
-    "effectType": "healMP"
+    "effectType": "healMP",
+    "itemFlavorText": "이상한 기운이 감도는 사탕. 맛있다."
   },
   {
     "itemTID": 401,
     "itemName": "기억 조각",
-    "desc": "다이버의 동조율을 상승시킴",
+    "desc": "다이버의 동조율을 상승시킨다.",
     "category": "memory",
     "itemMultiple": 10,
     "itemGrade": "epic",
     "icon": "Image_401_MemoryPiece",
     "userType": "main",
     "charID": 0,
-    "linkRateGain": 0
+    "linkRateGain": 0,
+    "itemFlavorText": "도시에서 주은 무언가의 조각. 이걸 들고 도시 밖으로 나간다면..."
   },
   {
     "itemTID": 1001,
