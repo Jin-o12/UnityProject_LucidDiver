@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using AnyPortrait;
 using UnityEngine;
 
 [DefaultExecutionOrder(1000)]
@@ -12,7 +13,13 @@ public class AnimatorShadowSync : MonoBehaviour
     [Header("Sync Options")]
     [SerializeField] private bool syncLayerWeights = true;
 
+    [Header("Shadow Visibility")]
+    [SerializeField] private apPortrait shadowPortrait;
+    [SerializeField, Range(0f, 1f)] private float targetShadowAlpha = 0f;
+    [SerializeField] private float shadowFadeTime = 0.5f;
+
     private AnimatorControllerParameter[] parameters;
+    private float currentShadowAlpha = 1f;
 
     private void Awake()
     {
@@ -45,6 +52,10 @@ public class AnimatorShadowSync : MonoBehaviour
         // {변경된 Animator 설정과 초기 포즈를 즉시 반영한다}
         shadowAnimator.Rebind();
         shadowAnimator.Update(0f);
+
+        ResolveShadowPortrait();
+        currentShadowAlpha = targetShadowAlpha;
+        ApplyShadowAlpha(currentShadowAlpha);
     }
 
     private void Update()
@@ -88,20 +99,22 @@ public class AnimatorShadowSync : MonoBehaviour
             }
         }
 
-        if (!syncLayerWeights)
-            return;
-
-        int layerCount = Mathf.Min(
-            sourceAnimator.layerCount,
-            shadowAnimator.layerCount);
-
-        for (int i = 0; i < layerCount; i++)
+        if (syncLayerWeights)
         {
-            // {상체 공격 레이어 등 Animator Layer의 가중치를 동기화한다}
-            shadowAnimator.SetLayerWeight(
-                i,
-                sourceAnimator.GetLayerWeight(i));
+            int layerCount = Mathf.Min(
+                sourceAnimator.layerCount,
+                shadowAnimator.layerCount);
+
+            for (int i = 0; i < layerCount; i++)
+            {
+                // {상체 공격 레이어 등 Animator Layer의 가중치를 동기화한다}
+                shadowAnimator.SetLayerWeight(
+                    i,
+                    sourceAnimator.GetLayerWeight(i));
+            }
         }
+
+        UpdateShadowVisibility();
     }
 
     public void SetTrigger(string triggerName)
@@ -122,5 +135,43 @@ public class AnimatorShadowSync : MonoBehaviour
         // {Trigger 파라미터를 원본과 그림자 Animator에서 동시에 초기화한다}
         sourceAnimator.ResetTrigger(triggerName);
         shadowAnimator.ResetTrigger(triggerName);
+    }
+
+    private void ResolveShadowPortrait()
+    {
+        if (shadowPortrait != null || shadowAnimator == null)
+            return;
+
+        // 그림자 Animator가 포함된 AnyPortrait를 자동으로 찾아 인스펙터 연결 누락을 보완한다
+        shadowPortrait = shadowAnimator.GetComponentInParent<apPortrait>();
+        if (shadowPortrait == null)
+        {
+            shadowPortrait = shadowAnimator.GetComponentInChildren<apPortrait>(true);
+        }
+    }
+
+    private void UpdateShadowVisibility()
+    {
+        ResolveShadowPortrait();
+        if (shadowPortrait == null)
+            return;
+
+        // EnemyVisible과 동일하게 포트레이트를 비활성화하지 않고 알파값만 점진적으로 변경한다
+        float fadeTime = Mathf.Max(0.01f, shadowFadeTime);
+        currentShadowAlpha = Mathf.MoveTowards(
+            currentShadowAlpha,
+            targetShadowAlpha,
+            Time.deltaTime / fadeTime);
+
+        ApplyShadowAlpha(currentShadowAlpha);
+    }
+
+    private void ApplyShadowAlpha(float alpha)
+    {
+        if (shadowPortrait == null)
+            return;
+
+        // AnyPortrait/Animator 업데이트는 유지하고 렌더 투명도만 조절한다
+        shadowPortrait.SetMeshAlphaAll(alpha);
     }
 }

@@ -10,6 +10,10 @@ using UnityEngine.AI;
 [Serializable]
 public class EnemyBrain
 {
+    [Header("Post Attack Stabilization")]
+    [SerializeField, Min(0f)] private float postAttackDirectChaseTime = 0.6f; // 공격 직후 복귀/차단 이동보다 직접 추적을 우선할 시간
+    [SerializeField, Min(0f)] private float postAttackRouteTolerance = 4.0f;  // 공격 돌진 직후 루트 반경 판정에 임시로 더해 줄 여유 거리
+
     [SerializeField] private float checkInterval = 0.2f;     // AI 판단 주기
 
     [Header("Chase Aggro And Leash")]
@@ -21,8 +25,8 @@ public class EnemyBrain
     [SerializeField, Min(0f)] private float hardReturnDistance = 24f;        // 루트에서 이 거리를 넘으면 시야와 무관하게 즉시 복귀
 
     [NonSerialized] private WaitForSeconds checkingDelay;     // 판단 루프에서 재사용할 대기 객체
-    [NonSerialized] private Transform currentTarget;          // 현재 추적 중인 플레이어
-    [NonSerialized] private Transform aggroTarget;            // 강제 우선 추적 대상 (어그로)
+    [NonSerialized] private Transform currentTarget;          // 현재 전투 타겟으로 유지 중인 플레이어
+    [NonSerialized] private Transform aggroTarget;            // 디코이처럼 전투 타겟보다 우선해서 이동할 임시 어그로 타겟
     [NonSerialized] private float aggroEndTime;               // 강제 추적 종료 시간
     [NonSerialized] private float currentAggro;                    // 현재 추적 유지에 남아 있는 어그로
     [NonSerialized] private float sightLostStartTime = -1f;        // 시야가 최초로 끊긴 시각
@@ -50,6 +54,8 @@ public class EnemyBrain
         aggroRecoveryPerSecond = Mathf.Max(0f, aggroRecoveryPerSecond);
         chaseLeashDistance = Mathf.Max(0f, chaseLeashDistance);
         hardReturnDistance = Mathf.Max(chaseLeashDistance, hardReturnDistance);
+        postAttackDirectChaseTime = Mathf.Max(0f, postAttackDirectChaseTime);
+        postAttackRouteTolerance = Mathf.Max(0f, postAttackRouteTolerance);
         checkingDelay = new WaitForSeconds(checkInterval);
     }
 
@@ -103,6 +109,21 @@ public class EnemyBrain
 
         RefreshTarget(self, perception, noiseListener, memory, GlobalRuntimeData.GetPlayerList().Values);
 
+        Transform priorityMoveTarget = ResolvePriorityMoveTarget(memory, self.position);
+        if (priorityMoveTarget != null)
+        {
+            HandlePriorityMoveTarget(
+                self,
+                agent,
+                status,
+                memory,
+                locomotion,
+                priorityMoveTarget,
+                onWalkEvent,
+                onLookDirEvent);
+            return;
+        }
+
         if (currentTarget == null)
         {
             memory.ClearTargetTracking();
@@ -134,22 +155,37 @@ public class EnemyBrain
         float enemyRouteDistance = memory.GetClosestPatrolPointDistance(self.position);
         float targetRouteDistance = memory.GetClosestPatrolPointDistance(currentTarget.position);
         float farthestRouteDistance = Mathf.Max(enemyRouteDistance, targetRouteDistance);
+        bool isPostAttackRepositioning = combat.IsInPostAttackRepositionGrace(postAttackDirectChaseTime);
+        float effectiveChaseLeashDistance = chaseLeashDistance;
+        float effectiveHardReturnDistance = hardReturnDistance;
+
+        if (isPostAttackRepositioning)
+        {
+            // 공격 돌진 직후에는 에너미가 루트 반경 밖으로 살짝 밀려날 수 있으므로
+            // 아주 짧은 시간 동안만 복귀 판정 반경에 여유를 주고 전투 재정렬을 우선합니다.
+            effectiveChaseLeashDistance += postAttackRouteTolerance;
+            effectiveHardReturnDistance += postAttackRouteTolerance;
+        }
 
         // 에너미 또는 타겟이 활동 한계를 넘으면 남은 어그로와 시야를 무시하고 즉시 복귀합니다.
-        if (memory.HasPatrolRoute && farthestRouteDistance > hardReturnDistance)
+        if (memory.HasPatrolRoute && farthestRouteDistance > effectiveHardReturnDistance)
         {
             StopChaseAndReturn(self.position, agent, status, memory, locomotion, onWalkEvent);
             return;
         }
 
-        bool isInsideChaseArea = !memory.HasPatrolRoute || farthestRouteDistance <= chaseLeashDistance;
+        bool isInsideChaseArea = !memory.HasPatrolRoute || farthestRouteDistance <= effectiveChaseLeashDistance;
         float sqrDistToTarget = EnemyMathUtility.GetPlanarSqrDistance(self.position, currentTarget.position);
         bool canSeeTarget = perception.CanSeeTrackedTarget(self, currentTarget);
         bool canMaintainCloseCombatTarget =
             isInsideChaseArea &&
             combat.IsWithinCloseCombatAwareness(sqrDistToTarget) &&
             perception.HasClearLineOfSight(self, currentTarget);
-        bool hasTargetAwareness = canSeeTarget || canMaintainCloseCombatTarget;
+        bool canReacquireAfterAttack =
+            isPostAttackRepositioning &&
+            isInsideChaseArea &&
+            perception.HasClearLineOfSight(self, currentTarget);
+        bool hasTargetAwareness = canSeeTarget || canMaintainCloseCombatTarget || canReacquireAfterAttack;
 
         if (hasTargetAwareness && isInsideChaseArea)
         {
@@ -159,7 +195,7 @@ public class EnemyBrain
 
             // 근접 교전에서는 이동 속도가 거의 0이어도 플레이어를 향해 회전해
             // 원형 이동 중 공격 시야가 영구적으로 끊기지 않게 합니다.
-            if (canMaintainCloseCombatTarget)
+            if (canMaintainCloseCombatTarget || canReacquireAfterAttack)
             {
                 locomotion.FacePosition(self, currentTarget.position, onLookDirEvent);
             }
@@ -218,7 +254,7 @@ public class EnemyBrain
                 : memory.LastKnownTargetPosition;
             EnemyMemory.ChaseMoveMode chaseMoveMode = EnemyMemory.ChaseMoveMode.Direct;
 
-            if (canSeeTarget && isInsideChaseArea && interceptPlanner != null &&
+            if (!isPostAttackRepositioning && canSeeTarget && isInsideChaseArea && interceptPlanner != null &&
                 interceptPlanner.TryPlanIntercept(self, currentTarget, memory, out Vector3 interceptDestination))
             {
                 chaseDestination = interceptDestination;
@@ -236,6 +272,61 @@ public class EnemyBrain
                 onLookDirEvent);
             return;
         }
+    }
+
+    /// <summary>
+    /// 디코이처럼 전투 타겟보다 우선해서 따라갈 임시 이동 타겟을 반환합니다.
+    /// 지속 시간이 끝났거나 활동 반경 밖으로 벗어난 디코이는 즉시 정리합니다.
+    /// </summary>
+    private Transform ResolvePriorityMoveTarget(EnemyMemory memory, Vector3 selfPosition)
+    {
+        if (aggroTarget == null)
+        {
+            return null;
+        }
+
+        if (Time.time >= aggroEndTime || !IsInsideChaseArea(memory, selfPosition, aggroTarget.position))
+        {
+            aggroTarget = null;
+            return null;
+        }
+
+        return aggroTarget;
+    }
+
+    /// <summary>
+    /// 디코이 타겟이 살아 있는 동안에는 플레이어 전투 타겟을 지우지 않고 이동 목표만 디코이로 우선 전환합니다.
+    /// 디코이는 공격 대상이 아니므로 공격 코루틴을 시작하지 않고, 종료 후에는 보존된 플레이어 타겟으로 자연스럽게 복귀합니다.
+    /// </summary>
+    private void HandlePriorityMoveTarget(
+        Transform self,
+        NavMeshAgent agent,
+        EnemyStatus status,
+        EnemyMemory memory,
+        EnemyLocomotion locomotion,
+        Transform priorityMoveTarget,
+        Action<bool> onWalkEvent,
+        Action<int, int> onLookDirEvent)
+    {
+        if (priorityMoveTarget == null)
+        {
+            return;
+        }
+
+        currentAggro = maxAggro;
+        sightLostStartTime = -1f;
+
+        memory.ClearPatrolWait();
+        memory.SetChasePlan(EnemyMemory.ChaseMoveMode.Direct, priorityMoveTarget.position);
+
+        locomotion.MoveTo(
+            self,
+            agent,
+            priorityMoveTarget.position,
+            status,
+            EnemyStatus.EnemyState.Chase,
+            onWalkEvent,
+            onLookDirEvent);
     }
 
     /// <summary>
@@ -282,26 +373,9 @@ public class EnemyBrain
 
         bool hadTarget = currentTarget != null;
 
-        // 강제 어그로도 추적 허용 구간을 벗어나면 갱신하지 않아 활동 반경 제한을 우회하지 못하게 합니다.
-        if (aggroTarget != null)
-        {
-            if (Time.time < aggroEndTime && IsInsideChaseArea(memory, self.position, aggroTarget.position))
-            {
-                currentTarget = aggroTarget;
-                currentAggro = maxAggro;
-                if (!hadTarget)
-                {
-                    memory.CaptureReturnAnchor(self.position);
-                }
-                noiseListener.Clear();
-                memory.ClearPatrolWait();
-                return;
-            }
-            else
-            {
-                aggroTarget = null; // 지속 시간 종료 또는 타겟 파괴
-            }
-        }
+        // 디코이 어그로는 전투 타겟을 덮어쓰지 않고 이동 우선순위로만 사용합니다.
+        // 기존 플레이어 타겟을 보존해야 디코이 종료 후 바로 다시 전투 타겟으로 복귀할 수 있습니다.
+        ResolvePriorityMoveTarget(memory, self.position);
 
         if (noiseListener.ShouldBlockSightReacquire())
         {

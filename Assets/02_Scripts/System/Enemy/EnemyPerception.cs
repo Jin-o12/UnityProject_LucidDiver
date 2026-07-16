@@ -140,18 +140,52 @@ public class EnemyPerception
             return true;
         }
 
-        if (!Physics.Raycast(
-                eyePosition,
-                directionToTarget.normalized,
-                out RaycastHit hit,
-                targetDistance,
-                ~0,
-                QueryTriggerInteraction.Ignore))
+        RaycastHit[] hits = Physics.RaycastAll(
+            eyePosition,
+            directionToTarget.normalized,
+            targetDistance,
+            ~0,
+            QueryTriggerInteraction.Ignore);
+
+        if (hits == null || hits.Length == 0)
         {
             return true;
         }
 
-        return hit.transform == target || hit.transform.IsChildOf(target);
+        RaycastHit nearestValidHit = default;
+        bool hasValidHit = false;
+        float nearestDistance = float.MaxValue;
+
+        foreach (RaycastHit hit in hits)
+        {
+            Transform hitTransform = hit.transform;
+            if (hitTransform == null)
+            {
+                continue;
+            }
+
+            // 시야 레이캐스트가 자기 자신의 콜라이더를 먼저 맞으면 근접 교전 중에도
+            // 플레이어가 벽 뒤에 있는 것처럼 판단될 수 있으므로 자기 자신 계층은 무시합니다.
+            if (hitTransform == self || hitTransform.IsChildOf(self))
+            {
+                continue;
+            }
+
+            if (hit.distance < nearestDistance)
+            {
+                nearestDistance = hit.distance;
+                nearestValidHit = hit;
+                hasValidHit = true;
+            }
+        }
+
+        if (!hasValidHit)
+        {
+            return true;
+        }
+
+        Transform nearestTransform = nearestValidHit.transform;
+        return nearestTransform == target || nearestTransform.IsChildOf(target);
     }
 
     /// <summary>

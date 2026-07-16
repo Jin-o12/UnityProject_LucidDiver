@@ -41,6 +41,7 @@ public class EnemyCombat
     [NonSerialized] private float nextAttackAvailableTime;             // 다음 공격 가능 시각
     [NonSerialized] private float currentSlashDamage;                  // 현재 공격 단계에서 적용할 피해량
     [NonSerialized] private bool hasAppliedCurrentSlashDamage;         // 현재 타격 단계 피해 적용 여부
+    [NonSerialized] private float lastAttackFinishedTime = float.NegativeInfinity; // 마지막 공격 종료 시각
 
     public void OnValidate()
     {
@@ -80,6 +81,15 @@ public class EnemyCombat
     public bool IsWithinCloseCombatAwareness(float sqrDistToTarget)
     {
         return sqrDistToTarget <= closeCombatAwarenessRangeSqr;
+    }
+
+    /// <summary>
+    /// 공격이 끝난 직후 짧은 재정렬 시간 안에 있는지 확인합니다.
+    /// EnemyBrain이 이 시간 동안 복귀/차단 이동보다 플레이어 재추적을 우선하도록 사용합니다.
+    /// </summary>
+    public bool IsInPostAttackRepositionGrace(float graceDuration)
+    {
+        return graceDuration > 0.0f && Time.time - lastAttackFinishedTime <= graceDuration;
     }
 
     /// <summary>
@@ -228,12 +238,20 @@ public class EnemyCombat
         }
 
         Vector3 origin = attackOrigin != null ? attackOrigin.position : self.position;
-        if (EnemyMathUtility.GetPlanarSqrDistance(origin, target.position) > attackHitRangeSqr)
+        Vector3 bodyOrigin = self != null ? self.position : origin;
+
+        // HitRange가 몸 앞쪽에 배치된 적은 플레이어가 너무 가까이 붙었을 때
+        // 몸 기준으로는 근접 상태지만 HitRange 기준으로는 오히려 범위 밖이 될 수 있습니다.
+        // 기존 전방 판정은 유지하되, 초근접 상황에서는 몸 중심 기준 거리도 함께 허용합니다.
+        bool isInsideHitOriginRange = EnemyMathUtility.GetPlanarSqrDistance(origin, target.position) <= attackHitRangeSqr;
+        bool isInsideBodyRange = EnemyMathUtility.GetPlanarSqrDistance(bodyOrigin, target.position) <= attackHitRangeSqr;
+        if (!isInsideHitOriginRange && !isInsideBodyRange)
         {
             return;
         }
 
-        if (IsAttackBlockedByObstacle(origin, target.position))
+        Vector3 damageCheckOrigin = isInsideHitOriginRange ? origin : bodyOrigin;
+        if (IsAttackBlockedByObstacle(damageCheckOrigin, target.position))
         {
             return;
         }
@@ -263,6 +281,7 @@ public class EnemyCombat
     private void FinishAttack(NavMeshAgent agent, EnemyStatus status)
     {
         ClearRuntimeState();
+        lastAttackFinishedTime = Time.time;
 
         if (status != null)
         {
