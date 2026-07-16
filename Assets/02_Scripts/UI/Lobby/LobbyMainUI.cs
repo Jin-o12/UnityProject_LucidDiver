@@ -125,7 +125,9 @@ public class LobbyMainUI : MonoBehaviour
         if (textSpeakerName != null)
             textSpeakerName.text = charData.charName;
         
-        string log = dialogueRepo.GetRandomDialogue((int)CharacterTID.Yuan, DialogueType.lobbyEnter);
+        // {캐릭터 동조율 단계에 따라 출력 가능한 대사를 가져온다}
+        string log = dialogueRepo.GetRandomDialogue((int)CharacterTID.Yuan, DialogueType.lobbyEnter, currentLevel);
+        Debug.Log($"현재 동조율 단계 = {currentLevel}");
         // {로비 기본 대사를 표시한다}
         if (textDialogue != null)
             textDialogue.text = log;
