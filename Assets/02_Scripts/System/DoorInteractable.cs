@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DoorInteractable : MonoBehaviour
 {
@@ -10,8 +11,9 @@ public class DoorInteractable : MonoBehaviour
     [SerializeField] private bool canToggle = true;
 
     [Header("Interaction")]
-    [SerializeField] private GameObject interactionGuideUI;
-    public int DoorOpen_AudioID = 10303;  // 문 열기 사운드 ID 리스트
+    [SerializeField] private Image interactionGuideImage;
+
+    public int DoorOpen_AudioID = 10303;
 
     private bool isPlayerInRange;
     private bool isOpen;
@@ -22,9 +24,8 @@ public class DoorInteractable : MonoBehaviour
         if (doorAnimator == null)
             doorAnimator = GetComponentInChildren<Animator>();
 
-        // 상호작용 안내 UI는 시작 시 숨긴다
-        if (interactionGuideUI != null)
-            interactionGuideUI.SetActive(false);
+        // 상호작용 안내 이미지는 시작 시 숨긴다
+        SetInteractionGuideVisible(false);
     }
 
     private void Update()
@@ -47,6 +48,7 @@ public class DoorInteractable : MonoBehaviour
         // 문 열림 상태를 반전한다
         isOpen = !isOpen;
 
+        // 문 상태에 맞는 VFX를 재생한다
         string doorVfxId = isOpen ? GameplayVFXIds.DoorOpen : GameplayVFXIds.DoorClose;
         VFXService.Instance?.Play(doorVfxId, transform.position, transform.rotation);
 
@@ -54,12 +56,11 @@ public class DoorInteractable : MonoBehaviour
         if (doorAnimator != null)
             doorAnimator.SetBool(openParameterName, isOpen);
 
-        // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
+        // 문 열기/닫기 사운드 재생 이벤트를 AudioManager에 전달한다
         GlobalEventBus.OnPlay3DSoundRequested?.Invoke(DoorOpen_AudioID, transform.position);
 
-        // 문이 열린 뒤 안내 UI를 숨긴다
-        if (interactionGuideUI != null)
-            interactionGuideUI.SetActive(!isOpen);
+        // 문 상태와 관계없이 플레이어가 범위 안에 있으면 안내 이미지를 계속 표시한다
+        SetInteractionGuideVisible(isPlayerInRange);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -68,11 +69,11 @@ public class DoorInteractable : MonoBehaviour
         if (!other.CompareTag("Player"))
             return;
 
+        // 플레이어가 상호작용 범위 안에 있음을 저장한다
         isPlayerInRange = true;
 
-        // 문이 닫혀 있거나 토글 가능한 경우 상호작용 안내 UI를 표시한다
-        if (interactionGuideUI != null && (!isOpen || canToggle))
-            interactionGuideUI.SetActive(true);
+        // 문이 열려 있든 닫혀 있든 상호작용 안내 이미지를 표시한다
+        SetInteractionGuideVisible(true);
     }
 
     private void OnTriggerExit(Collider other)
@@ -81,10 +82,20 @@ public class DoorInteractable : MonoBehaviour
         if (!other.CompareTag("Player"))
             return;
 
+        // 플레이어가 상호작용 범위 밖으로 나갔음을 저장한다
         isPlayerInRange = false;
 
-        // {범위 밖으로 나가면 상호작용 안내 UI를 숨긴다}
-        if (interactionGuideUI != null)
-            interactionGuideUI.SetActive(false);
+        // 범위 밖으로 나가면 상호작용 안내 이미지를 숨긴다
+        SetInteractionGuideVisible(false);
+    }
+
+    private void SetInteractionGuideVisible(bool visible)
+    {
+        // 상호작용 안내 Image가 연결되지 않았으면 처리하지 않는다
+        if (interactionGuideImage == null)
+            return;
+
+        // Image 컴포넌트가 붙은 오브젝트를 표시하거나 숨긴다
+        interactionGuideImage.gameObject.SetActive(visible);
     }
 }
