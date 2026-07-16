@@ -189,6 +189,13 @@
     "Loop": true
   },
   {
+    "AudioID": 10306,
+    "AudioClip": "InGame_Embient_2",
+    "AudioType": "AMBIENT",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
     "AudioID": 10401,
     "AudioClip": "Escape_Channeling_Loop",
     "AudioType": "SFX",

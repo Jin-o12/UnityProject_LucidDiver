@@ -12,7 +12,7 @@ public class IntroSceneController : MonoBehaviour
     private const string LobbySceneName = "LobbyScene";
     private const string TutorialSceneName = "TutorialScene";
     private const string TutorialAdditiveSceneName = "DemoScene Tutorial";
-    private readonly int introBGMAudioID = 10006;
+    private readonly int introBGMAudioID = 10006;  // 인트로 BGM ID
 
     [Header("Video Settings")]
     [SerializeField] private VideoPlayer videoPlayer;
