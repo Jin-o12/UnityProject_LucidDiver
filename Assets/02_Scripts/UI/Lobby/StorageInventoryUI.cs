@@ -13,6 +13,7 @@ public class StorageInventoryUI : MonoBehaviour
         Storage,
         Inventory,
         SafeSlot,
+        Artifact,
         QuickSlot,
         StoragePanel,
         InventoryPanel,
@@ -351,6 +352,7 @@ public class StorageInventoryUI : MonoBehaviour
         BindInventorySlotEvents(storageSlotUIs, AreaType.Storage);
         BindInventorySlotEvents(inventorySlotUIs, AreaType.Inventory);
         BindInventorySlotEvents(safeSlotUIs, AreaType.SafeSlot);
+        BindArtifactSlotEvents();
         BindQuickSlotEvents();
 
         AddPanelDropReceiver(storagePanelRaycastTarget, AreaType.StoragePanel);
@@ -383,6 +385,22 @@ public class StorageInventoryUI : MonoBehaviour
             quickSlotUIs[i].enabled = false;
 
             AddInputReceiver(quickSlotUIs[i].gameObject, AreaType.QuickSlot, i);
+        }
+    }
+
+    private void BindArtifactSlotEvents()
+    {
+        for (int i = 0; i < artifactSlotUIs.Count; i++)
+        {
+            if (artifactSlotUIs[i] == null)
+            {
+                continue;
+            }
+
+            // 창고 화면에서는 StorageInventoryUI가 드래그 규칙을 통합 관리합니다.
+            // 기존 ArtifactEquipSlotUI의 프리젠터 이벤트와 중복되지 않도록 입력 처리는 전용 Receiver로 넘깁니다.
+            artifactSlotUIs[i].enabled = false;
+            AddInputReceiver(artifactSlotUIs[i].gameObject, AreaType.Artifact, i);
         }
     }
 
@@ -468,6 +486,10 @@ public class StorageInventoryUI : MonoBehaviour
         {
             quickSlotTIDs[index] = 0;
         }
+        else if (area == AreaType.Artifact)
+        {
+            MoveToArea(artifactData, index, inventoryData);
+        }
 
         ValidateQuickSlots();
         SaveToPlayerData();
@@ -526,7 +548,11 @@ public class StorageInventoryUI : MonoBehaviour
         }
         else if (targetArea == AreaType.QuickSlot)
         {
-            EquipQuickSlot(index);
+            DropToQuickSlot(index);
+        }
+        else if (targetArea == AreaType.Artifact)
+        {
+            DropToArtifactSlot(index);
         }
 
         ValidateQuickSlots();
@@ -610,6 +636,13 @@ public class StorageInventoryUI : MonoBehaviour
             return;
         }
 
+        if (draggingArea == AreaType.Artifact)
+        {
+            // 아티팩트 장착 슬롯에서 패널 빈 공간으로 드롭하는 경우는 허용하지 않습니다.
+            // 해제는 인벤토리 슬롯 또는 더블클릭 흐름으로만 처리합니다.
+            return;
+        }
+
         if (!TryGetDraggingSource(out List<InventorySlotData> sourceList))
         {
             return;
@@ -673,10 +706,16 @@ public class StorageInventoryUI : MonoBehaviour
         ValidateQuickSlots();
     }
 
-    private void EquipQuickSlot(int quickSlotIndex)
+    private void DropToQuickSlot(int quickSlotIndex)
     {
         if (quickSlotIndex < 0 || quickSlotIndex >= quickSlotTIDs.Count)
         {
+            return;
+        }
+
+        if (draggingArea == AreaType.QuickSlot)
+        {
+            SwapQuickSlots(draggingIndex, quickSlotIndex);
             return;
         }
 
@@ -688,6 +727,12 @@ public class StorageInventoryUI : MonoBehaviour
         int tid = inventoryData[draggingIndex].TID;
         if (tid == 0)
         {
+            return;
+        }
+
+        if (!CanRegisterQuickSlot(tid))
+        {
+            Debug.LogWarning("퀵슬롯에는 소비 아이템만 등록할 수 있습니다.");
             return;
         }
 
@@ -707,6 +752,76 @@ public class StorageInventoryUI : MonoBehaviour
         quickSlotTIDs[quickSlotIndex] = tid;
     }
 
+    private void SwapQuickSlots(int sourceIndex, int targetIndex)
+    {
+        if (sourceIndex < 0 || sourceIndex >= quickSlotTIDs.Count)
+        {
+            return;
+        }
+
+        if (targetIndex < 0 || targetIndex >= quickSlotTIDs.Count || sourceIndex == targetIndex)
+        {
+            return;
+        }
+
+        (quickSlotTIDs[sourceIndex], quickSlotTIDs[targetIndex]) = (quickSlotTIDs[targetIndex], quickSlotTIDs[sourceIndex]);
+    }
+
+    private void DropToArtifactSlot(int artifactSlotIndex)
+    {
+        if (artifactSlotIndex < 0 || artifactSlotIndex >= artifactData.Count)
+        {
+            return;
+        }
+
+        if (draggingArea == AreaType.Artifact)
+        {
+            SwapArtifactSlots(draggingIndex, artifactSlotIndex);
+            return;
+        }
+
+        if (draggingArea != AreaType.Inventory || !IsValid(inventoryData, draggingIndex))
+        {
+            return;
+        }
+
+        InventorySlotData source = inventoryData[draggingIndex];
+        if (source == null || source.TID == 0)
+        {
+            return;
+        }
+
+        if (GetItemData(source.TID) is not ArtifactItemData)
+        {
+            Debug.LogWarning("아티팩트 아이템만 장착 슬롯에 넣을 수 있습니다.");
+            return;
+        }
+
+        InventorySlotData target = artifactData[artifactSlotIndex];
+        int previousTID = target.TID;
+
+        artifactData[artifactSlotIndex] = new InventorySlotData(source.TID, artifactSlotIndex, 1, GetIcon(source.TID));
+        inventoryData[draggingIndex] = new InventorySlotData(previousTID, draggingIndex, previousTID == 0 ? 0 : 1, GetIcon(previousTID));
+    }
+
+    private void SwapArtifactSlots(int sourceIndex, int targetIndex)
+    {
+        if (!IsValid(artifactData, sourceIndex) || !IsValid(artifactData, targetIndex) || sourceIndex == targetIndex)
+        {
+            return;
+        }
+
+        (artifactData[sourceIndex], artifactData[targetIndex]) = (artifactData[targetIndex], artifactData[sourceIndex]);
+        artifactData[sourceIndex].order = sourceIndex;
+        artifactData[targetIndex].order = targetIndex;
+    }
+
+    private bool CanRegisterQuickSlot(int tid)
+    {
+        ItemData itemData = GetItemData(tid);
+        return itemData != null && itemData.category == itemCategory.consume;
+    }
+
     private bool TryGetDraggingSource(out List<InventorySlotData> sourceList)
     {
         sourceList = null;
@@ -722,6 +837,10 @@ public class StorageInventoryUI : MonoBehaviour
         else if (draggingArea == AreaType.SafeSlot)
         {
             sourceList = safeSlotData;
+        }
+        else if (draggingArea == AreaType.Artifact)
+        {
+            sourceList = artifactData;
         }
 
         return sourceList != null;
@@ -742,6 +861,11 @@ public class StorageInventoryUI : MonoBehaviour
         if (draggingArea == AreaType.SafeSlot && IsValid(safeSlotData, draggingIndex))
         {
             return safeSlotData[draggingIndex].TID;
+        }
+
+        if (draggingArea == AreaType.Artifact && IsValid(artifactData, draggingIndex))
+        {
+            return artifactData[draggingIndex].TID;
         }
 
         return 0;
@@ -801,22 +925,32 @@ public class StorageInventoryUI : MonoBehaviour
 
     private void RefreshInventorySlot(InventorySlotUI slotUI, InventorySlotData slotData)
     {
-        // {기존 InventorySlotUI의 표시 함수 재사용}
-        slotUI.UpdateSlot(slotData.amount, GetIcon(slotData.TID));
+        if (slotUI == null || slotData == null)
+        {
+            return;
+        }
+
+        // 창고 UI도 인게임 인벤토리와 같은 슬롯 프리팹을 사용하므로,
+        // TID로 아이템 등급을 조회해 레어도 프레임까지 함께 갱신합니다.
+        ItemData itemData = GetItemData(slotData.TID);
+        ItemGrade grade = itemData != null ? itemData.itemGrade : ItemGrade.empty;
+        slotUI.UpdateSlot(slotData.amount, GetIcon(slotData.TID), grade, SlotType.inventory);
     }
 
     private void RefreshQuickSlot(int index, int tid)
     {
         Sprite icon = GetIcon(tid);
         int count = tid == 0 ? 0 : CountInventoryItem(tid);
+        ItemData itemData = GetItemData(tid);
+        ItemGrade grade = itemData != null ? itemData.itemGrade : ItemGrade.empty;
 
         if (quickSlotGroupUI != null)
         {
-            quickSlotGroupUI.UpdateSlot(index, icon, count);
+            quickSlotGroupUI.UpdateSlot(index, icon, count, grade);
         }
         else if (index < quickSlotUIs.Count)
         {
-            quickSlotUIs[index].UpdateSlot(count, icon);
+            quickSlotUIs[index].UpdateSlot(count, icon, grade);
         }
     }
 
@@ -956,6 +1090,11 @@ public class StorageInventoryUI : MonoBehaviour
             // {퀵슬롯의 TID를 가져온다}
             tid = quickSlotTIDs[index];
         }
+        else if (area == AreaType.Artifact && IsValid(artifactData, index))
+        {
+            // {아티팩트 장착 슬롯의 TID를 가져온다}
+            tid = artifactData[index].TID;
+        }
 
         // {TID로 아이템 원본 데이터를 가져온다}
         ItemData itemData = GetItemData(tid);
@@ -993,6 +1132,11 @@ public class StorageInventoryUI : MonoBehaviour
         if (area == AreaType.QuickSlot && index >= 0 && index < quickSlotTIDs.Count)
         {
             return quickSlotTIDs[index] != 0;
+        }
+
+        if (area == AreaType.Artifact && IsValid(artifactData, index))
+        {
+            return artifactData[index].TID != 0;
         }
 
         return false;
@@ -1212,6 +1356,12 @@ public class StorageInventoryUI : MonoBehaviour
 
             // {퀵슬롯에 장착된 아이템 아이콘 반환}
             return GetIcon(quickSlotTIDs[index]);
+        }
+
+        if (area == AreaType.Artifact)
+        {
+            // {아티팩트 장착 슬롯의 아이콘 반환}
+            return GetSlotIcon(artifactData, index);
         }
 
         return null;

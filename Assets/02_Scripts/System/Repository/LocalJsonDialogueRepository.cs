@@ -170,13 +170,14 @@ public class LocalJsonDialogueRepository : IDialogueRepository
             // 해당 캐릭터 데이터 내에 지정한 상황의 대사 리스트가 있는지 확인
             if(data.Dialogues.TryGetValue(_type, out List<DialogueLine> lines) && lines.Count > 0)
             {
+                // 현재 동조율 레벨이 대사별로 지정된 최소 동조율 레벨 이상이면 그 대사를 출력 가능 리스트에 추가
                 var availableLines = lines.Where(line => line.RequiredLevel <= currentLevel).ToList();
 
                 if(availableLines.Count > 0)
                 {
-                    // 리스트에서 무작위로 하나 뽑아서 텍스트 반환
-                    int randomIndex = Random.Range(0, lines.Count);
-                    return lines[randomIndex].Text;
+                    // 출력 가능 리스트에서 무작위로 하나 뽑아서 텍스트 반환
+                    int randomIndex = Random.Range(0, availableLines.Count);
+                    return availableLines[randomIndex].Text;
                 }
                 else
                 {
