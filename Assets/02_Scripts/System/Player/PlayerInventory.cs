@@ -405,8 +405,50 @@ public class PlayerInventory : MonoBehaviour
     {
         /// ※추가: 해당 아이템이 동일한 아이템이라면 존재한다면 합산 가능한지 판정 후 합산 ///
 
+        if (_index1 < 0 || _index1 >= anySlots.Count) return;
+        if (_index2 < 0 || _index2 >= anySlots.Count) return;
+        if (_index1 == _index2) return;
+
         InventorySlotData slot1 = anySlots[_index1];
         InventorySlotData slot2 = anySlots[_index2];
+
+        if (slot1 == null || slot2 == null) return;
+
+        // 같은 아이템을 드롭한 경우에는 슬롯 교환보다 스택 합치기를 우선 처리합니다.
+        if (slot1.TID != 0 && slot1.TID == slot2.TID)
+        {
+            ItemData itemData = slot1.itemData != null ? slot1.itemData : slot2.itemData;
+            itemData ??= GetItemDataByTID(slot1.TID);
+
+            int maxStack = itemData != null ? Mathf.Max(1, itemData.itemMultiple) : 1;
+            int canMoveAmount = maxStack - slot1.amount;
+
+            if (canMoveAmount > 0 && slot2.amount > 0)
+            {
+                int moveAmount = Mathf.Min(canMoveAmount, slot2.amount);
+
+                slot1.amount += moveAmount;
+                slot1.itemData ??= itemData;
+                if (slot1.icon == null)
+                    slot1.icon = slot2.icon;
+
+                slot2.amount -= moveAmount;
+
+                if (slot2.amount <= 0)
+                {
+                    slot2.TID = 0;
+                    slot2.amount = 0;
+                    slot2.icon = null;
+                    slot2.itemData = null;
+                }
+
+                NotifyInventorySlotChanged(_index1);
+                NotifyInventorySlotChanged(_index2);
+                SyncQuickSlotsByTID(slot1.TID);
+                RebuildAnySlots();
+                return;
+            }
+        }
 
         // 두 데이터 교환
         (slot1.TID, slot2.TID) = (slot2.TID, slot1.TID);
@@ -415,26 +457,28 @@ public class PlayerInventory : MonoBehaviour
         (slot1.itemData, slot2.itemData) = (slot2.itemData, slot1.itemData);
 
         // 변동사항 알림
-        if (_index1 < slots.Count)
-        {
-            OnSlotChanged?.Invoke(_index1);
-        }
-        else
-        {
-            OnSafeSlotChanged?.Invoke(_index1 - slots.Count);
-        }
-
-        if (_index2 < slots.Count)
-        {
-            OnSlotChanged?.Invoke(_index2);
-        }
-        else
-        {
-            OnSafeSlotChanged?.Invoke(_index2 - slots.Count);
-        }
+        NotifyInventorySlotChanged(_index1);
+        NotifyInventorySlotChanged(_index2);
 
         // 인벤토리 및 각성 보존 슬롯 헬퍼 갱신
         RebuildAnySlots();
+    }
+
+    private void NotifyInventorySlotChanged(int slotIndex)
+    {
+        if (slotIndex < 0) return;
+
+        if (slotIndex < slots.Count)
+        {
+            OnSlotChanged?.Invoke(slotIndex);
+            return;
+        }
+
+        int safeSlotIndex = slotIndex - slots.Count;
+        if (safeSlotIndex >= 0 && safeSlotIndex < safeSlots.Count)
+        {
+            OnSafeSlotChanged?.Invoke(safeSlotIndex);
+        }
     }
 
     /* 퀵슬롯에 아이템 추가 */

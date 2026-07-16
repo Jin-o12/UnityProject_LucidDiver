@@ -24,5 +24,27 @@ public class GamePlayUI : MonoBehaviour
         quickSlotGroupUI.InitializeSlots();
     }
 
+    private void Start()
+    {
+        SyncQuickSlotsFromPlayerInventory();
+    }
 
+    private void SyncQuickSlotsFromPlayerInventory()
+    {
+        if (quickSlotGroupUI == null)
+        {
+            return;
+        }
+
+        PlayerInventory playerInventory = FindObjectOfType<PlayerInventory>();
+        if (playerInventory == null)
+        {
+            Debug.LogWarning("GamePlayUI: 플레이어 인벤토리를 찾지 못해 퀵슬롯 초기 동기화를 건너뜁니다.", this);
+            return;
+        }
+
+        // PlayerInventory.RestoreFromSave가 GamePlayUI 생성보다 먼저 실행되면
+        // 퀵슬롯 갱신 이벤트를 놓칠 수 있으므로 UI 생성 후 현재 상태를 한 번 직접 반영한다.
+        quickSlotGroupUI.SyncFromInventory(playerInventory);
+    }
 }
