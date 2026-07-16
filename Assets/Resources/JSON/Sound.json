@@ -1,5 +1,61 @@
 [
   {
+    "AudioID": 10001,
+    "AudioClip": "Divers",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10002,
+    "AudioClip": "Extraction_Failed",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10003,
+    "AudioClip": "Inventory",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10004,
+    "AudioClip": "Lobby_1",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10005,
+    "AudioClip": "Pre-Extraction Sequence_1",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10006,
+    "AudioClip": "Title_1",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10007,
+    "AudioClip": "Victroy_1",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10008,
+    "AudioClip": "Yuan_Memory",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
     "AudioID": 10101,
     "AudioClip": "Body_Hit",
     "AudioType": "SFX",

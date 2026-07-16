@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +12,7 @@ public class IntroSceneController : MonoBehaviour
     private const string LobbySceneName = "LobbyScene";
     private const string TutorialSceneName = "TutorialScene";
     private const string TutorialAdditiveSceneName = "DemoScene Tutorial";
+    private readonly int introBGMAudioID = 10006;
 
     [Header("Video Settings")]
     [SerializeField] private VideoPlayer videoPlayer;
@@ -249,6 +250,9 @@ public class IntroSceneController : MonoBehaviour
                 titleUIPanel.blocksRaycasts = true;
             }
         }
+
+        // 타이틀 진입 시 인트로 BGM 실행
+        GlobalEventBus.OnPlayBGMRequested(introBGMAudioID);
     }
 
     // 화면 터치 제어 핸들러
@@ -413,6 +417,9 @@ public class IntroSceneController : MonoBehaviour
                 SceneManager.LoadScene(LobbySceneName);
             }
         }
+
+        // 신 이동 시 인트로 BGM 중지
+        GlobalEventBus.OnStopBGMRequested();
     }
 
     // 점멸 및 페이드 효과 처리
