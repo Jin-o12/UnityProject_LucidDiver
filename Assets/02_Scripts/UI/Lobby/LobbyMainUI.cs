@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -15,7 +15,7 @@ public class LobbyMainUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textDiverName;             // 다이버 이름 텍스트
     [SerializeField] private TextMeshProUGUI textLinkRateLevel;         // 동조율 수치 텍스트
     [SerializeField] private Slider sliderLinkRateLevel;                // 동조율 경험치 슬라이더
-    [SerializeField] private GameObject dialogueTestBox;                // 로비 대사 박스
+    [SerializeField] private CanvasGroup dialogueTestBox;                // 로비 대사 박스
     [SerializeField] private TextMeshProUGUI textSpeakerName;           // 로비 대사 화자 이름 텍스트
     [SerializeField] private TextMeshProUGUI textDialogue;              // 로비 대사 텍스트
     [SerializeField] private RawImage CharacterStandingImage;           // 캐릭터 스텐딩 일러스트 (Live2D 비디오 재생용)
@@ -48,6 +48,10 @@ public class LobbyMainUI : MonoBehaviour
     private float showDialogueTime = 3.0f;                              // 대사 스크립트가 보여질 시간
     private WaitForSeconds showDialogueWs;                              // 대사 스크립트 ws
     private float DialogueShowTimer;                                    // 다이얼로그가 보일 최소한의 시간 타이머
+
+    private const float fadeInDuration = 0.2f;                          // 대사 창 페이드 인 시간
+    private const float fadeOutDuration = 0.5f;                         // 대사 창 페이드 아웃 시간
+    private Coroutine dialogueCoroutine;                                 // 현재 실행 중인 대사 코루틴
 
     // 대사 출력 인터페이스
     private IDialogueRepository dialogueRepo;
@@ -162,18 +166,26 @@ public class LobbyMainUI : MonoBehaviour
         }
     }
 
+    /* 캐릭터 대화 창 정보 및 스크립트 보여주기 시작 */
     private void ShowCharDialogue()
     {
+        // 이전 대사 코루틴이 실행 중이면 중단 (페이드 아웃 중 클릭 시 즉시 중단)
+        if (dialogueCoroutine != null)
+            StopCoroutine(dialogueCoroutine);
+
         // 대사가 출력 된(시작한) 시간을 기록
         DialogueShowTimer = Time.time;
-        StartCoroutine(PrintDialogue());
+        dialogueCoroutine = StartCoroutine(PrintDialogue());
     }
 
-    /* 캐릭터 대화 창 정보 및 스크립트 보여주기 */
+    /* 스크립트 출력 */
     private IEnumerator PrintDialogue()
     {
-        if (!dialogueTestBox.activeSelf)
-            dialogueTestBox.SetActive(true);
+        if (!dialogueTestBox.gameObject.activeSelf)
+        {
+            dialogueTestBox.alpha = 0f;
+            dialogueTestBox.gameObject.SetActive(true);
+        }
 
         int currentLevel = PlayerSaveDataSO.Instance.GetLinkRateLevel();
 
@@ -187,12 +199,38 @@ public class LobbyMainUI : MonoBehaviour
         if (textDialogue != null)
             textDialogue.text = log;
 
+        // 대사 창이 나타나고 있는 중이라면 페이드 인 (0.2초)
+        if(dialogueTestBox.alpha < 1f)
+            yield return StartCoroutine(FadeDialogueBox(0f, 1f, fadeInDuration));
+
         yield return showDialogueWs;
 
         if(Time.time - DialogueShowTimer >= showDialogueTime)
         {
-            dialogueTestBox.SetActive(false);
+            // 페이드 아웃 (0.5초)
+            yield return StartCoroutine(FadeDialogueBox(1f, 0f, fadeOutDuration));
+            dialogueTestBox.gameObject.SetActive(false);
         }
+
+        dialogueCoroutine = null;
+    }
+
+    /* 대사 창 CanvasGroup의 alpha를 보간하여 페이드 효과를 적용 */
+    private IEnumerator FadeDialogueBox(float from, float to, float duration)
+    {
+        if (dialogueTestBox == null) yield break;
+
+        float elapsed = 0f;
+        dialogueTestBox.alpha = from;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            dialogueTestBox.alpha = Mathf.Lerp(from, to, elapsed / duration);
+            yield return null;
+        }
+
+        dialogueTestBox.alpha = to;
     }
 
     /* 관제사 정보 UI 갱신 */

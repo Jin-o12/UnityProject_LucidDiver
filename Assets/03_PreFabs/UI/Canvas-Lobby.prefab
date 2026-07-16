@@ -2408,7 +2408,7 @@ MonoBehaviour:
   textDiverName: {fileID: 848244235026976283}
   textLinkRateLevel: {fileID: 965834552413327166}
   sliderLinkRateLevel: {fileID: 3796316366617625295}
-  dialogueTestBox: {fileID: 3113772557898072283}
+  dialogueTestBox: {fileID: 5861981849640973295}
   textSpeakerName: {fileID: 4516556617685114177}
   textDialogue: {fileID: 5256806970443828623}
   CharacterStandingImage: {fileID: 2484925525888874777}
@@ -2857,6 +2857,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2044364547491799165}
+  - component: {fileID: 5861981849640973295}
   m_Layer: 5
   m_Name: BottomDialogueGroup
   m_TagString: Untagged
@@ -2886,6 +2887,18 @@ RectTransform:
   m_AnchoredPosition: {x: 945.24475, y: 155.78052}
   m_SizeDelta: {x: 1051.123, y: 178.4194}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &5861981849640973295
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3113772557898072283}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &3394758808018765729
 GameObject:
   m_ObjectHideFlags: 0
