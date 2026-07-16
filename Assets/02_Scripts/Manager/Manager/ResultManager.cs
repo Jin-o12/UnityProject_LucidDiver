@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 인게임 세션 종료 시 데이터 변동을 관리하는 클래스
 /// (탈출 성공 여부, 플레이 타임, 인벤토리 및 퀵슬롯, 동조율 단계)
 /// </summary>
@@ -14,10 +14,14 @@ public class ResultManager : MonoBehaviour, IResultService
     // 플레이 타임 기록 필드
     private float playTime;                             //이번 세션 플레이 시간
     private float startTime;                            //플레이 시작 시점
+
     // 탈출 여부 및 결과 창 필드
     private bool extractionResult;                      //탈출 성공 여부 판정
     private ResultUI resultPanel;                       //결과 창 UI 
     private Coroutine resultCoroutine;                  //결과 창 출력 코루틴
+    private readonly int successBGMAudioID = 10007;     //탈출 성공 BGM ID
+    private readonly int failedBGMAudioID = 10002;      //탈출 실패 BGM ID
+
     // 동조율 저장 필드
     private int prevLinkRateLevel;                      //동조율 상승 전 다이버와의 동조율 단계 값을 저장
     public int linkRateLevel;                           //동조율 상승 후 다이버와의 동조율 단계
@@ -26,12 +30,14 @@ public class ResultManager : MonoBehaviour, IResultService
     private bool linkRateUp = false;                    //동조율 단계 상승 여부 전달
     private bool MemoryLogUnlocked = false;             //세션 탈출 시 개인 심상 기록 해금 여부 저장
     private bool hasNewMemoryLog = true;                //개인 심상 기록 확인 여부 저장
+
     // 인벤토리 기록에 관한 필드
     private PlayerSaveData _playerSaveData;             //인벤토리 기록이 저장된 플레이어 세이브 데이터
     private PlayerInventory _inven;                     //현재 인게임 세션의 플레이어 인벤토리 데이터
     private PlayerArtifactEquipment artifactEquipment;  //플레이어가 장착한 아티팩트 데이터
     private ItemData memoryFragmentData;                //기억 파편 아이템 데이터
     private int memoryFragmentCount;                    //기억 파편 개수
+
     // 퀵슬롯 저장 필드
     public int slotTID1;                                //1번 슬롯 아이템의 ID값 데이터를 받아옴
     public Sprite slotSprite1;                          //1번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
@@ -46,7 +52,8 @@ public class ResultManager : MonoBehaviour, IResultService
     // 저장 데이터 인터페이스
     private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
     private ICharDataRepository charRepo;               // 캐릭터 데이터 접근 인터페이스
-    
+    private IDialogueRepository dialogueRepo;           // 대사 데이터 접근 인터페이스
+
     private void Awake()
     {
         // 싱글톤 인스턴스 중복 방지 설정
@@ -62,10 +69,11 @@ public class ResultManager : MonoBehaviour, IResultService
         
         // ResultServiceLocator에 자신을 등록
         ResultServiceLocator.Instance = this;
+
         // 인터페이스 등록
-        
-        itemRepo = new LocalJsonItemRepository();
-        charRepo = new SOCharacterRepository();
+        itemRepo = new LocalJsonItemRepository();           //아이템 인터페이스
+        charRepo = new SOCharacterRepository();             //캐릭터 인터페이스
+        dialogueRepo = new LocalJsonDialogueRepository();   //대사 인터페이스
 
         // 씬에 이미 존재하는 PlayerStatus를 찾아 등록 (타이밍 안전성 보장)
         foreach (var p in FindObjectsOfType<PlayerStatus>())
@@ -533,14 +541,22 @@ public class ResultManager : MonoBehaviour, IResultService
     {
         // 플레이어 Die 애니메이션 재생 시간만큼 대기 후 UI 오픈
         yield return new WaitForSeconds(1.25f);
+
+        // 탈출 성공 여부에 따라 BGM 변경
+        int resultBGMID = extractionResult ? successBGMAudioID : failedBGMAudioID;
+        GlobalEventBus.OnPlayBGMRequested(resultBGMID);
+
+        // 게임오버 시 환경음 이펙트는 중단
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10305);
+
         // UIManager에서 Canvas-ResultPanel을 받아와 UI 오픈
         resultPanel = UIManager.Instance.Open<ResultUI>();
         if (resultPanel == null) yield break;
-        // 인게임 세션에서 저장된 데이터를 resultPanel에 전달해 UI 갱신
+
+        // 인게임 세션에서 저장된 데이터를 resultPanel에 전달
         _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         resultPanel.extractionResult = extractionResult;
         resultPanel.playTime = playTime;
-
         resultPanel.memoryFragmentCount = memoryFragmentCount;
         resultPanel.memoryFragmentData = memoryFragmentData;
         resultPanel.prevLinkRateLevel = prevLinkRateLevel;
@@ -548,6 +564,13 @@ public class ResultManager : MonoBehaviour, IResultService
         resultPanel.linkRateLevel = linkRateLevel;
         resultPanel.linkRateGain = linkRateGain;
         resultPanel.linkRateUp = linkRateUp;
+
+        // 성공 여부에 따른 결과 대사를 resultPanel에 전달
+        string log = extractionResult?
+            dialogueRepo.GetRandomDialogue((int)CharacterTID.Yuan, DialogueType.escapeSuccess, linkRateLevel):
+            dialogueRepo.GetRandomDialogue((int)CharacterTID.Yuan, DialogueType.escapeFailed, linkRateLevel);
+        resultPanel.returnDialogueID = log;
+
         // 결과 창 UI에 각성 보존 슬롯 출력
         resultPanel.CreateSafeSlots(_inven.safeSlotNum);
         for (int k = 0; k < _inven.safeSlotNum; k++)

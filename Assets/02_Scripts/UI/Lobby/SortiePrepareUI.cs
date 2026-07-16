@@ -226,7 +226,8 @@ public class SortiePrepareUI : MonoBehaviour
         // {현재 Canvas 비활성화}
         gameObject.SetActive(false);
 
-        // {출격 확정 시 GameScene으로 이동}
+        // {출격 확정 시 로비 BGM을 중단하고 GameScene으로 이동}
+        GlobalEventBus.OnStopBGMRequested?.Invoke();
         GlobalEventBus.OnGoToGameScene?.Invoke();
     }
 

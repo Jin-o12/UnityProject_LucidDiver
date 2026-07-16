@@ -57,6 +57,7 @@ public class GlobalEventBus
     public static Action<int, float, float> OnEnemyHealthChanged;   // 적의 체력 변동: Action<고유 번호, 현재 체력, 전체 체력>
     public static Action<int> OnEnemyDead;                          // 적의 사망 여부: Action<고유 번호>
     public static Action<float> OnTimerChanged;                     // 남은 제한 시간 변동: Action<남은 시간>
+    public static Action<float> OnTimerRatioChanged;                // 남은 제한 시간 비율 변동: Action<남은 시간/제한 시간 비율>
     public static Action OnHitAnimate;                              // 플레이어 피격 애니메이션 발생
     public static Action<Vector3> OnBeginTargetTracking;            // 추적 개시 사운드 재생: <Action: 적 위치>
 

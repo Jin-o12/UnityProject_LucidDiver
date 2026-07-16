@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEditor.iOS;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -177,6 +178,9 @@ public class AudioManager : MonoBehaviour
         FindAudio(audioID, out AudioData _data, out AudioClip _clip);
         if (_clip == null) return;
 
+        // 이미 재생 중인 소스라면 무시 (무한 재시작 방지)
+        if (BGMSource.clip == _clip) return;
+
         // BGM 소스 설정 후 재생하기
         BGMSource.Stop();
         BGMSource.loop = true;
@@ -193,6 +197,9 @@ public class AudioManager : MonoBehaviour
 
         AudioSource _source = GetAudioSource(_data.AudioType);
         _source.volume = CalculateVolume(_data);
+
+        // 이미 재생 중인 소스라면 무시 (무한 시작 방지)
+        if (_source.clip == _clip) return;
 
         //찾은 파일을 타입에 맞는 소스에서 재생
         if (_data.Loop)
