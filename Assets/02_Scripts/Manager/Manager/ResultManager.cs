@@ -419,7 +419,6 @@ public class ResultManager : MonoBehaviour, IResultService
 
             if (currentExp >= requiredExp)
             {
-                currentExp -= requiredExp;
                 currentLevel++;
             }
             else

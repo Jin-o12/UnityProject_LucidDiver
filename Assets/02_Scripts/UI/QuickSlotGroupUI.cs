@@ -35,15 +35,6 @@ public class QuickSlotGroupUI : MonoBehaviour
 
     public void InitializeSlots()
     {
-        if (weaponImage != null)
-        {
-            weaponImage.enabled = false;
-        }
-        else
-        {
-            Debug.LogWarning("QuickSlotGroupUI: weaponImage가 연결되지 않아 장착 무기 아이콘 초기화를 건너뜁니다.", this);
-        }
-
         for(int i=0; i<slotDataList.Length; i++)
         {
             if (slotDataList[i] == null)

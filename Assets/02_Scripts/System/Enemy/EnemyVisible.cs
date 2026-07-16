@@ -7,11 +7,15 @@ public class EnemyVisible : MonoBehaviour
 {
     [Tooltip("apPortrait가 포함된 시각 오브젝트 (혹은 자기 자신)")]
     [SerializeField] private GameObject spriteObject;
+
     private PlayerSight playerSight;            // 플레이어 시야 스크립트
     private Rigidbody rb;                       // 적 몸통 오브젝트
     private apPortrait portrait;                // 스프라이트 포트레이트
     private Renderer[] cachedRenderers;         // 스프라이트 렌더러
+    private float visibleAnimationTime = 0.5f;  // 투명화 애니메이션 시간
+    private float currentAlpha = 0f;            // 현재 투명도 값
     [SerializeField] private Canvas uiCanvas;   // 체력 바 캔버스
+
     private void Awake()
     {
         if (spriteObject == null) spriteObject = gameObject;
@@ -21,6 +25,8 @@ public class EnemyVisible : MonoBehaviour
 
         rb = GetComponentInParent<Rigidbody>();
         portrait = GetComponentInChildren<apPortrait>();
+
+        // 렌더러 캐시
         cachedRenderers = spriteObject.GetComponentsInChildren<Renderer>(includeInactive: true);
     }
 
@@ -34,18 +40,13 @@ public class EnemyVisible : MonoBehaviour
     {
         if (playerSight == null || rb == null) return;
         bool visible = playerSight.IsTargetInSight(playerSight.transform, rb.transform);
-        // apPortrait가 있으면 컴포넌트 레벨로 제어 (안전)
-        if (portrait != null)
-        {
-            if (portrait.enabled != visible)
-                portrait.enabled = visible;
-        }
 
-        // 자식 렌더러들을 토글해서 시각적으로 숨김 처리
-        foreach (var r in cachedRenderers)
-        {
-            if (r != null && r.enabled != visible)
-                r.enabled = visible;
+        // apPortrait의 전체 투명도 값을 시야 노출 여부에 따라 점진적으로 변경
+        float targetAlpha = visible ? 1f : 0f;
+        currentAlpha = Mathf.MoveTowards(currentAlpha, targetAlpha, Time.deltaTime / visibleAnimationTime);
+        if (portrait != null) 
+        { 
+            portrait.SetMeshAlphaAll(currentAlpha);
         }
 
         uiCanvas.enabled = visible;
