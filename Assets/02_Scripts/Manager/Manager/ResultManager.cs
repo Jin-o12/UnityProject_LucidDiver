@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 인게임 세션 종료 시 데이터 변동을 관리하는 클래스
 /// (탈출 성공 여부, 플레이 타임, 인벤토리 및 퀵슬롯, 동조율 단계)
 /// </summary>
@@ -21,6 +21,7 @@ public class ResultManager : MonoBehaviour, IResultService
     private Coroutine resultCoroutine;                  //결과 창 출력 코루틴
     private readonly int successBGMAudioID = 10007;     //탈출 성공 BGM ID
     private readonly int failedBGMAudioID = 10002;      //탈출 실패 BGM ID
+    public int enemyKillCount = 0;                      //이번 세션에서 플레이어가 처치한 적 개체의 누적 수.
 
     // 동조율 저장 필드
     private int prevLinkRateLevel;                      //동조율 상승 전 다이버와의 동조율 단계 값을 저장
@@ -89,7 +90,9 @@ public class ResultManager : MonoBehaviour, IResultService
             Register(idComp.entityID, p);
             Debug.Log($"ResultManager Awake: Registered existing playerID={idComp.entityID} (gameObject={p.gameObject.name})");
         }
-        
+
+        //적 사망 이벤트를 연결해 킬 수 누적
+        GlobalEventBus.OnEnemyDead += KillPlus;
         //로비로 돌아가기 버튼에 결과 창 닫기 연결
         GlobalEventBus.OnReturnToLobby += CloseResultPanel;
         //출격 준비 UI의 퀵슬롯 캐시 재전송 요청 이벤트 연결
@@ -104,6 +107,7 @@ public class ResultManager : MonoBehaviour, IResultService
 
     private void OnDestroy()  //IResultService 구현체 (로케이터에 등록)
     {
+        GlobalEventBus.OnEnemyDead -= KillPlus;
         GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
         GlobalEventBus.OnRequestQuickSlotCache -= SendQuickSlotCacheEvent;
         GlobalEventBus.PrepareUIOpen -= SendQuickSlotCacheEvent;
@@ -189,6 +193,11 @@ public class ResultManager : MonoBehaviour, IResultService
     private void SetPlayerState(int playerID, PlayerStatus.livingState state)
     {
         if (_players.TryGetValue(playerID, out var ps)) ps.SetPlayerState(state);
+    }
+
+    private void KillPlus(int _id)
+    {
+        enemyKillCount++;
     }
 
     public void GameResult(bool _extractionResult, float beginTime)
@@ -567,6 +576,7 @@ public class ResultManager : MonoBehaviour, IResultService
         resultPanel.linkRateLevel = linkRateLevel;
         resultPanel.linkRateGain = linkRateGain;
         resultPanel.linkRateUp = linkRateUp;
+        resultPanel.enemyKillCount = enemyKillCount;
 
         // 성공 여부에 따른 결과 대사를 resultPanel에 전달
         string log = extractionResult?
@@ -621,6 +631,9 @@ public class ResultManager : MonoBehaviour, IResultService
         GlobalEventBus.OnStop2DSoundRequested?.Invoke(10304);
         GlobalEventBus.OnStop2DSoundRequested?.Invoke(10305);
         GlobalEventBus.OnStop2DSoundRequested?.Invoke(10306);
+
+        // 결과 창 닫기 시 킬 카운트를 초기화
+        enemyKillCount = 0;
 
         UIManager.Instance.Close<ResultUI>();
     }

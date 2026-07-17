@@ -20,6 +20,7 @@ public enum Faction
 // 아이템 카테고리
 public enum itemCategory
 {
+    empty,          // 빈 칸
     idle,           // 기타 아이템
     weapon,         // 무장
     armor,          // 방어구

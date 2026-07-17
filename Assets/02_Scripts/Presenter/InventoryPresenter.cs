@@ -291,6 +291,7 @@ public class InventoryPresenter : MonoBehaviour
         for (int k = 0; k < playerInventory.safeSlotNum; k++)
             inventoryUI.UpdateSafeSlot(k, playerInventory.safeSlots[k]);
 
+        inventoryUI.quickSlot.SyncFromInventory(playerInventory);
         inventoryUI.UpdateArtifactSlots(playerArtifactEquipment);
 
         // 인벤토리 열기 SFX를 출력한다.

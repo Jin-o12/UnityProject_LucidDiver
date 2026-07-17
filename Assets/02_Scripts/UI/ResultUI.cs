@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Threading.Tasks;
 
 public class ResultUI : MonoBehaviour
 {
@@ -238,7 +239,11 @@ public class ResultUI : MonoBehaviour
     public void UpdateSafeSlot(int slotNum, InventorySlotData slotData)
     {
         InventorySlotUI slotUI = safeSlotsObj[slotNum].GetComponent<InventorySlotUI>();
-        slotUI.UpdateSlot(slotData.amount, slotData.icon, SlotType.safe);
+        // 유효하지 않은 데이터의 경우 빈 칸으로 출력
+        if (slotData == null || slotData.TID == 0)
+            slotUI.UpdateSlot(0, null, itemCategory.empty, SlotType.safe);
+        else
+            slotUI.UpdateSlot(slotData.amount, slotData.icon, itemRepo.GetItemDataByID(slotData.TID).category, SlotType.safe);
     }
 
     private string Dialogue_Return()  //결과 창 말풍선 대사를 DB에서 추출해 출력하는 메소드

@@ -154,19 +154,19 @@ public class ChestUI : MonoBehaviour
         // ������ ��� ������ �� ĭ���� ����
         if (entry == null || entry.itemData == null || entry.amount <= 0)
         {
-            slotUI.UpdateSlot(0, null);
+            slotUI.UpdateSlot(0, null, itemCategory.empty, ItemGrade.empty);
             return;
         }
 
         ItemData jsonItemData = itemRepo.GetItemDataByID(entry.itemData.TID);
         if (jsonItemData == null)
         {
-            slotUI.UpdateSlot(0, null);
+            slotUI.UpdateSlot(0, null, itemCategory.empty, ItemGrade.empty);
             return;
         }
 
         // AddressableLoader를 사용하여 비동기로 아이콘을 로드하고 슬롯을 업데이트합니다 (Fire-and-Forget)
-        _ = LoadSlotIconAsync(slotUI, jsonItemData.iconAddress, entry.amount);
+        _ = LoadSlotIconAsync(slotUI, jsonItemData.iconAddress, entry.amount, jsonItemData.category, jsonItemData.itemGrade);
     }
 
     /// <summary>
@@ -294,7 +294,7 @@ public class ChestUI : MonoBehaviour
     /// <summary>
     ///   AddressableLoader를 사용하여 아이콘을 로드합니다.
     /// </summary>
-    private async Task LoadSlotIconAsync(ChestSlotUI slotUI, string iconAddress, int amount)
+    private async Task LoadSlotIconAsync(ChestSlotUI slotUI, string iconAddress, int amount, itemCategory category, ItemGrade grade)
     {
         if (slotUI == null)
             return;
@@ -302,7 +302,7 @@ public class ChestUI : MonoBehaviour
         if (string.IsNullOrEmpty(iconAddress))
         {
             Debug.LogWarning($"아이템의 아이콘 주소가 비어있습니다!");
-            slotUI.UpdateSlot(amount, null);
+            slotUI.UpdateSlot(amount, null, itemCategory.empty, ItemGrade.empty);
             return;
         }
 
@@ -310,7 +310,7 @@ public class ChestUI : MonoBehaviour
 
         if (slotUI != null)
         {
-            slotUI.UpdateSlot(amount, loadedIcon);
+            slotUI.UpdateSlot(amount, loadedIcon, category, grade);
         }
     }
 

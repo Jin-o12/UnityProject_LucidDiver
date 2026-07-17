@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -18,7 +18,10 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] private InventoryDropZoneUI dropZone;
 
     [Header("Artifact Equip UI")]
-    [SerializeField] private ArtifactEquipSlotUI[] artifactEquipSlots; // 인벤토리 상단의 아티팩트 장착 슬롯 UI 목록
+    [SerializeField] private ArtifactEquipSlotUI[] artifactEquipSlots;  // 인벤토리 상단의 아티팩트 장착 슬롯 UI 목록
+
+    [Header("Quickslot UI")]
+    public QuickSlotGroupUI quickSlot;                // 인벤토리 상단의 소비품 장착 퀵슬롯 UI
 
     private CanvasGroup dropZoneCanvasGroup;
     private bool canUseDropZone = true;
@@ -90,15 +93,17 @@ public class InventoryUI : MonoBehaviour
     public void UpdateSlot(int slotNum, InventorySlotData slotData)
     {
         InventorySlotUI slotUI = slotsObj[slotNum].GetComponent<InventorySlotUI>();
+        itemCategory category = slotData.itemData != null ? slotData.itemData.category : itemCategory.empty;
         ItemGrade grade = slotData.itemData != null ? slotData.itemData.itemGrade : ItemGrade.empty;
-        slotUI.UpdateSlot(slotData.amount, slotData.icon, grade, SlotType.inventory);
+        slotUI.UpdateSlot(slotData.amount, slotData.icon, category, grade, SlotType.inventory);
     }
 
     public void UpdateSafeSlot(int slotNum, InventorySlotData slotData)
     {
         InventorySlotUI slotUI = safeSlotsObj[slotNum].GetComponent<InventorySlotUI>();
+        itemCategory category = slotData.itemData != null ? slotData.itemData.category : itemCategory.empty;
         ItemGrade grade = slotData.itemData != null ? slotData.itemData.itemGrade : ItemGrade.empty;
-        slotUI.UpdateSlot(slotData.amount, slotData.icon, grade, SlotType.inventory);
+        slotUI.UpdateSlot(slotData.amount, slotData.icon, category, grade, SlotType.inventory);
     }
 
     public void SetDropZoneAvailable(bool available)
