@@ -705,15 +705,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
+    m_Left: 20
+    m_Right: 20
+    m_Top: 20
+    m_Bottom: 20
   m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 200, y: 200}
-  m_Spacing: {x: 0, y: 0}
+  m_CellSize: {x: 150, y: 150}
+  m_Spacing: {x: 20, y: 100}
   m_Constraint: 1
   m_ConstraintCount: 4
 --- !u!114 &7865282538063687066
@@ -1951,7 +1951,7 @@ MonoBehaviour:
   m_Content: {fileID: 7286699017783871098}
   m_Horizontal: 0
   m_Vertical: 1
-  m_MovementType: 2
+  m_MovementType: 1
   m_Elasticity: 0.1
   m_Inertia: 1
   m_DecelerationRate: 0.135
@@ -2231,8 +2231,6 @@ MonoBehaviour:
   text_getMemoryFragment: {fileID: 3545491913913321293}
   text_linkRate: {fileID: 1369103070854608163}
   text_memoryLogUnlocked: {fileID: 4645654938423374871}
-  image_manaStoneLost: {fileID: 0}
-  image_potionLost: {fileID: 0}
   text_returnDialogue: {fileID: 447145983076103374}
   acquiredItemsContainer: {fileID: 7286699017783871098}
   acquiredItemPrefab: {fileID: 3846980529766399128, guid: a8d3730e6047c2a44868896b274ee02c,
