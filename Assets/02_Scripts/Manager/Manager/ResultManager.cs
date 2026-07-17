@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 인게임 세션 종료 시 데이터 변동을 관리하는 클래스
 /// (탈출 성공 여부, 플레이 타임, 인벤토리 및 퀵슬롯, 동조율 단계)
 /// </summary>
@@ -552,6 +552,9 @@ public class ResultManager : MonoBehaviour, IResultService
         // UIManager에서 Canvas-ResultPanel을 받아와 UI 오픈
         resultPanel = UIManager.Instance.Open<ResultUI>();
         if (resultPanel == null) yield break;
+
+        // 결과 화면이 나왔으므로 커서 잠금을 해제합니다.
+        GlobalEventBus.OnMouseLocked?.Invoke(false);
 
         // 인게임 세션에서 저장된 데이터를 resultPanel에 전달
         _playerSaveData = PlayerSaveDataSO.Instance.currentData;

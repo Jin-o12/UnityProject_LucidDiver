@@ -36,6 +36,12 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     // 유니티 좀비 드래그(마우스를 떼지 않고 UI 재활성화 시 OnDrag가 이어지는 현상) 방지용 플래그
     private bool isDragging = false;
 
+    /// <summary>
+    /// 어떤 슬롯이든 드래그 중인지 전역으로 확인할 수 있는 플래그입니다.
+    /// 드래그 중에는 툴팁 표시를 차단하는 데 사용합니다.
+    /// </summary>
+    public static bool AnySlotDragging { get; private set; }
+
     private void Awake()
     {
 
@@ -63,6 +69,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     public void ResetDragState()
     {
         isDragging = false; // 드래그 강제 취소 인식
+        AnySlotDragging = false;
 
         if (mainCanvas != null && itemInfo != null && itemInfo.parent == mainCanvas.transform)
         {
@@ -185,6 +192,10 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             return;
 
         isDragging = true;
+        AnySlotDragging = true;
+
+        // 드래그 시작 시 열려 있는 툴팁을 닫습니다.
+        GlobalEventBus.OnTooltipUIClose?.Invoke();
         
         itemInfo.SetParent(mainCanvas.transform);
         itemInfo.SetAsLastSibling();
@@ -206,6 +217,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     public void OnEndDrag(PointerEventData eventData)
     {
         isDragging = false;
+        AnySlotDragging = false;
 
         if (canvasGroup != null)
             canvasGroup.blocksRaycasts = true;
@@ -252,6 +264,10 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        // 드래그 중에는 툴팁을 표시하지 않습니다.
+        if (AnySlotDragging)
+            return;
+
         //포인터가 슬롯 UI에 들어오면 아이템 데이터를 읽는다
         GlobalEventBus.OnTooltipUIOpen?.Invoke(slotType, slotIndex);
     }
