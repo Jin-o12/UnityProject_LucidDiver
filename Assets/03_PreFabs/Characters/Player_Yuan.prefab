@@ -1032,7 +1032,7 @@ MonoBehaviour:
   manaRegen: 0
   sprintMP: 0
   evadeMP: 0
-  Hit_AudioIDPool: 75270000762700007727000078270000792700007a2700007b2700007c270000
+  Hit_AudioIDPool: 7527000076270000772700007827000079270000
   lucidMark:
     maxStack: 2
     leakRequiredStack: 2

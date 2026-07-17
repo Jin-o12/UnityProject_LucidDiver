@@ -64,7 +64,7 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandle
         }
 
         // 클릭 시 사운드 재생
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         // 1번만 클릭한 경우에는 처리하지 않기
         if (eventData.clickCount < 2)

@@ -221,7 +221,7 @@ public class SortiePrepareUI : MonoBehaviour
     private void OnClickStartSortie()
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         // {현재 Canvas 비활성화}
         gameObject.SetActive(false);
@@ -234,7 +234,7 @@ public class SortiePrepareUI : MonoBehaviour
     private void OnClickBack()
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         // {로비 Canvas를 다시 활성화}
         GlobalEventBus.OnOpenLobbyUI?.Invoke();
@@ -246,7 +246,7 @@ public class SortiePrepareUI : MonoBehaviour
     private void OnClickChangeFromStorage()
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         // {창고 인벤토리 UI 열기 이벤트를 호출한다}
         GlobalEventBus.OnOpenStorageUI?.Invoke();

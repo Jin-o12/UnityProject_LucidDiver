@@ -271,6 +271,9 @@ public class IntroSceneController : MonoBehaviour
             return;
         }
 
+        //무시되지 않고 유효한 클릭인 경우 버튼 클릭 사운드를 출력
+        GlobalEventBus.OnClickAudio?.Invoke(true);
+
         if (currentState == IntroState.PlayingPV)
         {
             if (!skipPromptActive)
@@ -354,6 +357,9 @@ public class IntroSceneController : MonoBehaviour
     // 설정 팝업 열기
     private void OpenSettingPopup()
     {
+        // 버튼 클릭 사운드를 출력 (디버그: 설정 팝업이 null이면 false 사운드 vs 정상 연결되었으면 true 사운드)
+        GlobalEventBus.OnClickAudio?.Invoke(settingPopupPanel != null);
+
         if (settingPopupPanel != null)
         {
             settingPopupPanel.SetActive(true);
@@ -363,6 +369,9 @@ public class IntroSceneController : MonoBehaviour
     // 설정 팝업 닫기
     private void CloseSettingPopup()
     {
+        // 버튼 클릭 사운드를 출력
+        GlobalEventBus.OnClickAudio?.Invoke(true);
+
         if (settingPopupPanel != null)
         {
             settingPopupPanel.SetActive(false);

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
@@ -31,21 +31,25 @@ public class UILobbySidebar : MonoBehaviour
 
     private void OnClickNavSortie()
     {
+        GlobalEventBus.OnClickAudio?.Invoke(true);
         GlobalEventBus.OnOpenPrepareUI?.Invoke();
     }
 
     private void OnClickNavDiver()
     {
+        GlobalEventBus.OnClickAudio?.Invoke(true);
         GlobalEventBus.OnOpenRecordUI?.Invoke();
     }
 
     private void OnClickNavStorage()
     {
+        GlobalEventBus.OnClickAudio?.Invoke(true);
         GlobalEventBus.OnOpenStorageUI?.Invoke();
     }
 
     private void OnClickNavLobby()
     {
+        GlobalEventBus.OnClickAudio?.Invoke(true);
         GlobalEventBus.OnOpenLobbyUI?.Invoke();
     }
 }

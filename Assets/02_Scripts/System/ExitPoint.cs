@@ -40,6 +40,17 @@ public class ExitPoint : MonoBehaviour, IInteractable
         EndEscapeChannelVfx();
     }
 
+    // 탈출 포인트 진입 시 상호작용 오디오 재생
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            // 사운드 재생 이벤트를 AudioManager에 전달하여 탈출 포인트 지점에서 3D 오디오 재생
+            if (TryGetRandomAudioId(Escape_Interact_AudioIDPool, out int escapeInteractAudioID))
+                GlobalEventBus.OnPlay3DSoundRequested?.Invoke(escapeInteractAudioID, gameObject.transform.position);
+        }
+    }
+
     public bool Interact(int playerID) 
     {
         Debug.Log($"player {playerID}가 탈출구와 상호작용 함");

@@ -287,6 +287,7 @@ public class ChestUI : MonoBehaviour
     /// </summary>
     public void CloseUI()
     {
+        GlobalEventBus.OnClickAudio?.Invoke(true);
         onCloseRequested?.Invoke();
     }
 
