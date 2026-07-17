@@ -325,8 +325,7 @@ public class OcclusionWall : MonoBehaviour
 
         if (showDebugLog)
         {
-            Debug.Log(
-                $"OcclusionWall: 원래 재질 복원 - {name}");
+            //Debug.Log($"OcclusionWall: 원래 재질 복원 - {name}");
         }
     }
 

@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 아이템과 인벤토리에 관한 상호작용을 중재하는 Presenter.
 /// 아이템 습득, 인벤토리 UI 열기/닫기, 체스트 UI 연결, 월드 드랍을 담당한다.
 /// </summary>
@@ -218,6 +218,8 @@ public class InventoryPresenter : MonoBehaviour
 
         // 상자 UI를 여는 동안 입력 맵을 UI 모드로 전환한다.
         localInputReader.SwitchToUIMap();
+        // 마우스 잠금을 해제
+        GlobalEventBus.OnMouseLocked?.Invoke(false);
 
         // 인벤토리 UI를 먼저 연다.
         OpenInventoryUI();
@@ -289,6 +291,7 @@ public class InventoryPresenter : MonoBehaviour
         for (int k = 0; k < playerInventory.safeSlotNum; k++)
             inventoryUI.UpdateSafeSlot(k, playerInventory.safeSlots[k]);
 
+        inventoryUI.quickSlot.SyncFromInventory(playerInventory);
         inventoryUI.UpdateArtifactSlots(playerArtifactEquipment);
 
         // 인벤토리 열기 SFX를 출력한다.
@@ -436,9 +439,12 @@ public class InventoryPresenter : MonoBehaviour
         isChestOpen = false;
         localInputReader.SetInventoryOpenState(false);
 
-        // 일반적인 닫기 요청에서만 입력 맵을 다시 플레이어 모드로 전환한다.
+        // 일반적인 닫기 요청에서만 입력 맵을 다시 플레이어 모드로 전환하고 마우스를 가둔다.
         if (restorePlayerInput)
+        {
             localInputReader.SwitchToPlayerMap();
+            GlobalEventBus.OnMouseLocked?.Invoke(true);
+        }
     }
 
     /// <summary>

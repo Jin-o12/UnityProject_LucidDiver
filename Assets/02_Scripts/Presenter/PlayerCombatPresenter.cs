@@ -147,6 +147,9 @@ public class PlayerCombatPresenter : MonoBehaviour
             GlobalEventBus.OnMainActiveSkillCasted?.Invoke();
             SkillEffectProcessor.Instance.UseSkillEffect(skill, this.gameObject, payload, mousePos);
         }
+
+        //쿨타임 시작 시점 이벤트를 게임플레이 UI에 전달하는 이벤트
+        GlobalEventBus.OnPrintSkillCooltime?.Invoke(skill.skillCooltime);
     }
 
     /* 현재 마우스의 평면상의 위치*/

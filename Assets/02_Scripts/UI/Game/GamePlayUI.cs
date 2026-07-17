@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,6 +10,7 @@ public class GamePlayUI : MonoBehaviour
     [SerializeField] private CanvasGroup hudCanvasGroup;
 
     private const float DefaultHUDAlpha = 1.0f;
+    [SerializeField] SkillPlayUI skillUI;
 
     private void Awake()
     {
@@ -20,8 +21,9 @@ public class GamePlayUI : MonoBehaviour
         // 튜토리얼 대화/안내 UI가 열릴 때 인게임 HUD를 자연스럽게 뒤로 물리기 위한 알파 조절용입니다.
         if (hudCanvasGroup == null)
             hudCanvasGroup = gameObject.AddComponent<CanvasGroup>();
+        skillUI = GetComponent<SkillPlayUI>();
 
-        if(statusUI==null || quickSlotGroupUI==null)
+        if(statusUI==null || quickSlotGroupUI==null || skillUI == null)
         {
             this.enabled = false;
             Debug.LogError("GamePlayUI: 필요한 컴포넌트가 없습니다.");

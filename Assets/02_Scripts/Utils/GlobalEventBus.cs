@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 글로벌 이벤트 버스 클래스
 /// 게임 내에서 발생하는 다양한 이벤트를 중앙에서 관리하고 전달하는 역할을 합니다.
 /// </summary>
@@ -91,6 +91,18 @@ public class GlobalEventBus
     public static Action<bool> OnClickAudio;                                // UI 버튼 클릭 시 오디오 출력 요청: Action<유효한 클릭인지>
     public static Action OnInteractAudio;                                   // 캐릭터 상호작용 클릭 시 오디오 출력 요청
     public static Action<float> OnGameplayHUDAlphaRequested;                 // 튜토리얼/연출 중 인게임 HUD 투명도 조절 요청: Action<alpha>
+    public static Action<float> OnPrintSprintCooltime;                      // 달리기 불가 상태 회복 시간 시작: Action<sprintRecoverTime>
+    public static Action<float> OnPrintSkillCooltime;                       // 스킬 쿨타임 시작: Action<skillCooltime>
+    public static Action<float> OnPrintEvadeCooltime;                       // 구르기 시작: Action<evadeCooltime>
+    public static Action<string> OnSwitchInputMap;                          // Action Map 바꾸기 이벤트
+
+    /// <summary>
+    /// 설정 관리 이벤트
+    /// </summary>
+    public static Action<float> OnMasterVolumeChanged;                      // 전체 사운드 음량 변경 요청: Action<볼륨 값>
+    public static Action<float> OnBGMVolumeChanged;                         // BGM 음량 변경 요청: Action<볼륨 값>
+    public static Action<float> OnSFXVolumeChanged;                         // SFX 음량 변경 요청: Action<볼륨 값>
+
 
     /// <summary>
     /// 사운드 관리 이벤트

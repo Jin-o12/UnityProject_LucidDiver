@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,6 +16,11 @@ public class QuickSlotGroupUI : MonoBehaviour
 
     [Header("퀵슬롯 아이템 UI")]
     [SerializeField] private QuickSlotUI[] slotDataList;
+
+    private void Awake()
+    {
+        InitializeSlots();
+    }
 
     private void OnEnable()
     {

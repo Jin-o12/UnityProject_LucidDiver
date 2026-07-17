@@ -389,6 +389,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         {
             cannotSprint = true;
             GlobalEventBus.SendCannotSprint?.Invoke(cannotSprint);
+            GlobalEventBus.OnPrintSprintCooltime?.Invoke(sprintRecoverTime);  //쿨타임 시작 시점 이벤트를 게임플레이 UI에 전달하는 이벤트
             StartCoroutine(SprintRecover());
             return;
         }
@@ -409,6 +410,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GetMp(-_useMana);
         _movement.PlayerEvade();
         lastEvadeTime = Time.time;
+        GlobalEventBus.OnPrintEvadeCooltime?.Invoke(evadeCooltime);  //쿨타임 시작 시점 이벤트를 게임플레이 UI에 전달하는 이벤트
     }
 
     /* 초당 마나 회복 코루틴 */

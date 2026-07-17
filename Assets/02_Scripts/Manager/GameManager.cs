@@ -99,6 +99,9 @@ public class GameManager : MonoBehaviour
                 SpawnManager.Instance.SpawnBoxes();
             }
 
+            // 인게임 진입 시 조작 맵을 Player로 전환
+            GlobalEventBus.OnSwitchInputMap?.Invoke("Player");
+
             UIManager.Instance.Open<GamePlayUI>();
         }
         else
