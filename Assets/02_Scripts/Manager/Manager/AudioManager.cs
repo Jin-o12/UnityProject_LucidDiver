@@ -55,8 +55,10 @@ public class AudioManager : MonoBehaviour
     private AudioMixerSnapshot Snapshot;                        //믹서 스냅샷
 
     [Header("UI 사운드")]
-    [SerializeField] private int[] Click_AudioIDPool;           //클릭 시 사운드 ID 풀
-    [SerializeField] private int[] Chase_AudioIDPool;           //추적 개시 사운드 ID 풀
+    [SerializeField] private int ActiveButtonClick_AudioID;     //상호작용 가능한 클릭 시 사운드 ID
+    [SerializeField] private int NonActiveButtonClick_AudioID;  //상호작용 불가능한 클릭 시 사운드 ID
+    [SerializeField] private int InteractClick_AudioID;         //캐릭터 상호작용 시 사운드 ID
+    [SerializeField] private int[] Chase_AudioIDPool;           //추적 시작 사운드 ID 풀
 
     // <AudioID, AudioClip> 클립 딕셔너리
     public Dictionary<int, AudioClip> clipDict = new Dictionary<int, AudioClip>();
@@ -95,6 +97,7 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnPlay3DSoundRequestedWithHandle += Play3DSoundAndReturn;
 
         GlobalEventBus.OnClickAudio += PlayClickSound;              // UI 클릭 사운드 재생 이벤트
+        GlobalEventBus.OnInteractAudio += InteractSound;            // 캐릭터 상호작용 클릭 사운드 재생 이벤트
         GlobalEventBus.OnBeginTargetTracking += PlayChaseSound;     // 추적 개시 사운드 재생 이벤트
 
         // 사운드 종료 요청 이벤트 구독
@@ -114,6 +117,7 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnPlay3DSoundRequestedWithHandle -= Play3DSoundAndReturn;
 
         GlobalEventBus.OnClickAudio -= PlayClickSound;
+        GlobalEventBus.OnInteractAudio -= InteractSound;
         GlobalEventBus.OnBeginTargetTracking -= PlayChaseSound;
 
         GlobalEventBus.OnStopBGMRequested -= StopBGM;
@@ -418,13 +422,22 @@ public class AudioManager : MonoBehaviour
     #endregion
 
     #region 공통 사운드 재생
-    private void PlayClickSound()
+    // UI 버튼 클릭 시 동작 여부에 따른 사운드 출력
+    private void PlayClickSound(bool canActive = true)
     {
         // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
-        int ShotAudioID = Click_AudioIDPool[UnityEngine.Random.Range(0, Click_AudioIDPool.Length)];
+        int ShotAudioID = canActive ? ActiveButtonClick_AudioID : NonActiveButtonClick_AudioID;
         Play2DSound(ShotAudioID);
     }
 
+    // 로비 캐릭터 클릭 시 상호작용 사운드 출력
+    private void InteractSound()
+    {
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
+        Play2DSound(InteractClick_AudioID);
+    }
+
+    // 적이 플레이어 추적 시작 시 사운드 출력
     private void PlayChaseSound(Vector3 pos)
     {
         // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생

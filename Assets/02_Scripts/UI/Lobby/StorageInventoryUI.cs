@@ -461,7 +461,7 @@ public class StorageInventoryUI : MonoBehaviour
         }
 
         // 클릭 시 사운드 재생
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         ShowDescription(area, index);
 

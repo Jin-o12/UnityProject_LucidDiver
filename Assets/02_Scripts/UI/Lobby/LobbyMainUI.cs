@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -15,7 +15,7 @@ public class LobbyMainUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textDiverName;             // 다이버 이름 텍스트
     [SerializeField] private TextMeshProUGUI textLinkRateLevel;         // 동조율 수치 텍스트
     [SerializeField] private Slider sliderLinkRateLevel;                // 동조율 경험치 슬라이더
-    [SerializeField] private CanvasGroup dialogueTestBox;                // 로비 대사 박스
+    [SerializeField] private CanvasGroup dialogueTestBox;               // 로비 대사 박스
     [SerializeField] private TextMeshProUGUI textSpeakerName;           // 로비 대사 화자 이름 텍스트
     [SerializeField] private TextMeshProUGUI textDialogue;              // 로비 대사 텍스트
     [SerializeField] private RawImage CharacterStandingImage;           // 캐릭터 스텐딩 일러스트 (Live2D 비디오 재생용)
@@ -33,6 +33,8 @@ public class LobbyMainUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textShardAmount;           // 파편 수량
     [SerializeField] private TextMeshProUGUI textGoldAmount;            // 골드 수량
     [SerializeField] private Button buttonMail;                         // 우편함 버튼
+    [SerializeField] private Button buttonNotice;                       // 공지 버튼
+    [SerializeField] private Button buttonOption;                       // 옵션 버튼
 
     [Header("Operator Panel (Left)")]
     [SerializeField] private Image imageRingGauge;                      // 원형 링 게이지 (Filled)
@@ -90,19 +92,25 @@ public class LobbyMainUI : MonoBehaviour
         buttonSortie.onClick.AddListener(OpenSortiePrepare);
         buttonDiverRecord.onClick.AddListener(OpenDiverRecord);
         buttonStorage.onClick.AddListener(OpenStorageInventory);
-        buttonCharInteraction.onClick.AddListener(ShowCharDialogue);
+        buttonCharInteraction.onClick.AddListener(CharInteractClick);
+        buttonMail.onClick.AddListener(OpenMail);
+        buttonNotice.onClick.AddListener(OpenNotice);
+        buttonOption.onClick.AddListener(OpenOption);
 
         // UI 활성화 시에도 정보 업데이트
         Refresh();
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
-        // 오브젝트 파괴 시 이벤트 해제
+        // 오브젝트 비활성화 시 이벤트 해제
         buttonSortie.onClick.RemoveListener(OpenSortiePrepare);
         buttonDiverRecord.onClick.RemoveListener(OpenDiverRecord);
         buttonStorage.onClick.RemoveListener(OpenStorageInventory);
-        buttonCharInteraction.onClick.RemoveListener(ShowCharDialogue);
+        buttonCharInteraction.onClick.RemoveListener(CharInteractClick);
+        buttonMail.onClick.RemoveListener(OpenMail);
+        buttonNotice.onClick.RemoveListener(OpenNotice);
+        buttonOption.onClick.RemoveListener(OpenOption);
     }
 
     /* 로비의 정보들을 갱신 */
@@ -164,6 +172,14 @@ public class LobbyMainUI : MonoBehaviour
                 sliderLinkRateLevel.value = 1.0f;
             }
         }
+    }
+
+    /* 캐릭터 이미지를 클릭하여 대화 창 스크립트 출력 */
+    private void CharInteractClick()
+    {
+        // 상호작용 클릭 사운드를 출력하고 스크립트 보여주기 메소드를 발동
+        GlobalEventBus.OnInteractAudio?.Invoke();
+        ShowCharDialogue();
     }
 
     /* 캐릭터 대화 창 정보 및 스크립트 보여주기 시작 */
@@ -270,7 +286,7 @@ public class LobbyMainUI : MonoBehaviour
     public void OpenSortiePrepare()
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         GlobalEventBus.OnOpenPrepareUI?.Invoke();
     }
@@ -279,7 +295,7 @@ public class LobbyMainUI : MonoBehaviour
     public void OpenDiverRecord()
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         GlobalEventBus.OnOpenRecordUI?.Invoke();
     }
@@ -288,8 +304,30 @@ public class LobbyMainUI : MonoBehaviour
     public void OpenStorageInventory()
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         GlobalEventBus.OnOpenStorageUI?.Invoke();
+    }
+
+    /* 메일 버튼 클릭 동작 */
+    public void OpenMail()
+    {
+        // 임시 예외처리: 비활성화 버튼 클릭 사운드를 출력
+        GlobalEventBus.OnClickAudio?.Invoke(false);
+        Debug.Log("LobbyUI: 메일 기능은 P1에서 잠금 상태입니다.");
+    }
+    /* 공지 버튼 클릭 동작 */
+    public void OpenNotice()
+    {
+        // 임시 예외처리: 비활성화 버튼 클릭 사운드를 출력
+        GlobalEventBus.OnClickAudio?.Invoke(false);
+        Debug.Log("LobbyUI: 공지 기능은 P1에서 잠금 상태입니다.");
+    }
+    /* 옵션 버튼 클릭 동작 */
+    public void OpenOption()
+    {
+        // 임시 예외처리: 비활성화 버튼 클릭 사운드를 출력
+        GlobalEventBus.OnClickAudio?.Invoke(false);
+        Debug.Log("LobbyUI: 옵션 기능은 P1에서 잠금 상태입니다.");
     }
 }

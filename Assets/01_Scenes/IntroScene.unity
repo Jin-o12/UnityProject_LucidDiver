@@ -674,7 +674,7 @@ GameObject:
   - component: {fileID: 398019822}
   - component: {fileID: 398019821}
   m_Layer: 0
-  m_Name: == Audio ==
+  m_Name: ==Audio==
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1104,7 +1104,9 @@ MonoBehaviour:
     type: 2}
   AmbMixerGroup: {fileID: -2492169489151189591, guid: 457f0b17c866233459bf058ad2112051,
     type: 2}
-  Click_AudioIDPool: 982a0000992a00009a2a00009b2a00009c2a00009d2a0000
+  ActiveButtonClick_AudioID: 10904
+  NonActiveButtonClick_AudioID: 10906
+  InteractClick_AudioID: 10909
   Chase_AudioIDPool: dd270000de270000
 --- !u!4 &398019826
 Transform:

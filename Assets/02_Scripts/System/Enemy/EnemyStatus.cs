@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 public class EnemyStatus : MonoBehaviour, IEffectReceiver
@@ -24,10 +24,11 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
     public float atkValue { get; private set; }         // 공격력
     public float defValue { get; private set; }         // 방어력
 
-    public event Action OnLocalDeath;                   // 이 적 자신이 죽었을 때만 호출되는 로컬 사망 이벤트
+    public int[] Hit_AudioIDPool = null;                    // 적 피격 사운드 ID 리스트
+    public event Action OnLocalDeath;                       // 이 적 자신이 죽었을 때만 호출되는 로컬 사망 이벤트
     public event Action<float, float> OnLocalHealthChanged; // 이 적 자신에게 연결된 HP UI만 갱신하기 위한 로컬 체력 이벤트
 
-    private EntityIdentity entityIdentity;              // 런타임 식별 번호를 함께 맞춰 줄 식별 컴포넌트
+    private EntityIdentity entityIdentity;                  // 런타임 식별 번호를 함께 맞춰 줄 식별 컴포넌트
 
     public void SetIsAttacking(bool attacking)
     {
@@ -102,7 +103,13 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
         }
 
         if (hpCurrent < previousHp)
+        {
             VFXService.Instance?.Play(GameplayVFXIds.EnemyHit, transform.position, transform.rotation);
+
+            // 피해 입을 시 사운드 재생 이벤트
+            int hitID = Hit_AudioIDPool[UnityEngine.Random.Range(0, Hit_AudioIDPool.Length)];
+            GlobalEventBus.OnPlay3DSoundRequested?.Invoke(hitID, transform.position);
+        }
     }
 
     public event Action<Transform, float> OnAggroApplied;       // 강제 추적 타겟 지정 이벤트

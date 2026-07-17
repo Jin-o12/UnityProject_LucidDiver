@@ -2419,6 +2419,8 @@ MonoBehaviour:
   textShardAmount: {fileID: 1719495754809478338}
   textGoldAmount: {fileID: 7796476400279574809}
   buttonMail: {fileID: 3152656961136376048}
+  buttonNotice: {fileID: 3581529155871723152}
+  buttonOption: {fileID: 3482383939599181785}
   imageRingGauge: {fileID: 1208615482141471847}
   textRingValue: {fileID: 6754793539050471063}
   textOperatorLevel: {fileID: 5896441018549383069}
