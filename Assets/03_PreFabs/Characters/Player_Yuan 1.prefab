@@ -9,9 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5579393903464097122}
+  - component: {fileID: 2454713954707812803}
   m_Layer: 3
   m_Name: Player_Yuan 1
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -33,6 +34,20 @@ Transform:
   - {fileID: 212517452907667680}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2454713954707812803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1261954833884686477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbc01417524d8774186884ead35056fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  entityID: 1
+  entityFaction: 0
 --- !u!1 &1580857734339205167
 GameObject:
   m_ObjectHideFlags: 0
@@ -472,7 +487,7 @@ GameObject:
   - component: {fileID: 7874499396653359493}
   - component: {fileID: 7503575202836226189}
   - component: {fileID: 9030946779293927705}
-  - component: {fileID: 1544915511366390163}
+  - component: {fileID: 5750916021913036948}
   - component: {fileID: 4108988022212007405}
   - component: {fileID: 7677297852094990835}
   - component: {fileID: 7278962823690556463}
@@ -488,7 +503,7 @@ GameObject:
   - component: {fileID: 4745586612111487967}
   m_Layer: 3
   m_Name: Player_Yuan
-  m_TagString: Player
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -731,8 +746,8 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 0
---- !u!65 &1544915511366390163
-BoxCollider:
+--- !u!136 &5750916021913036948
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -749,9 +764,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0.09}
 --- !u!120 &4108988022212007405
 LineRenderer:
   serializedVersion: 2
@@ -928,12 +945,11 @@ MonoBehaviour:
   evadeTime: 0
   evadeMP: 0
   evadeCooltime: 0
+  movementCollider: {fileID: 5750916021913036948}
   movementObstacleMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1024
   movementWallBuffer: 0.05
-  evadeCornerProbeRadius: 0.25
-  evadeCornerProbeHeight: 0.5
   FootStep_AudioIDPool: 0a2900000b2900000c2900000d2900000e290000
   InDoor_FootStep_AudioIDPool: 0529000006290000072900000829000009290000
   Evade_AudioIDPool: ce290000
@@ -1304,7 +1320,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 1, y: 2, z: 1}
   m_Center: {x: 0, y: 1, z: 0}

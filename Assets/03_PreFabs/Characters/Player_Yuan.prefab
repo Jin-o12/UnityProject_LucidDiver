@@ -45,8 +45,8 @@ Light:
   m_Type: 0
   m_Shape: 0
   m_Color: {r: 0.8509804, g: 0.9137255, b: 1, a: 1}
-  m_Intensity: 3
-  m_Range: 10
+  m_Intensity: 20
+  m_Range: 20
   m_SpotAngle: 100
   m_InnerSpotAngle: 100
   m_CookieSize: 10
@@ -408,8 +408,8 @@ Light:
   m_Type: 0
   m_Shape: 0
   m_Color: {r: 0.8509804, g: 0.9137255, b: 1, a: 1}
-  m_Intensity: 10
-  m_Range: 10
+  m_Intensity: 30
+  m_Range: 30
   m_SpotAngle: 45.086464
   m_InnerSpotAngle: 45.086464
   m_CookieSize: 10
@@ -492,6 +492,7 @@ GameObject:
   - component: {fileID: 954821434801016667}
   - component: {fileID: 3197383195713597290}
   - component: {fileID: 8911344894910441550}
+  - component: {fileID: 5952568731164367092}
   - component: {fileID: 1607228738055200154}
   - component: {fileID: 7647394893422696114}
   - component: {fileID: 5413406790877702969}
@@ -756,6 +757,29 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!136 &5952568731164367092
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6496859401421214368}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!65 &1607228738055200154
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -773,7 +797,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 1, y: 2, z: 1}
   m_Center: {x: 0, y: 1, z: 0}
@@ -953,12 +977,11 @@ MonoBehaviour:
   evadeTime: 0
   evadeMP: 0
   evadeCooltime: 0
+  movementCollider: {fileID: 5952568731164367092}
   movementObstacleMask:
     serializedVersion: 2
-    m_Bits: 0
-  movementWallBuffer: 0.05
-  evadeCornerProbeRadius: 0.25
-  evadeCornerProbeHeight: 0.5
+    m_Bits: 1024
+  movementWallBuffer: 0.2
   FootStep_AudioIDPool: 0a2900000b2900000c2900000d2900000e290000
   InDoor_FootStep_AudioIDPool: 0529000006290000072900000829000009290000
   Evade_AudioIDPool: ce290000
