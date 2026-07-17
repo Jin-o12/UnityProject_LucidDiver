@@ -444,7 +444,11 @@ public sealed class TutorialManager : MonoBehaviour
         pausedByTutorial = true;
 
         inputReader = FindFirstObjectByType<LocalInputReader>();
-        inputReader?.SwitchToUIMap();
+        if (inputReader != null)
+        {
+            inputReader.SetGameplayInputBlocked(true);
+            inputReader.SwitchToUIMap();
+        }
     }
 
     private void RestoreGameplay()
@@ -465,7 +469,10 @@ public sealed class TutorialManager : MonoBehaviour
             if (isActiveAndEnabled)
                 restoreInputRoutine = StartCoroutine(RestorePlayerInputMapNextFrame(readerToRestore));
             else
+            {
                 readerToRestore.SwitchToPlayerMap();
+                readerToRestore.SetGameplayInputBlocked(false);
+            }
         }
 
         inputReader = null;
@@ -476,7 +483,13 @@ public sealed class TutorialManager : MonoBehaviour
         yield return null;
 
         if (readerToRestore != null)
+        {
             readerToRestore.SwitchToPlayerMap();
+
+            // NEXT/확인 클릭이 같은 프레임의 공격 입력으로 이어지지 않도록 한 프레임 더 입력 잠금을 유지합니다.
+            yield return null;
+            readerToRestore.SetGameplayInputBlocked(false);
+        }
 
         restoreInputRoutine = null;
     }
