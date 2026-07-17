@@ -933,8 +933,9 @@ public class StorageInventoryUI : MonoBehaviour
         // 창고 UI도 인게임 인벤토리와 같은 슬롯 프리팹을 사용하므로,
         // TID로 아이템 등급을 조회해 레어도 프레임까지 함께 갱신합니다.
         ItemData itemData = GetItemData(slotData.TID);
+        itemCategory category = itemData != null ? itemData.category : itemCategory.empty;
         ItemGrade grade = itemData != null ? itemData.itemGrade : ItemGrade.empty;
-        slotUI.UpdateSlot(slotData.amount, GetIcon(slotData.TID), grade, SlotType.inventory);
+        slotUI.UpdateSlot(slotData.amount, GetIcon(slotData.TID), category, grade, SlotType.inventory);
     }
 
     private void RefreshQuickSlot(int index, int tid)

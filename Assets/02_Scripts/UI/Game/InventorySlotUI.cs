@@ -11,12 +11,13 @@ using UnityEngine.EventSystems;
 public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("슬롯 UI 요소")]
-    [SerializeField] private Image slotFrameImage; // 기본 빈 슬롯 이미지
-    [SerializeField] private Image rarityFrameImage; // 등급별 슬롯 이미지
-    [SerializeField] private Image itemImg;
-    [SerializeField] private TMP_Text itemStack;
-    [SerializeField] private Transform itemInfo;
-    [SerializeField] private SlotType slotType;     //슬롯 종류
+    [SerializeField] private Image slotFrameImage;      // 기본 빈 슬롯 이미지
+    [SerializeField] private Image rarityFrameImage;    // 등급별 슬롯 이미지
+    [SerializeField] private Image itemImg;             // 아이템 아이콘 이미지
+    [SerializeField] private TMP_Text itemStack;        // 아이템 개수 출력
+    [SerializeField] private Transform itemInfo;        // 아이템 아이콘 위치
+    [SerializeField] private SlotType slotType;         // 슬롯 종류
+    [SerializeField] private Image categoryIconImage;   // 카테고리 아이콘 이미지
 
     [Header("등급별 슬롯 이미지")]
     [SerializeField] private Sprite emptySlotSprite;
@@ -25,6 +26,12 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     [SerializeField] private Sprite rareSlotSprite;
     [SerializeField] private Sprite epicSlotSprite;
     [SerializeField] private Sprite legendSlotSprite;
+
+    [Header("카테고리별 아이콘 이미지")]
+    [SerializeField] private Sprite artifactSprite;
+    [SerializeField] private Sprite consumeSprite;
+    [SerializeField] private Sprite memorySprite;
+    [SerializeField] private Sprite idleSprite;
 
     private InventoryUI inventoryUI;
 
@@ -84,15 +91,15 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     public void Initialize(int index)
     {
         slotIndex = index;
-        UpdateSlot(0, null, ItemGrade.empty, SlotType.empty);
+        UpdateSlot(0, null, itemCategory.idle, ItemGrade.empty, SlotType.empty);
     }
 
-    public void UpdateSlot(int stack, Sprite sprite, SlotType _type = SlotType.inventory)
+    public void UpdateSlot(int stack, Sprite sprite, itemCategory _category, SlotType _type = SlotType.inventory)
     {
-        UpdateSlot(stack, sprite, ItemGrade.empty, _type);
+        UpdateSlot(stack, sprite, _category, ItemGrade.empty, _type);
     }
 
-    public void UpdateSlot(int stack, Sprite sprite, ItemGrade grade, SlotType _type)
+    public void UpdateSlot(int stack, Sprite sprite, itemCategory _category, ItemGrade grade, SlotType _type)
     {
         if (stack <= 0 || sprite == null)
         {
@@ -100,6 +107,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             itemStack.text = "";
             slotType = SlotType.empty;
             ApplySlotFrame(ItemGrade.empty);
+            ApplyCategoryIcon(itemCategory.empty);
             return;
         }
 
@@ -108,6 +116,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         itemStack.text = stack.ToString();
         slotType = _type;
         ApplySlotFrame(grade);
+        ApplyCategoryIcon(_category);
     }
 
     /// <summary>
@@ -158,6 +167,28 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         };
     }
 
+    // 아이템 종류에 따라 카테고리 라벨 아이콘을 출력
+    private void ApplyCategoryIcon(itemCategory category)
+    {
+        // 슬롯이 빈 칸이면 카테고리 라벨을 비활성화한다
+        if (categoryIconImage == null || category == itemCategory.empty)
+        {
+            categoryIconImage.enabled = false;
+            return;
+        }
+
+        // 아이템 카테고리 종류별 라벨 아이콘을 출력한다
+        categoryIconImage.enabled = true;
+        categoryIconImage.sprite = category switch
+        {
+            itemCategory.artifact   => artifactSprite,
+            itemCategory.consume    => consumeSprite,
+            itemCategory.memory     => memorySprite,
+            itemCategory.idle       => idleSprite,
+            _                       => null
+        };
+    }
+
     // 왼쪽 버튼 더블클릭으로 인벤토리 이동을 처리
     public void OnPointerClick(PointerEventData eventData)
     {
@@ -184,6 +215,8 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         // 체스트가 열려 있을 때만 인벤토리 -> 체스트 이동을 허용한다.
         if (ChestUI.ActiveUI != null)
             ChestUI.ActiveUI.TryMoveFromInventory(slotIndex);
+        // 체스트가 닫혀 있을 때에는 인벤토리 → 퀵슬롯 이동을 실행한다.
+        else { }
     }
 
     public void OnBeginDrag(PointerEventData eventData)

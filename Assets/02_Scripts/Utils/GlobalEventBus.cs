@@ -90,6 +90,9 @@ public class GlobalEventBus
     public static Action OnTooltipUIClose;                                  // 아이템 툴팁 UI를 닫음
     public static Action<bool> OnClickAudio;                                // UI 버튼 클릭 시 오디오 출력 요청: Action<유효한 클릭인지>
     public static Action OnInteractAudio;                                   // 캐릭터 상호작용 클릭 시 오디오 출력 요청
+    public static Action<float> OnPrintSprintCooltime;                      // 달리기 불가 상태 회복 시간 시작: Action<sprintRecoverTime>
+    public static Action<float> OnPrintSkillCooltime;                       // 스킬 쿨타임 시작: Action<skillCooltime>
+    public static Action<float> OnPrintEvadeCooltime;                       // 구르기 시작: Action<evadeCooltime>
 
     /// <summary>
     /// 사운드 관리 이벤트
