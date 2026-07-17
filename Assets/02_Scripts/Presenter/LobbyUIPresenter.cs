@@ -1,6 +1,7 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class LobbyUIPresenter : MonoBehaviour
 {
@@ -12,6 +13,9 @@ public class LobbyUIPresenter : MonoBehaviour
     private readonly int sortieBGMAudioID = 10005;  // 출격 준비 BGM ID
     private readonly int recordBGMAudioID = 10008;  // 기록 카드 BGM ID
 
+    private InputAction openSettingAction;          // 설정 창 열기 이벤트
+    private SettingUI settingUI;                    // 설정 UI 캐시
+
     private void OnEnable()
     {
         /// 이벤트 구독 ///
@@ -20,6 +24,13 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenRecordUI += OpenDiverRecord;
         GlobalEventBus.OnOpenStorageUI += OpenStorageInventory;
         GlobalEventBus.OnOpenRecordCardPopUpUI += OpenRecordCardPopUp;
+
+        openSettingAction = InputManager.Instance.GetAction("Lobby", "Setting");
+        if (openSettingAction != null)
+        {
+            openSettingAction.Enable();
+            openSettingAction.performed += OpenSettingUI;
+        }
     }
 
     private void OnDisable()
@@ -30,6 +41,12 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenRecordUI -= OpenDiverRecord;
         GlobalEventBus.OnOpenStorageUI -= OpenStorageInventory;
         GlobalEventBus.OnOpenRecordCardPopUpUI -= OpenRecordCardPopUp;
+
+        if (openSettingAction != null)
+        {
+            openSettingAction.performed -= OpenSettingUI;
+            openSettingAction.Disable();
+        }
     }
 
     private void Start()
@@ -94,5 +111,24 @@ public class LobbyUIPresenter : MonoBehaviour
 
         // 기록 제목과 캐릭터 ID를 팝업에 전달한다
         popup.SetData(title, tid);
+    }
+
+    /* 설졍 UI 열기 */
+    public void OpenSettingUI(InputAction.CallbackContext context)
+    {
+        if(settingUI==null)
+        {
+            settingUI = uiManager.Open<SettingUI>();
+            return;
+        }
+
+        if(settingUI.gameObject.activeInHierarchy == false)
+        {
+            uiManager.Open<SettingUI>();
+        }
+        else
+        {
+            uiManager.Close<SettingUI>();
+        }
     }
 }
