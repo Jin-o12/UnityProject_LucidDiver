@@ -248,6 +248,8 @@ public sealed class TutorialManager : MonoBehaviour
 
     private bool ShowGuide(TutorialGuideData guide, Action completed = null)
     {
+        GlobalEventBus.OnMouseLocked?.Invoke(false);
+
         if (guide == null || isShowing || popup == null)
             return false;
 
@@ -336,6 +338,12 @@ public sealed class TutorialManager : MonoBehaviour
 
         if (completedGuide.NextGuideID > 0 && guideById.TryGetValue(completedGuide.NextGuideID, out TutorialGuideData nextGuide))
             RequestGuide(nextGuide);
+
+        // 다음 연쇄 대사가 없어 묶음이 완전히 끝났으면 커서를 다시 잠급니다.
+        if (!isShowing)
+        {
+            GlobalEventBus.OnMouseLocked?.Invoke(true);
+        }
     }
 
     private void CompleteLegacyPopup()

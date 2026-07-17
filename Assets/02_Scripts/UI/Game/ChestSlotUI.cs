@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -120,6 +120,10 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandle
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        // 드래그 중에는 툴팁을 표시하지 않습니다.
+        if (InventorySlotUI.AnySlotDragging)
+            return;
+
         //포인터가 슬롯 UI에 들어오면 아이템 데이터를 읽는다
         GlobalEventBus.OnTooltipUIOpen?.Invoke(SlotType.chest, slotIndex);
     }

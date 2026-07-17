@@ -71,6 +71,7 @@ public class GlobalEventBus
     public static Action<IInteractable, int> OnItemBoxOpened;       // 상자와 상호작용하여 UI를 열었을 시: Action<열린 상자, 상호작용한 플레이어 ID>
     public static Action<NoiseStimulus> OnNoiseRequested;           // 노이즈 시스템에 소음 발생을 요청: Action<요청된 소음 데이터>
     public static Action<NoiseStimulus> OnNoiseEmitted;             // 노이즈 매니저가 실제 처리한 소음 전달: Action<확정된 소음 데이터>
+    public static Action<bool> OnMouseLocked;                       // 마우스 잠김/풀림 이벤트: Action<isLocked>
 
     /// <summary>
     /// UI 관리 이벤트

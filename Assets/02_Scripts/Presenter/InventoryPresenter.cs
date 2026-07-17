@@ -257,6 +257,8 @@ public class InventoryPresenter : MonoBehaviour
     /// </summary>
     public void OpenInventoryUI()
     {
+        GlobalEventBus.OnMouseLocked?.Invoke(false);
+
         // 플레이어 상태가 idle이 아니면 인벤토리 조작을 막는다.
         if (playerStatus.nowState != PlayerStatus.livingState.idle || playerStatus.IsSessionEnded)
             return;
@@ -324,6 +326,8 @@ public class InventoryPresenter : MonoBehaviour
         // 일반 플레이 중에 닫은 경우에만 플레이어 입력으로 복귀한다.
         if (!playerStatus.IsSessionEnded)
             localInputReader.SwitchToPlayerMap();
+
+        GlobalEventBus.OnMouseLocked?.Invoke(true);
     }
 
     /// <summary>
