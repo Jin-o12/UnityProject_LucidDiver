@@ -10,10 +10,40 @@ public sealed class TutorialTrigger : MonoBehaviour
     [SerializeField] private string fallbackTutorialId = "";
     [SerializeField] private bool triggerOnce = true;
 
+    [Header("전투 구간 차단 옵션")]
+    [SerializeField] private bool useCombatBlockers = false;
+    [SerializeField] private string combatBlockerNamePrefix = "CombatCollider";
+    [SerializeField] private bool disableCombatBlockersOnAwake = true;
+    [SerializeField] private bool releaseCombatBlockersOnEnemyDead = true;
+
     private bool consumed;
+    private bool combatBlockersActive;
+    private bool combatBlockersCleared;
+    private Collider[] combatBlockers;
 
     public string TriggerValue => string.IsNullOrWhiteSpace(triggerValue) ? gameObject.name : triggerValue;
     public bool IsConsumed => consumed;
+
+    private void Awake()
+    {
+        CacheCombatBlockers();
+
+        // 전투 구간 차단 콜라이더는 플레이어가 해당 트리거에 진입하기 전까지 꺼 둡니다.
+        if (useCombatBlockers && disableCombatBlockersOnAwake)
+            SetCombatBlockers(false);
+    }
+
+    private void OnEnable()
+    {
+        if (useCombatBlockers && releaseCombatBlockersOnEnemyDead)
+            GlobalEventBus.OnEnemyDead += HandleEnemyDead;
+    }
+
+    private void OnDisable()
+    {
+        if (useCombatBlockers && releaseCombatBlockersOnEnemyDead)
+            GlobalEventBus.OnEnemyDead -= HandleEnemyDead;
+    }
 
     private void Reset()
     {
@@ -24,7 +54,14 @@ public sealed class TutorialTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if ((triggerOnce && consumed) || !IsPlayer(other))
+        if (!IsPlayer(other))
+            return;
+
+        // 전투 실습 차단은 안내 팝업 성공 여부와 분리해서, 트리거에 닿는 즉시 먼저 켭니다.
+        if (useCombatBlockers && !combatBlockersActive && !combatBlockersCleared)
+            ActivateCombatBlockers();
+
+        if (triggerOnce && consumed)
             return;
 
         TutorialManager manager = TutorialManager.Instance ?? FindFirstObjectByType<TutorialManager>();
@@ -35,12 +72,72 @@ public sealed class TutorialTrigger : MonoBehaviour
         bool handledByFallback = !handledByCondition && !string.IsNullOrWhiteSpace(fallbackTutorialId) && manager.Show(fallbackTutorialId);
 
         if (handledByCondition || handledByFallback)
+        {
             consumed = triggerOnce;
+        }
     }
 
     public void ResetTrigger()
     {
         consumed = false;
+        combatBlockersActive = false;
+        combatBlockersCleared = false;
+
+        if (useCombatBlockers)
+            SetCombatBlockers(false);
+    }
+
+    private void ActivateCombatBlockers()
+    {
+        if (!useCombatBlockers)
+            return;
+
+        SetCombatBlockers(true);
+        combatBlockersActive = true;
+    }
+
+    private void HandleEnemyDead(int enemyId)
+    {
+        if (!useCombatBlockers || !combatBlockersActive)
+            return;
+
+        // 전투 실습 구간에서는 적 처치 이벤트를 클리어 조건으로 보고 차단을 해제합니다.
+        SetCombatBlockers(false);
+        combatBlockersActive = false;
+        combatBlockersCleared = true;
+    }
+
+    private void CacheCombatBlockers()
+    {
+        if (!useCombatBlockers)
+            return;
+
+        Collider[] childColliders = GetComponentsInChildren<Collider>(true);
+        combatBlockers = System.Array.FindAll(childColliders, IsCombatBlocker);
+    }
+
+    private bool IsCombatBlocker(Collider target)
+    {
+        return target != null &&
+               target.gameObject != gameObject &&
+               target.gameObject.name.StartsWith(combatBlockerNamePrefix, System.StringComparison.Ordinal);
+    }
+
+    private void SetCombatBlockers(bool enabled)
+    {
+        if (combatBlockers == null || combatBlockers.Length == 0)
+            CacheCombatBlockers();
+
+        if (combatBlockers == null)
+            return;
+
+        foreach (Collider blocker in combatBlockers)
+        {
+            if (blocker == null)
+                continue;
+
+            blocker.enabled = enabled;
+        }
     }
 
     private static bool IsPlayer(Collider other)

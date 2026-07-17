@@ -13,6 +13,7 @@ public class LocalInputReader : MonoBehaviour
     public event Action OnInventoryOpenRequested;
     public event Action OnInventoryCloseRequested;
     private bool isInventoryOpen;
+    private bool isGameplayInputBlocked;
     public bool isSprint;
 
     private void Awake()
@@ -33,6 +34,12 @@ public class LocalInputReader : MonoBehaviour
     /* 플레이어 이동 입력 처리 */
     public void OnMove(InputAction.CallbackContext context)
     {
+        if (isGameplayInputBlocked)
+        {
+            GlobalEventBus.OnPlayerMove?.Invoke(Vector2.zero);
+            return;
+        }
+
         Vector2 moveInput = context.ReadValue<Vector2>();
         
         GlobalEventBus.OnPlayerMove?.Invoke(moveInput);
@@ -41,6 +48,9 @@ public class LocalInputReader : MonoBehaviour
     /* 플레이어 공격 입력 처리 */
     public void OnAttack(InputAction.CallbackContext context)
     {
+        if (isGameplayInputBlocked)
+            return;
+
         if (isInventoryOpen)
             return;
 
@@ -53,6 +63,9 @@ public class LocalInputReader : MonoBehaviour
     /* 플레이어 스킬 입력 처리 */
     public void OnActiveSkill(InputAction.CallbackContext context)
     {
+        if (isGameplayInputBlocked)
+            return;
+
         //인벤토리 메뉴 오픈 중에는 스킬이 발동하지 않도록 잠금
         if (isInventoryOpen)
             return;
@@ -66,6 +79,9 @@ public class LocalInputReader : MonoBehaviour
     /* 플레이어 상호작용 입력 처리 */
     public void OnInteract(InputAction.CallbackContext context)
     {
+        if (isGameplayInputBlocked)
+            return;
+
         if (context.performed)
         {
             GlobalEventBus.OnInteractionInput?.Invoke();
@@ -74,6 +90,9 @@ public class LocalInputReader : MonoBehaviour
 
     public void OnAimPosition(InputAction.CallbackContext context)
     {
+        if (isGameplayInputBlocked)
+            return;
+
         // 마우스의 2D 픽셀 좌표를 읽어서 이벤트 버스로 전송
         Vector2 mousePos = context.ReadValue<Vector2>();
         GlobalEventBus.OnMousePositionInput?.Invoke(mousePos);
@@ -81,6 +100,9 @@ public class LocalInputReader : MonoBehaviour
 
     public void OpenInventoryUI(InputAction.CallbackContext context)
     {
+        if (isGameplayInputBlocked)
+            return;
+
         if (context.performed)
         {
             if (isInventoryOpen)
@@ -92,6 +114,9 @@ public class LocalInputReader : MonoBehaviour
 
     public void CloseInventoryUI(InputAction.CallbackContext context)
     {
+        if (isGameplayInputBlocked)
+            return;
+
         if (context.performed)
         {
             OnInventoryCloseRequested?.Invoke();
@@ -100,6 +125,9 @@ public class LocalInputReader : MonoBehaviour
 
     public void OnUseQuickSlot(InputAction.CallbackContext context)
     {
+        if (isGameplayInputBlocked)
+            return;
+
         if (isInventoryOpen)
             return;
 
@@ -117,6 +145,13 @@ public class LocalInputReader : MonoBehaviour
     /* 플레이어 달리기 입력 처리 */
     public void OnSprint(InputAction.CallbackContext context)
     {
+        if (isGameplayInputBlocked)
+        {
+            isSprint = false;
+            GlobalEventBus.OnSprintInput?.Invoke(false);
+            return;
+        }
+
         // Sprint 키 입력 시작 시 및 입력 유지 중 달리기 상태를 true로
         if (context.started || context.performed)
         {
@@ -134,6 +169,9 @@ public class LocalInputReader : MonoBehaviour
     /* 플레이어 구르기 입력 처리 */
     public void OnEvade(InputAction.CallbackContext context)
     {
+        if (isGameplayInputBlocked)
+            return;
+
         if (context.performed)
         {
             GlobalEventBus.OnEvadeRequested?.Invoke();
@@ -155,6 +193,19 @@ public class LocalInputReader : MonoBehaviour
     public void SwitchToPlayerMap()
     {
         playerInput.SwitchCurrentActionMap("Player");
+    }
+
+    public void SetGameplayInputBlocked(bool isBlocked)
+    {
+        isGameplayInputBlocked = isBlocked;
+
+        // 튜토리얼 UI가 열리는 순간 남아 있던 이동/달리기 입력이 유지되지 않도록 즉시 정지시킵니다.
+        if (!isBlocked)
+            return;
+
+        isSprint = false;
+        GlobalEventBus.OnSprintInput?.Invoke(false);
+        GlobalEventBus.OnPlayerMove?.Invoke(Vector2.zero);
     }
 
     public void SetInventoryOpenState(bool isOpen)
