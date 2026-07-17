@@ -1959,8 +1959,8 @@ MonoBehaviour:
   videoRenderImage: {fileID: 2091344334}
   initialPVClip: {fileID: 32900000, guid: bfe13100f0f744842b5764d03f72d6de, type: 3}
   loopTitleClip: {fileID: 32900000, guid: cc8f1797b19b000488c222c1759f5ac8, type: 3}
-  forcePlayPV: 1
-  useTutorialScene: 1
+  forcePlayPV: 0
+  useTutorialScene: 0
   resetTutorialCompletedOnIntro: 1
   skipGuidePanel: {fileID: 1903650880}
   titleUIPanel: {fileID: 1748444870}
@@ -2222,6 +2222,8 @@ GameObject:
   - component: {fileID: 1588521464}
   - component: {fileID: 1588521463}
   - component: {fileID: 1588521462}
+  - component: {fileID: 1588521467}
+  - component: {fileID: 1588521468}
   m_Layer: 0
   m_Name: ==Manager==
   m_TagString: Untagged
@@ -2308,6 +2310,7 @@ MonoBehaviour:
   - {fileID: 1625286815563743019, guid: a49f6e1a3a95bb14f9c1e452bbdc1252, type: 3}
   - {fileID: 304085410330346154, guid: 3504b6c206946784d9274301299c9a4f, type: 3}
   - {fileID: 8372227223916743333, guid: 5c44a7108387eaf43bddb46a1e74d272, type: 3}
+  - {fileID: 2267654377530830183, guid: 46565bd3e6d0b9c459f207e353919298, type: 3}
 --- !u!114 &1588521465
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2335,6 +2338,236 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1588521467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1588521461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73965ff17cc35624e993fa25ec943aa5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerInput: {fileID: 1588521468}
+--- !u!114 &1588521468
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1588521461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Actions: {fileID: -944628639613478452, guid: 2916c3af5b82a7949a06336baed5ee16,
+    type: 3}
+  m_NotificationBehavior: 2
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969, guid: 1ca9f47baa802824c8a073c57f7dc6db,
+          type: 3}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnMove
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 5896a782-7853-4b6f-9529-daa6dcdf959f
+    m_ActionName: Player/Move[/Keyboard/w,/Keyboard/upArrow,/Keyboard/s,/Keyboard/downArrow,/Keyboard/a,/Keyboard/leftArrow,/Keyboard/d,/Keyboard/rightArrow]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969, guid: 1ca9f47baa802824c8a073c57f7dc6db,
+          type: 3}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnAimPosition
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: a90752fb-8abd-40a2-a3bd-c637b0004916
+    m_ActionName: Player/Look[/Mouse/delta,/Touchscreen/delta]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969, guid: 1ca9f47baa802824c8a073c57f7dc6db,
+          type: 3}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnAttack
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 5882f5a2-ea0a-458f-b557-22fbdd151208
+    m_ActionName: Player/Fire[/Mouse/leftButton,/Touchscreen/primaryTouch/tap]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969, guid: 1ca9f47baa802824c8a073c57f7dc6db,
+          type: 3}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnInteract
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 9aac0982-8927-4d69-9e91-86231b3dafce
+    m_ActionName: Player/Interaction[/Mouse/leftButton,/Keyboard/f,/Touchscreen/primaryTouch/tap]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969, guid: 1ca9f47baa802824c8a073c57f7dc6db,
+          type: 3}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: CloseInventoryUI
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 0294f856-6f5e-4086-9e07-201189004fbd
+    m_ActionName: UI/Inventory[/Keyboard/e]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969, guid: 1ca9f47baa802824c8a073c57f7dc6db,
+          type: 3}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OpenInventoryUI
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 0afa2470-9d36-4c74-aef6-7b04beeb1dc2
+    m_ActionName: Player/Inventory[/Keyboard/e]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969, guid: 1ca9f47baa802824c8a073c57f7dc6db,
+          type: 3}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnUseQuickSlot
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: cab83422-cfb2-4925-af40-a30c1c892a2a
+    m_ActionName: Player/QuickSlot[/Keyboard/1,/Keyboard/2,/Keyboard/3]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969, guid: 1ca9f47baa802824c8a073c57f7dc6db,
+          type: 3}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnSprint
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 5aabe901-952f-4ae2-9f25-2ee5d8eb13a4
+    m_ActionName: Player/Sprint[/Keyboard/leftShift]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969, guid: 1ca9f47baa802824c8a073c57f7dc6db,
+          type: 3}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnEvade
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: f078f8e9-0e24-4b57-a420-e85d6597076e
+    m_ActionName: Player/Evade[/Mouse/rightButton]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5413406790877702969, guid: 1ca9f47baa802824c8a073c57f7dc6db,
+          type: 3}
+        m_TargetAssemblyTypeName: LocalInputReader, SystemAD
+        m_MethodName: OnActiveSkill
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: d446ab80-152d-4972-961f-31cc16d2abb6
+    m_ActionName: Player/ActiveSkill[/Keyboard/q]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 11500000, guid: 3d2f0376aefd01f46a4b080cd623d6b7, type: 3}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 4a8f36db-325c-4b78-9315-62bd5a0cad72
+    m_ActionName: Lobby/Setting[/Keyboard/escape]
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
+  m_DefaultActionMap: Player
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}
 --- !u!1 &1725483870
 GameObject:
   m_ObjectHideFlags: 0
