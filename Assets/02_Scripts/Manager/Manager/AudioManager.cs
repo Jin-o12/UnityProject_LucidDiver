@@ -32,12 +32,14 @@ public class AudioManager : MonoBehaviour
     [Range(0f, 1f)][SerializeField] private float SFXVolume = 1.0f;     //SFX 음량
     [Range(0f, 1f)][SerializeField] private float UIVolume = 1.0f;      //UI 사운드 음량
     [Range(0f, 1f)][SerializeField] private float AmbVolume = 1.0f;     //환경 사운드 음량
+    
     [Header("음량 기본값")]
-    [Range(0f, 1f)][SerializeField] private float defaultMasterVolume = 1.0f;   //전체 사운드 음량 기본값
-    [Range(0f, 1f)][SerializeField] private float defaultBGMVolume = 1.0f;      //BGM 음량 기본값
-    [Range(0f, 1f)][SerializeField] private float defaultSFXVolume = 1.0f;      //SFX 음량 기본값
-    [Range(0f, 1f)][SerializeField] private float defaultUIVolume = 1.0f;       //UI 사운드 음량 기본값
-    [Range(0f, 1f)][SerializeField] private float defaultAmbVolume = 1.0f;      //환경 사운드 음량 기본값
+    [Range(0f, 1f)][SerializeField] private float defaultMasterVolume = 0.5f;   //전체 사운드 음량 기본값
+    [Range(0f, 1f)][SerializeField] private float defaultBGMVolume = 0.5f;      //BGM 음량 기본값
+    [Range(0f, 1f)][SerializeField] private float defaultSFXVolume = 0.5f;      //SFX 음량 기본값
+    [Range(0f, 1f)][SerializeField] private float defaultUIVolume = 0.5f;       //UI 사운드 음량 기본값
+    [Range(0f, 1f)][SerializeField] private float defaultAmbVolume = 0.5f;      //환경 사운드 음량 기본값
+    
     [Header("음소거 체크")]
     public bool masterMute = false;     //전체 사운드 음소거
     public bool BGMMute = false;        //BGM 음소거
@@ -104,8 +106,19 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnStop2DSoundRequested += Stop2DSound;
         GlobalEventBus.OnStop3DSoundRequested += Stop3DSound;
 
+        // 사운드 설정 관리 이벤트 구독
+        GlobalEventBus.OnMasterVolumeChanged += SetMasterVolume;
+        GlobalEventBus.OnBGMVolumeChanged += SetBGMVolume;
+        GlobalEventBus.OnSFXVolumeChanged += SetSFXVolume;
+
         // Awake 처리 완료 시 디버그 콜
         Debug.Log("AudioManager Awake CALLED");
+    }
+
+    private void Start()
+    {
+        // Unity 오디오 믹서 버그(Awake 시점에서는 SetFloat이 씹히는 현상) 방지를 위해 Start에서 한 번 더 볼륨 적용
+        ApplyVolume();
     }
 
     private void OnDestroy()
@@ -122,6 +135,10 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnStopBGMRequested -= StopBGM;
         GlobalEventBus.OnStop2DSoundRequested -= Stop2DSound;
         GlobalEventBus.OnStop3DSoundRequested -= Stop3DSound;
+
+        GlobalEventBus.OnMasterVolumeChanged -= SetMasterVolume;
+        GlobalEventBus.OnBGMVolumeChanged -= SetBGMVolume;
+        GlobalEventBus.OnSFXVolumeChanged -= SetSFXVolume;
     }
 
     #region 데이터 및 변수 관리
@@ -235,13 +252,14 @@ public class AudioManager : MonoBehaviour
         _source.rolloffMode = AudioRolloffMode.Logarithmic;
         _source.minDistance = 1f;
         _source.maxDistance = Mathf.Max(10f, _data.Volume * 50f);
-        _source.volume = _data.Volume * _data.AudioType switch
+        _source.volume = _data.Volume;
+        _source.outputAudioMixerGroup = _data.AudioType switch
         {
-            AudioType.BGM       => BGMSource.volume,
-            AudioType.SFX       => SFXSource.volume,
-            AudioType.UI        => UISource.volume,
-            AudioType.AMBIENT   => AmbSource.volume,
-            _                   => SFXSource.volume
+            AudioType.BGM       => BGMMixerGroup,
+            AudioType.SFX       => SFXMixerGroup,
+            AudioType.UI        => UIMixerGroup,
+            AudioType.AMBIENT   => AmbMixerGroup,
+            _                   => SFXMixerGroup
         };
         _source.loop = _data.Loop;
 
@@ -269,13 +287,14 @@ public class AudioManager : MonoBehaviour
         src.rolloffMode = AudioRolloffMode.Logarithmic;
         src.minDistance = 1f;
         src.maxDistance = Mathf.Max(10f, _data.Volume * 50f);
-        src.volume = _data.Volume * _data.AudioType switch
+        src.volume = _data.Volume;
+        src.outputAudioMixerGroup = _data.AudioType switch
         {
-            AudioType.BGM       => BGMSource.volume,
-            AudioType.SFX       => SFXSource.volume,
-            AudioType.UI        => UISource.volume,
-            AudioType.AMBIENT   => AmbSource.volume,
-            _ => SFXSource.volume
+            AudioType.BGM       => BGMMixerGroup,
+            AudioType.SFX       => SFXMixerGroup,
+            AudioType.UI        => UIMixerGroup,
+            AudioType.AMBIENT   => AmbMixerGroup,
+            _ => SFXMixerGroup
         };
         src.loop = _data.Loop;
 
@@ -322,12 +341,21 @@ public class AudioManager : MonoBehaviour
     // 음량 값 적용
     public void ApplyVolume()
     {
-        AudioListener.volume = masterMute ? 0f : masterVolume;
-        if (BGMSource != null ) BGMSource.volume =  BGMVolume * (BGMMute ? 0 : 1);
-        if (UISource != null) UISource.volume = UIVolume * (UIMute ? 0 : 1);
-        if (SFXSource != null) SFXSource.volume = SFXVolume * (SFXMute ? 0 : 1);
-        if (AmbSource != null) AmbSource.volume = AmbVolume * (AmbMute ? 0 : 1);
+        if (mixer == null) return;
+        
+        mixer.SetFloat("MasterVolume", Mathf.Log10(Mathf.Clamp(masterMute ? 0.0001f : masterVolume, 0.0001f, 1f)) * 20);
+        mixer.SetFloat("BGMVolume", Mathf.Log10(Mathf.Clamp(BGMMute ? 0.0001f : BGMVolume, 0.0001f, 1f)) * 20);
+        mixer.SetFloat("SFXVolume", Mathf.Log10(Mathf.Clamp(SFXMute ? 0.0001f : SFXVolume, 0.0001f, 1f)) * 20);
+        mixer.SetFloat("UIVolume", Mathf.Log10(Mathf.Clamp(UIMute ? 0.0001f : UIVolume, 0.0001f, 1f)) * 20);
+        mixer.SetFloat("AmbVolume", Mathf.Log10(Mathf.Clamp(AmbMute ? 0.0001f : AmbVolume, 0.0001f, 1f)) * 20);
     }
+
+    // UI 볼륨 설정 인터페이스
+    public void SetMasterVolume(float vol) { masterVolume = vol; ApplyVolume(); SaveAudioSettings(); }
+    public void SetBGMVolume(float vol) { BGMVolume = vol; ApplyVolume(); SaveAudioSettings(); }
+    public void SetSFXVolume(float vol) { SFXVolume = vol; ApplyVolume(); SaveAudioSettings(); }
+    public void SetUIVolume(float vol) { UIVolume = vol; ApplyVolume(); SaveAudioSettings(); }
+    public void SetAmbVolume(float vol) { AmbVolume = vol; ApplyVolume(); SaveAudioSettings(); }
 
     // 사운드 설정 데이터 저장
     public void SaveAudioSettings()
@@ -374,14 +402,8 @@ public class AudioManager : MonoBehaviour
     // 실제 출력할 최종 음량 계산
     public float CalculateVolume(AudioData data)
     {
-        return data.AudioType switch
-        {
-            AudioType.BGM       =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * BGMVolume * (BGMMute ? 0 : 1),
-            AudioType.SFX       =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * SFXVolume * (SFXMute ? 0 : 1),
-            AudioType.UI        =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * UIVolume * (UIMute ? 0 : 1),
-            AudioType.AMBIENT   =>  masterVolume * (masterMute ? 0 : 1) * data.Volume * AmbVolume * (AmbMute ? 0 : 1),
-            _               =>  0f
-        };
+        // 믹서에서 볼륨을 총괄하므로, 각 AudioSource는 클립 본연의 볼륨값만 사용
+        return data.Volume;
     }
     #endregion
 

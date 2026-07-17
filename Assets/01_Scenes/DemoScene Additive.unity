@@ -979,7 +979,6 @@ GameObject:
   - component: {fileID: 5466022800813604381}
   - component: {fileID: 8254926602438052759}
   - component: {fileID: 8254926602438052760}
-  - component: {fileID: 8254926602438052762}
   - component: {fileID: 8254926602438052761}
   m_Layer: 0
   m_Name: ==Manager==
@@ -1172,23 +1171,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 566869833765836583}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a868eedc59e6134ebb02cabd724c84d, type: 3}
+  m_Script: {fileID: 11500000, guid: 73965ff17cc35624e993fa25ec943aa5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &8254926602438052762
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 566869833765836583}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: da05d0bf87097d540ade1ab289363ec6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  healthItemAudioID: 10701
-  mpGainItemAudioID: 10704
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
