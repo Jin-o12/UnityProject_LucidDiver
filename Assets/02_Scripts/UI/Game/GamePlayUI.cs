@@ -7,11 +7,19 @@ public class GamePlayUI : MonoBehaviour
     [Header("하위 UI 판넬 컴포넌트")]
     [SerializeField] PlayerStatusUI statusUI;
     [SerializeField] QuickSlotGroupUI quickSlotGroupUI;
+    [SerializeField] private CanvasGroup hudCanvasGroup;
+
+    private const float DefaultHUDAlpha = 1.0f;
 
     private void Awake()
     {
         statusUI = GetComponent<PlayerStatusUI>();
         quickSlotGroupUI = GetComponent<QuickSlotGroupUI>();
+        hudCanvasGroup = GetComponent<CanvasGroup>();
+
+        // 튜토리얼 대화/안내 UI가 열릴 때 인게임 HUD를 자연스럽게 뒤로 물리기 위한 알파 조절용입니다.
+        if (hudCanvasGroup == null)
+            hudCanvasGroup = gameObject.AddComponent<CanvasGroup>();
 
         if(statusUI==null || quickSlotGroupUI==null)
         {
@@ -24,9 +32,28 @@ public class GamePlayUI : MonoBehaviour
         quickSlotGroupUI.InitializeSlots();
     }
 
+    private void OnEnable()
+    {
+        GlobalEventBus.OnGameplayHUDAlphaRequested += SetHUDAlpha;
+    }
+
+    private void OnDisable()
+    {
+        GlobalEventBus.OnGameplayHUDAlphaRequested -= SetHUDAlpha;
+        SetHUDAlpha(DefaultHUDAlpha);
+    }
+
     private void Start()
     {
         SyncQuickSlotsFromPlayerInventory();
+    }
+
+    private void SetHUDAlpha(float alpha)
+    {
+        if (hudCanvasGroup == null)
+            return;
+
+        hudCanvasGroup.alpha = Mathf.Clamp01(alpha);
     }
 
     private void SyncQuickSlotsFromPlayerInventory()

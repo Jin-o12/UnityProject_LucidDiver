@@ -90,6 +90,7 @@ public class GlobalEventBus
     public static Action OnTooltipUIClose;                                  // 아이템 툴팁 UI를 닫음
     public static Action<bool> OnClickAudio;                                // UI 버튼 클릭 시 오디오 출력 요청: Action<유효한 클릭인지>
     public static Action OnInteractAudio;                                   // 캐릭터 상호작용 클릭 시 오디오 출력 요청
+    public static Action<float> OnGameplayHUDAlphaRequested;                 // 튜토리얼/연출 중 인게임 HUD 투명도 조절 요청: Action<alpha>
 
     /// <summary>
     /// 사운드 관리 이벤트

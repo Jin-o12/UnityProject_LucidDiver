@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem.HID;
+using UnityEngine.SceneManagement;
 
 public class PlayerStatus : MonoBehaviour, IEffectReceiver
 {
@@ -39,6 +40,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
 
     private float artifactHpRegenBonus;                     // 아티팩트로 추가되는 초당 체력 회복량
     private float artifactMpRegenBonus;                     // 아티팩트로 추가되는 초당 마나 회복량
+    private const float TutorialMinimumHp = 1.0f;            // 튜토리얼에서는 사망 대신 유지할 최소 체력
 
     // 사운드 연출
     public int[] Hit_AudioIDPool = null;                    // 플레이어 피격 사운드 ID 리스트
@@ -297,6 +299,12 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         // 구르기 도중에는 플레이어가 피해를 받아 HP가 감소하지 않음
         if (_movement != null && _movement.isEvading) return;
 
+        if (ShouldPreventTutorialDeath(dmg))
+        {
+            PreventTutorialDeath();
+            return;
+        }
+
         GetHp(-dmg);
 
         // 치명타에서는 일반 피격 VFX 대신 사망 VFX만 재생해 두 연출이 겹치지 않게 합니다.
@@ -318,6 +326,41 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnPlay3DSoundRequested?.Invoke(hitID,transform.position);
         // 피해 입을 시 탈출 실패 처리
         GlobalEventBus.OnEscapeFailure?.Invoke(playerID);
+    }
+
+    /// <summary>
+    /// 튜토리얼 씬에서는 전투 실습 중 사망으로 로비에 돌아가지 않도록 치명 피해만 차단합니다.
+    /// 일반 인게임 씬에서는 기존 사망/결과 처리 흐름을 그대로 사용합니다.
+    /// </summary>
+    private bool ShouldPreventTutorialDeath(float damage)
+    {
+        return IsTutorialSceneActive() && hpCurrent - damage <= 0.0f;
+    }
+
+    /// <summary>
+    /// 튜토리얼 사망 방지 처리입니다.
+    /// HP를 1로 고정하고 피격 피드백과 튜토리얼 안내 이벤트만 발생시킵니다.
+    /// </summary>
+    private void PreventTutorialDeath()
+    {
+        hpCurrent = Mathf.Clamp(TutorialMinimumHp, 0.0f, hpMax);
+        UpdateHp();
+
+        VFXService.Instance?.Play(GameplayVFXIds.PlayerHit, transform.position, transform.rotation);
+        GlobalEventBus.OnHitAnimate?.Invoke();
+
+        int hitID = Hit_AudioIDPool[UnityEngine.Random.Range(0, Hit_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(hitID, transform.position);
+
+        TutorialManager.Instance?.ShowTutorialDeathPreventedRadio();
+    }
+
+    /// <summary>
+    /// 튜토리얼은 기본 씬과 Additive 씬이 함께 로드되므로 TutorialScene 로드 여부로 판정합니다.
+    /// </summary>
+    private static bool IsTutorialSceneActive()
+    {
+        return SceneManager.GetSceneByName("TutorialScene").isLoaded;
     }
 
     /* 공격 시 마나 사용 */

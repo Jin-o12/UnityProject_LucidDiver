@@ -12,6 +12,8 @@ using UnityEngine.SceneManagement;
 public sealed class TutorialManager : MonoBehaviour
 {
     private const string CatalogResourcePath = "Tutorial/TutorialMessageCatalog";
+    private const float DimmedGameplayHUDAlpha = 0.3f;
+    private const float DefaultGameplayHUDAlpha = 1.0f;
 
     public static TutorialManager Instance { get; private set; }
 
@@ -31,6 +33,11 @@ public sealed class TutorialManager : MonoBehaviour
     private bool isShowing;
     private bool pausedByTutorial;
     private bool tutorialCompletionSaved;
+    private bool isRuntimeRadioShowing;
+    private bool suspendedWasShowing;
+    private int tutorialDeathPreventedRadioIndex;
+    private Action suspendedCompletion;
+    private TutorialGuideData suspendedGuide;
 
     public bool IsShowing => isShowing;
 
@@ -82,6 +89,7 @@ public sealed class TutorialManager : MonoBehaviour
         currentGuide = null;
         StopDurationRoutine();
         RestoreGameplay();
+        SetGameplayHUDDimmed(false);
     }
 
     private void Update()
@@ -121,6 +129,7 @@ public sealed class TutorialManager : MonoBehaviour
 
         isShowing = true;
         currentCompletion = completed;
+        SetGameplayHUDDimmed(true);
 
         if (entry.PauseGame)
             PauseGameplay();
@@ -147,6 +156,52 @@ public sealed class TutorialManager : MonoBehaviour
         bool clearedCurrent = TryClearCurrent(TutorialConditionTypes.Event, eventName);
         bool openedNew = TryOpenByCondition(TutorialConditionTypes.Event, eventName);
         return clearedCurrent || openedNew;
+    }
+
+    /// <summary>
+    /// 튜토리얼에서 플레이어 사망을 막았을 때 출력하는 반복 가능 무전입니다.
+    /// JSON 진행 데이터와 분리해 HP가 1로 떨어질 때마다 번갈아 출력할 수 있게 합니다.
+    /// </summary>
+    public void ShowTutorialDeathPreventedRadio()
+    {
+        if (popup == null || isRuntimeRadioShowing)
+            return;
+
+        string message = tutorialDeathPreventedRadioIndex % 2 == 0
+            ? "\uC5D0\uB108\uBBF8\uB97C \uC8FD\uC5EC\uC57C \uD574!"
+            : "\uC815\uC2E0\uCC28\uB824 \uC720\uC548!";
+        tutorialDeathPreventedRadioIndex++;
+
+        TutorialGuideData runtimeRadio = new()
+        {
+            TID = -9001 - tutorialDeathPreventedRadioIndex,
+            ContentType = "Dialogue",
+            Speaker = "Operator",
+            SpeakerName = "\uAD00\uC81C\uC0AC",
+            PortraitId = "Operator_Radio",
+            DialogueText = message,
+            Title = "\uAD00\uC81C\uC0AC",
+            ConfirmText = string.Empty,
+            ClearConditionType = TutorialConditionTypes.NextButton,
+            ClearConditionValue = "-",
+            RadioEffectId = "Radio_Default",
+            PauseGame = true,
+            IsTutorialAutoSkip = false
+        };
+
+        suspendedWasShowing = isShowing;
+        suspendedGuide = currentGuide;
+        suspendedCompletion = currentCompletion;
+
+        isRuntimeRadioShowing = true;
+        isShowing = true;
+        currentGuide = runtimeRadio;
+        currentCompletion = null;
+        StopDurationRoutine();
+        SetGameplayHUDDimmed(true);
+        PauseGameplay();
+
+        popup.Show(runtimeRadio, CompleteRuntimeRadio);
     }
 
     private void LoadJsonGuides()
@@ -257,6 +312,7 @@ public sealed class TutorialManager : MonoBehaviour
         currentGuide = guide;
         currentCompletion = completed;
         isShowing = true;
+        SetGameplayHUDDimmed(true);
 
         if (guide.PauseGame)
             PauseGameplay();
@@ -269,7 +325,31 @@ public sealed class TutorialManager : MonoBehaviour
 
     private void HandlePopupConfirmed()
     {
+        if (ShouldDismissObjectiveOnly())
+        {
+            DismissCurrentObjectivePopup();
+            return;
+        }
+
         TryClearCurrent(TutorialConditionTypes.NextButton, string.Empty);
+    }
+
+    private bool ShouldDismissObjectiveOnly()
+    {
+        if (currentGuide == null)
+            return false;
+
+        return IsSameContentType(currentGuide.ContentType, "Objective") ||
+               IsSameConditionType(currentGuide.ClearConditionType, TutorialConditionTypes.Event);
+    }
+
+    private void DismissCurrentObjectivePopup()
+    {
+        // ObjectivePanel의 버튼은 목표 완료가 아니라 화면에서 안내창만 접는 용도입니다.
+        // 실제 완료 처리는 EnemyDead, ItemBoxOpened, EscapeSucceeded 같은 기존 이벤트 조건이 계속 담당합니다.
+        popup?.HideImmediate();
+        RestoreGameplay();
+        SetGameplayHUDDimmed(false);
     }
 
     private bool IsConfirmInputPressed()
@@ -326,6 +406,7 @@ public sealed class TutorialManager : MonoBehaviour
         StopDurationRoutine();
         popup?.HideImmediate();
         RestoreGameplay();
+        SetGameplayHUDDimmed(false);
 
         Action completion = currentCompletion;
         currentCompletion = null;
@@ -354,10 +435,43 @@ public sealed class TutorialManager : MonoBehaviour
         isShowing = false;
         RestoreGameplay();
         popup?.HideImmediate();
+        SetGameplayHUDDimmed(false);
 
         Action completion = currentCompletion;
         currentCompletion = null;
         completion?.Invoke();
+    }
+
+    private void CompleteRuntimeRadio()
+    {
+        if (!isRuntimeRadioShowing)
+            return;
+
+        isRuntimeRadioShowing = false;
+        RestoreGameplay();
+
+        if (suspendedWasShowing && suspendedGuide != null)
+        {
+            currentGuide = suspendedGuide;
+            currentCompletion = suspendedCompletion;
+            isShowing = true;
+            popup?.Show(currentGuide, HandlePopupConfirmed);
+
+            if (currentGuide.PauseGame)
+                PauseGameplay();
+        }
+        else
+        {
+            currentGuide = null;
+            currentCompletion = null;
+            isShowing = false;
+            popup?.HideImmediate();
+            SetGameplayHUDDimmed(false);
+        }
+
+        suspendedWasShowing = false;
+        suspendedGuide = null;
+        suspendedCompletion = null;
     }
 
     private void StartDurationClearIfNeeded(TutorialGuideData guide)
@@ -476,6 +590,11 @@ public sealed class TutorialManager : MonoBehaviour
         }
 
         inputReader = null;
+    }
+
+    private void SetGameplayHUDDimmed(bool dimmed)
+    {
+        GlobalEventBus.OnGameplayHUDAlphaRequested?.Invoke(dimmed ? DimmedGameplayHUDAlpha : DefaultGameplayHUDAlpha);
     }
 
     private IEnumerator RestorePlayerInputMapNextFrame(LocalInputReader readerToRestore)

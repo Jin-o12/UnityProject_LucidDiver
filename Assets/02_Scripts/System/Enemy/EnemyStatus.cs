@@ -68,7 +68,7 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
         nowState = EnemyState.Idle;
 
         // 현재 프로젝트에서는 기본 스탯을 여기서 초기화합니다.
-        hpMax = 100.0f;
+        hpMax = 50.0f;
         hpCurrent = hpMax;
         atkValue = 10.0f;
         defValue = 0.0f;

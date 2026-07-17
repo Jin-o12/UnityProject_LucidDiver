@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 튜토리얼 데이터에 따라 가이드, 관제사 무전, 유안 대사, 목표 안내 패널 중 하나를 표시합니다.
+/// ?쒗넗由ъ뼹 ?곗씠?곗뿉 ?곕씪 媛?대뱶, 愿?쒖궗 臾댁쟾, ?좎븞 ??? 紐⑺몴 ?덈궡 ?⑤꼸 以??섎굹瑜??쒖떆?⑸땲??
 /// </summary>
 public sealed class TutorialPopup : MonoBehaviour
 {
@@ -63,6 +63,28 @@ public sealed class TutorialPopup : MonoBehaviour
         {
             if (root != null)
                 root.SetActive(visible);
+        }
+
+        public void ResolveMissingReferences()
+        {
+            if (root == null || confirmButton != null)
+                return;
+
+            Button[] childButtons = root.GetComponentsInChildren<Button>(true);
+            foreach (Button childButton in childButtons)
+            {
+                if (childButton == null)
+                    continue;
+
+                if (string.Equals(childButton.gameObject.name, "ConfirmButton", StringComparison.Ordinal))
+                {
+                    confirmButton = childButton;
+                    return;
+                }
+            }
+
+            if (childButtons.Length > 0)
+                confirmButton = childButtons[0];
         }
     }
 
@@ -142,6 +164,7 @@ public sealed class TutorialPopup : MonoBehaviour
     private void Awake()
     {
         CacheComponents();
+        ResolvePanelReferences();
         RegisterConfirmButton(confirmButton);
         RegisterConfirmButton(guidePanel.ConfirmButton);
         RegisterConfirmButton(operatorRadioPanel.ConfirmButton);
@@ -260,20 +283,20 @@ public sealed class TutorialPopup : MonoBehaviour
         SetPopupRect(new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 64f), new Vector2(1180f, 260f), new Vector2(0.5f, 0f));
         SetTitleRect(new Vector2(0f, 0.72f), new Vector2(0f, 1f), new Vector2(138f, -14f), new Vector2(240f, -16f), TextAlignmentOptions.Center, 34f, GetTitleColor(PopupMode.YuanDialogue));
         SetMessageRect(new Vector2(0f, 0.28f), new Vector2(1f, 0.74f), new Vector2(0f, -4f), new Vector2(-160f, -8f), TextAlignmentOptions.Left, 34f, GetMessageColor(PopupMode.YuanDialogue));
-        SetConfirmButton(false, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-136f, 28f), new Vector2(200f, 54f), new Vector2(1f, 0f));
+        SetConfirmButton(true, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-136f, 28f), new Vector2(200f, 54f), new Vector2(1f, 0f));
         SetBackground(PopupMode.YuanDialogue, true);
     }
 
     private void ApplyOperatorRadioStyle()
     {
-        // 관제사 무전은 별도 버튼 대신 패널 전체를 눌러 진행합니다.
+        // 愿?쒖궗 臾댁쟾? 蹂꾨룄 踰꾪듉 ????⑤꼸 ?꾩껜瑜??뚮윭 吏꾪뻾?⑸땲??
         SelectPanel(PopupMode.OperatorRadio);
-        SetOperatorRadioPanelClickable(true);
+        SetOperatorRadioPanelClickable(false);
         SetPortrait(false);
         SetPopupRect(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 120f), new Vector2(980f, 170f), new Vector2(0.5f, 0.5f));
         SetTitleRect(new Vector2(0f, 0.64f), new Vector2(0f, 1f), new Vector2(124f, -8f), new Vector2(220f, -8f), TextAlignmentOptions.Center, 30f, GetTitleColor(PopupMode.OperatorRadio));
         SetMessageRect(new Vector2(0f, 0.16f), new Vector2(1f, 0.72f), new Vector2(0f, 0f), new Vector2(-120f, -6f), TextAlignmentOptions.Center, 34f, GetMessageColor(PopupMode.OperatorRadio));
-        SetConfirmButton(false, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-80f, 18f), new Vector2(170f, 46f), new Vector2(1f, 0f));
+        SetConfirmButton(true, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-80f, 18f), new Vector2(170f, 46f), new Vector2(1f, 0f));
         SetBackground(PopupMode.OperatorRadio, false);
     }
 
@@ -285,7 +308,7 @@ public sealed class TutorialPopup : MonoBehaviour
         SetPopupRect(new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -56f), new Vector2(960f, 178f), new Vector2(0.5f, 1f));
         SetTitleRect(new Vector2(0f, 0.58f), new Vector2(1f, 1f), new Vector2(0f, -6f), new Vector2(-56f, -2f), TextAlignmentOptions.Center, 34f, GetTitleColor(PopupMode.Objective));
         SetMessageRect(new Vector2(0f, 0.08f), new Vector2(1f, 0.62f), new Vector2(0f, 0f), new Vector2(-96f, -6f), TextAlignmentOptions.Center, 27f, GetMessageColor(PopupMode.Objective));
-        SetConfirmButton(false, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(180f, 52f), new Vector2(0.5f, 0f));
+        SetConfirmButton(true, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(180f, 52f), new Vector2(0.5f, 0f));
         SetBackground(PopupMode.Objective, false);
     }
 
@@ -294,6 +317,7 @@ public sealed class TutorialPopup : MonoBehaviour
         SetOperatorRadioPanelClickable(false);
         HideSeparatedPanels();
         activePanel = GetPanel(mode);
+        SetLegacyCommonControlsVisible(activePanel == null || !activePanel.HasAnyReference);
 
         if (activePanel != null)
             activePanel.SetRootVisible(true);
@@ -305,6 +329,31 @@ public sealed class TutorialPopup : MonoBehaviour
         operatorRadioPanel.SetRootVisible(false);
         yuanDialoguePanel.SetRootVisible(false);
         objectivePanel.SetRootVisible(false);
+    }
+
+    private void ResolvePanelReferences()
+    {
+        guidePanel.ResolveMissingReferences();
+        operatorRadioPanel.ResolveMissingReferences();
+        yuanDialoguePanel.ResolveMissingReferences();
+        objectivePanel.ResolveMissingReferences();
+    }
+
+    private void SetLegacyCommonControlsVisible(bool visible)
+    {
+        // ?⑤꼸 遺꾨━ ?댄썑?먮룄 ?덉쟾 怨듭슜 ?띿뒪?멸? 耳쒖졇 ?덉쑝硫??????UI ?꾩뿉 ?댁쟾 ?덈궡 臾멸뎄媛 寃뱀퀜 蹂댁엯?덈떎.
+        SetTextObjectVisible(titleText, visible);
+        SetTextObjectVisible(messageText, visible);
+        SetTextObjectVisible(confirmText, visible);
+
+        if (confirmButton != null)
+            confirmButton.gameObject.SetActive(visible);
+    }
+
+    private static void SetTextObjectVisible(TMP_Text targetText, bool visible)
+    {
+        if (targetText != null)
+            targetText.gameObject.SetActive(visible);
     }
 
     private void ApplyText(string title, string message, string confirm)
@@ -323,28 +372,13 @@ public sealed class TutorialPopup : MonoBehaviour
 
     private void SetPopupRect(Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot)
     {
-        if (popupRect == null)
-            return;
-
-        popupRect.anchorMin = anchorMin;
-        popupRect.anchorMax = anchorMax;
-        popupRect.anchoredPosition = anchoredPosition;
-        popupRect.sizeDelta = sizeDelta;
-        popupRect.pivot = pivot;
+        // ?쒗넗由ъ뼹 UI ?꾩튂? ?ш린???꾨━???몄뒪?숉꽣 ?명똿??湲곗??쇰줈 ?ъ슜?⑸땲??
+        // ?고??꾩뿉??RectTransform????뼱?곕㈃ ?묒뾽?먭? 留욎텣 ??붿갹 ?꾩튂媛 諛由????덉쑝誘濡??ш린?쒕뒗 泥섎━?섏? ?딆뒿?덈떎.
     }
 
     private void SetTitleRect(Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPosition, Vector2 sizeDelta, TextAlignmentOptions alignment, float fontSize, Color color)
     {
         TMP_Text targetTitle = GetActiveTitleText();
-        RectTransform targetTitleRect = targetTitle != null ? targetTitle.transform as RectTransform : titleRect;
-
-        if (targetTitleRect != null)
-        {
-            targetTitleRect.anchorMin = anchorMin;
-            targetTitleRect.anchorMax = anchorMax;
-            targetTitleRect.anchoredPosition = anchoredPosition;
-            targetTitleRect.sizeDelta = sizeDelta;
-        }
 
         if (targetTitle == null)
             return;
@@ -357,15 +391,6 @@ public sealed class TutorialPopup : MonoBehaviour
     private void SetMessageRect(Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPosition, Vector2 sizeDelta, TextAlignmentOptions alignment, float fontSize, Color color)
     {
         TMP_Text targetMessage = GetActiveMessageText();
-        RectTransform targetMessageRect = targetMessage != null ? targetMessage.transform as RectTransform : messageRect;
-
-        if (targetMessageRect != null)
-        {
-            targetMessageRect.anchorMin = anchorMin;
-            targetMessageRect.anchorMax = anchorMax;
-            targetMessageRect.anchoredPosition = anchoredPosition;
-            targetMessageRect.sizeDelta = sizeDelta;
-        }
 
         if (targetMessage == null)
             return;
@@ -387,17 +412,6 @@ public sealed class TutorialPopup : MonoBehaviour
 
         if (!visible)
             return;
-
-        RectTransform targetButtonRect = targetButton != null ? targetButton.transform as RectTransform : confirmButtonRect;
-
-        if (targetButtonRect == null)
-            return;
-
-        targetButtonRect.anchorMin = anchorMin;
-        targetButtonRect.anchorMax = anchorMax;
-        targetButtonRect.anchoredPosition = anchoredPosition;
-        targetButtonRect.sizeDelta = sizeDelta;
-        targetButtonRect.pivot = pivot;
     }
 
     private void SetBackground(PopupMode mode, bool allowRootSpriteFallback)
@@ -419,24 +433,30 @@ public sealed class TutorialPopup : MonoBehaviour
         if (modeBackgroundSprite != null)
         {
             activeBackgroundImage.sprite = modeBackgroundSprite;
-        }
-        else if (activeBackgroundImage == backgroundImage)
-        {
-            // 루트 Image에 직접 넣은 텍스트 박스 스프라이트는 유안 대사 모드에서만 재사용합니다.
-            // 툴팁/무전/목표 모드는 별도 이미지가 없으면 색상 배경으로만 표시합니다.
-            activeBackgroundImage.sprite = allowRootSpriteFallback ? rootBackgroundSprite : null;
-        }
-
-        // UI 프레임 스프라이트가 들어간 경우에는 모드별 tint 색으로 표시합니다.
-        // 기본값은 흰색이라 원본 이미지 색을 그대로 유지합니다.
-        if (activeBackgroundImage.sprite != null)
-        {
             activeBackgroundImage.color = spriteTintColor;
             activeBackgroundImage.type = Image.Type.Sliced;
             return;
         }
 
-        activeBackgroundImage.color = fallbackColor;
+        if (activeBackgroundImage == backgroundImage)
+        {
+            // 레거시 루트 Image만 기존 fallback sprite/color 규칙을 사용합니다.
+            // 분리된 패널의 BackgroundImage는 인스펙터에서 직접 세팅한 sprite/color/type을 보존합니다.
+            activeBackgroundImage.sprite = allowRootSpriteFallback ? rootBackgroundSprite : null;
+
+            if (activeBackgroundImage.sprite != null)
+            {
+                activeBackgroundImage.color = spriteTintColor;
+                activeBackgroundImage.type = Image.Type.Sliced;
+                return;
+            }
+
+            activeBackgroundImage.color = fallbackColor;
+            return;
+        }
+
+        if (activeBackgroundImage.sprite == null)
+            activeBackgroundImage.color = fallbackColor;
     }
 
     private void SetPortrait(bool visible)
@@ -547,6 +567,11 @@ public sealed class TutorialPopup : MonoBehaviour
     private Sprite GetBackgroundSprite(PopupMode mode)
     {
         TutorialPanelView panel = GetPanel(mode);
+
+        // 분리된 패널에 BackgroundImage가 연결되어 있으면 Image 컴포넌트의 인스펙터 값을 우선합니다.
+        // 이 경우 레거시 모드별 Sprite 필드가 남아 있어도 캔버스에 직접 넣은 이미지를 덮지 않습니다.
+        if (panel != null && panel.BackgroundImage != null)
+            return null;
 
         if (panel != null && panel.BackgroundSprite != null)
             return panel.BackgroundSprite;
@@ -706,3 +731,4 @@ public sealed class TutorialPopup : MonoBehaviour
         UnregisterConfirmButton(operatorRadioRootButton);
     }
 }
+
