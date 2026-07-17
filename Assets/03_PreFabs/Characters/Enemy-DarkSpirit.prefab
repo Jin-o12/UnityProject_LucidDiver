@@ -217,6 +217,9 @@ MonoBehaviour:
   sourceAnimator: {fileID: 5865512869968719248}
   shadowAnimator: {fileID: 9060761744033455479}
   syncLayerWeights: 1
+  shadowPortrait: {fileID: 0}
+  targetShadowAlpha: 0
+  shadowFadeTime: 0.5
 --- !u!1 &3789977310427166511
 GameObject:
   m_ObjectHideFlags: 0
@@ -728,6 +731,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brain:
+    postAttackDirectChaseTime: 0.5
+    postAttackRouteTolerance: 4
     checkInterval: 0.2
     maxAggro: 100
     sightLossGraceTime: 1
@@ -796,8 +801,8 @@ MonoBehaviour:
     secondSlashLungeDistance: 5
     firstSlashLungeDuration: 0.15
     secondSlashLungeDuration: 0.18
-    firstSlashDamage: 8
-    secondSlashDamage: 12
+    firstSlashDamage: 20
+    secondSlashDamage: 30
     secondSlashTurnLimit: 25
     AttackCue_AudioIDPool: db270000
     firstSlash_AudioIDPool: d9270000
