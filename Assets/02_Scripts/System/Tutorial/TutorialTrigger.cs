@@ -57,10 +57,6 @@ public sealed class TutorialTrigger : MonoBehaviour
         if (!IsPlayer(other))
             return;
 
-        // 전투 실습 차단은 안내 팝업 성공 여부와 분리해서, 트리거에 닿는 즉시 먼저 켭니다.
-        if (useCombatBlockers && !combatBlockersActive && !combatBlockersCleared)
-            ActivateCombatBlockers();
-
         if (triggerOnce && consumed)
             return;
 
@@ -73,6 +69,10 @@ public sealed class TutorialTrigger : MonoBehaviour
 
         if (handledByCondition || handledByFallback)
         {
+            // 전투 실습 구간은 해당 트리거의 안내/조건이 실제로 처리된 시점에 차단 콜라이더를 켭니다.
+            if (useCombatBlockers && !combatBlockersActive && !combatBlockersCleared)
+                ActivateCombatBlockers();
+
             consumed = triggerOnce;
         }
     }
