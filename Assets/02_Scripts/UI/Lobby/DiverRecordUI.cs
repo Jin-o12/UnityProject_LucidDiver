@@ -10,9 +10,6 @@ public class DiverRecordUI : MonoBehaviour
     [SerializeField] private Button buttonRecordCard01;
     [SerializeField] private Button buttonRecordCard02;
 
-
-
-
     [Header("Diver Info")]
     [SerializeField] private TextMeshProUGUI textDiverName;
     [SerializeField] private TextMeshProUGUI textDiverRole;
@@ -102,6 +99,7 @@ public class DiverRecordUI : MonoBehaviour
         buttonBackTop.onClick.AddListener(OnClickBack);
         buttonBackBottom.onClick.AddListener(OnClickBack);
         buttonRecordCard01.onClick.AddListener(OnClickRecord01);
+        buttonRecordCard02.onClick.AddListener(OnClickRecord02);
 
         // {테스트 데이터 사용 시 임시 값 적용}
         if (useTestData)
@@ -267,7 +265,7 @@ public class DiverRecordUI : MonoBehaviour
     private void OnClickBack()
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         // {로비 Canvas를 다시 활성화}
         GlobalEventBus.OnOpenLobbyUI?.Invoke();
@@ -282,8 +280,8 @@ public class DiverRecordUI : MonoBehaviour
             return;
         }
 
-        // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        // 기록 해금 여부에 따라 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke(memoryLogUnlocked);
 
         // {기록 카드 팝업 열기 이벤트를 호출한다}
         GlobalEventBus.OnOpenRecordCardPopUpUI?.Invoke(Record01Title, CharacterTID.Yuan);
@@ -299,9 +297,11 @@ public class DiverRecordUI : MonoBehaviour
         GlobalEventBus.OnRecordRead?.Invoke();
     }
 
+    // {기록 02는 P0에서 잠금 더미}
     private void OnClickRecord02()
     {
-        // {기록 02는 P0에서 잠금 더미}
+        // 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke(false);
         Debug.Log("DiverRecordUI: 기록 02는 P0에서 잠금 상태입니다.");
     }
 }

@@ -71,8 +71,8 @@ public class RecordCardPopUpUI : MonoBehaviour
     // 다음 텍스트 보기 버튼 터치 시 ID를 1칸 뒤로
     public void ReadNextStory()
     {
-        // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        // 다이버 상호작용 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnInteractAudio?.Invoke();
 
         // {마지막 페이지를 넘지 않도록 현재 인덱스를 제한한다}
         nowDialogueIndex = Mathf.Min(nowDialogueIndex + 1, dialogueCount - 1);
@@ -84,8 +84,8 @@ public class RecordCardPopUpUI : MonoBehaviour
     // 이전 텍스트 보기 버튼 터치 시 ID를 1칸 앞으로
     public void ReadPrevStory()
     {
-        // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        // 다이버 상호작용 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnInteractAudio?.Invoke();
 
         // {첫 페이지보다 앞으로 가지 않도록 현재 인덱스를 제한한다}
         nowDialogueIndex = Mathf.Max(nowDialogueIndex - 1, 0);
@@ -143,7 +143,7 @@ public class RecordCardPopUpUI : MonoBehaviour
     public void CloseUI()
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         // {팝업을 닫을 때 다음 열람을 위해 페이지 인덱스를 첫 페이지로 되돌린다}
         nowDialogueIndex = 0;

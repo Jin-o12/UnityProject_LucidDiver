@@ -249,7 +249,7 @@ public class ResultUI : MonoBehaviour
     public void OnReturnLobbyClick()  //로비로 돌아가기 버튼 터치 동작
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
         // 로비로 돌아가기 이벤트를 호출
         GlobalEventBus.OnReturnToLobby?.Invoke();
         // LobbyScene으로 이동하기

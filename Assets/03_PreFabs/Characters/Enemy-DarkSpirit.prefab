@@ -714,6 +714,7 @@ MonoBehaviour:
   objID: 0
   hpMax: 0
   hpCurrent: 0
+  Hit_AudioIDPool: 7a2700007b2700007c270000
 --- !u!114 &6121303018300076720
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 아이템 슬롯 하나의 역할을 수행합니다
 /// 인벤토리 슬롯 1칸의 표시와 입력을 담당한다.
 /// 인벤토리 슬롯끼리의 위치 교환, 체스트와의 우클릭 이동, 드래그 앤 드롭 이동, 포인터 호버로 툴팁 출력을 처리한다.
@@ -161,7 +161,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         }
 
         // 클릭 시 사운드 재생
-        GlobalEventBus.OnClickAudio?.Invoke();
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
         // 1번만 클릭한 경우에는 처리하지 않기
         if (eventData.clickCount < 2)

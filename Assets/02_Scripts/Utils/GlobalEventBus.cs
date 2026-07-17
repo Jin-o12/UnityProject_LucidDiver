@@ -87,7 +87,8 @@ public class GlobalEventBus
     public static Action OnRecordRead;                                      // 다이버 개인 심상 기록 읽음
     public static Action<SlotType, int> OnTooltipUIOpen;                    // 아이템 툴팁 UI를 출력: Action<슬롯 종류, itemIndex>
     public static Action OnTooltipUIClose;                                  // 아이템 툴팁 UI를 닫음
-    public static Action OnClickAudio;                                      // 클릭 시 오디오 출력 요청
+    public static Action<bool> OnClickAudio;                                // UI 버튼 클릭 시 오디오 출력 요청: Action<유효한 클릭인지>
+    public static Action OnInteractAudio;                                   // 캐릭터 상호작용 클릭 시 오디오 출력 요청
 
     /// <summary>
     /// 사운드 관리 이벤트
