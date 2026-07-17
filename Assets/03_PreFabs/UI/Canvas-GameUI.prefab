@@ -287,6 +287,17 @@ MonoBehaviour:
   slotIcon: {fileID: 5613968632863365011}
   itemStack: {fileID: 1733080398126337463}
   itemInfo: {fileID: 6606980023320001773}
+  slotFrameImage: {fileID: 0}
+  maxIconSize: {x: 64, y: 64}
+  rarityFrameImage: {fileID: 0}
+  emptySlotSprite: {fileID: 0}
+  normalSlotSprite: {fileID: 0}
+  uncommonSlotSprite: {fileID: 0}
+  rareSlotSprite: {fileID: 0}
+  epicSlotSprite: {fileID: 0}
+  legendSlotSprite: {fileID: 0}
+  useIconTintWhenFrameMissing: 1
+  emptySlotColor: {r: 0.32, g: 0.32, b: 0.32, a: 1}
 --- !u!222 &2982394344617210532
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -587,6 +598,17 @@ MonoBehaviour:
   slotIcon: {fileID: 9174888458580158338}
   itemStack: {fileID: 4799183115759447039}
   itemInfo: {fileID: 2029109051608077289}
+  slotFrameImage: {fileID: 0}
+  maxIconSize: {x: 64, y: 64}
+  rarityFrameImage: {fileID: 0}
+  emptySlotSprite: {fileID: 0}
+  normalSlotSprite: {fileID: 0}
+  uncommonSlotSprite: {fileID: 0}
+  rareSlotSprite: {fileID: 0}
+  epicSlotSprite: {fileID: 0}
+  legendSlotSprite: {fileID: 0}
+  useIconTintWhenFrameMissing: 1
+  emptySlotColor: {r: 0.32, g: 0.32, b: 0.32, a: 1}
 --- !u!222 &4506317501807833148
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -935,7 +957,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.20754719, g: 0.20754719, b: 0.20754719, a: 0.5882353}
+  m_Color: {r: 0.20754719, g: 0.20754719, b: 0.20754719, a: 0}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1398,6 +1420,17 @@ MonoBehaviour:
   slotIcon: {fileID: 5106440366499896430}
   itemStack: {fileID: 7852821449457460019}
   itemInfo: {fileID: 747904446606460408}
+  slotFrameImage: {fileID: 0}
+  maxIconSize: {x: 64, y: 64}
+  rarityFrameImage: {fileID: 0}
+  emptySlotSprite: {fileID: 0}
+  normalSlotSprite: {fileID: 0}
+  uncommonSlotSprite: {fileID: 0}
+  rareSlotSprite: {fileID: 0}
+  epicSlotSprite: {fileID: 0}
+  legendSlotSprite: {fileID: 0}
+  useIconTintWhenFrameMissing: 1
+  emptySlotColor: {r: 0.32, g: 0.32, b: 0.32, a: 1}
 --- !u!222 &2194026731134100530
 CanvasRenderer:
   m_ObjectHideFlags: 0

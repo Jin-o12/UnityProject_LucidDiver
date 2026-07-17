@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using UnityEditor.iOS;
 using UnityEngine;
 using UnityEngine.Audio;
 
