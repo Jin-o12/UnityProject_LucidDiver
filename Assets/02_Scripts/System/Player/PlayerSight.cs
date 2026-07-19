@@ -1,6 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine;
+using UnityEngine.InputSystem;
 using AnyPortrait;
 
 /// <summary>
@@ -19,6 +21,7 @@ public class PlayerSight : MonoBehaviour
     private float halfSightAngle;                           // 반 사이각 캐시
     private Vector2 currentMousePos;                        // 현재 마우스 화면 좌표
     
+    private InputAction aimAction;                          // 마우스 조준 이벤트 캐시
     private void Awake()
     {
         tr = GetComponent<Transform>();
@@ -29,12 +32,27 @@ public class PlayerSight : MonoBehaviour
     private void OnEnable()
     {
         if (mainCamera == null) mainCamera = Camera.main;
-        GlobalEventBus.OnMousePositionInput += UpdateMousePos;
+
+        if (GlobalEventBus.OnGetInputAction != null)
+        {
+            aimAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Look");
+            if (aimAction != null)
+            {
+                aimAction.Enable();
+                aimAction.performed += OnAimInput;
+                aimAction.canceled += OnAimInput;
+            }
+        }
     }
 
     private void OnDisable()
     {
-        GlobalEventBus.OnMousePositionInput -= UpdateMousePos;
+        if (aimAction != null)
+        {
+            aimAction.performed -= OnAimInput;
+            aimAction.canceled -= OnAimInput;
+            aimAction.Disable();
+        }
     }
 
     private void FixedUpdate()
@@ -57,6 +75,8 @@ public class PlayerSight : MonoBehaviour
         halfSightAngle = sightAngle * 0.5f;
         sqrCircleSight = minCircleSight * minCircleSight;
     }
+
+    private void OnAimInput(InputAction.CallbackContext context) => UpdateMousePos(context.ReadValue<Vector2>());
 
     // 마우스 화면 좌표 갱신
     private void UpdateMousePos(Vector2 pos) => currentMousePos = pos;

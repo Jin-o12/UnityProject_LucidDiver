@@ -1,9 +1,10 @@
-﻿using AnyPortrait;
+using AnyPortrait;
 using System.Collections;
 /// <summary>
 /// 플레이어의 이동과 커서 방향 회전을 처리하는 스크립트
 /// </summary>
 using UnityEngine;
+using UnityEngine.InputSystem;
 using static AnyPortrait.apAnimPlayUnit;
 
 public class PlayerMovement : MonoBehaviour
@@ -15,6 +16,9 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 movementInput;                      // 플레이어의 이동 입력
     private bool sprintInput;                           // 플레이어의 달리기 입력
     private Vector2 currentMousePos;                    // 현재 마우스 화면 좌표
+    private InputAction moveAction;                     // 플레이어 이동 이벤트 캐시
+    private InputAction sprintAction;                   // 플레이어 달리기 이벤트 캐시
+    private InputAction aimAction;                      // 마우스 조준 이벤트 캐시
 
     private readonly float isometricYAngle = +45.0f;    // 쿼터뷰 기준 이동 방향 보정
     public float moveSpeed;                             // 이동 속도
@@ -99,10 +103,35 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnEnable()
     {
-        GlobalEventBus.OnPlayerMove += PlayerMove;
+        if (GlobalEventBus.OnGetInputAction != null)
+        {
+            moveAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Move");
+            if (moveAction != null)
+            {
+                moveAction.Enable();
+                moveAction.performed += OnMoveInput;
+                moveAction.canceled += OnMoveCanceled;
+            }
+
+            sprintAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Sprint");
+            if (sprintAction != null)
+            {
+                sprintAction.Enable();
+                sprintAction.performed += OnSprintInputPerformed;
+                sprintAction.canceled += OnSprintInputCanceled;
+            }
+
+            aimAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Look");
+            if (aimAction != null)
+            {
+                aimAction.Enable();
+                aimAction.performed += OnAimInput;
+                aimAction.canceled += OnAimInput;
+            }
+        }
+
         GlobalEventBus.SendCanSprint += PlayerSprint;
         GlobalEventBus.SendCannotSprint += PlayerSprint;
-        GlobalEventBus.OnMousePositionInput += UpdateMousePos;
         GlobalEventBus.OnMainActiveSkillCasted += SkillAnimate;
         GlobalEventBus.OnHitAnimate += HitAnimate;
         GlobalEventBus.onPlayerDead += PlayerDie;
@@ -110,10 +139,29 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDisable()
     {
-        GlobalEventBus.OnPlayerMove -= PlayerMove;
+        if (moveAction != null)
+        {
+            moveAction.performed -= OnMoveInput;
+            moveAction.canceled -= OnMoveCanceled;
+            moveAction.Disable();
+        }
+
+        if (sprintAction != null)
+        {
+            sprintAction.performed -= OnSprintInputPerformed;
+            sprintAction.canceled -= OnSprintInputCanceled;
+            sprintAction.Disable();
+        }
+
+        if (aimAction != null)
+        {
+            aimAction.performed -= OnAimInput;
+            aimAction.canceled -= OnAimInput;
+            aimAction.Disable();
+        }
+
         GlobalEventBus.SendCanSprint -= PlayerSprint;
         GlobalEventBus.SendCannotSprint -= PlayerSprint;
-        GlobalEventBus.OnMousePositionInput -= UpdateMousePos;
         GlobalEventBus.OnMainActiveSkillCasted -= SkillAnimate;
         GlobalEventBus.OnHitAnimate -= HitAnimate;
         GlobalEventBus.onPlayerDead -= PlayerDie;
@@ -176,13 +224,22 @@ public class PlayerMovement : MonoBehaviour
     }
 
     /* 플레이어 이동 입력 갱신 */
-    private void PlayerMove(Vector2 input) => movementInput = input;
+    private void OnMoveInput(InputAction.CallbackContext context) => movementInput = context.ReadValue<Vector2>();
 
-    /* 플레이어 달리기 입력 갱신 */
+    /* 플레이어 이동 입력 종료 */
+    private void OnMoveCanceled(InputAction.CallbackContext context) => movementInput = Vector2.zero;
+
+    /* 플레이어 달리기 입력 이벤트 */
+    private void OnSprintInputPerformed(InputAction.CallbackContext context) => GlobalEventBus.OnSprintInput?.Invoke(true);
+    private void OnSprintInputCanceled(InputAction.CallbackContext context) => GlobalEventBus.OnSprintInput?.Invoke(false);
+
+    /* 플레이어 달리기 허용 상태 갱신 (PlayerStatus에서 수신) */
     private void PlayerSprint(bool sprint) => sprintInput = sprint;
 
+    private void OnAimInput(InputAction.CallbackContext context) => UpdateMousePos(context.ReadValue<Vector2>());
+
     /* 마우스 화면 좌표 갱신 */
-    private void UpdateMousePos(Vector2 pos) => currentMousePos = pos;
+    private void UpdateMousePos(Vector2 _mousePos) => currentMousePos = _mousePos;
 
     /* 이동과 회전 처리 */
     private void MoveAndRotate()

@@ -4,6 +4,7 @@
 /// </summary>
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GlobalEventBus
 {
@@ -24,6 +25,7 @@ public class GlobalEventBus
     public static Action<Vector2> OnMousePositionInput;             // 마우스의 현재 화면 좌표 전달: Action<화면 상의 좌표>
     public static Action<GameObject> OnPlayerSpawned;               // 플레이어 생성 시 위치 정보 전달: Action<플레이어의 Transform>
     public static Action<Transform> OnPlayerDespawned;              // 플레이어 제거 시 위치 정보 전달: Action<플레이어의 Transform>
+    public static Func<string, string, InputAction> OnGetInputAction; // InputAction 간접 호출 전달: Func<맵 이름, 액션 이름, InputAction>
 
     /// <summary>
     /// 아이템 상호작용 이벤트

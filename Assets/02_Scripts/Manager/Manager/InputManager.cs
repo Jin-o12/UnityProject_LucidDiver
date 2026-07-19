@@ -25,11 +25,13 @@ public class InputManager : MonoBehaviour
     private void OnEnable()
     {
         GlobalEventBus.OnSwitchInputMap += SwitchInputMap;
+        GlobalEventBus.OnGetInputAction += GetAction;
     }
 
     private void OnDisable()
     {
         GlobalEventBus.OnSwitchInputMap -= SwitchInputMap;
+        GlobalEventBus.OnGetInputAction -= GetAction;
     }
 
     public void SwitchInputMap(string mapName)

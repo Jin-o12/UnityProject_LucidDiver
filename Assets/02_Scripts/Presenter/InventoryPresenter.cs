@@ -3,6 +3,7 @@
 /// 아이템 습득, 인벤토리 UI 열기/닫기, 체스트 UI 연결, 월드 드랍을 담당한다.
 /// </summary>
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class InventoryPresenter : MonoBehaviour
 {
@@ -31,6 +32,8 @@ public class InventoryPresenter : MonoBehaviour
     // 아티팩트 장착 상태 관리
     private PlayerArtifactEquipment playerArtifactEquipment;       // 플레이어 아티팩트 장착 상태
 
+    private InputAction inventoryAction;                // 인벤토리 이벤트 캐시
+
     // 인벤토리 열기 SFX ID
     [SerializeField] private int inventoryOpenAudioID = 10703;
 
@@ -38,13 +41,13 @@ public class InventoryPresenter : MonoBehaviour
     {
         playerWeapon = GetComponent<PlayerWeapon>();
         playerInventory = GetComponent<PlayerInventory>();
-        localInputReader = GetComponent<LocalInputReader>();
+        //localInputReader = GetComponent<LocalInputReader>();
         identity = GetComponent<EntityIdentity>();
         playerStatus = GetComponent<PlayerStatus>();
         playerArtifactEquipment = GetComponent<PlayerArtifactEquipment>();
 
         if (playerWeapon == null || playerInventory == null || playerStatus == null ||
-            localInputReader == null || identity == null || playerArtifactEquipment == null)
+            /*localInputReader == null|| */identity == null || playerArtifactEquipment == null)
         {
             enabled = false;
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
@@ -67,9 +70,16 @@ public class InventoryPresenter : MonoBehaviour
         // 상자와 상호작용했을 때 상자 UI를 여는 이벤트를 구독한다.
         GlobalEventBus.OnItemBoxOpened += HandleItemBoxOpened;
 
-        // 입력으로 인벤토리 열기/닫기 요청이 들어오면 Presenter가 처리한다.
-        localInputReader.OnInventoryOpenRequested += OpenInventoryUI;
-        localInputReader.OnInventoryCloseRequested += CloseInventoryUI;
+        // 인벤토리 액션을 구독하여 직접 토글을 처리한다.
+        if (GlobalEventBus.OnGetInputAction != null)
+        {
+            inventoryAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Inventory");
+            if (inventoryAction != null)
+            {
+                inventoryAction.Enable();
+                inventoryAction.performed += OnInventoryInput;
+            }
+        }
 
         // 인벤토리 및 각성 보존 슬롯 데이터가 바뀌면 해당 슬롯 UI를 갱신한다.
         playerInventory.OnSlotChanged += HandleSlotChanged;
@@ -97,8 +107,11 @@ public class InventoryPresenter : MonoBehaviour
         GlobalEventBus.OnItemPickedUp -= HandleItemPickUp;
         GlobalEventBus.OnItemBoxOpened -= HandleItemBoxOpened;
 
-        localInputReader.OnInventoryOpenRequested -= OpenInventoryUI;
-        localInputReader.OnInventoryCloseRequested -= CloseInventoryUI;
+        if (inventoryAction != null)
+        {
+            inventoryAction.performed -= OnInventoryInput;
+            inventoryAction.Disable();
+        }
 
         playerInventory.OnSlotChanged -= HandleSlotChanged;
         playerInventory.OnSafeSlotChanged -= HandleSafeSlotChanged;
@@ -251,6 +264,14 @@ public class InventoryPresenter : MonoBehaviour
             return;
 
         inventoryUI.UpdateSafeSlot(index, playerInventory.safeSlots[index]);
+    }
+
+    private void OnInventoryInput(InputAction.CallbackContext context)
+    {
+        if (inventoryUI != null && inventoryUI.gameObject.activeInHierarchy)
+            CloseInventoryUI();
+        else
+            OpenInventoryUI();
     }
 
     /// <summary>

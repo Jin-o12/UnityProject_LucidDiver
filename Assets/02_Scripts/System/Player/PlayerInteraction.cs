@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
@@ -10,6 +11,7 @@ public class PlayerInteraction : MonoBehaviour
 {
     private List<IInteractable> nearbyInteractables = new List<IInteractable>();    // 현재 상호작용 범위 안에 들어와 있는 대상 목록
     private EntityIdentity identity;                                                // 플레이어의 ID 정보 참조
+    private InputAction interactAction;                                             // 상호작용 이벤트 캐시
 
     private void Awake()
     {
@@ -25,14 +27,24 @@ public class PlayerInteraction : MonoBehaviour
 
     private void OnEnable()
     {
-        /// 이벤트 구독 ///
-        GlobalEventBus.OnInteractionInput += GetInteraction;
+        if (GlobalEventBus.OnGetInputAction != null)
+        {
+            interactAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Interact");
+            if (interactAction != null)
+            {
+                interactAction.Enable();
+                interactAction.performed += OnInteractInput;
+            }
+        }
     }
 
     private void OnDisable()
     {
-        /// 이벤트 구독 해제 ///
-        GlobalEventBus.OnInteractionInput -= GetInteraction;
+        if (interactAction != null)
+        {
+            interactAction.performed -= OnInteractInput;
+            interactAction.Disable();
+        }
     }
 
     /// <summary>
@@ -68,6 +80,8 @@ public class PlayerInteraction : MonoBehaviour
             SetPromptVisible(interactable, false);
         }
     }
+
+    private void OnInteractInput(InputAction.CallbackContext context) => GetInteraction();
 
     /// <summary>
     /// 상호작용 입력이 들어오면 현재 범위 안 대상 중

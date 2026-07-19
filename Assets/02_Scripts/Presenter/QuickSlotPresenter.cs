@@ -3,6 +3,7 @@
 /// 퀵슬롯에 등록된 아이템이 실제로 소비된 경우에만 효과를 실행합니다.
 /// </summary>
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class QuickSlotPresenter : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class QuickSlotPresenter : MonoBehaviour
 
     // 아이템 데이터 조회 인터페이스
     private IItemDataRepository itemRepo;
+
+    private InputAction quickSlotAction;                // 퀵슬롯 사용 이벤트 캐시
 
     private void Awake()
     {
@@ -28,12 +31,31 @@ public class QuickSlotPresenter : MonoBehaviour
 
     private void OnEnable()
     {
-        GlobalEventBus.OnQuickSlotUseRequested += UseQuickSlotItem;
+        if (GlobalEventBus.OnGetInputAction != null)
+        {
+            quickSlotAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "QuickSlot");
+            if (quickSlotAction != null)
+            {
+                quickSlotAction.Enable();
+                quickSlotAction.performed += OnQuickSlotInput;
+            }
+        }
     }
 
     private void OnDisable()
     {
-        GlobalEventBus.OnQuickSlotUseRequested -= UseQuickSlotItem;
+        if (quickSlotAction != null)
+        {
+            quickSlotAction.performed -= OnQuickSlotInput;
+            quickSlotAction.Disable();
+        }
+    }
+
+    private void OnQuickSlotInput(InputAction.CallbackContext context)
+    {
+        float rawValue = context.ReadValue<float>();
+        int slotIndex = (int)rawValue;
+        UseQuickSlotItem(slotIndex);
     }
 
     /* 퀵슬롯에 등록된 아이템을 사용 */

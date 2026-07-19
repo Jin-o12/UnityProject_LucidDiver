@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// 플레이어의 전투 입력을 실제 전투 시스템에 연결하는 Presenter입니다.
@@ -17,6 +18,10 @@ public class PlayerCombatPresenter : MonoBehaviour
     private float artifactFireSpeedRate;        // 아티팩트 공격 속도 증가율
     private float artifactFireMpDownRate;       // 아티팩트 공격 MP 소모 감소율
     private float nextAttackAvailableTime;      // 다음 기본 공격 가능 시각
+
+    private InputAction evadeAction;            // 구르기 이벤트 캐시
+    private InputAction skillAction;            // 스킬 이벤트 캐시
+    private InputAction attackAction;           // 기본 공격 이벤트 캐시
 
     private void Awake()
     {
@@ -39,17 +44,52 @@ public class PlayerCombatPresenter : MonoBehaviour
 
     private void OnEnable()
     {
-        GlobalEventBus.OnAttackInput += TryAttack;
-        GlobalEventBus.OnEvadeRequested += TryEvade;
-        GlobalEventBus.OnMainActiveSkillRequested += TrySkill;
+        if (GlobalEventBus.OnGetInputAction != null)
+        {
+            attackAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Attack");
+            if (attackAction != null)
+            {
+                attackAction.Enable();
+                attackAction.performed += OnAttackInput;
+            }
+            evadeAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Evade");
+            if (evadeAction != null)
+            {
+                evadeAction.Enable();
+                evadeAction.performed += OnEvadeInput;
+            }
+
+            skillAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "ActiveSkill");
+            if (skillAction != null)
+            {
+                skillAction.Enable();
+                skillAction.performed += OnSkillInput;
+            }
+        }
     }
 
     private void OnDisable()
     {
-        GlobalEventBus.OnAttackInput -= TryAttack;
-        GlobalEventBus.OnEvadeRequested -= TryEvade;
-        GlobalEventBus.OnMainActiveSkillRequested -= TrySkill;
+        if (attackAction != null)
+        {
+            attackAction.performed -= OnAttackInput;
+            attackAction.Disable();
+        }
+
+        if (evadeAction != null)
+        {
+            evadeAction.performed -= OnEvadeInput;
+            evadeAction.Disable();
+        }
+
+        if (skillAction != null)
+        {
+            skillAction.performed -= OnSkillInput;
+            skillAction.Disable();
+        }
     }
+
+    private void OnAttackInput(InputAction.CallbackContext context) => TryAttack();
 
     private void TryAttack()
     {
@@ -97,6 +137,8 @@ public class PlayerCombatPresenter : MonoBehaviour
         return speedMultiplier > 0.0f ? baseFireRate / speedMultiplier : baseFireRate;
     }
 
+    private void OnEvadeInput(InputAction.CallbackContext context) => TryEvade();
+
     private void TryEvade()
     {
         if (playerStatus.nowState != PlayerStatus.livingState.idle)
@@ -110,6 +152,8 @@ public class PlayerCombatPresenter : MonoBehaviour
 
         playerStatus.UseEvadeMana(playerStatus.evadeMP);
     }
+
+    private void OnSkillInput(InputAction.CallbackContext context) => TrySkill();
 
     private void TrySkill()
     {
