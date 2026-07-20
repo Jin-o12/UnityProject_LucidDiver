@@ -86,6 +86,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "GameMenu",
+                    "type": "Button",
+                    "id": "90896386-108a-4eb6-9028-5722c37fac74",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -407,6 +416,17 @@
                     "action": "ActiveSkill",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e1253646-da5e-4f94-afc4-64a6fd72058d",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GameMenu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -454,7 +474,7 @@
             "id": "78552c38-8115-4354-855c-e407040fe6ab",
             "actions": [
                 {
-                    "name": "Setting",
+                    "name": "GameMenu",
                     "type": "Button",
                     "id": "4a8f36db-325c-4b78-9315-62bd5a0cad72",
                     "expectedControlType": "",
@@ -471,7 +491,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Setting",
+                    "action": "GameMenu",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

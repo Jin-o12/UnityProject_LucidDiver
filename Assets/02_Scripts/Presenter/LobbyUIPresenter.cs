@@ -15,6 +15,7 @@ public class LobbyUIPresenter : MonoBehaviour
 
     private InputAction openSettingAction;          // 설정 창 열기 이벤트
     private SettingUI settingUI;                    // 설정 UI 캐시
+    private GameMenuUI gameMenuUI;                  // 게임 메뉴 UI 캐시
 
     private void OnEnable()
     {
@@ -25,11 +26,14 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenStorageUI += OpenStorageInventory;
         GlobalEventBus.OnOpenRecordCardPopUpUI += OpenRecordCardPopUp;
 
-        openSettingAction = InputManager.Instance.GetAction("Lobby", "Setting");
+        // 게임 메뉴 팝업 관련 이벤트들
+        GlobalEventBus.OnOpenSettingUI += OpenSettingUI;
+
+        openSettingAction = InputManager.Instance.GetAction("Lobby", "GameMenu");
         if (openSettingAction != null)
         {
             openSettingAction.Enable();
-            openSettingAction.performed += OpenSettingUI;
+            openSettingAction.performed += OpenPauseUI;
         }
     }
 
@@ -41,10 +45,11 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenRecordUI -= OpenDiverRecord;
         GlobalEventBus.OnOpenStorageUI -= OpenStorageInventory;
         GlobalEventBus.OnOpenRecordCardPopUpUI -= OpenRecordCardPopUp;
+        GlobalEventBus.OnOpenSettingUI -= OpenSettingUI;
 
         if (openSettingAction != null)
         {
-            openSettingAction.performed -= OpenSettingUI;
+            openSettingAction.performed -= OpenPauseUI;
             openSettingAction.Disable();
         }
     }
@@ -113,8 +118,34 @@ public class LobbyUIPresenter : MonoBehaviour
         popup.SetData(title, tid);
     }
 
+    /* ESC 목록UI 열기 */
+    public void OpenPauseUI(InputAction.CallbackContext context)
+    {
+        if(gameMenuUI==null)
+        {
+            gameMenuUI = uiManager.Open<GameMenuUI>();
+            return;
+        }
+
+        if(gameMenuUI.gameObject.activeInHierarchy == false)
+        {
+            uiManager.Open<GameMenuUI>();
+        }
+        else
+        {
+            if (uiManager.GetTopUI() != gameMenuUI)
+            {
+                uiManager.CloseNowUI();
+            }
+            else
+            {
+                uiManager.Close<GameMenuUI>();
+            }
+        }
+    }
+
     /* 설졍 UI 열기 */
-    public void OpenSettingUI(InputAction.CallbackContext context)
+    public void OpenSettingUI()
     {
         if(settingUI==null)
         {
