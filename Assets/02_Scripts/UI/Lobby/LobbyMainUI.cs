@@ -21,7 +21,6 @@ public class LobbyMainUI : MonoBehaviour
     [SerializeField] private RawImage CharacterStandingImage;           // 캐릭터 스텐딩 일러스트 (Live2D 비디오 재생용)
     [SerializeField] private Button buttonCharInteraction;              // 캐릭터 스탠딩 일러스트 상호작용 버튼
 
-
     [Header("Notification")]
     [SerializeField] private GameObject newMemoryLogMark;               // 새로운 메모리 알림 마크
 
@@ -63,7 +62,6 @@ public class LobbyMainUI : MonoBehaviour
     SaveCharacterData charSaveData;         // 플레이어가 선택 한 캐릭터의 세이브 데이터
     PlayerSaveData saveData;                // 플레이어 저장 데이터 SO
     CharacterData charData;                 // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터
-
 
     private void Awake()
     {
@@ -316,6 +314,7 @@ public class LobbyMainUI : MonoBehaviour
         GlobalEventBus.OnClickAudio?.Invoke(false);
         Debug.Log("LobbyUI: 메일 기능은 P1에서 잠금 상태입니다.");
     }
+
     /* 공지 버튼 클릭 동작 */
     public void OpenNotice()
     {
@@ -323,11 +322,13 @@ public class LobbyMainUI : MonoBehaviour
         GlobalEventBus.OnClickAudio?.Invoke(false);
         Debug.Log("LobbyUI: 공지 기능은 P1에서 잠금 상태입니다.");
     }
+
     /* 옵션 버튼 클릭 동작 */
     public void OpenOption()
     {
-        // 임시 예외처리: 비활성화 버튼 클릭 사운드를 출력
-        GlobalEventBus.OnClickAudio?.Invoke(false);
-        Debug.Log("LobbyUI: 옵션 기능은 P1에서 잠금 상태입니다.");
+        // 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke(true);
+
+        GlobalEventBus.OnOpenSettingUI?.Invoke();
     }
 }

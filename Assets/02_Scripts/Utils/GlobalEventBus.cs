@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 글로벌 이벤트 버스 클래스
 /// 게임 내에서 발생하는 다양한 이벤트를 중앙에서 관리하고 전달하는 역할을 합니다.
 /// </summary>
@@ -97,6 +97,7 @@ public class GlobalEventBus
     public static Action<float> OnPrintSkillCooltime;                       // 스킬 쿨타임 시작: Action<skillCooltime>
     public static Action<float> OnPrintEvadeCooltime;                       // 구르기 시작: Action<evadeCooltime>
     public static Action<string> OnSwitchInputMap;                          // Action Map 바꾸기 이벤트
+    public static Action OnOpenSettingUI;                                   // 로비의 설정 버튼 터치 시 설정 UI 오픈
 
     /// <summary>
     /// 설정 관리 이벤트
@@ -104,6 +105,8 @@ public class GlobalEventBus
     public static Action<float> OnMasterVolumeChanged;                      // 전체 사운드 음량 변경 요청: Action<볼륨 값>
     public static Action<float> OnBGMVolumeChanged;                         // BGM 음량 변경 요청: Action<볼륨 값>
     public static Action<float> OnSFXVolumeChanged;                         // SFX 음량 변경 요청: Action<볼륨 값>
+    public static Action<float> OnUIVolumeChanged;                         // UI 음량 변경 요청: Action<볼륨 값>
+    public static Action<float> OnAmbVolumeChanged;                         // 환경음 음량 변경 요청: Action<볼륨 값>
 
 
     /// <summary>
