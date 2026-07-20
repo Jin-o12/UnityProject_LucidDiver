@@ -15,6 +15,8 @@ public class LocalInputReader : MonoBehaviour
     private bool isInventoryOpen;
     private bool isGameplayInputBlocked;
     public bool isSprint;
+    public bool IsInventoryOpen => isInventoryOpen;
+    public bool IsGameplayInputBlocked => isGameplayInputBlocked;
 
     private void Awake()
     {
@@ -38,13 +40,47 @@ public class LocalInputReader : MonoBehaviour
         GlobalEventBus.OnSprintInput?.Invoke(false);
         GlobalEventBus.OnPlayerMove?.Invoke(Vector2.zero);
 
-        playerInput.SwitchCurrentActionMap("UI");
+        TrySwitchActionMap("UI");
     }
 
     /* 액션맵을 플레이어 모드로 전환 */
     public void SwitchToPlayerMap()
     {
-        playerInput.SwitchCurrentActionMap("Player");
+        TrySwitchActionMap("Player");
+    }
+
+    /// <summary>
+    /// 현재 입력을 관리하는 InputManager를 우선 사용하고, 연결되지 않은 경우에만 로컬 PlayerInput으로 전환합니다.
+    /// </summary>
+    private void TrySwitchActionMap(string mapName)
+    {
+        if (GlobalEventBus.OnSwitchInputMap != null)
+        {
+            GlobalEventBus.OnSwitchInputMap.Invoke(mapName);
+            return;
+        }
+
+        // 플레이어 프리팹의 PlayerInput은 중앙 InputManager 구조에서 비활성화될 수 있으므로 안전하게 확인합니다.
+        if (playerInput == null ||
+            !playerInput.enabled ||
+            !playerInput.gameObject.activeInHierarchy ||
+            playerInput.actions == null)
+        {
+            Debug.LogWarning($"LocalInputReader: 입력 맵을 전환할 수 없습니다. ({mapName})", this);
+            return;
+        }
+
+        InputActionMap targetMap = playerInput.actions.FindActionMap(mapName, false);
+        if (targetMap == null)
+        {
+            Debug.LogWarning($"LocalInputReader: 입력 맵을 찾을 수 없습니다. ({mapName})", this);
+            return;
+        }
+
+        if (playerInput.currentActionMap == targetMap)
+            return;
+
+        playerInput.SwitchCurrentActionMap(mapName);
     }
 
     public void SetGameplayInputBlocked(bool isBlocked)

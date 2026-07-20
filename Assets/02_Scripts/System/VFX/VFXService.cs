@@ -172,6 +172,16 @@ public sealed class VFXService : MonoBehaviour
         return pool;
     }
 
+    private void LateUpdate()
+    {
+        if (isShuttingDown)
+            return;
+
+        // OnDisable 처리 중에는 계층을 바꾸지 않고, 활성화 전환이 끝난 뒤 안전하게 풀 루트로 복원합니다.
+        foreach (VFXRuntimePool pool in pools.Values)
+            pool.ProcessPendingReturns();
+    }
+
     private void OnDestroy()
     {
         if (Instance != this)

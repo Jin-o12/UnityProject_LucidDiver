@@ -33,6 +33,7 @@ public class InventoryPresenter : MonoBehaviour
     private PlayerArtifactEquipment playerArtifactEquipment;       // 플레이어 아티팩트 장착 상태
 
     private InputAction inventoryAction;                // 인벤토리 이벤트 캐시
+    private InputAction uiInventoryAction;              // UI 액션맵의 인벤토리 닫기 이벤트 캐시
 
     // 인벤토리 열기 SFX ID
     [SerializeField] private int inventoryOpenAudioID = 10703;
@@ -41,13 +42,13 @@ public class InventoryPresenter : MonoBehaviour
     {
         playerWeapon = GetComponent<PlayerWeapon>();
         playerInventory = GetComponent<PlayerInventory>();
-        //localInputReader = GetComponent<LocalInputReader>();
+        localInputReader = GetComponent<LocalInputReader>();
         identity = GetComponent<EntityIdentity>();
         playerStatus = GetComponent<PlayerStatus>();
         playerArtifactEquipment = GetComponent<PlayerArtifactEquipment>();
 
         if (playerWeapon == null || playerInventory == null || playerStatus == null ||
-            /*localInputReader == null|| */identity == null || playerArtifactEquipment == null)
+            localInputReader == null || identity == null || playerArtifactEquipment == null)
         {
             enabled = false;
             Debug.LogError("InventoryPresenter: 필요한 컴포넌트가 없습니다.");
@@ -78,6 +79,13 @@ public class InventoryPresenter : MonoBehaviour
             {
                 inventoryAction.Enable();
                 inventoryAction.performed += OnInventoryInput;
+            }
+
+            // 상자를 열어 UI 액션맵으로 전환된 뒤에도 같은 입력으로 컨테이너를 닫을 수 있게 구독합니다.
+            uiInventoryAction = GlobalEventBus.OnGetInputAction.Invoke("UI", "Inventory");
+            if (uiInventoryAction != null)
+            {
+                uiInventoryAction.performed += OnUIInventoryInput;
             }
         }
 
@@ -111,6 +119,11 @@ public class InventoryPresenter : MonoBehaviour
         {
             inventoryAction.performed -= OnInventoryInput;
             inventoryAction.Disable();
+        }
+
+        if (uiInventoryAction != null)
+        {
+            uiInventoryAction.performed -= OnUIInventoryInput;
         }
 
         playerInventory.OnSlotChanged -= HandleSlotChanged;
@@ -272,6 +285,14 @@ public class InventoryPresenter : MonoBehaviour
             CloseInventoryUI();
         else
             OpenInventoryUI();
+    }
+
+    // UI 액션맵은 이미 열린 인벤토리 또는 상자를 닫는 용도로만 사용합니다.
+    // 튜토리얼 팝업처럼 다른 이유로 UI 맵이 활성화됐을 때 인벤토리가 새로 열리는 것을 방지합니다.
+    private void OnUIInventoryInput(InputAction.CallbackContext context)
+    {
+        if (isChestOpen || (inventoryUI != null && inventoryUI.gameObject.activeInHierarchy))
+            CloseInventoryUI();
     }
 
     /// <summary>
