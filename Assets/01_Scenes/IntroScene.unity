@@ -2312,6 +2312,9 @@ MonoBehaviour:
   - {fileID: 304085410330346154, guid: 3504b6c206946784d9274301299c9a4f, type: 3}
   - {fileID: 8372227223916743333, guid: 5c44a7108387eaf43bddb46a1e74d272, type: 3}
   - {fileID: 2267654377530830183, guid: 46565bd3e6d0b9c459f207e353919298, type: 3}
+  - {fileID: 2267654377530830183, guid: 696c3a9b1d3d0e642b76b2e278665cc5, type: 3}
+  - {fileID: 2267654377530830183, guid: f7c5bbc68fe2dde4d833705a8f78e583, type: 3}
+  - {fileID: 2267654377530830183, guid: c3ba2aa8f6534824692a956975c5e9ee, type: 3}
 --- !u!114 &1588521465
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2564,6 +2567,10 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 4a8f36db-325c-4b78-9315-62bd5a0cad72
     m_ActionName: Lobby/Setting[/Keyboard/escape]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 90896386-108a-4eb6-9028-5722c37fac74
+    m_ActionName: Player/GameMenu[/Keyboard/escape]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
