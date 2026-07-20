@@ -1014,6 +1014,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df754175ecc50b5469c1ff24f8982967, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyKillCount: 0
   linkRateLevel: 0
   linkRatePoint: 1
   slotTID1: 0
@@ -1174,6 +1175,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73965ff17cc35624e993fa25ec943aa5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerInput: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
