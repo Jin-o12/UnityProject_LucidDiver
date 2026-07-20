@@ -18,6 +18,9 @@ public class PlayerWeapon : MonoBehaviour
     [SerializeField] private Color hitTraceColor = Color.white;         // 적중 했을 시 궤적 색상
     [SerializeField] private Color missTraceColor = Color.red;          // 적중하지 않을 시 궤적 색상
 
+    [Header("Muzzle Light Feedback")]
+    [SerializeField] private MuzzleFlashLight muzzleFlashLight;         // 기존 머즐 VFX와 함께 재생할 짧은 실시간 발사광
+
     public bool isEquipped => weaponData != null;                       // 무기 장착 여부
     public float nowUseMana => weaponData.useMana;                      // 현재 무기의 마나 사용량
     public float nowAttackPower => weaponData.AtkValue;                 // 무기의 공격력
@@ -43,6 +46,10 @@ public class PlayerWeapon : MonoBehaviour
         weaponData = null;
         shotTraceWait = new WaitForSeconds(shotTraceDuration);
         HideShotTrace();
+
+        // 프리팹 참조가 빠져도 기존 FirePos 아래의 컴포넌트를 한 번만 찾아 안전하게 복구합니다.
+        if (muzzleFlashLight == null && firePoint != null)
+            muzzleFlashLight = firePoint.GetComponent<MuzzleFlashLight>();
     }
 
     private void OnDisable()
@@ -69,6 +76,7 @@ public class PlayerWeapon : MonoBehaviour
         // 총구 위치와 방향을 기준으로 발사 VFX를 재생합니다.
         VFXService.Instance?.Play(GameplayVFXIds.PlayerMuzzle, firePoint.position, firePoint.rotation);
 
+        muzzleFlashLight?.PlayFlash();
         apPort.SetControlParamFloat("Yuan_Recoil", 1.0f);
         apPort.SetControlParamFloat("Yuan_B_Recoil", 1.0f);
         StartCoroutine(PlayRecoilAnimation(0.5f, "Yuan_Recoil"));

@@ -79,7 +79,7 @@ MonoBehaviour:
     scaleMultiplier: 0.5
   - vfxId: VFX_Player_Muzzle
     prefabReference:
-      m_AssetGUID: ed0da22508f7f5c449639019342ed67e
+      m_AssetGUID: e8527e1d81e4461daf9ec956a314cc6f
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
