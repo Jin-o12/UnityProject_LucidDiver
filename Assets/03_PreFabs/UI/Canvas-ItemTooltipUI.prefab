@@ -760,6 +760,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7472605746917250594}
   - component: {fileID: 3219316609801498707}
+  - component: {fileID: 5493247057435374059}
   m_Layer: 0
   m_Name: Panel-Tooltip
   m_TagString: Untagged
@@ -803,6 +804,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4379858591818494466}
   m_CullTransparentMesh: 1
+--- !u!114 &5493247057435374059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4379858591818494466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b43641d388b71b44812778c9b792925, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetId: ItemTooltipUI
+  targetKind: 0
+  uiTarget: {fileID: 7472605746917250594}
+  uiPadding: {x: 16, y: 16}
+  worldTarget: {fileID: 7472605746917250594}
+  worldOffset: {x: 0, y: 1, z: 0}
+  worldScreenSize: {x: 220, y: 220}
+  worldCamera: {fileID: 0}
 --- !u!1 &5057792220353885705
 GameObject:
   m_ObjectHideFlags: 0

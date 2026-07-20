@@ -122,6 +122,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   statusUI: {fileID: 0}
   quickSlotGroupUI: {fileID: 0}
+  hudCanvasGroup: {fileID: 0}
   skillUI: {fileID: 0}
 --- !u!114 &935967920800905343
 MonoBehaviour:
@@ -153,6 +154,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1acc47790a2be62498c7ec0eb04b9bb4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  weaponImage: {fileID: 0}
   slotDataList:
   - {fileID: 6622171423150993816}
   - {fileID: 2952562689082735255}
@@ -2929,6 +2931,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 758795818045212159}
+  - component: {fileID: 6470135194921415835}
   m_Layer: 0
   m_Name: Skill-Q
   m_TagString: Untagged
@@ -2961,6 +2964,26 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 170, y: 170}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &6470135194921415835
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6132449693087509035}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b43641d388b71b44812778c9b792925, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetId: GameplayUI_SkillButton
+  targetKind: 0
+  uiTarget: {fileID: 758795818045212159}
+  uiPadding: {x: 16, y: 16}
+  worldTarget: {fileID: 758795818045212159}
+  worldOffset: {x: 0, y: 1, z: 0}
+  worldScreenSize: {x: 220, y: 220}
+  worldCamera: {fileID: 0}
 --- !u!1 &6264044654478244135
 GameObject:
   m_ObjectHideFlags: 0
@@ -3238,6 +3261,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4836769981011293172}
+  - component: {fileID: 2151651460031790347}
   m_Layer: 0
   m_Name: Skill-Shift
   m_TagString: Untagged
@@ -3269,6 +3293,26 @@ RectTransform:
   m_AnchoredPosition: {x: -200, y: 0}
   m_SizeDelta: {x: 140, y: 140}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2151651460031790347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6388643847108860275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b43641d388b71b44812778c9b792925, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetId: GameplayUI_SprintButton
+  targetKind: 0
+  uiTarget: {fileID: 4836769981011293172}
+  uiPadding: {x: 16, y: 16}
+  worldTarget: {fileID: 4836769981011293172}
+  worldOffset: {x: 0, y: 1, z: 0}
+  worldScreenSize: {x: 220, y: 220}
+  worldCamera: {fileID: 0}
 --- !u!1 &6683903795353067134
 GameObject:
   m_ObjectHideFlags: 0
@@ -3749,6 +3793,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8655062151282736196}
+  - component: {fileID: 5222295953904267335}
   m_Layer: 3
   m_Name: MP
   m_TagString: Untagged
@@ -3778,6 +3823,26 @@ RectTransform:
   m_AnchoredPosition: {x: 261.3, y: -217.3}
   m_SizeDelta: {x: 458.7278, y: 32.4787}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &5222295953904267335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7215289116848467688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b43641d388b71b44812778c9b792925, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetId: GameplayUI_MPGauge
+  targetKind: 0
+  uiTarget: {fileID: 8655062151282736196}
+  uiPadding: {x: 18, y: 12}
+  worldTarget: {fileID: 8655062151282736196}
+  worldOffset: {x: 0, y: 1, z: 0}
+  worldScreenSize: {x: 220, y: 220}
+  worldCamera: {fileID: 0}
 --- !u!1 &7363463364455279914
 GameObject:
   m_ObjectHideFlags: 0

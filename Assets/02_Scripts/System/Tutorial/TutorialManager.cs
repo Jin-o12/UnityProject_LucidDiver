@@ -19,6 +19,7 @@ public sealed class TutorialManager : MonoBehaviour
 
     [SerializeField] private TutorialMessageCatalog catalog;
     [SerializeField] private TutorialPopup popup;
+    [SerializeField] private TutorialHighlightController highlightController;
 
     private readonly Dictionary<int, TutorialGuideData> guideById = new();
     private readonly HashSet<int> openedGuideIds = new();
@@ -53,7 +54,9 @@ public sealed class TutorialManager : MonoBehaviour
         Instance = this;
         catalog ??= Resources.Load<TutorialMessageCatalog>(CatalogResourcePath);
         popup ??= GetComponentInChildren<TutorialPopup>(true);
+        highlightController ??= GetComponentInChildren<TutorialHighlightController>(true);
         popup?.HideImmediate();
+        highlightController?.Hide();
 
         LoadJsonGuides();
     }
@@ -82,6 +85,7 @@ public sealed class TutorialManager : MonoBehaviour
         GlobalEventBus.OnMainActiveSkillCasted -= HandleMainActiveSkillCasted;
 
         CompletePendingInputRestore();
+        highlightController?.Hide();
 
         if (!isShowing)
             return;
@@ -132,6 +136,7 @@ public sealed class TutorialManager : MonoBehaviour
 
         isShowing = true;
         currentCompletion = completed;
+        highlightController?.Hide();
         SetGameplayHUDDimmed(true);
 
         if (entry.PauseGame)
@@ -201,6 +206,7 @@ public sealed class TutorialManager : MonoBehaviour
         currentGuide = runtimeRadio;
         currentCompletion = null;
         StopDurationRoutine();
+        highlightController?.Hide();
         SetGameplayHUDDimmed(true);
         PauseGameplay();
 
@@ -315,7 +321,8 @@ public sealed class TutorialManager : MonoBehaviour
         currentGuide = guide;
         currentCompletion = completed;
         isShowing = true;
-        SetGameplayHUDDimmed(true);
+        bool hasHighlight = highlightController != null && highlightController.Show(guide);
+        SetGameplayHUDDimmed(!hasHighlight);
 
         if (guide.PauseGame)
             PauseGameplay();
@@ -353,6 +360,7 @@ public sealed class TutorialManager : MonoBehaviour
         popup?.HideImmediate();
         RestoreGameplay();
         SetGameplayHUDDimmed(false);
+        highlightController?.EnterObjectiveMode();
     }
 
     private bool IsConfirmInputPressed()
@@ -408,6 +416,7 @@ public sealed class TutorialManager : MonoBehaviour
         currentGuide = null;
         StopDurationRoutine();
         popup?.HideImmediate();
+        highlightController?.Hide();
         RestoreGameplay();
         SetGameplayHUDDimmed(false);
 
@@ -438,6 +447,7 @@ public sealed class TutorialManager : MonoBehaviour
         isShowing = false;
         RestoreGameplay();
         popup?.HideImmediate();
+        highlightController?.Hide();
         SetGameplayHUDDimmed(false);
 
         Action completion = currentCompletion;
@@ -458,6 +468,8 @@ public sealed class TutorialManager : MonoBehaviour
             currentGuide = suspendedGuide;
             currentCompletion = suspendedCompletion;
             isShowing = true;
+            bool hasHighlight = highlightController != null && highlightController.Show(currentGuide);
+            SetGameplayHUDDimmed(!hasHighlight);
             popup?.Show(currentGuide, HandlePopupConfirmed);
 
             if (currentGuide.PauseGame)
@@ -469,6 +481,7 @@ public sealed class TutorialManager : MonoBehaviour
             currentCompletion = null;
             isShowing = false;
             popup?.HideImmediate();
+            highlightController?.Hide();
             SetGameplayHUDDimmed(false);
         }
 
