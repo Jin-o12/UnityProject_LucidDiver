@@ -27,9 +27,6 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenRecordCardPopUpUI += OpenRecordCardPopUp;
         GlobalEventBus.OnOpenSettingUI += OpenSettingPopup;
 
-        // 게임 메뉴 팝업 관련 이벤트들
-        GlobalEventBus.OnOpenSettingUI += OpenSettingUI;
-
         openSettingAction = InputManager.Instance.GetAction("Lobby", "GameMenu");
         if (openSettingAction != null)
         {
