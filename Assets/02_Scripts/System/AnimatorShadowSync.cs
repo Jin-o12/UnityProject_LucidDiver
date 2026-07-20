@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using AnyPortrait;
 using UnityEngine;
@@ -15,7 +15,7 @@ public class AnimatorShadowSync : MonoBehaviour
 
     [Header("Shadow Visibility")]
     [SerializeField] private apPortrait shadowPortrait;
-    [SerializeField, Range(0f, 1f)] private float targetShadowAlpha = 0f;
+    [SerializeField, Range(0f, 1f)] private float targetShadowAlpha = 1f;
     [SerializeField] private float shadowFadeTime = 0.5f;
 
     private AnimatorControllerParameter[] parameters;
@@ -173,5 +173,43 @@ public class AnimatorShadowSync : MonoBehaviour
 
         // AnyPortrait/Animator 업데이트는 유지하고 렌더 투명도만 조절한다
         shadowPortrait.SetMeshAlphaAll(alpha);
+
+        // {그림자 메시 렌더러들을 ShadowsOnly로 강제하고, 투명(T) 셰이더를 클립(C) 셰이더로 대체하여 URP Shadow Map 생성에 포함되도록 만듭니다}
+        var renderers = shadowPortrait.GetComponentsInChildren<MeshRenderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            var r = renderers[i];
+            if (r.shadowCastingMode != UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly)
+            {
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+            }
+            
+            var mats = r.sharedMaterials;
+            if (mats != null)
+            {
+                for (int j = 0; j < mats.Length; j++)
+                {
+                    var mat = mats[j];
+                    if (mat != null)
+                    {
+                        string shaderName = mat.shader.name;
+                        if (shaderName.Contains("_T_Alpha"))
+                        {
+                            string newShaderName = shaderName.Replace("_T_Alpha", "_C_Alpha");
+                            Shader newShader = Shader.Find(newShaderName);
+                            if (newShader != null)
+                            {
+                                mat.shader = newShader;
+                            }
+                        }
+
+                        if (mat.renderQueue != 2450)
+                        {
+                            mat.renderQueue = 2450;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
