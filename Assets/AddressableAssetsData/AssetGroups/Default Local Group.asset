@@ -252,6 +252,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e8527e1d81e4461daf9ec956a314cc6f
+    m_Address: VFX_Player_Muzzle_HDR
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ed58507349914c842b10aaefe1af98b5
     m_Address: HCFX_Explosion_03
     m_ReadOnly: 0

@@ -20,6 +20,9 @@ public class InventoryUI : MonoBehaviour
     [Header("Artifact Equip UI")]
     [SerializeField] private ArtifactEquipSlotUI[] artifactEquipSlots;  // 인벤토리 상단의 아티팩트 장착 슬롯 UI 목록
 
+    [Header("장착 대상 드롭 피드백")]
+    [SerializeField] private InventoryDragFeedbackController dropFeedbackController;
+
     [Header("Quickslot UI")]
     public QuickSlotGroupUI quickSlot;                // 인벤토리 상단의 소비품 장착 퀵슬롯 UI
 
@@ -34,7 +37,17 @@ public class InventoryUI : MonoBehaviour
         if (dropZone != null)
             dropZoneCanvasGroup = dropZone.GetComponent<CanvasGroup>();
 
+        if (dropFeedbackController == null)
+            dropFeedbackController = GetComponent<InventoryDragFeedbackController>();
+
         HideDropZone();
+        HideEquipmentDropFeedback(true);
+    }
+
+    private void OnDisable()
+    {
+        HideDropZone();
+        HideEquipmentDropFeedback(true);
     }
 
     public void CreatSlots(int count)
@@ -84,7 +97,7 @@ public class InventoryUI : MonoBehaviour
             InventorySlotUI slotUI = newSlot.GetComponent<InventorySlotUI>();
 
             if (slotUI != null)
-                slotUI.Initialize(j + invenCnt);
+                slotUI.Initialize(j + invenCnt, false);
 
             safeSlotsObj.Add(newSlot);
         }
@@ -95,7 +108,7 @@ public class InventoryUI : MonoBehaviour
         InventorySlotUI slotUI = slotsObj[slotNum].GetComponent<InventorySlotUI>();
         itemCategory category = slotData.itemData != null ? slotData.itemData.category : itemCategory.empty;
         ItemGrade grade = slotData.itemData != null ? slotData.itemData.itemGrade : ItemGrade.empty;
-        slotUI.UpdateSlot(slotData.amount, slotData.icon, category, grade, SlotType.inventory);
+        slotUI.UpdateSlot(slotData.amount, slotData.icon, category, grade, SlotType.inventory, slotData.itemData, slotData.TID);
     }
 
     public void UpdateSafeSlot(int slotNum, InventorySlotData slotData)
@@ -103,7 +116,7 @@ public class InventoryUI : MonoBehaviour
         InventorySlotUI slotUI = safeSlotsObj[slotNum].GetComponent<InventorySlotUI>();
         itemCategory category = slotData.itemData != null ? slotData.itemData.category : itemCategory.empty;
         ItemGrade grade = slotData.itemData != null ? slotData.itemData.itemGrade : ItemGrade.empty;
-        slotUI.UpdateSlot(slotData.amount, slotData.icon, category, grade, SlotType.inventory);
+        slotUI.UpdateSlot(slotData.amount, slotData.icon, category, grade, SlotType.inventory, slotData.itemData, slotData.TID);
     }
 
     public void SetDropZoneAvailable(bool available)
@@ -132,6 +145,24 @@ public class InventoryUI : MonoBehaviour
         dropZoneCanvasGroup.alpha = 0f;
         dropZoneCanvasGroup.blocksRaycasts = false;
         dropZoneCanvasGroup.interactable = false;
+    }
+
+    /// <summary>
+    /// 드래그 중인 인벤토리 슬롯을 기준으로 장착 가능한 목적지 슬롯만 강조합니다.
+    /// </summary>
+    public void ShowEquipmentDropFeedback(InventorySlotUI sourceSlot)
+    {
+        if (dropFeedbackController != null)
+            dropFeedbackController.ShowFor(sourceSlot);
+    }
+
+    /// <summary>
+    /// 장착 가능 슬롯 강조를 숨깁니다. UI 종료나 강제 취소 시에는 즉시 숨길 수 있습니다.
+    /// </summary>
+    public void HideEquipmentDropFeedback(bool immediate = false)
+    {
+        if (dropFeedbackController != null)
+            dropFeedbackController.HideAll(immediate);
     }
 
     public void UpdateArtifactSlot(int slotIndex, ArtifactItemData artifact)
@@ -179,5 +210,7 @@ public class InventoryUI : MonoBehaviour
                     slotUI.ResetDragState();
             }
         }
+
+        HideEquipmentDropFeedback(true);
     }
 }
