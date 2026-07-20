@@ -246,6 +246,14 @@ public class QuickSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
         if (droppedObj.TryGetComponent<InventorySlotUI>(out InventorySlotUI originSlot))
         {
+            bool canAssign = originSlot.CanAssignToQuickSlot
+                && InventoryItemPlacementPolicy.CanPlace(
+                    originSlot.CurrentItemData,
+                    originSlot.CurrentItemTid,
+                    InventoryDropTargetType.QuickSlot);
+            if (!canAssign)
+                return;
+
             GlobalEventBus.OnDropItemQuickSlot(slotIndex, originSlot.slotIndex);
             return;
         }

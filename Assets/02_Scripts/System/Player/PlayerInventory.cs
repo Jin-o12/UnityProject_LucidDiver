@@ -490,8 +490,13 @@ public class PlayerInventory : MonoBehaviour
 
         InventorySlotData slot = slots[_slotIndex];
 
-        // 소모품이 아닐 경우에는 퀵슬롯에 등록하지 않음
-        if (slot.TID <= 300 || slot.TID >= 400) return;
+        // UI 하이라이트와 동일한 공통 규칙으로 소모품만 퀵슬롯에 등록합니다.
+        ItemData itemData = slot.itemData ?? GetItemDataByTID(slot.TID);
+        if (!InventoryItemPlacementPolicy.CanPlace(itemData, slot.TID, InventoryDropTargetType.QuickSlot))
+            return;
+
+        if (slot.itemData == null)
+            slot.itemData = itemData;
 
         // 이미 다른 퀵슬롯에 있다면 기존 슬롯을 비움
         for (int i = 0; i < quickSlotNum; i++)

@@ -319,6 +319,11 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
 
         if (eventData.pointerDrag.TryGetComponent<InventorySlotUI>(out InventorySlotUI inventorySlot))
         {
+            if (!InventoryItemPlacementPolicy.CanPlace(
+                    inventorySlot.CurrentItemData,
+                    InventoryDropTargetType.ArtifactSlot))
+                return;
+
             GlobalEventBus.OnArtifactEquipRequested?.Invoke(equipSlotIndex, inventorySlot.slotIndex);
         }
     }

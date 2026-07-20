@@ -34,8 +34,14 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     [SerializeField] private Sprite idleSprite;
 
     private InventoryUI inventoryUI;
+    private ItemData currentItemData;
+    private int currentItemTid;
+    private bool canAssignToQuickSlot = true;
 
     public int slotIndex { get; set; }
+    public ItemData CurrentItemData => currentItemData;
+    public int CurrentItemTid => currentItemTid;
+    public bool CanAssignToQuickSlot => canAssignToQuickSlot;
 
     private CanvasGroup canvasGroup;
     private Canvas mainCanvas;
@@ -86,11 +92,14 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         if (canvasGroup != null)
             canvasGroup.blocksRaycasts = true;
+
+        inventoryUI?.HideEquipmentDropFeedback(true);
     }
 
-    public void Initialize(int index)
+    public void Initialize(int index, bool allowQuickSlotAssignment = true)
     {
         slotIndex = index;
+        canAssignToQuickSlot = allowQuickSlotAssignment;
         UpdateSlot(0, null, itemCategory.idle, ItemGrade.empty, SlotType.empty);
     }
 
@@ -101,11 +110,28 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void UpdateSlot(int stack, Sprite sprite, itemCategory _category, ItemGrade grade, SlotType _type)
     {
+        UpdateSlot(stack, sprite, _category, grade, _type, null, 0);
+    }
+
+    public void UpdateSlot(
+        int stack,
+        Sprite sprite,
+        itemCategory _category,
+        ItemGrade grade,
+        SlotType _type,
+        ItemData itemData,
+        int itemTid = 0)
+    {
+        currentItemData = itemData;
+        currentItemTid = itemData != null ? itemData.TID : itemTid;
+
         if (stack <= 0 || sprite == null)
         {
             itemImg.enabled = false;
             itemStack.text = "";
             slotType = SlotType.empty;
+            currentItemData = null;
+            currentItemTid = 0;
             ApplySlotFrame(ItemGrade.empty);
             ApplyCategoryIcon(itemCategory.empty);
             return;
@@ -236,6 +262,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         if (canvasGroup != null)
             canvasGroup.blocksRaycasts = false;
         inventoryUI?.ShowDropZone();
+        inventoryUI?.ShowEquipmentDropFeedback(this);
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -261,6 +288,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             itemInfo.localPosition = Vector3.zero;
         }
         inventoryUI?.HideDropZone();
+        inventoryUI?.HideEquipmentDropFeedback();
     }
 
     public void OnDrop(PointerEventData eventData)

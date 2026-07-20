@@ -539,13 +539,16 @@ public class InventoryPresenter : MonoBehaviour
     {
         // UI는 슬롯 번호만 전달하고, Presenter가 실제 아이템 타입과 장착 가능 여부를 검증한다.
         ItemData itemData = playerInventory.GetSlotItemData(inventorySlotIndex);
-        ArtifactItemData artifactData = itemData as ArtifactItemData;
 
-        if (artifactData == null)
+        if (!InventoryItemPlacementPolicy.CanPlace(itemData, InventoryDropTargetType.ArtifactSlot))
         {
             Debug.LogWarning("아티팩트 아이템만 장착할 수 있습니다.");
             return;
         }
+
+        ArtifactItemData artifactData = itemData as ArtifactItemData;
+        if (artifactData == null)
+            return;
 
         if (!playerArtifactEquipment.EquipArtifact(equipSlotIndex, artifactData, out ArtifactItemData previousArtifact))
             return;
