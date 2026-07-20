@@ -52,6 +52,16 @@ public class UIManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    private void OnEnable()
+    {
+        GlobalEventBus.OnCloseTopUI += CloseNowUI;
+    }
+
+    private void OnDisable()
+    {
+        GlobalEventBus.OnCloseTopUI -= CloseNowUI;
+    }
+
     private void OnDestroy()
     {
         // 자기 자신이 싱글톤 참조라면 파괴 시점에 참조를 비워 다음 접근 때 다시 찾을 수 있게 합니다.
@@ -109,6 +119,20 @@ public class UIManager : MonoBehaviour
         {
             Debug.LogWarning("현재 닫을 UI가 없습니다.");
         }
+    }
+
+    /// <summary>
+    /// 스택의 최상단 UI를 반환합니다.
+    /// </summary>
+    public MonoBehaviour GetTopUI()
+    {
+        if (this == null)
+            return null;
+
+        if (uiStack.TryPeek(out MonoBehaviour topUI))
+            return topUI;
+            
+        return null;
     }
 
     /// <summary>

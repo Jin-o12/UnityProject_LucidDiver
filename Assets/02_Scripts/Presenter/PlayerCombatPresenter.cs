@@ -95,6 +95,11 @@ public class PlayerCombatPresenter : MonoBehaviour
 
     private void TryAttack()
     {
+        // 마우스가 UI 위에 있다면 공격을 실행하지 않음
+        if (UnityEngine.EventSystems.EventSystem.current != null &&
+            UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            return;
+
         if (localInputReader.IsGameplayInputBlocked || localInputReader.IsInventoryOpen)
             return;
 

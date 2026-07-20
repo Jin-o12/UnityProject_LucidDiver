@@ -97,7 +97,9 @@ public class GlobalEventBus
     public static Action<float> OnPrintSkillCooltime;                       // 스킬 쿨타임 시작: Action<skillCooltime>
     public static Action<float> OnPrintEvadeCooltime;                       // 구르기 시작: Action<evadeCooltime>
     public static Action<string> OnSwitchInputMap;                          // Action Map 바꾸기 이벤트
-    public static Action OnOpenSettingUI;                                   // 로비의 설정 버튼 터치 시 설정 UI 오픈
+    public static Action OnOpenSettingUI;                                   // 설정 UI 열기 이벤트
+    public static Action OnOpenNoticeLobbyUI;                               // 로비로 가기 전 경고창 팝업 열기 이벤트
+    public static Action OnCloseTopUI;                                      // 가장 최상단의 UI를 종료하는 이벤트
 
     /// <summary>
     /// 설정 관리 이벤트
