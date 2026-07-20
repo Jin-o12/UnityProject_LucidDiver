@@ -391,6 +391,7 @@ GameObject:
   - component: {fileID: 5741781935344463553}
   - component: {fileID: 9118985713835142962}
   - component: {fileID: 132459527459975648}
+  - component: {fileID: 3164773497115714916}
   m_Layer: 0
   m_Name: Scroll View-Inventory
   m_TagString: Untagged
@@ -489,6 +490,26 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3164773497115714916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408943042794697066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b43641d388b71b44812778c9b792925, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetId: InventoryUI_Slots
+  targetKind: 0
+  uiTarget: {fileID: 2142395031627857612}
+  uiPadding: {x: 18, y: 18}
+  worldTarget: {fileID: 2142395031627857612}
+  worldOffset: {x: 0, y: 1, z: 0}
+  worldScreenSize: {x: 220, y: 220}
+  worldCamera: {fileID: 0}
 --- !u!1 &497629448234951755
 GameObject:
   m_ObjectHideFlags: 0
@@ -3417,6 +3438,7 @@ GameObject:
   - component: {fileID: 3175184011399935933}
   - component: {fileID: 9003319249782581823}
   - component: {fileID: 5802872119565185991}
+  - component: {fileID: 3896753733803483609}
   m_Layer: 0
   m_Name: Panel-QuickSlotList
   m_TagString: Untagged
@@ -3502,6 +3524,26 @@ MonoBehaviour:
   - {fileID: 4474797615587419149}
   - {fileID: 74366053869745340}
   - {fileID: 1573733219886894380}
+--- !u!114 &3896753733803483609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4375133131259757140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b43641d388b71b44812778c9b792925, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetId: InventoryUI_QuickSlot_ArtifactSlot
+  targetKind: 0
+  uiTarget: {fileID: 1175269081342035026}
+  uiPadding: {x: 18, y: 18}
+  worldTarget: {fileID: 1175269081342035026}
+  worldOffset: {x: 0, y: 1, z: 0}
+  worldScreenSize: {x: 220, y: 220}
+  worldCamera: {fileID: 0}
 --- !u!1 &4843435037715118560
 GameObject:
   m_ObjectHideFlags: 0
@@ -5655,6 +5697,7 @@ GameObject:
   - component: {fileID: 8916283206780167131}
   - component: {fileID: 5047375657880607475}
   - component: {fileID: 4341840475170528192}
+  - component: {fileID: 3206836798790608310}
   m_Layer: 0
   m_Name: Panel-EquipSlotList
   m_TagString: Untagged
@@ -5723,6 +5766,26 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3206836798790608310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8743456385673204837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b43641d388b71b44812778c9b792925, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetId: InventoryUI_QuickSlot_ArtifactSlot
+  targetKind: 0
+  uiTarget: {fileID: 8916283206780167131}
+  uiPadding: {x: 18, y: 18}
+  worldTarget: {fileID: 8916283206780167131}
+  worldOffset: {x: 0, y: 1, z: 0}
+  worldScreenSize: {x: 220, y: 220}
+  worldCamera: {fileID: 0}
 --- !u!1 &8797793977169927382
 GameObject:
   m_ObjectHideFlags: 0

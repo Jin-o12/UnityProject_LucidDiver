@@ -27,6 +27,7 @@ public static class TutorialPrefabBuilder
 
         TutorialMessageCatalog catalog = CreateCatalogIfNeeded();
         CreateSystemPrefab(catalog);
+        TutorialHighlightPrefabSetup.ApplyAll();
         CreateTriggerPrefab();
         PlacePrefabsInTutorialScene();
         AddTutorialSceneToBuildSettings();
@@ -87,6 +88,37 @@ public static class TutorialPrefabBuilder
 
     private static void CreateSystemPrefab(TutorialMessageCatalog catalog)
     {
+        // 이미 구성된 프리팹은 새로 만들지 않고 필수 참조만 보강합니다.
+        // 기존 방식으로 덮어쓰면 인스펙터에서 조정한 분리 패널과 레이아웃이 사라질 수 있습니다.
+        GameObject existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(SystemPrefabPath);
+        if (existingPrefab != null)
+        {
+            GameObject prefabContents = PrefabUtility.LoadPrefabContents(SystemPrefabPath);
+
+            try
+            {
+                TutorialManager existingManager = prefabContents.GetComponent<TutorialManager>();
+                TutorialPopup existingPopup = prefabContents.GetComponentInChildren<TutorialPopup>(true);
+                if (existingManager == null || existingPopup == null)
+                {
+                    Debug.LogError("[TutorialBuilder] 기존 TutorialSystem 프리팹의 필수 컴포넌트를 찾지 못해 덮어쓰기를 중단합니다.");
+                    return;
+                }
+
+                SerializedObject existingManagerObject = new SerializedObject(existingManager);
+                SetObjectReference(existingManagerObject, "catalog", catalog);
+                SetObjectReference(existingManagerObject, "popup", existingPopup);
+                existingManagerObject.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(prefabContents, SystemPrefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(prefabContents);
+            }
+
+            return;
+        }
+
         GameObject root = new GameObject("TutorialSystem");
         TutorialManager manager = root.AddComponent<TutorialManager>();
 
