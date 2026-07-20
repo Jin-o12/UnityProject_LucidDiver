@@ -9,6 +9,7 @@ public class PlayerCombatPresenter : MonoBehaviour
 {
     private PlayerWeapon playerWeapon;          // 플레이어가 장착한 무기 정보
     private PlayerStatus playerStatus;          // 플레이어 HP/MP/상태 정보
+    private LocalInputReader localInputReader;  // 튜토리얼 및 인벤토리 입력 차단 상태
 
     private float skillTimer;                   // 스킬 사용 시 딜레이 타이머
 
@@ -27,8 +28,9 @@ public class PlayerCombatPresenter : MonoBehaviour
     {
         playerWeapon = GetComponent<PlayerWeapon>();
         playerStatus = GetComponent<PlayerStatus>();
+        localInputReader = GetComponent<LocalInputReader>();
 
-        if (playerWeapon == null || playerStatus == null)
+        if (playerWeapon == null || playerStatus == null || localInputReader == null)
         {
             enabled = false;
             Debug.LogError("PlayerCombatPresenter: 필요한 컴포넌트가 없습니다.");
@@ -46,7 +48,7 @@ public class PlayerCombatPresenter : MonoBehaviour
     {
         if (GlobalEventBus.OnGetInputAction != null)
         {
-            attackAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Attack");
+            attackAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Fire");
             if (attackAction != null)
             {
                 attackAction.Enable();
@@ -93,6 +95,9 @@ public class PlayerCombatPresenter : MonoBehaviour
 
     private void TryAttack()
     {
+        if (localInputReader.IsGameplayInputBlocked || localInputReader.IsInventoryOpen)
+            return;
+
         if (playerStatus.nowState != PlayerStatus.livingState.idle)
             return;
 
@@ -141,6 +146,9 @@ public class PlayerCombatPresenter : MonoBehaviour
 
     private void TryEvade()
     {
+        if (localInputReader.IsGameplayInputBlocked)
+            return;
+
         if (playerStatus.nowState != PlayerStatus.livingState.idle)
             return;
 
@@ -158,6 +166,9 @@ public class PlayerCombatPresenter : MonoBehaviour
     private void TrySkill()
     {
         /// 스킬 시전을 위한 조건들 확인 (플레이어 상태, 스킬 쿨타임, 마나량) ///
+
+        if (localInputReader.IsGameplayInputBlocked || localInputReader.IsInventoryOpen)
+            return;
 
         // 플레이어 상태가 idle이 아니면 스킬을 사용할 수 없음
         if (playerStatus.nowState != PlayerStatus.livingState.idle) return;

@@ -29,7 +29,7 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (GlobalEventBus.OnGetInputAction != null)
         {
-            interactAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Interact");
+            interactAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Interaction");
             if (interactAction != null)
             {
                 interactAction.Enable();

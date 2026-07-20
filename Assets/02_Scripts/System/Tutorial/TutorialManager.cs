@@ -26,6 +26,7 @@ public sealed class TutorialManager : MonoBehaviour
 
     private Action currentCompletion;
     private LocalInputReader inputReader;
+    private LocalInputReader pendingInputReader;
     private TutorialGuideData currentGuide;
     private Coroutine durationRoutine;
     private Coroutine restoreInputRoutine;
@@ -79,6 +80,8 @@ public sealed class TutorialManager : MonoBehaviour
         GlobalEventBus.OnEnemyDead -= HandleEnemyDead;
         GlobalEventBus.OnEscapeRequest -= HandleEscapeRequest;
         GlobalEventBus.OnMainActiveSkillCasted -= HandleMainActiveSkillCasted;
+
+        CompletePendingInputRestore();
 
         if (!isShowing)
             return;
@@ -547,11 +550,7 @@ public sealed class TutorialManager : MonoBehaviour
 
     private void PauseGameplay()
     {
-        if (restoreInputRoutine != null)
-        {
-            StopCoroutine(restoreInputRoutine);
-            restoreInputRoutine = null;
-        }
+        CompletePendingInputRestore();
 
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
@@ -576,17 +575,15 @@ public sealed class TutorialManager : MonoBehaviour
         if (inputReader != null)
         {
             LocalInputReader readerToRestore = inputReader;
+            pendingInputReader = readerToRestore;
             inputReader = null;
 
             // 확인 버튼을 누른 같은 프레임의 마우스/키 입력이 공격이나 이동으로 이어지지 않도록
-            // 플레이어 액션맵 복귀를 한 프레임 늦춥니다.
+            // 클릭 입력이 완전히 끝난 뒤 플레이어 액션맵을 복구합니다.
             if (isActiveAndEnabled)
-                restoreInputRoutine = StartCoroutine(RestorePlayerInputMapNextFrame(readerToRestore));
+                restoreInputRoutine = StartCoroutine(RestorePlayerInputMapAfterClick(readerToRestore));
             else
-            {
-                readerToRestore.SwitchToPlayerMap();
-                readerToRestore.SetGameplayInputBlocked(false);
-            }
+                CompletePendingInputRestore();
         }
 
         inputReader = null;
@@ -597,20 +594,44 @@ public sealed class TutorialManager : MonoBehaviour
         GlobalEventBus.OnGameplayHUDAlphaRequested?.Invoke(dimmed ? DimmedGameplayHUDAlpha : DefaultGameplayHUDAlpha);
     }
 
-    private IEnumerator RestorePlayerInputMapNextFrame(LocalInputReader readerToRestore)
+    private IEnumerator RestorePlayerInputMapAfterClick(LocalInputReader readerToRestore)
     {
+        yield return null;
+
+        // 확인 클릭이 완전히 끝날 때까지 Player 액션맵을 비활성 상태로 유지합니다.
         yield return null;
 
         if (readerToRestore != null)
         {
-            readerToRestore.SwitchToPlayerMap();
-
-            // NEXT/확인 클릭이 같은 프레임의 공격 입력으로 이어지지 않도록 한 프레임 더 입력 잠금을 유지합니다.
-            yield return null;
             readerToRestore.SetGameplayInputBlocked(false);
+            readerToRestore.SwitchToPlayerMap();
         }
 
+        if (pendingInputReader == readerToRestore)
+            pendingInputReader = null;
+
         restoreInputRoutine = null;
+    }
+
+    /// <summary>
+    /// 튜토리얼 오브젝트가 비활성화되거나 씬이 전환돼도 입력 맵과 차단 상태가 남지 않게 즉시 복구합니다.
+    /// </summary>
+    private void CompletePendingInputRestore()
+    {
+        if (restoreInputRoutine != null)
+        {
+            StopCoroutine(restoreInputRoutine);
+            restoreInputRoutine = null;
+        }
+
+        LocalInputReader readerToRestore = pendingInputReader;
+        pendingInputReader = null;
+
+        if (readerToRestore == null)
+            return;
+
+        readerToRestore.SetGameplayInputBlocked(false);
+        readerToRestore.SwitchToPlayerMap();
     }
 
     private void MarkTutorialCompleted()
@@ -633,6 +654,7 @@ public sealed class TutorialManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        CompletePendingInputRestore();
         RestoreGameplay();
         if (Instance == this)
             Instance = null;

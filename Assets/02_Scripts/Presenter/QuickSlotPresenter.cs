@@ -12,14 +12,16 @@ public class QuickSlotPresenter : MonoBehaviour
 
     // 아이템 데이터 조회 인터페이스
     private IItemDataRepository itemRepo;
+    private LocalInputReader localInputReader;          // 튜토리얼 및 인벤토리 입력 차단 상태
 
     private InputAction quickSlotAction;                // 퀵슬롯 사용 이벤트 캐시
 
     private void Awake()
     {
         inventory = GetComponent<PlayerInventory>();
+        localInputReader = GetComponent<LocalInputReader>();
 
-        if (inventory == null)
+        if (inventory == null || localInputReader == null)
         {
             enabled = false;
             Debug.LogError("QuickSlotPresenter: 필요한 컴포넌트가 없습니다.");
@@ -53,6 +55,9 @@ public class QuickSlotPresenter : MonoBehaviour
 
     private void OnQuickSlotInput(InputAction.CallbackContext context)
     {
+        if (localInputReader.IsGameplayInputBlocked || localInputReader.IsInventoryOpen)
+            return;
+
         float rawValue = context.ReadValue<float>();
         int slotIndex = (int)rawValue;
         UseQuickSlotItem(slotIndex);
