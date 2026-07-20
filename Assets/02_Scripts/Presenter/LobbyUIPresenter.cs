@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -25,6 +25,7 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenRecordUI += OpenDiverRecord;
         GlobalEventBus.OnOpenStorageUI += OpenStorageInventory;
         GlobalEventBus.OnOpenRecordCardPopUpUI += OpenRecordCardPopUp;
+        GlobalEventBus.OnOpenSettingUI += OpenSettingPopup;
 
         // 게임 메뉴 팝업 관련 이벤트들
         GlobalEventBus.OnOpenSettingUI += OpenSettingUI;
@@ -45,7 +46,7 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenRecordUI -= OpenDiverRecord;
         GlobalEventBus.OnOpenStorageUI -= OpenStorageInventory;
         GlobalEventBus.OnOpenRecordCardPopUpUI -= OpenRecordCardPopUp;
-        GlobalEventBus.OnOpenSettingUI -= OpenSettingUI;
+        GlobalEventBus.OnOpenSettingUI -= OpenSettingPopup;
 
         if (openSettingAction != null)
         {
@@ -145,15 +146,15 @@ public class LobbyUIPresenter : MonoBehaviour
     }
 
     /* 설졍 UI 열기 */
-    public void OpenSettingUI()
+    public void OpenSettingPopup()
     {
-        if(settingUI==null)
+        if (settingUI == null)
         {
             settingUI = uiManager.Open<SettingUI>();
             return;
         }
 
-        if(settingUI.gameObject.activeInHierarchy == false)
+        if (settingUI.gameObject.activeInHierarchy == false)
         {
             uiManager.Open<SettingUI>();
         }

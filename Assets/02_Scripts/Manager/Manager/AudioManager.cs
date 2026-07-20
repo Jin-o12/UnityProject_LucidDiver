@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -110,6 +110,8 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnMasterVolumeChanged += SetMasterVolume;
         GlobalEventBus.OnBGMVolumeChanged += SetBGMVolume;
         GlobalEventBus.OnSFXVolumeChanged += SetSFXVolume;
+        GlobalEventBus.OnUIVolumeChanged += SetUIVolume;
+        GlobalEventBus.OnAmbVolumeChanged += SetAmbVolume;
 
         // Awake 처리 완료 시 디버그 콜
         Debug.Log("AudioManager Awake CALLED");
@@ -139,6 +141,8 @@ public class AudioManager : MonoBehaviour
         GlobalEventBus.OnMasterVolumeChanged -= SetMasterVolume;
         GlobalEventBus.OnBGMVolumeChanged -= SetBGMVolume;
         GlobalEventBus.OnSFXVolumeChanged -= SetSFXVolume;
+        GlobalEventBus.OnUIVolumeChanged -= SetUIVolume;
+        GlobalEventBus.OnAmbVolumeChanged -= SetAmbVolume;
     }
 
     #region 데이터 및 변수 관리

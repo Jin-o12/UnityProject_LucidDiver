@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 글로벌 이벤트 버스 클래스
 /// 게임 내에서 발생하는 다양한 이벤트를 중앙에서 관리하고 전달하는 역할을 합니다.
 /// </summary>
@@ -107,6 +107,8 @@ public class GlobalEventBus
     public static Action<float> OnMasterVolumeChanged;                      // 전체 사운드 음량 변경 요청: Action<볼륨 값>
     public static Action<float> OnBGMVolumeChanged;                         // BGM 음량 변경 요청: Action<볼륨 값>
     public static Action<float> OnSFXVolumeChanged;                         // SFX 음량 변경 요청: Action<볼륨 값>
+    public static Action<float> OnUIVolumeChanged;                         // UI 음량 변경 요청: Action<볼륨 값>
+    public static Action<float> OnAmbVolumeChanged;                         // 환경음 음량 변경 요청: Action<볼륨 값>
 
 
     /// <summary>
