@@ -18,6 +18,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     [SerializeField] private Transform itemInfo;        // 아이템 아이콘 위치
     [SerializeField] private SlotType slotType;         // 슬롯 종류
     [SerializeField] private Image categoryIconImage;   // 카테고리 아이콘 이미지
+    [SerializeField] private InventoryDropTargetFeedbackUI dropTargetFeedback; // 현재 드롭 예정 슬롯 강조
 
     [Header("등급별 슬롯 이미지")]
     [SerializeField] private Sprite emptySlotSprite;
@@ -71,6 +72,11 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         if (itemInfo != null)
             canvasGroup = itemInfo.GetComponent<CanvasGroup>();
 
+        if (dropTargetFeedback == null)
+            dropTargetFeedback = GetComponentInChildren<InventoryDropTargetFeedbackUI>(true);
+
+        dropTargetFeedback?.HideImmediate();
+
         if (mainCanvas == null)
         {
             enabled = false;
@@ -93,7 +99,13 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         if (canvasGroup != null)
             canvasGroup.blocksRaycasts = true;
 
+        dropTargetFeedback?.HideImmediate();
         inventoryUI?.HideEquipmentDropFeedback(true);
+    }
+
+    private void OnDisable()
+    {
+        dropTargetFeedback?.HideImmediate();
     }
 
     public void Initialize(int index, bool allowQuickSlotAssignment = true)
@@ -289,10 +301,14 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         }
         inventoryUI?.HideDropZone();
         inventoryUI?.HideEquipmentDropFeedback();
+        dropTargetFeedback?.SetAvailable(false);
     }
 
     public void OnDrop(PointerEventData eventData)
     {
+        // 실제 드롭 대상이 확정됐으므로 현재 슬롯 강조를 종료합니다.
+        dropTargetFeedback?.SetAvailable(false);
+
         GameObject droppedObj = eventData.pointerDrag;
         if (droppedObj == null)
             return;
@@ -325,8 +341,17 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        GameObject draggedObject = eventData.pointerDrag;
+        if (CanPreviewAsDropTarget(draggedObject))
+        {
+            // Unity의 GraphicRaycaster가 현재 선택한 슬롯과 같은 대상을 강조합니다.
+            dropTargetFeedback?.SetAvailable(true);
+            GlobalEventBus.OnTooltipUIClose?.Invoke();
+            return;
+        }
+
         // 드래그 중에는 툴팁을 표시하지 않습니다.
-        if (AnySlotDragging)
+        if (draggedObject != null || AnySlotDragging)
             return;
 
         //포인터가 슬롯 UI에 들어오면 아이템 데이터를 읽는다
@@ -335,7 +360,27 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        dropTargetFeedback?.SetAvailable(false);
+
         //포인터가 슬롯 UI에서 빠져나가면 슬롯 UI를 닫는다
         GlobalEventBus.OnTooltipUIClose?.Invoke();
+    }
+
+    /// <summary>
+    /// 기존 OnDrop이 목적지 인덱스를 그대로 사용하는 이동만 미리 표시합니다.
+    /// 아티팩트 해제는 현재 첫 빈 슬롯으로 이동하므로 특정 슬롯 강조 대상에서 제외합니다.
+    /// </summary>
+    private bool CanPreviewAsDropTarget(GameObject draggedObject)
+    {
+        if (draggedObject == null)
+            return false;
+
+        if (draggedObject.TryGetComponent<InventorySlotUI>(out InventorySlotUI originSlot))
+            return originSlot != this;
+
+        if (draggedObject.TryGetComponent<ChestSlotUI>(out ChestSlotUI chestSlot))
+            return chestSlot.OwnerUI != null;
+
+        return false;
     }
 }

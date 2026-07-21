@@ -4,8 +4,10 @@
 /// </summary>
 public enum InventoryDropTargetType
 {
-    QuickSlot,
-    ArtifactSlot
+    QuickSlot = 0,
+    ArtifactSlot = 1,
+    InventorySlot = 2,
+    ChestSlot = 3
 }
 
 /// <summary>

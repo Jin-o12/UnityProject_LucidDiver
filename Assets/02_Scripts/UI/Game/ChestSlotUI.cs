@@ -16,6 +16,7 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandle
     [SerializeField] private Image itemImg;             // 아이템 아이콘 이미지
     [SerializeField] private TMP_Text itemStack;        // 아이템 개수 출력
     [SerializeField] private Transform itemInfo;        // 아이템 아이콘 위치
+    [SerializeField] private InventoryDropTargetFeedbackUI dropTargetFeedback; // 현재 드롭 예정 슬롯 강조
 
     [Header("등급별 슬롯 이미지")]
     [SerializeField] private Sprite emptySlotSprite;
@@ -49,6 +50,16 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandle
 
         if (itemInfo != null)
             canvasGroup = itemInfo.GetComponent<CanvasGroup>();
+
+        if (dropTargetFeedback == null)
+            dropTargetFeedback = GetComponentInChildren<InventoryDropTargetFeedbackUI>(true);
+
+        dropTargetFeedback?.HideImmediate();
+    }
+
+    private void OnDisable()
+    {
+        dropTargetFeedback?.HideImmediate();
     }
 
     public void Initialize(ChestUI owner, int index)
@@ -186,10 +197,15 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandle
             itemInfo.SetParent(transform);
             itemInfo.localPosition = Vector3.zero;
         }
+
+        dropTargetFeedback?.SetAvailable(false);
     }
 
     public void OnDrop(PointerEventData eventData)
     {
+        // 실제 드롭 대상이 확정됐으므로 현재 슬롯 강조를 종료합니다.
+        dropTargetFeedback?.SetAvailable(false);
+
         GameObject droppedObj = eventData.pointerDrag;
         if (droppedObj == null)
             return;
@@ -200,8 +216,18 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandle
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        GameObject draggedObject = eventData.pointerDrag;
+        if (draggedObject != null &&
+            draggedObject.TryGetComponent<InventorySlotUI>(out _))
+        {
+            // 상자 슬롯의 실제 OnDrop 대상과 동일한 슬롯만 강조합니다.
+            dropTargetFeedback?.SetAvailable(true);
+            GlobalEventBus.OnTooltipUIClose?.Invoke();
+            return;
+        }
+
         // 드래그 중에는 툴팁을 표시하지 않습니다.
-        if (InventorySlotUI.AnySlotDragging)
+        if (draggedObject != null || InventorySlotUI.AnySlotDragging)
             return;
 
         //포인터가 슬롯 UI에 들어오면 아이템 데이터를 읽는다
@@ -210,6 +236,8 @@ public class ChestSlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandle
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        dropTargetFeedback?.SetAvailable(false);
+
         //포인터가 슬롯 UI에서 빠져나가면 슬롯 UI를 닫는다
         GlobalEventBus.OnTooltipUIClose?.Invoke();
     }
