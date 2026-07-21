@@ -24,6 +24,15 @@ public class EnemyBrain
     [SerializeField, Min(0f)] private float chaseLeashDistance = 16f;        // 루트에서 이 거리까지 새 추적과 어그로 회복을 허용
     [SerializeField, Min(0f)] private float hardReturnDistance = 24f;        // 루트에서 이 거리를 넘으면 시야와 무관하게 즉시 복귀
 
+    [Header("Chase Crowd Spacing")]
+    [SerializeField] private bool enableDistributedApproach = false;                    // 플레이어 추격에만 개체별 접근 지점을 사용할지 여부
+    [SerializeField, Min(0.1f)] private float distributedApproachRadius = 4.0f;          // 플레이어 중심에서 각 접근 지점까지의 거리
+    [SerializeField, Min(0.1f)] private float distributedApproachActivationDistance = 10.0f; // 가까운 추격에서 접근 지점 분산을 시작할 거리
+    [SerializeField, Range(2, 32)] private int distributedApproachSlotCount = 16;        // 플레이어 주변에 분산할 접근 지점 수
+    [SerializeField, Min(0.1f)] private float distributedApproachSampleDistance = 1.5f;  // 접근 지점을 NavMesh 위로 보정할 탐색 거리
+    [SerializeField, Min(0.05f)] private float distributedApproachReachDistance = 0.5f;  // 접근 슬롯에 도착했다고 판단할 평면 거리
+    [SerializeField] private bool holdInsideAttackRangeDuringCooldown = false;          // 공격 쿨다운 중 플레이어 중심으로 더 파고들지 않고 정지할지 여부
+
     [NonSerialized] private WaitForSeconds checkingDelay;     // 판단 루프에서 재사용할 대기 객체
     [NonSerialized] private Transform currentTarget;          // 현재 전투 타겟으로 유지 중인 플레이어
     [NonSerialized] private Transform aggroTarget;            // 디코이처럼 전투 타겟보다 우선해서 이동할 임시 어그로 타겟
@@ -31,6 +40,7 @@ public class EnemyBrain
     [NonSerialized] private float currentAggro;                    // 현재 추적 유지에 남아 있는 어그로
     [NonSerialized] private float sightLostStartTime = -1f;        // 시야가 최초로 끊긴 시각
     [NonSerialized] private float lastTickTime;                     // 프레임 변화와 무관한 어그로 계산용 이전 판단 시각
+    [NonSerialized] private NavMeshPath distributedApproachPath;    // 접근 슬롯의 경로 유효성 검사에 재사용할 NavMesh 경로
 
     /// <summary>
     /// 지정한 타겟을 일정 시간 동안 강제 어그로 대상으로 등록합니다.
@@ -54,6 +64,11 @@ public class EnemyBrain
         aggroRecoveryPerSecond = Mathf.Max(0f, aggroRecoveryPerSecond);
         chaseLeashDistance = Mathf.Max(0f, chaseLeashDistance);
         hardReturnDistance = Mathf.Max(chaseLeashDistance, hardReturnDistance);
+        distributedApproachRadius = Mathf.Max(0.1f, distributedApproachRadius);
+        distributedApproachActivationDistance = Mathf.Max(distributedApproachRadius, distributedApproachActivationDistance);
+        distributedApproachSlotCount = Mathf.Clamp(distributedApproachSlotCount, 2, 32);
+        distributedApproachSampleDistance = Mathf.Max(0.1f, distributedApproachSampleDistance);
+        distributedApproachReachDistance = Mathf.Max(0.05f, distributedApproachReachDistance);
         postAttackDirectChaseTime = Mathf.Max(0f, postAttackDirectChaseTime);
         postAttackRouteTolerance = Mathf.Max(0f, postAttackRouteTolerance);
         checkingDelay = new WaitForSeconds(checkInterval);
@@ -82,6 +97,50 @@ public class EnemyBrain
         currentTarget = null;
         currentAggro = 0f;
         sightLostStartTime = -1f;
+    }
+
+    /// <summary>
+    /// 실제 피해를 받은 순간 플레이어를 전투 타겟으로 등록합니다.
+    /// 디코이 이동 타겟은 별도로 보존하므로 디코이가 끝난 뒤 이 전투 타겟으로 자연스럽게 복귀합니다.
+    /// </summary>
+    public bool TryAcquireCombatTargetFromDamage(
+        Transform self,
+        Transform damageTarget,
+        EnemyMemory memory,
+        EnemyNoiseListener noiseListener)
+    {
+        if (self == null || memory == null || !EnemyPerception.IsTargetAvailable(damageTarget))
+        {
+            return false;
+        }
+
+        bool hadTarget = EnemyPerception.IsTargetAvailable(currentTarget);
+        Transform resolvedTarget = hadTarget
+            ? currentTarget
+            : damageTarget;
+
+        // 피격 반응도 자기 활동 범위 안에서만 허용해 원거리 공격으로 복귀 규칙이 무너지지 않게 합니다.
+        if (!IsInsideChaseArea(memory, self.position, resolvedTarget.position))
+        {
+            return false;
+        }
+
+        currentTarget = resolvedTarget;
+        currentAggro = maxAggro;
+        sightLostStartTime = -1f;
+
+        if (!hadTarget)
+        {
+            memory.CaptureReturnAnchor(self.position);
+        }
+
+        memory.UpdateTargetTracking(currentTarget);
+        memory.ClearPatrolWait();
+        memory.ClearChasePlan();
+
+        // 강제 조사만 해제하며, EnemyBrain이 별도로 보관하는 디코이 우선 타겟은 유지합니다.
+        noiseListener?.Clear();
+        return true;
     }
 
     /// <summary>
@@ -232,6 +291,32 @@ public class EnemyBrain
             return;
         }
 
+        Vector3 distributedDestination = default;
+        bool hasDistributedApproach =
+            hasTargetAwareness &&
+            isInsideChaseArea &&
+            TryResolveDistributedApproachDestination(
+                self,
+                status,
+                agent,
+                memory,
+                currentTarget.position,
+                out distributedDestination);
+
+        bool hasReachedDistributedApproach =
+            hasDistributedApproach &&
+            locomotion.HasReachedDestination(
+                self.position,
+                distributedDestination,
+                distributedApproachReachDistance);
+
+        // NavMesh 보정으로 슬롯이 공격 거리 밖에 잡혔다면 직접 추격으로 전환해 슬롯에서 멈추지 않게 합니다.
+        if (hasReachedDistributedApproach && !combat.IsWithinAttackStartRange(sqrDistToTarget))
+        {
+            hasDistributedApproach = false;
+            hasReachedDistributedApproach = false;
+        }
+
         if (hasTargetAwareness && isInsideChaseArea && combat.CanStartAttack(sqrDistToTarget))
         {
             memory.ClearChasePlan();
@@ -248,6 +333,32 @@ public class EnemyBrain
             return;
         }
 
+        // 공격 후 쿨다운에는 자기 접근 슬롯으로 재정렬해 돌진이 끝난 지점에 여러 개체가 포개지지 않게 합니다.
+        if (hasDistributedApproach && !hasReachedDistributedApproach)
+        {
+            memory.SetChasePlan(EnemyMemory.ChaseMoveMode.Direct, distributedDestination);
+            locomotion.MoveTo(
+                self,
+                agent,
+                distributedDestination,
+                status,
+                EnemyStatus.EnemyState.Chase,
+                onWalkEvent,
+                onLookDirEvent);
+            return;
+        }
+
+        // 공격 쿨다운 중에는 이미 확보한 공격 거리에서 정지해 플레이어 중심으로 포개지지 않게 합니다.
+        if (holdInsideAttackRangeDuringCooldown && hasTargetAwareness && isInsideChaseArea &&
+            combat.IsWithinAttackStartRange(sqrDistToTarget))
+        {
+            memory.ClearChasePlan();
+            locomotion.Stop(agent, onWalkEvent);
+            status.SetNowState(EnemyStatus.EnemyState.Chase);
+            locomotion.FacePosition(self, currentTarget.position, onLookDirEvent);
+            return;
+        }
+
         {
             Vector3 chaseDestination = hasTargetAwareness && isInsideChaseArea
                 ? currentTarget.position
@@ -261,6 +372,13 @@ public class EnemyBrain
                 chaseMoveMode = EnemyMemory.ChaseMoveMode.Intercept;
             }
 
+            // 접근 슬롯에 도착한 틱에서도 플레이어가 움직였다면 최신 슬롯 위치를 추적 목적지로 유지합니다.
+            if (hasDistributedApproach)
+            {
+                chaseDestination = distributedDestination;
+                chaseMoveMode = EnemyMemory.ChaseMoveMode.Direct;
+            }
+
             memory.SetChasePlan(chaseMoveMode, chaseDestination);
             locomotion.MoveTo(
                 self,
@@ -272,6 +390,80 @@ public class EnemyBrain
                 onLookDirEvent);
             return;
         }
+    }
+
+    /// <summary>
+    /// 전투 타겟 주변의 개체별 접근 슬롯을 계산하고 실제로 도달 가능한 NavMesh 위치만 반환합니다.
+    /// 디코이, 마지막 확인 위치, 조사, 순찰, 복귀 목적지에는 호출하지 않아 각 목적지 체계를 분리합니다.
+    /// </summary>
+    private bool TryResolveDistributedApproachDestination(
+        Transform self,
+        EnemyStatus status,
+        NavMeshAgent agent,
+        EnemyMemory memory,
+        Vector3 targetPosition,
+        out Vector3 destination)
+    {
+        destination = targetPosition;
+
+        if (!enableDistributedApproach || self == null || status == null || agent == null || memory == null ||
+            !agent.enabled || !agent.isOnNavMesh)
+        {
+            return false;
+        }
+
+        float activationDistanceSqr = distributedApproachActivationDistance * distributedApproachActivationDistance;
+        if (EnemyMathUtility.GetPlanarSqrDistance(self.position, targetPosition) > activationDistanceSqr)
+        {
+            return false;
+        }
+
+        int identitySeed = status.objID > 0 ? status.objID : self.GetInstanceID();
+        int positiveSeed = identitySeed & int.MaxValue;
+        int slotIndex = (int)(((long)positiveSeed * 7L) % distributedApproachSlotCount);
+        float slotAngle = slotIndex * (Mathf.PI * 2.0f / distributedApproachSlotCount);
+        Vector3 slotOffset = new Vector3(Mathf.Cos(slotAngle), 0.0f, Mathf.Sin(slotAngle)) * distributedApproachRadius;
+        Vector3 slotCandidate = targetPosition + slotOffset;
+
+        if (!NavMesh.SamplePosition(
+                slotCandidate,
+                out NavMeshHit navHit,
+                distributedApproachSampleDistance,
+                agent.areaMask))
+        {
+            return false;
+        }
+
+        // 타겟이 루트 경계 가까이에 있어도 접근 슬롯 자체가 활동 반경 밖으로 튀어나가지 않게 합니다.
+        if (!IsInsideChaseArea(memory, self.position, navHit.position))
+        {
+            return false;
+        }
+
+        // 얇은 벽 반대편 슬롯은 경로가 완성되더라도 큰 우회 이동을 만들 수 있으므로 직선 NavMesh 연결을 확인합니다.
+        if (NavMesh.SamplePosition(
+                targetPosition,
+                out NavMeshHit targetNavHit,
+                distributedApproachSampleDistance,
+                agent.areaMask) &&
+            NavMesh.Raycast(targetNavHit.position, navHit.position, out NavMeshHit blockedHit, agent.areaMask))
+        {
+            return false;
+        }
+
+        if (distributedApproachPath == null)
+        {
+            distributedApproachPath = new NavMeshPath();
+        }
+
+        if (!agent.CalculatePath(navHit.position, distributedApproachPath) ||
+            distributedApproachPath.status != NavMeshPathStatus.PathComplete)
+        {
+            return false;
+        }
+
+        destination = navHit.position;
+        return true;
     }
 
     /// <summary>

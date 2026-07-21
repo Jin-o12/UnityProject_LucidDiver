@@ -543,6 +543,11 @@ MonoBehaviour:
   playerSpawnPool: {fileID: 0}
   enemySpawnPool: {fileID: 0}
   levelBoxSpawner: {fileID: 0}
+  enableEnemyBoxDrop: 1
+  enemyBoxPrefab: {fileID: 864261442559763118, guid: a297d633fad14944da8c9131e19770dd,
+    type: 3}
+  enemyBoxDropChance: 0.25
+  enemyBoxNavMeshSampleDistance: 2
 --- !u!114 &331859828
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -16,6 +16,7 @@ public class EnemyCombat
     [SerializeField] private float attackHitRange = 1.2f;              // 실제 데미지가 들어가는 근접 판정 거리
     [SerializeField] private float closeCombatAwarenessRange = 6.0f;   // 교전 후 시야각 없이 타겟을 유지할 근접 거리
     [SerializeField] private float attackCooldown = 2.0f;              // 한 번의 콤보 후 다시 공격 가능한 시간
+    [SerializeField] private bool startCooldownAfterCombo = false;     // 기존 프리팹 호환을 유지하면서 콤보 종료 후부터 쿨다운을 셀지 여부
 
     [SerializeField] private float firstSlashTelegraphTime = 0.35f;    // 공격 애니메이션을 시작하기 전 선딜 시간
     [SerializeField] private float telegraphTurnSpeed = 360.0f;        // 선딜 중 플레이어를 따라 회전할 초당 최대 각도
@@ -75,6 +76,15 @@ public class EnemyCombat
     }
 
     /// <summary>
+    /// 공격 쿨다운과 무관하게 대상이 공격 시작 거리 안에 있는지만 확인합니다.
+    /// 추격 중인 적이 쿨다운 동안 플레이어 중심까지 파고들지 않도록 정지 판정에 사용합니다.
+    /// </summary>
+    public bool IsWithinAttackStartRange(float sqrDistToTarget)
+    {
+        return sqrDistToTarget <= attackStartRangeSqr;
+    }
+
+    /// <summary>
     /// 이미 교전 중인 타겟을 시야각과 무관하게 유지할 수 있는 근접 거리인지 확인합니다.
     /// 최초 감지에는 사용하지 않으며, 플레이어가 에너미 주위를 돌 때 전투가 끊기는 현상만 방지합니다.
     /// </summary>
@@ -110,7 +120,10 @@ public class EnemyCombat
             yield break;
         }
 
-        nextAttackAvailableTime = Time.time + attackCooldown;
+        if (!startCooldownAfterCombo)
+        {
+            nextAttackAvailableTime = Time.time + attackCooldown;
+        }
         status.SetNowState(EnemyStatus.EnemyState.Attack);
         status.SetIsAttacking(true);
 
@@ -282,6 +295,11 @@ public class EnemyCombat
     {
         ClearRuntimeState();
         lastAttackFinishedTime = Time.time;
+
+        if (startCooldownAfterCombo)
+        {
+            nextAttackAvailableTime = Time.time + attackCooldown;
+        }
 
         if (status != null)
         {

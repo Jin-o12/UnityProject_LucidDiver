@@ -5397,6 +5397,10 @@ MonoBehaviour:
   playerSpawnPool: {fileID: 22377260}
   enemySpawnPool: {fileID: 864556063}
   levelBoxSpawner: {fileID: 0}
+  enableEnemyBoxDrop: 1
+  enemyBoxPrefab: {fileID: 864261442559763118, guid: a297d633fad14944da8c9131e19770dd, type: 3}
+  enemyBoxDropChance: 0.2
+  enemyBoxNavMeshSampleDistance: 2
 --- !u!114 &331859828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13554,17 +13558,17 @@ MonoBehaviour:
   lootOptions: []
   useCategoryLoot: 1
   categoryLootOptions:
-  - category: 3
+  - category: 4
     weight: 60
     minAmount: 1
     maxAmount: 1
     itemTids: 2d0100002e010000
-  - category: 4
+  - category: 5
     weight: 30
     minAmount: 1
     maxAmount: 1
     itemTids: 91010000
-  - category: 5
+  - category: 6
     weight: 10
     minAmount: 1
     maxAmount: 1

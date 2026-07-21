@@ -25,6 +25,7 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
     public float defValue { get; private set; }         // 방어력
 
     public int[] Hit_AudioIDPool = null;                    // 적 피격 사운드 ID 리스트
+    public event Action OnLocalDamaged;                     // 이 적이 비치명 피해를 실제로 받았을 때만 호출되는 로컬 피격 이벤트
     public event Action OnLocalDeath;                       // 이 적 자신이 죽었을 때만 호출되는 로컬 사망 이벤트
     public event Action<float, float> OnLocalHealthChanged; // 이 적 자신에게 연결된 HP UI만 갱신하기 위한 로컬 체력 이벤트
 
@@ -107,8 +108,14 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
             VFXService.Instance?.Play(GameplayVFXIds.EnemyHit, transform.position, transform.rotation);
 
             // 피해 입을 시 사운드 재생 이벤트
-            int hitID = Hit_AudioIDPool[UnityEngine.Random.Range(0, Hit_AudioIDPool.Length)];
-            GlobalEventBus.OnPlay3DSoundRequested?.Invoke(hitID, transform.position);
+            if (Hit_AudioIDPool != null && Hit_AudioIDPool.Length > 0)
+            {
+                int hitID = Hit_AudioIDPool[UnityEngine.Random.Range(0, Hit_AudioIDPool.Length)];
+                GlobalEventBus.OnPlay3DSoundRequested?.Invoke(hitID, transform.position);
+            }
+
+            // 피해가 확정된 뒤 해당 적에게만 피격 플래시와 미세 경직을 요청합니다.
+            OnLocalDamaged?.Invoke();
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 
 public class SpawnManager : MonoBehaviour
@@ -13,6 +14,12 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private GameObject playerSpawnPool;
     [SerializeField] private GameObject enemySpawnPool;
     [SerializeField] private LevelBoxSpawner levelBoxSpawner;
+
+    [Header("에너미 처치 상자 드롭")]
+    [SerializeField] private bool enableEnemyBoxDrop = true;                          // 현재 씬에서 에너미 처치 상자를 사용할지 여부
+    [SerializeField] private GameObject enemyBoxPrefab;                               // 에너미가 처치됐을 때 생성할 전용 상자 프리팹
+    [SerializeField, Range(0.0f, 1.0f)] private float enemyBoxDropChance = 0.2f;       // 에너미 한 마리당 상자 생성 확률
+    [SerializeField, Min(0.0f)] private float enemyBoxNavMeshSampleDistance = 2.0f;    // 사망 위치를 이동 가능한 지면으로 보정할 탐색 거리
 
     private readonly List<Transform> playerSpawnPoint = new();
     private readonly List<EnemySpawnZone> enemySpawnZones = new();
@@ -327,6 +334,9 @@ public class SpawnManager : MonoBehaviour
         // 스폰 직후 런타임 고유 번호를 다시 배정해서 적 개체별 UI/이벤트 식별이 섞이지 않게 만듭니다.
         AssignEnemyRuntimeIdentity(spawnedEnemy);
 
+        // 이 씬에서 에너미 상자 드롭을 사용하는 경우 해당 개체의 로컬 사망 이벤트에 1회 처리기를 연결합니다.
+        RegisterEnemyBoxDrop(spawnedEnemy);
+
         EnemyPatrolRoute patrolRoute = spawnPointSettings != null
             ? spawnPointSettings.ResolvePatrolRoute(zone)
             : ResolvePatrolRouteByName(pointTransform, zone);
@@ -344,6 +354,63 @@ public class SpawnManager : MonoBehaviour
 
         // 생성된 적 오브젝트를 런타임 데이터에 등록
         return true;
+    }
+
+    /// <summary>
+    /// 스폰된 적의 로컬 사망 이벤트에 현재 씬 전용 상자 드롭 처리를 연결합니다.
+    /// 전역 사망 이벤트를 사용하지 않아 다른 적의 위치나 중복 구독과 섞이지 않게 합니다.
+    /// </summary>
+    private void RegisterEnemyBoxDrop(GameObject spawnedEnemy)
+    {
+        if (!enableEnemyBoxDrop || enemyBoxPrefab == null || spawnedEnemy == null)
+            return;
+
+        if (!spawnedEnemy.TryGetComponent(out EnemyStatus enemyStatus))
+            return;
+
+        bool dropResolved = false;
+        Transform enemyTransform = spawnedEnemy.transform;
+        Scene enemyScene = spawnedEnemy.scene;
+
+        enemyStatus.OnLocalDeath += () =>
+        {
+            if (dropResolved)
+                return;
+
+            dropResolved = true;
+            float dropChance = Mathf.Clamp01(enemyBoxDropChance);
+
+            if (dropChance <= 0.0f || UnityEngine.Random.value >= dropChance)
+                return;
+
+            // Destroy는 프레임 종료 시 적용되므로 로컬 사망 이벤트 안에서 마지막 위치를 안전하게 읽을 수 있습니다.
+            if (enemyTransform == null)
+                return;
+
+            SpawnEnemyBox(enemyTransform.position, enemyScene);
+        };
+    }
+
+    /// <summary>
+    /// 에너미 사망 위치를 NavMesh 지면에 보정한 뒤 전용 상자를 같은 씬에 생성합니다.
+    /// </summary>
+    private void SpawnEnemyBox(Vector3 deathPosition, Scene enemyScene)
+    {
+        Vector3 spawnPosition = deathPosition;
+        float sampleDistance = Mathf.Max(0.0f, enemyBoxNavMeshSampleDistance);
+
+        if (sampleDistance > 0.0f &&
+            NavMesh.SamplePosition(deathPosition, out NavMeshHit navHit, sampleDistance, NavMesh.AllAreas))
+        {
+            spawnPosition = navHit.position;
+        }
+
+        GameObject spawnedBox = Instantiate(enemyBoxPrefab, spawnPosition, Quaternion.identity);
+
+        if (enemyScene.IsValid() && enemyScene.isLoaded)
+        {
+            SceneManager.MoveGameObjectToScene(spawnedBox, enemyScene);
+        }
     }
 
     /// <summary>

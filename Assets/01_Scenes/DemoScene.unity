@@ -4405,6 +4405,11 @@ MonoBehaviour:
   playerSpawnPool: {fileID: 22377260}
   enemySpawnPool: {fileID: 864556063}
   levelBoxSpawner: {fileID: 0}
+  enableEnemyBoxDrop: 1
+  enemyBoxPrefab: {fileID: 864261442559763118, guid: a297d633fad14944da8c9131e19770dd,
+    type: 3}
+  enemyBoxDropChance: 0.25
+  enemyBoxNavMeshSampleDistance: 2
 --- !u!114 &331859828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4481,6 +4486,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da05d0bf87097d540ade1ab289363ec6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  healthItemAudioID: 10701
+  mpGainItemAudioID: 10704
 --- !u!1 &335469027
 GameObject:
   m_ObjectHideFlags: 0
@@ -11023,6 +11030,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   slotCapacity: 8
   items: []
+  fixedLootOptions: []
   useRandomLoot: 1
   minCreateCount: 1
   maxCreateCount: 2
@@ -11030,17 +11038,17 @@ MonoBehaviour:
   lootOptions: []
   useCategoryLoot: 1
   categoryLootOptions:
-  - category: 3
+  - category: 4
     weight: 60
     minAmount: 1
     maxAmount: 1
     itemTids: 2d0100002e010000
-  - category: 4
+  - category: 5
     weight: 30
     minAmount: 1
     maxAmount: 1
     itemTids: 91010000
-  - category: 5
+  - category: 6
     weight: 10
     minAmount: 1
     maxAmount: 1
@@ -11063,6 +11071,7 @@ MonoBehaviour:
     weight: 2
   openNoiseRange: 30
   openNoiseDuration: 1.8
+  Box_Open_AudioIDPool: 
 --- !u!1001 &730569933
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28438,6 +28447,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timerCanvas: {fileID: 490515740}
   escapeTime: 3
+  Escape_Interact_AudioIDPool: 
+  Escape_Channeling_AudioIDPool: 
+  Escape_Success_AudioIDPool: 
+  Escape_Faild_AudioIDPool: 
+  failAudioTime: 1.5
 --- !u!1001 &1935843507
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31181,6 +31195,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df754175ecc50b5469c1ff24f8982967, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyKillCount: 0
   linkRateLevel: 0
   linkRatePoint: 1
   slotTID1: 0
@@ -31493,9 +31508,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9085d86c646f8e74c8a839fde94049da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  saveFilePath: 
-  playerRuntimeDataSO: {fileID: 11400000, guid: fa24d9c9857070545bf4a1ecd531daa4,
-    type: 2}
 --- !u!114 &8254926602438052759
 MonoBehaviour:
   m_ObjectHideFlags: 0

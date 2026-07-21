@@ -201,6 +201,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spriteObject: {fileID: 0}
+  enableHitFlash: 1
+  hitFlashDuration: 0.1
+  hitFlashColor: {r: 1, g: 0.82, b: 1.15, a: 1}
   uiCanvas: {fileID: 7808511582653619376}
 --- !u!114 &6382991222265699378
 MonoBehaviour:
@@ -740,6 +743,13 @@ MonoBehaviour:
     aggroRecoveryPerSecond: 50
     chaseLeashDistance: 16
     hardReturnDistance: 24
+    enableDistributedApproach: 1
+    distributedApproachRadius: 3.5
+    distributedApproachActivationDistance: 10
+    distributedApproachSlotCount: 16
+    distributedApproachSampleDistance: 1
+    distributedApproachReachDistance: 0.5
+    holdInsideAttackRangeDuringCooldown: 1
   memory:
     homePosition: {x: 0, y: 0, z: 0}
     patrolRoute: {fileID: 0}
@@ -793,6 +803,7 @@ MonoBehaviour:
     attackHitRange: 1.2
     closeCombatAwarenessRange: 6
     attackCooldown: 2
+    startCooldownAfterCombo: 1
     firstSlashTelegraphTime: 0.35
     telegraphTurnSpeed: 360
     attackAnimationDuration: 2
@@ -819,6 +830,14 @@ MonoBehaviour:
     interceptNavMeshSampleDistance: 2.5
     minInterceptAdvanceDistance: 0.75
   attackOrigin: {fileID: 56568208924813218}
+  enableHitStagger: 1
+  hitStaggerDuration: 0.3
+  attackHitStopDuration: 0.1
+  hitStaggerCooldown: 0.1
+  recognizePlayerOnHit: 1
+  varyAvoidancePriority: 1
+  avoidancePriorityMin: 40
+  avoidancePriorityMax: 60
   dissolve_AudioIDPool: dc270000
 --- !u!195 &7557683503473658478
 NavMeshAgent:
@@ -829,7 +848,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 7964753466980344667}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 0.7
   m_Speed: 4
   m_Acceleration: 12
   avoidancePriority: 50
