@@ -6915,9 +6915,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c9f8d59a8d54068a5bf8716c95d5d33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  guaranteedSpawnCount: 4
-  maxSpawnCount: 8
-  allowRandomSpawn: 1
+  guaranteedSpawnCount: 1
+  maxSpawnCount: 1
+  allowRandomSpawn: 0
   randomWeight: 1.2
   densityMultiplier: 0.8
   includeInactivePoints: 0

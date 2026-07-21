@@ -20,13 +20,14 @@ public enum Faction
 // 아이템 카테고리
 public enum itemCategory
 {
-    empty,          // 빈 칸
-    idle,           // 기타 아이템
-    weapon,         // 무장
-    armor,          // 방어구
-    consume,        // 소모품
-    memory,         // 기억 파편
-    artifact        // 장비형 아이템
+    // 프리팹과 씬에 저장되는 enum 값이 항목 추가로 밀리지 않도록 번호를 명시적으로 고정합니다.
+    empty = 0,      // 빈 칸
+    idle = 1,       // 기타 아이템
+    weapon = 2,     // 무장
+    armor = 3,      // 방어구
+    consume = 4,    // 소모품
+    memory = 5,     // 기억 파편
+    artifact = 6    // 장비형 아이템
 }
 
 // 아이템 사용 방법 종류

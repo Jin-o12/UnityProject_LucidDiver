@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 8231862850697718748}
   - component: {fileID: 3570556423017487055}
   m_Layer: 0
-  m_Name: ItemBox
+  m_Name: ItemBox_Tutorial
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -85,9 +85,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   slotCapacity: 8
   items: []
-  useRandomLoot: 1
+  fixedLootOptions:
+  - itemTid: 301
+    amount: 5
+  - itemTid: 302
+    amount: 5
+  - itemTid: 401
+    amount: 1
+  - itemTid: 1001
+    amount: 1
+  useRandomLoot: 0
   minCreateCount: 1
-  maxCreateCount: 5
+  maxCreateCount: 1
   allowDuplicateLoot: 0
   lootOptions:
   - itemData: {fileID: 11400000, guid: e1f045e6d1c51e143a76ad1a32e8bf41, type: 2}

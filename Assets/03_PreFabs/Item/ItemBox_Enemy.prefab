@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 8231862850697718748}
   - component: {fileID: 3570556423017487055}
   m_Layer: 0
-  m_Name: ItemBox
+  m_Name: ItemBox_Enemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -86,7 +86,7 @@ MonoBehaviour:
   slotCapacity: 8
   items: []
   useRandomLoot: 1
-  minCreateCount: 1
+  minCreateCount: 3
   maxCreateCount: 5
   allowDuplicateLoot: 0
   lootOptions:
@@ -104,37 +104,37 @@ MonoBehaviour:
     maxAmount: 5
   useCategoryLoot: 1
   categoryLootOptions:
-  - category: 4
-    weight: 60
-    minAmount: 1
-    maxAmount: 1
-    itemTids: 2d0100002e010000
   - category: 5
-    weight: 30
+    weight: 40
     minAmount: 1
-    maxAmount: 1
+    maxAmount: 3
     itemTids: 91010000
+  - category: 4
+    weight: 40
+    minAmount: 3
+    maxAmount: 5
+    itemTids: 2d0100002e010000
   - category: 6
-    weight: 10
+    weight: 20
     minAmount: 1
     maxAmount: 1
     itemTids: 
   artifactLootOptions:
   - grade: 1
     itemTid: 1001
-    weight: 55
+    weight: 40
   - grade: 2
     itemTid: 1002
-    weight: 25
+    weight: 30
   - grade: 3
     itemTid: 1003
-    weight: 12
+    weight: 15
   - grade: 4
     itemTid: 1004
-    weight: 6
+    weight: 10
   - grade: 5
     itemTid: 1005
-    weight: 2
+    weight: 5
   openNoiseRange: 20
   openNoiseDuration: 1.8
   Box_Open_AudioIDPool: 692900006a290000

@@ -681,6 +681,10 @@ MonoBehaviour:
   playerSpawnPool: {fileID: 0}
   enemySpawnPool: {fileID: 0}
   levelBoxSpawner: {fileID: 0}
+  enableEnemyBoxDrop: 0
+  enemyBoxPrefab: {fileID: 864261442559763118, guid: a297d633fad14944da8c9131e19770dd, type: 3}
+  enemyBoxDropChance: 0.2
+  enemyBoxNavMeshSampleDistance: 2
 --- !u!114 &331859828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -705,15 +709,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a81f4a4f0b64d19a7bd6c1d9ef73a41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boxPrefab: {fileID: 864261442559763118, guid: 06362a3faed268841a55bd0693f1f026,
+  boxPrefab: {fileID: 864261442559763118, guid: 06b8a72973c80db4bb5f039fa6c75651,
     type: 3}
   boxSpawnPointPool: {fileID: 0}
   spawnedBoxRoot: {fileID: 0}
-  additionalSpawnMode: 2
-  additionalSpawnDensity: 0.4
+  additionalSpawnMode: 1
+  additionalSpawnDensity: 0
   additionalSpawnCount: 0
-  totalSpawnMin: 20
-  totalSpawnMax: 30
+  totalSpawnMin: 0
+  totalSpawnMax: 0
   clearPreviouslySpawnedBoxes: 1
   useDeterministicSeed: 0
   randomSeed: 0
