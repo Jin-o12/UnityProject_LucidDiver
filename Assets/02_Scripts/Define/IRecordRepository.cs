@@ -16,4 +16,7 @@ public interface IRecordRepository
 
     /* 특정 레벨에서 출력 가능한 기록 대사의 개수를 뽑아오는 함수 */
     int GetRecordCount(int charTID, int requiredLevel);
+
+    /* 특정 레벨에 맞는 기록의 제목(RecordName)을 뽑아오는 함수 */
+    string GetRecordName(int charTID, int requiredLevel);
 }

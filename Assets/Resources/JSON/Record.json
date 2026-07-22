@@ -2,6 +2,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101101,
     "Speaker": "유안",
@@ -10,6 +11,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101102,
     "Speaker": "관제사",
@@ -18,6 +20,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101103,
     "Speaker": "유안",
@@ -26,6 +29,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101104,
     "Speaker": "관제사",
@@ -34,6 +38,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101105,
     "Speaker": "유안",
@@ -42,6 +47,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101106,
     "Speaker": "관제사",
@@ -50,6 +56,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101107,
     "Speaker": "유안",
@@ -58,6 +65,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101108,
     "Speaker": "관제사",
@@ -66,6 +74,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101109,
     "Speaker": "유안",
@@ -74,6 +83,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101110,
     "Speaker": "관제사",
@@ -82,6 +92,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101111,
     "Speaker": "유안",
@@ -90,6 +101,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101112,
     "Speaker": "관제사",
@@ -98,6 +110,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "약속",
     "RequiredLevel": 1,
     "DialogID": 101113,
     "Speaker": "유안",
@@ -106,6 +119,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101201,
     "Speaker": "관제사",
@@ -114,6 +128,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101202,
     "Speaker": "유안",
@@ -122,6 +137,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101203,
     "Speaker": "관제사",
@@ -130,6 +146,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101204,
     "Speaker": "유안",
@@ -138,6 +155,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101205,
     "Speaker": "관제사",
@@ -146,6 +164,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101206,
     "Speaker": "유안",
@@ -154,6 +173,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101207,
     "Speaker": "관제사",
@@ -162,6 +182,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101208,
     "Speaker": "유안",
@@ -170,6 +191,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101209,
     "Speaker": "관제사",
@@ -178,6 +200,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101210,
     "Speaker": "유안",
@@ -186,6 +209,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101211,
     "Speaker": "관제사",
@@ -194,6 +218,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "닻",
     "RequiredLevel": 2,
     "DialogID": 101212,
     "Speaker": "유안",
@@ -202,6 +227,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101301,
     "Speaker": "관제사",
@@ -210,6 +236,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101302,
     "Speaker": "유안",
@@ -218,6 +245,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101303,
     "Speaker": "관제사",
@@ -226,6 +254,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101304,
     "Speaker": "유안",
@@ -234,6 +263,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101305,
     "Speaker": "관제사",
@@ -242,6 +272,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101306,
     "Speaker": "유안",
@@ -250,6 +281,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101307,
     "Speaker": "관제사",
@@ -258,6 +290,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101308,
     "Speaker": "유안",
@@ -266,6 +299,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101309,
     "Speaker": "관제사",
@@ -274,6 +308,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101310,
     "Speaker": "유안",
@@ -282,6 +317,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101311,
     "Speaker": "관제사",
@@ -290,6 +326,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101312,
     "Speaker": "관제사",
@@ -298,6 +335,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101313,
     "Speaker": "관제사",
@@ -306,6 +344,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101314,
     "Speaker": "유안",
@@ -314,6 +353,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101315,
     "Speaker": "유안",
@@ -322,6 +362,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101316,
     "Speaker": "관제사",
@@ -330,6 +371,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101317,
     "Speaker": "유안",
@@ -338,6 +380,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "임계점",
     "RequiredLevel": 3,
     "DialogID": 101318,
     "Speaker": "유안",
@@ -346,6 +389,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101401,
     "Speaker": "유안",
@@ -354,6 +398,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101402,
     "Speaker": "관제사",
@@ -362,6 +407,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101403,
     "Speaker": "유안",
@@ -370,6 +416,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101404,
     "Speaker": "관제사",
@@ -378,6 +425,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101405,
     "Speaker": "유안",
@@ -386,6 +434,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101406,
     "Speaker": "관제사",
@@ -394,6 +443,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101407,
     "Speaker": "유안",
@@ -402,6 +452,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101408,
     "Speaker": "관제사",
@@ -410,6 +461,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101409,
     "Speaker": "유안",
@@ -418,6 +470,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101410,
     "Speaker": "관제사",
@@ -426,6 +479,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101411,
     "Speaker": "유안",
@@ -434,6 +488,7 @@
   {
     "CharacterTID": 101,
     "CharacterName": "Yuan",
+    "RecordName": "두 번째 첫 만남",
     "RequiredLevel": 4,
     "DialogID": 101412,
     "Speaker": "유안",

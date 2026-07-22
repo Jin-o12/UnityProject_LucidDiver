@@ -9,6 +9,7 @@ public class FlatRecordData
     public int CharacterTID;
     public string CharacterName;
     public int RequiredLevel;
+    public string RecordName;
     public int DialogID;
     public string Speaker;
     public string Text;
@@ -37,8 +38,15 @@ public class LocalJsonRecordRepository : IRecordRepository
                     {
                         CharacterTID = data.CharacterTID,
                         CharacterName = data.CharacterName,
+                        RecordNames = new Dictionary<int, string>(),
                         Records = new Dictionary<int, List<RecordLine>>()
                     };
+                }
+
+                // 해당 캐릭터의 RecordNames 안에 현재 해금 레벨(RequiredLevel)의 제목이 없으면 추가
+                if (!recordDataDictionary[data.CharacterTID].RecordNames.ContainsKey(data.RequiredLevel))
+                {
+                    recordDataDictionary[data.CharacterTID].RecordNames[data.RequiredLevel] = data.RecordName;
                 }
 
                 // 해당 캐릭터의 Records 안에 현재 해금 레벨(RequiredLevel) 리스트가 없으면 생성
@@ -160,5 +168,18 @@ public class LocalJsonRecordRepository : IRecordRepository
             }
         }
         return 0;
+    }
+
+    /* 특정 레벨에 맞는 기록의 제목(RecordName)을 뽑아오는 함수 */
+    public string GetRecordName(int charTID, int requiredLevel)
+    {
+        if (recordDataDictionary.TryGetValue(charTID, out CharacterRecordData data))
+        {
+            if (data.RecordNames.TryGetValue(requiredLevel, out string recordName))
+            {
+                return recordName;
+            }
+        }
+        return $"심상 기록 {requiredLevel:D2}";
     }
 }
