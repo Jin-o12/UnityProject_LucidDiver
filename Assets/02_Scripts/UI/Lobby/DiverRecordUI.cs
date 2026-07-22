@@ -220,13 +220,18 @@ public class DiverRecordUI : MonoBehaviour
                 if (cardItem != null)
                 {
                     int index = i + 1;
-                    string cardTitle = isUnlocked ? $"심상 기록 {index:D2}" : "???";
+                    string recordName = recordRepo.GetRecordName(charTID, reqLevel);
+                    string cardTitle = isUnlocked ? recordName : "???";
                     
                     // 제목 밑에 보여줄 짧은 내용으로는 첫 번째 대사를 일부 보여주거나 기본 문구 사용
                     string cardDesc = isUnlocked ? recordRepo.GetRecordTextByIndex(charTID, reqLevel, 0) : "기억 파편을 회수하고 특정 동조율에 도달하면 해금됩니다.";
                     if (cardDesc.Length > 30) cardDesc = cardDesc.Substring(0, 30) + "..."; // 텍스트가 길 경우 생략
                     
-                    cardItem.Setup(isUnlocked, cardTitle, cardDesc, index, hasNewMemoryLog && isUnlocked, () => OnClickRecord(cardTitle, charTID, reqLevel));
+                    // NEW 마크 표시 여부: 해금되었고 아직 본 적 없는 기록인지 확인
+                    bool isViewed = charSaveData.viewedRecordLevels != null && charSaveData.viewedRecordLevels.Contains(reqLevel);
+                    bool showNewMark = isUnlocked && !isViewed;
+                    
+                    cardItem.Setup(isUnlocked, cardTitle, cardDesc, index, showNewMark, () => OnClickRecord(cardTitle, charTID, reqLevel));
                 }
             }
         }
@@ -263,7 +268,20 @@ public class DiverRecordUI : MonoBehaviour
         // {기록 카드 팝업 열기 이벤트를 호출한다}
         GlobalEventBus.OnOpenRecordCardPopUpUI?.Invoke(title, tid, reqLevel);
 
-        // {기록을 열람했으므로 NEW 배지를 제거한다}
+        // {선택한 기록을 개별 열람 처리하고 세이브 데이터에 저장}
+        SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+        if (charSaveData != null)
+        {
+            if (charSaveData.viewedRecordLevels == null) charSaveData.viewedRecordLevels = new System.Collections.Generic.List<int>();
+            
+            if (!charSaveData.viewedRecordLevels.Contains(reqLevel))
+            {
+                charSaveData.viewedRecordLevels.Add(reqLevel);
+                PlayerSaveDataSO.Instance.SaveGameData(); // 파일에 저장
+            }
+        }
+
+        // {전역 알림용 NEW 배지는 이제 개별 처리되므로 false로 바꿔도 무방함 (원래 코드 유지)}
         hasNewMemoryLog = false;
 
         // NEW 배지 갱신을 위해 다시 새로고침

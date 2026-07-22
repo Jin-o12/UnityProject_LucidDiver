@@ -58,4 +58,5 @@ public class SaveCharacterData
     public int TID;                     // 캐릭터 고유 번호
     public int linkRateLevel;           // 각 플레이어 캐릭터 동조율 단계 값
     public float TotallinkRateValue;    // 동조율 단계 값을 달성하기 위해 누적해야 하는 총 동조율 값
+    public List<int> viewedRecordLevels = new(); // 이미 열람한 기록의 해금 레벨(reqLevel) 리스트
 }

@@ -9,6 +9,7 @@ public class RecordAnswerButton : MonoBehaviour
 {
     [SerializeField] Button buttonAnswer;       // 대답 선택지 버튼
     [SerializeField] TMP_Text textAnswer;       // 대답 선택지에 출력 될 텍스트
+    public Action onClickAction;                // 버튼 클릭 시 로컬 이벤트
 
     private void OnEnable()
     {
@@ -25,8 +26,8 @@ public class RecordAnswerButton : MonoBehaviour
         textAnswer.text = _text;
     }
 
-    public Action onClickAction;
-
+    
+    /* 버튼이 클릭 되었을 시 로컬 이벤트로 처리 */
     public void OnClickButton()
     {
         onClickAction?.Invoke();

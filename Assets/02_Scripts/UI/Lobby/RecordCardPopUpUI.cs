@@ -13,9 +13,9 @@ public class RecordCardPopUpUI : MonoBehaviour
     [SerializeField] private Image imageMemoryLog;                  // {기록 이미지}
 
     [Header("Buttons")]
-    [SerializeField] private Button buttonClose;                    // {닫기 버튼}
-    //[SerializeField] private Button buttonPrev;                     // {이전 텍스트 보기 버튼}
-    [SerializeField] private Button buttonNext;                     // {다음 텍스트 보기 버튼}
+    [SerializeField] private Button buttonClose;                    // 닫기 버튼
+    [SerializeField] private Button buttonNext;                     // 다음 텍스트 보기 버튼
+    [SerializeField] private Button buttonLog;                      // 대화 기록 보기 버튼
 
     [Header("Prefab")]
     [SerializeField] GameObject answerButton;                       // 주인공의 대답 버튼 및 텍스트
@@ -70,7 +70,7 @@ public class RecordCardPopUpUI : MonoBehaviour
         charData = charRepo.GetCharacterData(nowCharacterID);
 
         // {기록 제목 및 본문 텍스트, 이미지를 출력한다}
-        PrintDialogue(title, 0);
+        PrintDialogue(charData.charName, 0);
     }
 
     // 다음 텍스트 보기 버튼 터치 시 ID를 1칸 뒤로
@@ -119,7 +119,22 @@ public class RecordCardPopUpUI : MonoBehaviour
         // 화자가 "관제사"인 경우 버튼 출력, 아니면 일반 텍스트 출력
         if (speaker == "관제사")
         {
-            if (textMemoryLogBody != null) textMemoryLogBody.gameObject.SetActive(false);
+            if (textMemoryLogBody != null) 
+            {
+                textMemoryLogBody.gameObject.SetActive(true);
+                // 이전 대사들 중 관제사가 아닌 화자의 마지막 대사를 찾아서 유지
+                string prevBody = "";
+                for (int j = index - 1; j >= 0; j--)
+                {
+                    if (recordRepo.GetRecordSpeakerByIndex(nowCharacterID, currentReqLevel, j) != "관제사")
+                    {
+                        prevBody = recordRepo.GetRecordTextByIndex(nowCharacterID, currentReqLevel, j);
+                        break;
+                    }
+                }
+                textMemoryLogBody.text = prevBody;
+            }
+            
             if (buttonNext != null) buttonNext.gameObject.SetActive(false); // 다음 텍스트 보기 버튼 숨김
 
             if (answerButton != null && textMemoryLogBody != null)
@@ -155,21 +170,19 @@ public class RecordCardPopUpUI : MonoBehaviour
     // 버튼 On/Off 설정
     public void StoryButtonCtrl()
     {
-        // {맨 앞 텍스트(index == 0)이면 이전 텍스트 보기 버튼 잠금}
-        //buttonPrev.interactable = nowDialogueIndex > 0;
-        // {맨 뒤 텍스트(index == lines.Count - 1)이면 다음 텍스트 보기 버튼 잠금}
+        // 맨 뒤 텍스트(index == lines.Count - 1)이면 다음 텍스트 보기 버튼 잠금
         buttonNext.interactable = nowDialogueIndex < (dialogueCount - 1);
     }
 
     // 기록 번호를 출력한다 (현재 번호 / 총 기록 개수)
     private void PrintIndexNumber()
     {
-        // {Index 번호는 0번부터 시작 / Count 개수는 1개부터 시작하므로 Index에 1을 더해서 1부터 출력해준다}
+        // Index 번호는 0번부터 시작 / Count 개수는 1개부터 시작하므로 Index에 1을 더해서 1부터 출력해준다
         if (textMemoryLogIndex != null)
             textMemoryLogIndex.text = $"{nowDialogueIndex + 1} / {dialogueCount}";
     }
 
-    // {심상 기록 보기 UI를 닫고 다이버/기록 UI를 출력 }
+    /* 심상 기록 보기 UI를 닫고 다이버/기록 UI를 출력 */
     public void CloseUI()
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
