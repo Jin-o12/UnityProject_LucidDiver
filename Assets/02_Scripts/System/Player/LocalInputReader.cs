@@ -3,8 +3,19 @@
 /// 'Player input'에 등록되는 모든 메서드들이 정리되어 있습니다
 /// </summary>
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+
+/// <summary>
+/// 동시에 입력을 차단하는 시스템들이 서로의 잠금을 해제하지 않도록 차단 소유자를 구분합니다.
+/// </summary>
+public enum GameplayInputBlockSource
+{
+    Legacy,
+    Tutorial,
+    GameMenu
+}
 
 public class LocalInputReader : MonoBehaviour
 {
@@ -13,10 +24,10 @@ public class LocalInputReader : MonoBehaviour
     public event Action OnInventoryOpenRequested;
     public event Action OnInventoryCloseRequested;
     private bool isInventoryOpen;
-    private bool isGameplayInputBlocked;
+    private readonly HashSet<GameplayInputBlockSource> gameplayInputBlockSources = new();
     public bool isSprint;
     public bool IsInventoryOpen => isInventoryOpen;
-    public bool IsGameplayInputBlocked => isGameplayInputBlocked;
+    public bool IsGameplayInputBlocked => gameplayInputBlockSources.Count > 0;
 
     private void Awake()
     {
@@ -46,6 +57,10 @@ public class LocalInputReader : MonoBehaviour
     /* 액션맵을 플레이어 모드로 전환 */
     public void SwitchToPlayerMap()
     {
+        // 다른 시스템이 입력 차단을 유지 중이면 Player 맵을 다시 활성화하지 않습니다.
+        if (IsGameplayInputBlocked)
+            return;
+
         TrySwitchActionMap("Player");
     }
 
@@ -83,11 +98,26 @@ public class LocalInputReader : MonoBehaviour
         playerInput.SwitchCurrentActionMap(mapName);
     }
 
+    /// <summary>
+    /// 기존 호출부 호환용 입력 차단 API입니다.
+    /// 신규 시스템은 차단 소유자를 명시하는 오버로드를 사용합니다.
+    /// </summary>
     public void SetGameplayInputBlocked(bool isBlocked)
     {
-        isGameplayInputBlocked = isBlocked;
+        SetGameplayInputBlocked(isBlocked, GameplayInputBlockSource.Legacy);
+    }
 
-        // 튜토리얼 UI가 열리는 순간 남아 있던 이동/달리기 입력이 유지되지 않도록 즉시 정지시킵니다.
+    /// <summary>
+    /// 지정한 시스템의 입력 차단 상태만 추가하거나 해제합니다.
+    /// </summary>
+    public void SetGameplayInputBlocked(bool isBlocked, GameplayInputBlockSource source)
+    {
+        if (isBlocked)
+            gameplayInputBlockSources.Add(source);
+        else
+            gameplayInputBlockSources.Remove(source);
+
+        // 차단을 거는 순간 남아 있던 이동/달리기 입력이 유지되지 않도록 즉시 정지시킵니다.
         if (!isBlocked)
             return;
 

@@ -99,6 +99,7 @@ public class GlobalEventBus
     public static Action<string> OnSwitchInputMap;                          // Action Map 바꾸기 이벤트
     public static Action OnOpenSettingUI;                                   // 설정 UI 열기 이벤트
     public static Action OnOpenNoticeLobbyUI;                               // 로비로 가기 전 경고창 팝업 열기 이벤트
+    public static Action OnCloseInGameMenuUI;                               // 인게임 ESC 메뉴 닫기 요청
     public static Action OnCloseTopUI;                                      // 가장 최상단의 UI를 종료하는 이벤트
 
     /// <summary>

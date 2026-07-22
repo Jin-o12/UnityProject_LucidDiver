@@ -572,7 +572,7 @@ public sealed class TutorialManager : MonoBehaviour
         inputReader = FindFirstObjectByType<LocalInputReader>();
         if (inputReader != null)
         {
-            inputReader.SetGameplayInputBlocked(true);
+            inputReader.SetGameplayInputBlocked(true, GameplayInputBlockSource.Tutorial);
             inputReader.SwitchToUIMap();
         }
     }
@@ -616,7 +616,7 @@ public sealed class TutorialManager : MonoBehaviour
 
         if (readerToRestore != null)
         {
-            readerToRestore.SetGameplayInputBlocked(false);
+            readerToRestore.SetGameplayInputBlocked(false, GameplayInputBlockSource.Tutorial);
             readerToRestore.SwitchToPlayerMap();
         }
 
@@ -643,7 +643,7 @@ public sealed class TutorialManager : MonoBehaviour
         if (readerToRestore == null)
             return;
 
-        readerToRestore.SetGameplayInputBlocked(false);
+        readerToRestore.SetGameplayInputBlocked(false, GameplayInputBlockSource.Tutorial);
         readerToRestore.SwitchToPlayerMap();
     }
 

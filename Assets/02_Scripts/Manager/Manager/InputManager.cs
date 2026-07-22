@@ -8,6 +8,9 @@ public class InputManager : MonoBehaviour
     public static InputManager Instance { get; private set; }  //싱글톤 인스턴스 지정
     [SerializeField] private PlayerInput playerInput;
 
+    // 메뉴를 닫을 때 열기 전 입력 상태로 안전하게 복구하기 위한 현재 액션 맵 이름입니다.
+    public string CurrentActionMapName => CanUsePlayerInput() ? playerInput.currentActionMap?.name : null;
+
     private void Awake()
     {
         // 싱글톤 인스턴스 중복 방지 설정

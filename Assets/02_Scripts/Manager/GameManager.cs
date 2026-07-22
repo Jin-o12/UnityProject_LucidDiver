@@ -102,7 +102,8 @@ public class GameManager : MonoBehaviour
             // 인게임 진입 시 조작 맵을 Player로 전환
             GlobalEventBus.OnSwitchInputMap?.Invoke("Player");
 
-            UIManager.Instance.Open<GamePlayUI>();
+            // 게임플레이 HUD는 ESC 팝업 스택에 포함하지 않아 최상단 닫기 대상이 되지 않게 합니다.
+            UIManager.Instance.OpenRoot<GamePlayUI>();
         }
         else
         {

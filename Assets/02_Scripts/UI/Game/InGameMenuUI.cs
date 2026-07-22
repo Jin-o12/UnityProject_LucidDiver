@@ -13,7 +13,7 @@ public class InGameMenuUI : MonoBehaviour
 
     void OnEnable()
     {
-        if(closeButton != null) closeButton.onClick.AddListener(OpenSettingUI);
+        if(closeButton != null) closeButton.onClick.AddListener(CloseMenuUI);
         if(settingButton != null) settingButton.onClick.AddListener(OpenSettingUI);
         if(lobbyButton != null) lobbyButton.onClick.AddListener(OnLobbyButton);
         if(exitButton != null) exitButton.onClick.AddListener(ExitGame);
@@ -21,10 +21,16 @@ public class InGameMenuUI : MonoBehaviour
 
     void OnDisable()
     {
-        if(closeButton != null) closeButton.onClick.RemoveListener(OpenSettingUI);
+        if(closeButton != null) closeButton.onClick.RemoveListener(CloseMenuUI);
         if(settingButton != null) settingButton.onClick.RemoveListener(OpenSettingUI);
         if(lobbyButton != null) lobbyButton.onClick.RemoveListener(OnLobbyButton);
         if(exitButton != null) exitButton.onClick.RemoveListener(ExitGame);
+    }
+
+    /* 닫기 버튼을 누르면 인게임 메뉴 닫기를 요청한다. */
+    private void CloseMenuUI()
+    {
+        GlobalEventBus.OnCloseInGameMenuUI?.Invoke();
     }
 
     /* 설정 UI 버튼 누를 시 */

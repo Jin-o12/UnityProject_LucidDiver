@@ -281,6 +281,8 @@ public class InventoryPresenter : MonoBehaviour
 
     private void OnInventoryInput(InputAction.CallbackContext context)
     {
+        if (localInputReader.IsGameplayInputBlocked || IsGameplayMenuModalOpen())
+            return;
         if (inventoryUI != null && inventoryUI.gameObject.activeInHierarchy)
             CloseInventoryUI();
         else
@@ -291,8 +293,22 @@ public class InventoryPresenter : MonoBehaviour
     // 튜토리얼 팝업처럼 다른 이유로 UI 맵이 활성화됐을 때 인벤토리가 새로 열리는 것을 방지합니다.
     private void OnUIInventoryInput(InputAction.CallbackContext context)
     {
+        if (localInputReader.IsGameplayInputBlocked || IsGameplayMenuModalOpen())
+            return;
         if (isChestOpen || (inventoryUI != null && inventoryUI.gameObject.activeInHierarchy))
             CloseInventoryUI();
+    }
+
+    /// <summary>
+    /// ESC 메뉴와 그 하위 팝업이 열려 있으면 Tab/F 입력이 인벤토리 상태를 바꾸지 못하게 합니다.
+    /// </summary>
+    private bool IsGameplayMenuModalOpen()
+    {
+        UIManager manager = UIManager.Instance;
+        return manager != null &&
+               (manager.IsOpen<InGameMenuUI>() ||
+                manager.IsOpen<SettingUI>() ||
+                manager.IsOpen<NoticeLobbyUI>());
     }
 
     /// <summary>
@@ -301,6 +317,8 @@ public class InventoryPresenter : MonoBehaviour
     /// </summary>
     public void OpenInventoryUI()
     {
+        if (localInputReader.IsGameplayInputBlocked || IsGameplayMenuModalOpen())
+            return;
         GlobalEventBus.OnMouseLocked?.Invoke(false);
 
         // 플레이어 상태가 idle이 아니면 인벤토리 조작을 막는다.
@@ -368,11 +386,12 @@ public class InventoryPresenter : MonoBehaviour
         inventoryUI = null;
         localInputReader.SetInventoryOpenState(false);
 
-        // 일반 플레이 중에 닫은 경우에만 플레이어 입력으로 복귀한다.
-        if (!playerStatus.IsSessionEnded)
+        // 다른 UI가 입력 차단을 유지하지 않는 일반 플레이 중에만 Player 맵과 커서를 복구합니다.
+        if (!playerStatus.IsSessionEnded && !localInputReader.IsGameplayInputBlocked)
+        {
             localInputReader.SwitchToPlayerMap();
-
-        GlobalEventBus.OnMouseLocked?.Invoke(true);
+            GlobalEventBus.OnMouseLocked?.Invoke(true);
+        }
     }
 
     /// <summary>
@@ -482,7 +501,7 @@ public class InventoryPresenter : MonoBehaviour
         localInputReader.SetInventoryOpenState(false);
 
         // 일반적인 닫기 요청에서만 입력 맵을 다시 플레이어 모드로 전환하고 마우스를 가둔다.
-        if (restorePlayerInput)
+        if (restorePlayerInput && !localInputReader.IsGameplayInputBlocked)
         {
             localInputReader.SwitchToPlayerMap();
             GlobalEventBus.OnMouseLocked?.Invoke(true);

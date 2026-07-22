@@ -12,16 +12,22 @@ public class GameMenuUI : MonoBehaviour
 
     void OnEnable()
     {
-        if(closeButton != null) closeButton.onClick.AddListener(OpenSettingUI);
+        if(closeButton != null) closeButton.onClick.AddListener(CloseMenuUI);
         if(settingButton != null) settingButton.onClick.AddListener(OpenSettingUI);
         if(exitButton != null) exitButton.onClick.AddListener(ExitGame);
     } 
 
     void OnDisable()
     {
-        if(closeButton != null) closeButton.onClick.RemoveListener(OpenSettingUI);
+        if(closeButton != null) closeButton.onClick.RemoveListener(CloseMenuUI);
         if(settingButton != null) settingButton.onClick.RemoveListener(OpenSettingUI);
         if(exitButton != null) exitButton.onClick.RemoveListener(ExitGame);
+    }
+
+    /* 닫기 버튼을 누르면 현재 로비 게임 메뉴만 닫는다. */
+    private void CloseMenuUI()
+    {
+        GlobalEventBus.OnCloseTopUI?.Invoke();
     }
 
     private void OpenSettingUI()
