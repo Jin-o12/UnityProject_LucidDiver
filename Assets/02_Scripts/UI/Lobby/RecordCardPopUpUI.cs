@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,13 +18,14 @@ public class RecordCardPopUpUI : MonoBehaviour
     [SerializeField] private Button buttonPrev;                     // {이전 텍스트 보기 버튼}
     [SerializeField] private Button buttonNext;                     // {다음 텍스트 보기 버튼}
 
-    private IDialogueRepository dialogueRepo;                       // 대사 출력 인터페이스
+    private IRecordRepository recordRepo;                           // 기록 출력 인터페이스
     private ICharDataRepository charRepo;                           // 캐릭터 정보 인터페이스
     private CharacterData charData;                                 // 인터페이스에서 추출한 캐릭터 데이터
     private int nowCharacterID = (int)CharacterTID.Yuan;            // 현재 출력 중인 캐릭터 ID
     private int nowDialogueIndex = 0;                               // 현재 출력 중인 대사 순서 번호
     private int nowDialogueTID = 0;                                 // 현재 출력 중인 대사 ID
     private int dialogueCount = 0;                                  // 현재 출력 가능한 대사 개수
+    private int currentReqLevel = 1;                                // 현재 출력 중인 기록의 레벨(그룹)
 
     private void OnEnable()
     {
@@ -40,25 +41,26 @@ public class RecordCardPopUpUI : MonoBehaviour
         buttonNext.onClick.RemoveListener(ReadNextStory);
     }
 
-    public void SetData(string title, CharacterTID tid)
+    public void SetData(string title, CharacterTID tid, int reqLevel)
     {
-        // 대사 출력 인터페이스 연결
-        dialogueRepo = new LocalJsonDialogueRepository();
+        // 기록 출력 인터페이스 연결
+        recordRepo = new LocalJsonRecordRepository();
 
         // 캐릭터 정보 인터페이스 연결
         charRepo = new SOCharacterRepository();
 
-        if (dialogueRepo == null)
+        if (recordRepo == null)
         {
-            Debug.LogError("Dialogue Repository Load Failed");
+            Debug.LogError("Record Repository Load Failed");
         }
 
         // {팝업을 새로 열 때 항상 첫 페이지부터 시작하도록 현재 대사 인덱스를 초기화한다}
         nowDialogueIndex = 0;
+        currentReqLevel = reqLevel;
 
         // {캐릭터 ID를 받아와 대사 개수와 맨 앞(0번) 대사를 받아온다}
         nowCharacterID = (int)tid;
-        dialogueCount = dialogueRepo.GetDialogueCount(nowCharacterID, DialogueType.storyOpen);
+        dialogueCount = recordRepo.GetRecordCount(nowCharacterID, currentReqLevel);
 
         // {캐릭터 ID를 캐릭터 정보 인터페이스에 대입해 캐릭터 데이터를 받아온다}
         // {캐릭터 데이터에서 캐릭터 이름을 가져와 출력}
@@ -102,18 +104,18 @@ public class RecordCardPopUpUI : MonoBehaviour
             textMemoryLogTitle.text = title;
 
         // {index 값에 해당하는 캐릭터 대사를 Body 구역에 출력}
-        string body = dialogueRepo.GetDialogueByIndex(nowCharacterID, DialogueType.storyOpen, index);
+        string body = recordRepo.GetRecordTextByIndex(nowCharacterID, currentReqLevel, index);
         if (textMemoryLogBody != null)
             textMemoryLogBody.text = body;
 
-        // {이미지 출력 구역}
-        // P0 버전에서는 임시로 대사별 ID 값에 따른 색 변경으로 구현함
-        nowDialogueTID = dialogueRepo.GetTIDByIndex(nowCharacterID, DialogueType.storyOpen, index);
-        imageMemoryLog.color = (nowDialogueTID % 2) switch
-        {
-            1 => Color.gray,
-            _ => Color.white,
-        };
+        // // {이미지 출력 구역}
+        // // P0 버전에서는 임시로 대사별 ID 값에 따른 색 변경으로 구현함
+        // nowDialogueTID = recordRepo.GetRecordDialogIDByIndex(nowCharacterID, currentReqLevel, index);
+        // imageMemoryLog.color = (nowDialogueTID % 2) switch
+        // {
+        //     1 => Color.gray,
+        //     _ => Color.white,
+        // };
 
         // {버튼 On/Off 설정}
         StoryButtonCtrl();

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -103,7 +103,7 @@ public class LobbyUIPresenter : MonoBehaviour
     }
 
     /* 기록 카드 팝업 UI 전환 */
-    public void OpenRecordCardPopUp(string title, CharacterTID tid)
+    public void OpenRecordCardPopUp(string title, CharacterTID tid, int reqLevel)
     {
         // 현재 열려있는 캔버스를 닫는다
         uiManager.CloseNowUI();
@@ -112,8 +112,8 @@ public class LobbyUIPresenter : MonoBehaviour
         RecordCardPopUpUI popup = uiManager.Open<RecordCardPopUpUI>();
         GlobalEventBus.OnPlayBGMRequested?.Invoke(recordBGMAudioID);
 
-        // 기록 제목과 캐릭터 ID를 팝업에 전달한다
-        popup.SetData(title, tid);
+        // 기록 제목, 캐릭터 ID, 해금 레벨을 팝업에 전달한다
+        popup.SetData(title, tid, reqLevel);
     }
 
     /* ESC 목록UI 열기 */

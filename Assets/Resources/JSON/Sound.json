@@ -196,9 +196,9 @@
     "Loop": true
   },
   {
-    "AudioID": 10400,
+    "AudioID": 10307,
     "AudioClip": "PayPhoneRing_Loop",
-    "AudioType": "SFX",
+    "AudioType": "AMBIENT",
     "Volume": 1,
     "Loop": true
   },

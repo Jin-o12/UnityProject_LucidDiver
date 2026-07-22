@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,35 +7,17 @@ public class DiverRecordUI : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button buttonBackTop;                          //상단 왼쪽 뒤로가기 버튼
     [SerializeField] private Button buttonBackBottom;                       //하단 버튼 그룹의 뒤로가기 버튼
-    [SerializeField] private Button buttonRecordCard01;
-    [SerializeField] private Button buttonRecordCard02;
 
     [Header("Diver Info")]
     [SerializeField] private TextMeshProUGUI textDiverName;
     [SerializeField] private TextMeshProUGUI textDiverRole;
     [SerializeField] private TextMeshProUGUI textLinkRate;
     [SerializeField] private Slider sliderLinkRate;
-    [SerializeField] private RectTransform imageLinkRateBarFill;
-    //[SerializeField] private float linkRateBarMaxWidth = 160f;
 
     [Header("Record List")]
     [SerializeField] private TextMeshProUGUI textRecordCount;
-
-    [Header("Record 01")]
-    [SerializeField] private CanvasGroup recordCard01CanvasGroup;
-    [SerializeField] private TextMeshProUGUI textRecordState01;
-    [SerializeField] private TextMeshProUGUI textRecordTitle01;
-    [SerializeField] private TextMeshProUGUI textRecordDesc01;
-    [SerializeField] private TextMeshProUGUI textOpenRecord01;
-    [SerializeField] private TextMeshProUGUI textNewBadge01;
-
-    [Header("Record 02")]
-    [SerializeField] private CanvasGroup recordCard02CanvasGroup;
-    [SerializeField] private TextMeshProUGUI textRecordState02;
-    [SerializeField] private TextMeshProUGUI textRecordTitle02;
-    [SerializeField] private TextMeshProUGUI textRecordDesc02;
-    [SerializeField] private TextMeshProUGUI textOpenRecord02;
-    [SerializeField] private TextMeshProUGUI textNewBadge02;
+    [SerializeField] private Transform recordCardContainer;
+    [SerializeField] private GameObject recordCardPrefab;
 
     [Header("Temporary Test Data")]
     [SerializeField] private bool useTestData = true;
@@ -53,25 +35,10 @@ public class DiverRecordUI : MonoBehaviour
     // 대사 출력 인터페이스
     private IDialogueRepository dialogue;
 
+    // 기록 출력 인터페이스
+    private IRecordRepository recordRepo;
+
     private const string DiverRole = "메인 다이버";
-    private const string Record01Title = "대외 경계 태도 및 면담 일지";
-
-    private const string Record01Desc =
-        "유안의 대외 경계 태도와\n초기 면담 기록이 복구되었다.";
-
-    private const string Record01LockedDesc =
-        "기억 파편을 회수하고 탈출 성공 시\n개인 심상 기록 01이 해금된다.";
-
-    // private const string Record01Body =
-    //     "[면담 요약서: 다이버 유안 (관리번호: D-004)]\n\n" +
-    //     "피실험자는 면담 시간 내내 극도의 긴장 상태를 유지했으며, " +
-    //     "탁자 위의 깨진 액정 화면에 비치는 나의 모습을 집요하게 시선으로 쫓는 기이한 행동을 보였다.\n\n" +
-    //     "이는 사건 발생 당일 내 눈에만 이상한 보랏빛 선이 보여서 피해야 한다고 주장했으나 " +
-    //     "아무도 믿어주지 않아 눈앞에서 가족을 잃었던 트라우마의 전형적인 방어 행동이다.\n\n" +
-    //     "피실험자는 바깥 세계의 일반적인 시선과 언어 정보를 적대시하고 있으며, " +
-    //     "자신이 직접 관찰하고 물리적으로 확인한 상만을 판단의 근거로 삼는다.\n\n" +
-    //     "특이점은 이러한 편집증적인 시각적 집착이 뇌파 안정기와 맞물렸을 때, " +
-    //     "주변 공간의 미세한 파동 굴절을 누구보다 빠르게 잡아내는 초감각으로 치환된다는 사실이다.";
 
     private void Awake()
     {
@@ -85,12 +52,12 @@ public class DiverRecordUI : MonoBehaviour
 
         // 캐릭터 정보 인터페이스 연결
         charRepo = new SOCharacterRepository();
-    }
-
-    private void Start()
-    {
+        
         // 대사 출력 인터페이스 연결
         dialogue = new LocalJsonDialogueRepository();
+
+        // 기록 출력 인터페이스 연결
+        recordRepo = new LocalJsonRecordRepository();
     }
 
     private void OnEnable()
@@ -98,8 +65,6 @@ public class DiverRecordUI : MonoBehaviour
         /// 버튼 클릭 이벤트를 등록 ///
         buttonBackTop.onClick.AddListener(OnClickBack);
         buttonBackBottom.onClick.AddListener(OnClickBack);
-        buttonRecordCard01.onClick.AddListener(OnClickRecord01);
-        buttonRecordCard02.onClick.AddListener(OnClickRecord02);
 
         // {테스트 데이터 사용 시 임시 값 적용}
         if (useTestData)
@@ -124,8 +89,6 @@ public class DiverRecordUI : MonoBehaviour
     {
         buttonBackTop.onClick.RemoveListener(OnClickBack);
         buttonBackBottom.onClick.RemoveListener(OnClickBack);
-        buttonRecordCard01.onClick.RemoveListener(OnClickRecord01);
-        buttonRecordCard02.onClick.RemoveListener(OnClickRecord02);
 
         GlobalEventBus.RecordDataLoad -= SetData;
     }
@@ -157,11 +120,8 @@ public class DiverRecordUI : MonoBehaviour
         // {다이버 기본 정보 갱신}
         RefreshDiverInfo();
 
-        // {기록 목록 갱신}
+        // {기록 목록 갱신 및 프리팹 생성}
         RefreshRecordList();
-
-        // {기록 01 카드 갱신}
-        RefreshRecord01();
     }
 
     private void RefreshDiverInfo()
@@ -219,47 +179,62 @@ public class DiverRecordUI : MonoBehaviour
 
     private void RefreshRecordList()
     {
+        if (recordRepo == null) return;
+        if (PlayerSaveDataSO.Instance == null) return;
+
+        SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+        if (charSaveData == null) return;
+
+        int charTID = charSaveData.TID;
+
+        // 기록 그룹 가져오기 (해금 레벨 리스트)
+        System.Collections.Generic.List<int> recordLevels = recordRepo.GetRecordGroupLevels(charTID);
+        
+        int openedCount = 0;
+        int totalCount = recordLevels.Count;
+
+        // 컨테이너 초기화
+        if (recordCardContainer != null)
+        {
+            foreach (Transform child in recordCardContainer)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+
+        for (int i = 0; i < totalCount; i++)
+        {
+            int reqLevel = recordLevels[i];
+            bool isUnlocked = linkRateLevel >= reqLevel;
+            
+            if (isUnlocked)
+            {
+                openedCount++;
+            }
+
+            if (recordCardPrefab != null && recordCardContainer != null)
+            {
+                GameObject recordObj = Instantiate(recordCardPrefab, recordCardContainer);
+                RecordCardItem cardItem = recordObj.GetComponent<RecordCardItem>();
+                if (cardItem != null)
+                {
+                    int index = i + 1;
+                    string cardTitle = isUnlocked ? $"심상 기록 {index:D2}" : "???";
+                    
+                    // 제목 밑에 보여줄 짧은 내용으로는 첫 번째 대사를 일부 보여주거나 기본 문구 사용
+                    string cardDesc = isUnlocked ? recordRepo.GetRecordTextByIndex(charTID, reqLevel, 0) : "기억 파편을 회수하고 특정 동조율에 도달하면 해금됩니다.";
+                    if (cardDesc.Length > 30) cardDesc = cardDesc.Substring(0, 30) + "..."; // 텍스트가 길 경우 생략
+                    
+                    cardItem.Setup(isUnlocked, cardTitle, cardDesc, index, hasNewMemoryLog && isUnlocked, () => OnClickRecord(cardTitle, charTID, reqLevel));
+                }
+            }
+        }
+
         // {해금된 기록 개수 표시}
         if (textRecordCount != null)
         {
-            int openedCount = memoryLogUnlocked ? 1 : 0;
-            textRecordCount.text = $"{openedCount} / 2";
+            textRecordCount.text = $"{openedCount} / {totalCount}";
         }
-    }
-
-    private void RefreshRecord01()
-    {
-        // {기록 01 상태 표시}
-        if (textRecordState01 != null)
-            textRecordState01.text = memoryLogUnlocked ? "[OPEN] 기록 01" : "[LOCK] 기록 01";
-
-        // {기록 01 제목 표시}
-        if (textRecordTitle01 != null)
-            textRecordTitle01.text = memoryLogUnlocked ? Record01Title : "???";
-
-        // {기록 01 설명 표시}
-        if (textRecordDesc01 != null)
-            textRecordDesc01.text = memoryLogUnlocked ? Record01Desc : Record01LockedDesc;
-
-        // {기록 보기 문구 표시}
-        if (textOpenRecord01 != null)
-            textOpenRecord01.text = memoryLogUnlocked ? "기록 보기" : "잠김";
-
-        // {기록 01 버튼 활성화}
-        if (buttonRecordCard01 != null)
-            buttonRecordCard01.interactable = memoryLogUnlocked;
-
-        // {기록 01 카드 투명도 처리}
-        if (recordCard01CanvasGroup != null)
-        {
-            recordCard01CanvasGroup.alpha = memoryLogUnlocked ? 1f : 0.55f;
-            recordCard01CanvasGroup.interactable = memoryLogUnlocked;
-            recordCard01CanvasGroup.blocksRaycasts = memoryLogUnlocked;
-        }
-
-        // {NEW 배지 표시}
-        if (textNewBadge01 != null)
-            textNewBadge01.gameObject.SetActive(memoryLogUnlocked && hasNewMemoryLog);
     }
 
     private void OnClickBack()
@@ -271,37 +246,23 @@ public class DiverRecordUI : MonoBehaviour
         GlobalEventBus.OnOpenLobbyUI?.Invoke();
     }
 
-    private void OnClickRecord01()
+    private void OnClickRecord(string title, int charTID, int reqLevel)
     {
-        // {기록 01이 잠겨 있으면 팝업을 열지 않는다}
-        if (!memoryLogUnlocked)
-        {
-            Debug.Log("DiverRecordUI: 기록 01은 아직 잠겨 있습니다.");
-            return;
-        }
+        // 기록 해금 여부에 따라 버튼 클릭 사운드 출력 이벤트를 호출 (이미 isUnlocked 체크되어 호출되므로 true 전달)
+        GlobalEventBus.OnClickAudio?.Invoke(true);
 
-        // 기록 해금 여부에 따라 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke(memoryLogUnlocked);
+        CharacterTID tid = (CharacterTID)charTID;
 
         // {기록 카드 팝업 열기 이벤트를 호출한다}
-        GlobalEventBus.OnOpenRecordCardPopUpUI?.Invoke(Record01Title, CharacterTID.Yuan);
+        GlobalEventBus.OnOpenRecordCardPopUpUI?.Invoke(title, tid, reqLevel);
 
         // {기록을 열람했으므로 NEW 배지를 제거한다}
         hasNewMemoryLog = false;
 
-        // {NEW 배지 오브젝트를 비활성화한다}
-        if (textNewBadge01 != null)
-            textNewBadge01.gameObject.SetActive(false);
+        // NEW 배지 갱신을 위해 다시 새로고침
+        RefreshRecordList();
 
         // {기록 읽음 이벤트를 호출한다}
         GlobalEventBus.OnRecordRead?.Invoke();
-    }
-
-    // {기록 02는 P0에서 잠금 더미}
-    private void OnClickRecord02()
-    {
-        // 버튼 클릭 사운드 출력 이벤트를 호출
-        GlobalEventBus.OnClickAudio?.Invoke(false);
-        Debug.Log("DiverRecordUI: 기록 02는 P0에서 잠금 상태입니다.");
     }
 }
