@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 플레이어의 인벤토리 데이터와 내부의 슬롯, 아이템을 관리하는 클래스
 /// </summary>
 using System;
@@ -31,9 +31,14 @@ public class PlayerInventory : MonoBehaviour
     // 아이템 드롭 시 생성 할 공통 드롭 아이템 오브젝트 프리팹
     [SerializeField] private GameObject itemPrefabRef;
 
+    // 퀵슬롯 사용 여부를 PlayerStatus.livingState와 연계
+    private PlayerStatus _status;
 
     private void OnEnable()
     {
+        /// 플레이어 상태 구독 ///
+        _status = gameObject.GetComponent<PlayerStatus>();
+
         /// 이벤트 구독 ///
         GlobalEventBus.OnSwapInventorySlot += SwapSlotData;
         GlobalEventBus.OnDropItemQuickSlot += AddItemToQuickslot;
@@ -539,6 +544,9 @@ public class PlayerInventory : MonoBehaviour
     {
         // 퀵슬롯 범위 및 데이터 유효성 검사
         if (_index < 0 || _index >= quickSlotNum) return false;
+
+        // 플레이어 현재 상태가 idle이 아니면 사용 처리를 취소
+        if (_status.nowState != PlayerStatus.livingState.idle) return false;
 
         InventorySlotData slot = quickSlots[_index];
         if (slot == null || slot.TID == 0 || slot.amount <= 0) return false;
