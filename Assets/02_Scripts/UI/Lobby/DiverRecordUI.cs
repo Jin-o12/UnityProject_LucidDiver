@@ -198,6 +198,7 @@ public class DiverRecordUI : MonoBehaviour
         {
             foreach (Transform child in recordCardContainer)
             {
+                child.gameObject.SetActive(false); // 레이아웃 연산에서 즉시 제외
                 Destroy(child.gameObject);
             }
         }
@@ -234,6 +235,12 @@ public class DiverRecordUI : MonoBehaviour
         if (textRecordCount != null)
         {
             textRecordCount.text = $"{openedCount} / {totalCount}";
+        }
+
+        // 강제로 레이아웃을 즉시 갱신하여 영역 밖으로 잘리지 않고 보이도록 컨테이너 크기를 조정
+        if (recordCardContainer != null)
+        {
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(recordCardContainer.GetComponent<RectTransform>());
         }
     }
 

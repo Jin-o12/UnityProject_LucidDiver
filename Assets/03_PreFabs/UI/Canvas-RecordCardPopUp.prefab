@@ -318,8 +318,9 @@ MonoBehaviour:
   textMemoryLogIndex: {fileID: 7238179973765292818}
   imageMemoryLog: {fileID: 1713665715897170057}
   buttonClose: {fileID: 6598520344948412414}
-  buttonPrev: {fileID: 1663802087035144587}
   buttonNext: {fileID: 8689510458581673635}
+  answerButton: {fileID: 4586886433386010646, guid: e679ac28d2b8de048be5402e6431466e,
+    type: 3}
 --- !u!1 &4674095611208455116
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,29 +14,33 @@ public class RecordCardPopUpUI : MonoBehaviour
 
     [Header("Buttons")]
     [SerializeField] private Button buttonClose;                    // {닫기 버튼}
-    [SerializeField] private Button buttonPrev;                     // {이전 텍스트 보기 버튼}
+    //[SerializeField] private Button buttonPrev;                     // {이전 텍스트 보기 버튼}
     [SerializeField] private Button buttonNext;                     // {다음 텍스트 보기 버튼}
+
+    [Header("Prefab")]
+    [SerializeField] GameObject answerButton;                       // 주인공의 대답 버튼 및 텍스트
 
     private IRecordRepository recordRepo;                           // 기록 출력 인터페이스
     private ICharDataRepository charRepo;                           // 캐릭터 정보 인터페이스
     private CharacterData charData;                                 // 인터페이스에서 추출한 캐릭터 데이터
     private int nowCharacterID = (int)CharacterTID.Yuan;            // 현재 출력 중인 캐릭터 ID
     private int nowDialogueIndex = 0;                               // 현재 출력 중인 대사 순서 번호
-    private int nowDialogueTID = 0;                                 // 현재 출력 중인 대사 ID
     private int dialogueCount = 0;                                  // 현재 출력 가능한 대사 개수
     private int currentReqLevel = 1;                                // 현재 출력 중인 기록의 레벨(그룹)
+    
+    private System.Collections.Generic.List<GameObject> activeAnswerButtons = new(); // 현재 생성된 대답 버튼 리스트
 
     private void OnEnable()
     {
         buttonClose.onClick.AddListener(CloseUI);
-        buttonPrev.onClick.AddListener(ReadPrevStory);
+        //buttonPrev.onClick.AddListener(ReadPrevStory);
         buttonNext.onClick.AddListener(ReadNextStory);
     }
 
     private void OnDisable()
     {
         buttonClose.onClick.RemoveListener(CloseUI);
-        buttonPrev.onClick.RemoveListener(ReadPrevStory);
+        //buttonPrev.onClick.RemoveListener(ReadPrevStory);
         buttonNext.onClick.RemoveListener(ReadNextStory);
     }
 
@@ -97,25 +100,50 @@ public class RecordCardPopUpUI : MonoBehaviour
     }
 
     // 캐릭터 대사 (제목, 본문 텍스트, 이미지 스프라이트)를 출력
-    private void PrintDialogue(string title,int index)
+    private void PrintDialogue(string title, int index)
     {
+        // {기존에 생성된 대답 버튼들을 모두 제거}
+        foreach (var btn in activeAnswerButtons)
+        {
+            if (btn != null) Destroy(btn);
+        }
+        activeAnswerButtons.Clear();
+
         // {title에 입력한 제목 텍스트를 Title 구역에 출력}
         if (textMemoryLogTitle != null)
             textMemoryLogTitle.text = title;
 
-        // {index 값에 해당하는 캐릭터 대사를 Body 구역에 출력}
+        string speaker = recordRepo.GetRecordSpeakerByIndex(nowCharacterID, currentReqLevel, index);
         string body = recordRepo.GetRecordTextByIndex(nowCharacterID, currentReqLevel, index);
-        if (textMemoryLogBody != null)
-            textMemoryLogBody.text = body;
 
-        // // {이미지 출력 구역}
-        // // P0 버전에서는 임시로 대사별 ID 값에 따른 색 변경으로 구현함
-        // nowDialogueTID = recordRepo.GetRecordDialogIDByIndex(nowCharacterID, currentReqLevel, index);
-        // imageMemoryLog.color = (nowDialogueTID % 2) switch
-        // {
-        //     1 => Color.gray,
-        //     _ => Color.white,
-        // };
+        // 화자가 "관제사"인 경우 버튼 출력, 아니면 일반 텍스트 출력
+        if (speaker == "관제사")
+        {
+            if (textMemoryLogBody != null) textMemoryLogBody.gameObject.SetActive(false);
+            if (buttonNext != null) buttonNext.gameObject.SetActive(false); // 다음 텍스트 보기 버튼 숨김
+
+            if (answerButton != null && textMemoryLogBody != null)
+            {
+                GameObject btnObj = Instantiate(answerButton, this.gameObject.transform.GetChild(0));
+                btnObj.SetActive(true);
+                RecordAnswerButton btnScript = btnObj.GetComponent<RecordAnswerButton>();
+                if (btnScript != null)
+                {
+                    btnScript.PrintText(body);
+                    btnScript.onClickAction = () => { ReadNextStory(); };
+                }
+                activeAnswerButtons.Add(btnObj);
+            }
+        }
+        else
+        {
+            if (textMemoryLogBody != null)
+            {
+                textMemoryLogBody.gameObject.SetActive(true);
+                textMemoryLogBody.text = body;
+            }
+            if (buttonNext != null) buttonNext.gameObject.SetActive(true);
+        }
 
         // {버튼 On/Off 설정}
         StoryButtonCtrl();
@@ -128,7 +156,7 @@ public class RecordCardPopUpUI : MonoBehaviour
     public void StoryButtonCtrl()
     {
         // {맨 앞 텍스트(index == 0)이면 이전 텍스트 보기 버튼 잠금}
-        buttonPrev.interactable = nowDialogueIndex > 0;
+        //buttonPrev.interactable = nowDialogueIndex > 0;
         // {맨 뒤 텍스트(index == lines.Count - 1)이면 다음 텍스트 보기 버튼 잠금}
         buttonNext.interactable = nowDialogueIndex < (dialogueCount - 1);
     }
