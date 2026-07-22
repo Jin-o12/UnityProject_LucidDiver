@@ -16,8 +16,10 @@ public class GameUIPresenter : MonoBehaviour
     private InputAction playerGameMenuAction;   // 플레이 중 ESC 입력
     private InputAction uiGameMenuAction;       // 메뉴가 열린 동안의 ESC 입력
     private Coroutine restoreInputRoutine;
+    private Coroutine inventoryEscapeGuardRoutine;
     private string previousInputMapName = PlayerInputMapName;
     private bool isMenuInputCaptured;
+    private bool isInventoryEscapeConsumed;
     private bool isSessionEnded;
 
     private void Start()
@@ -57,6 +59,14 @@ public class GameUIPresenter : MonoBehaviour
             restoreInputRoutine = null;
         }
 
+        if (inventoryEscapeGuardRoutine != null)
+        {
+            StopCoroutine(inventoryEscapeGuardRoutine);
+            inventoryEscapeGuardRoutine = null;
+        }
+
+        isInventoryEscapeConsumed = false;
+
         // 씬 전환 시에는 다음 입력 맵으로 바꾸지 않고 메뉴가 소유한 차단만 해제합니다.
         if (isMenuInputCaptured)
         {
@@ -95,7 +105,7 @@ public class GameUIPresenter : MonoBehaviour
     }
 
     /// <summary>
-    /// ESC 메뉴를 열거나 현재 최상단 팝업부터 닫습니다.
+    /// ESC 입력 시 인벤토리 계열 UI를 먼저 닫고, 이후 게임 메뉴 또는 최상단 팝업을 처리합니다.
     /// 메뉴가 열린 동안에도 Time.timeScale은 변경하지 않습니다.
     /// </summary>
     public void OpenPauseUI(InputAction.CallbackContext context)
@@ -104,11 +114,18 @@ public class GameUIPresenter : MonoBehaviour
         if (isSessionEnded)
             return;
 
+        // 인벤토리를 닫은 ESC가 액션 맵 전환 직후 메뉴 열기로 다시 처리되는 것을 막는다.
+        if (isInventoryEscapeConsumed)
+            return;
+
         uiManager ??= UIManager.Instance;
         if (uiManager == null)
             return;
 
         bool isMenuOpen = inGameMenuUI != null && inGameMenuUI.gameObject.activeInHierarchy;
+        if (!isMenuOpen && TryCloseInventoryBeforeMenu())
+            return;
+
         if (!isMenuOpen)
         {
             OpenInGameMenu();
@@ -123,6 +140,39 @@ public class GameUIPresenter : MonoBehaviour
         }
 
         CloseInGameMenuUI();
+    }
+
+    /// <summary>
+    /// ESC를 공통 뒤로가기 입력으로 사용하여 인벤토리 계열 UI를 메뉴보다 먼저 닫습니다.
+    /// </summary>
+    private bool TryCloseInventoryBeforeMenu()
+    {
+        bool isInventoryFamilyOpen = uiManager.IsOpen<InventoryUI>() ||
+                                     uiManager.IsOpen<ChestUI>() ||
+                                     uiManager.IsOpen<ItemTooltipUI>();
+        if (!isInventoryFamilyOpen)
+            return false;
+
+        isInventoryEscapeConsumed = true;
+        if (inventoryEscapeGuardRoutine != null)
+            StopCoroutine(inventoryEscapeGuardRoutine);
+
+        inventoryEscapeGuardRoutine = StartCoroutine(ReleaseInventoryEscapeGuard());
+        GlobalEventBus.OnRequestCloseInventoryUI?.Invoke();
+        return true;
+    }
+
+    /// <summary>
+    /// ESC 키가 완전히 해제된 다음 프레임부터 새 메뉴 입력을 허용합니다.
+    /// </summary>
+    private IEnumerator ReleaseInventoryEscapeGuard()
+    {
+        while (Keyboard.current != null && Keyboard.current.escapeKey.isPressed)
+            yield return null;
+
+        yield return null;
+        isInventoryEscapeConsumed = false;
+        inventoryEscapeGuardRoutine = null;
     }
 
     /// <summary>
@@ -290,6 +340,14 @@ public class GameUIPresenter : MonoBehaviour
             StopCoroutine(restoreInputRoutine);
             restoreInputRoutine = null;
         }
+
+        if (inventoryEscapeGuardRoutine != null)
+        {
+            StopCoroutine(inventoryEscapeGuardRoutine);
+            inventoryEscapeGuardRoutine = null;
+        }
+
+        isInventoryEscapeConsumed = false;
 
         if (isMenuInputCaptured)
         {
