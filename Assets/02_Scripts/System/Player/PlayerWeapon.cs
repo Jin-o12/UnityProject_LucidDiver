@@ -31,7 +31,7 @@ public class PlayerWeapon : MonoBehaviour
     private WaitForSeconds shotTraceWait;                               // 궤적 출력 코루틴 WS
 
     [Header("Aim")]
-    [SerializeField] private float aimOriginHeight = 1.0f;              // 1차 조준 레이를 쏠 높이
+    [SerializeField] private float aimOriginHeight = 1.0f;              // 1차 조준 레이를 쏠 높이 (Handle 높이와 같게 맞춤)
     [SerializeField] private float muzzleBackstepDistance = 0.3f;       // 총구가 벽 안에 들어갔을 때 시작점을 뒤로 물릴 거리
     [SerializeField] private float aimSuccessParallex = 0.1f;           // 1차 조준 레이가 적에게 명중 시 적 body 내부를 조준하기 위한 보정 거리
 

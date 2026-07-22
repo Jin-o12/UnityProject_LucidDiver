@@ -407,6 +407,9 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     /* 마나 사용 후 구르기 실행 */
     public void UseEvadeMana(float _useMana)
     {
+        // 방향 키 입력이 전달되지 않는 동안에는 구르기를 처리하지 않음
+        if (_movement.movementInput.sqrMagnitude <= 0.001f) return;
+
         GetMp(-_useMana);
         _movement.PlayerEvade();
         lastEvadeTime = Time.time;

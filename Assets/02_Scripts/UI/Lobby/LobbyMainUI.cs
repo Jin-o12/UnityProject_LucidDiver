@@ -167,7 +167,8 @@ public class LobbyMainUI : MonoBehaviour
             }
             else
             {
-                sliderLinkRateLevel.value = 1.0f;
+                // 최대 레벨 이상인 경우 현재 슬라이더의 최대값까지 채우도록 보정
+                sliderLinkRateLevel.value = sliderLinkRateLevel.maxValue;
             }
         }
     }

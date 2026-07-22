@@ -1,4 +1,4 @@
-using AnyPortrait;
+﻿using AnyPortrait;
 using System.Collections;
 /// <summary>
 /// 플레이어의 이동과 커서 방향 회전을 처리하는 스크립트
@@ -13,9 +13,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Camera mainCamera;
 
-    private Vector2 movementInput;                      // 플레이어의 이동 입력
+    public Vector2 movementInput;                       // 플레이어의 이동 입력
     private bool sprintInput;                           // 플레이어의 달리기 입력
     private Vector2 currentMousePos;                    // 현재 마우스 화면 좌표
+
+    [SerializeField] private float handleHeight = 1f;   // 총구 높이 (마우스 조준 기준 평면을 맞춤)
+
     private InputAction moveAction;                     // 플레이어 이동 이벤트 캐시
     private InputAction sprintAction;                   // 플레이어 달리기 이벤트 캐시
     private InputAction aimAction;                      // 마우스 조준 이벤트 캐시
@@ -616,7 +619,8 @@ public class PlayerMovement : MonoBehaviour
             return false;
         }
 
-        Plane plane = new Plane(Vector3.up, transform.position);
+        // 총구 높이만큼 보정하여 커서 위치 평면 설정
+        Plane plane = new Plane(Vector3.up, transform.position + (Vector3.up * handleHeight));
         Ray ray = mainCamera.ScreenPointToRay(currentMousePos);
 
         if (plane.Raycast(ray, out float enter))
