@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -61,8 +61,8 @@ public class LobbyUIPresenter : MonoBehaviour
     /* 로비 UI 전환 */
     public void OpenLobby()
     {
-        // 현재 열려있는 캔버스를 닫는다
-        uiManager.CloseNowUI();
+        // 이전 UI 닫기
+        CloseOtherUI();
 
         // 로비 UI를 활성화하고 BGM 재생
         uiManager.Open<LobbyMainUI>();
@@ -72,8 +72,8 @@ public class LobbyUIPresenter : MonoBehaviour
     /* 준비 UI 전환 */
     public void OpenSortiePrepare()
     {
-        // 현재 열려있는 캔버스를 닫는다
-        uiManager.CloseNowUI();
+        // 이전 UI 닫기
+        CloseOtherUI();
 
         // 준비 UI를 활성화하고 BGM 재생
         uiManager.Open<SortiePrepareUI>();
@@ -83,8 +83,8 @@ public class LobbyUIPresenter : MonoBehaviour
     /* 기록 UI 전환 */
     public void OpenDiverRecord()
     {
-        // 현재 열려있는 캔버스를 닫는다
-        uiManager.CloseNowUI();
+        // 이전 UI 닫기
+        CloseOtherUI();
 
         // 기록 UI를 활성화하고 BGM 재생
         uiManager.Open<DiverRecordUI>();
@@ -94,12 +94,22 @@ public class LobbyUIPresenter : MonoBehaviour
     /* 창고 UI 전환 */
     public void OpenStorageInventory()
     {
-        // 현재 열려있는 캔버스를 닫는다
-        uiManager.CloseNowUI();
+        // 이전 UI 닫기
+        CloseOtherUI();
 
         // 창고 UI를 활성화하고 BGM 재생
         uiManager.Open<StorageInventoryUI>();
         GlobalEventBus.OnPlayBGMRequested?.Invoke(storageBGMAudioID);
+    }
+
+    private void CloseOtherUI()
+    {
+        // 먼저 게임 메뉴 및 세팅 UI를 닫는다
+        uiManager.Close<GameMenuUI>();
+        uiManager.Close<SettingUI>();
+
+        // 현재 열려있는 캔버스를 닫는다
+        uiManager.CloseNowUI();
     }
 
     /* 기록 카드 팝업 UI 전환 */
@@ -125,9 +135,15 @@ public class LobbyUIPresenter : MonoBehaviour
             return;
         }
 
-        if(gameMenuUI.gameObject.activeInHierarchy == false)
+        if (gameMenuUI.gameObject.activeInHierarchy == false)
         {
             uiManager.Open<GameMenuUI>();
+
+            // 메뉴 UI 열기 전 이미 열려 있던 설정 UI를 닫기
+            if (settingUI != null && settingUI.gameObject.activeInHierarchy == true)
+            {
+                OpenSettingPopup();
+            }
         }
         else
         {
