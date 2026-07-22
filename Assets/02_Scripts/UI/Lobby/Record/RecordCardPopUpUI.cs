@@ -35,6 +35,17 @@ public class RecordCardPopUpUI : MonoBehaviour
         buttonClose.onClick.AddListener(CloseUI);
         //buttonPrev.onClick.AddListener(ReadPrevStory);
         buttonNext.onClick.AddListener(ReadNextStory);
+
+        // RecordLogButton 컴포넌트를 사용하는 경우 우선 연결, 없으면 기본 버튼 이벤트로 연결
+        RecordLogButton logToggleBtn = GetComponentInChildren<RecordLogButton>(true);
+        if (logToggleBtn != null) 
+        {
+            logToggleBtn.onClickAction = ToggleLogUI;
+        }
+        else if (buttonLog != null) 
+        {
+            buttonLog.onClick.AddListener(ToggleLogUI);
+        }
     }
 
     private void OnDisable()
@@ -42,6 +53,16 @@ public class RecordCardPopUpUI : MonoBehaviour
         buttonClose.onClick.RemoveListener(CloseUI);
         //buttonPrev.onClick.RemoveListener(ReadPrevStory);
         buttonNext.onClick.RemoveListener(ReadNextStory);
+        
+        RecordLogButton logToggleBtn = GetComponentInChildren<RecordLogButton>(true);
+        if (logToggleBtn != null) 
+        {
+            logToggleBtn.onClickAction = null;
+        }
+        else if (buttonLog != null) 
+        {
+            buttonLog.onClick.RemoveListener(ToggleLogUI);
+        }
     }
 
     public void SetData(string title, CharacterTID tid, int reqLevel)
@@ -192,5 +213,31 @@ public class RecordCardPopUpUI : MonoBehaviour
         nowDialogueIndex = 0;
 
         GlobalEventBus.OnOpenRecordUI?.Invoke();
+    }
+
+    // 대화 기록(Log) UI 여/닫기
+    private void ToggleLogUI()
+    {
+        GlobalEventBus.OnClickAudio?.Invoke(true);
+
+        RecordLogUI logUI = GetComponentInChildren<RecordLogUI>(true);
+        if (logUI != null)
+        {
+            if (logUI.gameObject.activeSelf)
+            {
+                // 열려있으면 닫기
+                logUI.gameObject.SetActive(false);
+            }
+            else
+            {
+                // 닫혀있으면 열고 로그 갱신
+                logUI.gameObject.SetActive(true);
+                logUI.ShowLog(recordRepo, nowCharacterID, currentReqLevel, nowDialogueIndex);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("RecordLogUI를 찾을 수 없습니다. 자식 오브젝트로 존재하는지 확인하세요.");
+        }
     }
 }
