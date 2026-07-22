@@ -653,6 +653,13 @@ public class StorageInventoryUI : MonoBehaviour
 
     private void DropToSlot(List<InventorySlotData> targetList, int targetIndex)
     {
+        // 장착 중인 아티팩트는 일반 아이템 교환 로직과 분리하여 처리한다.
+        if (draggingArea == AreaType.Artifact)
+        {
+            DropEquippedArtifactToSlot(targetList, targetIndex);
+            return;
+        }
+
         if (!TryGetDraggingSource(out List<InventorySlotData> sourceList))
         {
             return;
@@ -679,31 +686,124 @@ public class StorageInventoryUI : MonoBehaviour
         if (target.TID == 0)
         {
             // {빈 슬롯에 드롭하면 이동}
-            targetList[targetIndex] = new InventorySlotData(source.TID, targetIndex, source.amount, GetIcon(source.TID));
-            sourceList[draggingIndex] = new InventorySlotData(0, draggingIndex, 0, null);
+            targetList[targetIndex] = new InventorySlotData(
+                source.TID,
+                targetIndex,
+                source.amount,
+                GetIcon(source.TID));
+
+            sourceList[draggingIndex] = new InventorySlotData(
+                0,
+                draggingIndex,
+                0,
+                null);
         }
         else if (target.TID == source.TID)
         {
             // {같은 아이템이면 중첩}
             int maxStack = GetMaxStack(source.TID);
-            int moveAmount = Mathf.Min(maxStack - target.amount, source.amount);
+            int moveAmount = Mathf.Min(
+                maxStack - target.amount,
+                source.amount);
 
             targetList[targetIndex].amount += moveAmount;
             sourceList[draggingIndex].amount -= moveAmount;
 
             if (sourceList[draggingIndex].amount <= 0)
             {
-                sourceList[draggingIndex] = new InventorySlotData(0, draggingIndex, 0, null);
+                sourceList[draggingIndex] = new InventorySlotData(
+                    0,
+                    draggingIndex,
+                    0,
+                    null);
             }
         }
         else
         {
             // {다른 아이템이면 교환}
-            targetList[targetIndex] = new InventorySlotData(source.TID, targetIndex, source.amount, GetIcon(source.TID));
-            sourceList[draggingIndex] = new InventorySlotData(target.TID, draggingIndex, target.amount, GetIcon(target.TID));
+            targetList[targetIndex] = new InventorySlotData(
+                source.TID,
+                targetIndex,
+                source.amount,
+                GetIcon(source.TID));
+
+            sourceList[draggingIndex] = new InventorySlotData(
+                target.TID,
+                draggingIndex,
+                target.amount,
+                GetIcon(target.TID));
         }
 
         ValidateQuickSlots();
+    }
+
+    private void DropEquippedArtifactToSlot(List<InventorySlotData> targetList, int targetIndex)
+    {
+        if (!IsValid(artifactData, draggingIndex) ||
+            !IsValid(targetList, targetIndex))
+        {
+            return;
+        }
+
+        InventorySlotData equippedArtifact = artifactData[draggingIndex];
+        InventorySlotData target = targetList[targetIndex];
+
+        if (equippedArtifact == null || equippedArtifact.TID == 0)
+        {
+            return;
+        }
+
+        // 장착 슬롯의 원본 데이터가 실제 아티팩트인지 확인한다.
+        if (GetItemData(equippedArtifact.TID) is not ArtifactItemData)
+        {
+            Debug.LogError(
+                $"아티팩트 장착 슬롯에 아티팩트가 아닌 아이템이 들어 있습니다. " +
+                $"슬롯: {draggingIndex}, TID: {equippedArtifact.TID}");
+
+            return;
+        }
+
+        // 대상이 빈 슬롯이면 아티팩트의 장착을 해제하고 해당 슬롯으로 이동한다.
+        if (target == null ||
+            target.TID == 0 ||
+            target.amount <= 0)
+        {
+            targetList[targetIndex] = new InventorySlotData(
+                equippedArtifact.TID,
+                targetIndex,
+                1,
+                GetIcon(equippedArtifact.TID));
+
+            artifactData[draggingIndex] = new InventorySlotData(
+                0,
+                draggingIndex,
+                0,
+                null);
+
+            return;
+        }
+
+        // 대상이 아티팩트가 아니면 양쪽 아이템을 변경하지 않는다.
+        if (GetItemData(target.TID) is not ArtifactItemData)
+        {
+            Debug.LogWarning(
+                "장착 아티팩트는 소비 아이템 등 비아티팩트 아이템과 교환할 수 없습니다.");
+
+            return;
+        }
+
+        // 대상도 아티팩트이면 빈 슬롯 유무와 관계없이 서로 교환한다.
+        targetList[targetIndex] = new InventorySlotData(
+            equippedArtifact.TID,
+            targetIndex,
+            1,
+            GetIcon(equippedArtifact.TID));
+
+        artifactData[draggingIndex] = new InventorySlotData(
+            target.TID,
+            draggingIndex,
+            1,
+            GetIcon(target.TID));
     }
 
     private void DropToQuickSlot(int quickSlotIndex)
@@ -769,23 +869,29 @@ public class StorageInventoryUI : MonoBehaviour
 
     private void DropToArtifactSlot(int artifactSlotIndex)
     {
-        if (artifactSlotIndex < 0 || artifactSlotIndex >= artifactData.Count)
+        if (artifactSlotIndex < 0 ||
+            artifactSlotIndex >= artifactData.Count)
         {
             return;
         }
 
         if (draggingArea == AreaType.Artifact)
         {
-            SwapArtifactSlots(draggingIndex, artifactSlotIndex);
+            SwapArtifactSlots(
+                draggingIndex,
+                artifactSlotIndex);
+
             return;
         }
 
-        if (draggingArea != AreaType.Inventory || !IsValid(inventoryData, draggingIndex))
+        if (draggingArea != AreaType.Inventory ||
+            !IsValid(inventoryData, draggingIndex))
         {
             return;
         }
 
         InventorySlotData source = inventoryData[draggingIndex];
+
         if (source == null || source.TID == 0)
         {
             return;
@@ -793,15 +899,58 @@ public class StorageInventoryUI : MonoBehaviour
 
         if (GetItemData(source.TID) is not ArtifactItemData)
         {
-            Debug.LogWarning("아티팩트 아이템만 장착 슬롯에 넣을 수 있습니다.");
+            Debug.LogWarning(
+                "아티팩트 아이템만 장착 슬롯에 넣을 수 있습니다.");
+
             return;
         }
 
         InventorySlotData target = artifactData[artifactSlotIndex];
-        int previousTID = target.TID;
 
-        artifactData[artifactSlotIndex] = new InventorySlotData(source.TID, artifactSlotIndex, 1, GetIcon(source.TID));
-        inventoryData[draggingIndex] = new InventorySlotData(previousTID, draggingIndex, previousTID == 0 ? 0 : 1, GetIcon(previousTID));
+        // 기존 장착 데이터가 비어 있지 않다면 실제 아티팩트인지 확인한다.
+        if (target != null &&
+            target.TID != 0 &&
+            GetItemData(target.TID) is not ArtifactItemData)
+        {
+            Debug.LogError(
+                $"아티팩트 장착 슬롯에 잘못된 아이템이 저장되어 있습니다. " +
+                $"슬롯: {artifactSlotIndex}, TID: {target.TID}");
+
+            return;
+        }
+
+        int previousTID = target != null
+            ? target.TID
+            : 0;
+
+        int previousAmount = target != null
+            ? target.amount
+            : 0;
+
+        // 인벤토리의 아티팩트를 장착 슬롯에 배치한다.
+        artifactData[artifactSlotIndex] = new InventorySlotData(
+            source.TID,
+            artifactSlotIndex,
+            1,
+            GetIcon(source.TID));
+
+        // 기존 장착 아티팩트가 있으면 드래그를 시작한 인벤토리 슬롯으로 되돌린다.
+        if (previousTID == 0)
+        {
+            inventoryData[draggingIndex] = new InventorySlotData(
+                0,
+                draggingIndex,
+                0,
+                null);
+        }
+        else
+        {
+            inventoryData[draggingIndex] = new InventorySlotData(
+                previousTID,
+                draggingIndex,
+                Mathf.Max(1, previousAmount),
+                GetIcon(previousTID));
+        }
     }
 
     private void SwapArtifactSlots(int sourceIndex, int targetIndex)
