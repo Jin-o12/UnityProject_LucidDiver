@@ -2571,6 +2571,10 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 90896386-108a-4eb6-9028-5722c37fac74
     m_ActionName: Player/GameMenu[/Keyboard/escape]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 7d29330f-b687-4f7b-a75c-ef09c229a151
+    m_ActionName: UI/GameMenu[/Keyboard/escape]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
