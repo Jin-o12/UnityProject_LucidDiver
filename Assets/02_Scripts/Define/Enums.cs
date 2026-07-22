@@ -89,6 +89,15 @@ public enum DialogueType
     escapeFailed        // 탈출 실패 시
 }
 
+// 인게임 세션이 종료된 원인
+public enum SessionEndReason
+{
+    None = 0,
+    EscapeSuccess = 1,  // 정상 탈출
+    EscapeFailed = 2,   // 사망 또는 제한 시간 종료
+    GameAbandon = 3     // 메뉴에서 관제실 복귀를 선택한 게임 포기
+}
+
 /* 캐릭터 고유 번호 */
 public enum CharacterTID
 {

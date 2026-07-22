@@ -28,7 +28,15 @@ public class NoticeLobbyUI : MonoBehaviour
 
     private void GoToLobby()
     {
+        IResultService resultService = ResultServiceLocator.Instance;
+        if (resultService == null)
+        {
+            Debug.LogError("NoticeLobbyUI: 게임 포기 결과를 처리할 ResultService가 준비되지 않았습니다.", this);
+            return;
+        }
+
         GlobalEventBus.OnCloseTopUI?.Invoke();
-        GlobalEventBus.OnGoToLobbyScene?.Invoke();
+        // 씬을 즉시 이동하지 않고 기존 실패 정산과 결과 화면을 거친 뒤 로비 버튼에서 이동합니다.
+        resultService.HandleGameAbandon();
     }
 }

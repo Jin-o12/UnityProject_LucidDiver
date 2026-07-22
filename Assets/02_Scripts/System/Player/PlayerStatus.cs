@@ -121,8 +121,8 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
 
     void FixedUpdate()  //현재 상태를 확인하여 입력 동작 여부를 체크
     {
-        // 플레이어 상태가 idle인 경우에 입력 동작을 처리함
-        bool canInput = (nowState == livingState.idle);
+        // 세션 종료가 확정된 뒤에는 상태 갱신 순서와 관계없이 입력과 이동을 다시 켜지 않습니다.
+        bool canInput = !IsSessionEnded && nowState == livingState.idle;
         if (_input != null) _input.enabled = canInput;
         if (_movement != null) _movement.enabled = canInput;
 

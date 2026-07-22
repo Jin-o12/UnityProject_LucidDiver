@@ -17,6 +17,9 @@ public class ResultManager : MonoBehaviour, IResultService
 
     // 탈출 여부 및 결과 창 필드
     private bool extractionResult;                      //탈출 성공 여부 판정
+    private SessionEndReason pendingSessionEndReason;   //기존 성공 여부 이벤트에 함께 전달할 대기 중 종료 사유
+    private bool isGameAbandonRequested;                //게임 포기 결과 처리 중 중복 요청 방지
+    public SessionEndReason LastSessionEndReason { get; private set; } = SessionEndReason.None;
     private ResultUI resultPanel;                       //결과 창 UI 
     private Coroutine resultCoroutine;                  //결과 창 출력 코루틴
     private readonly int successBGMAudioID = 10007;     //탈출 성공 BGM ID
@@ -189,6 +192,42 @@ public class ResultManager : MonoBehaviour, IResultService
     //탈출 취소로 기본 상태로 돌아가는 처리
     public void HandleEscapeIdle(int playerID) => SetPlayerState(playerID, PlayerStatus.livingState.idle);
 
+    // 메뉴에서 관제실 복귀를 확정하면 게임 포기 사유를 기록하고 기존 실패 정산을 실행합니다.
+    public void HandleGameAbandon()
+    {
+        // 확인 버튼이 중복 입력되어도 같은 종료 요청을 여러 번 발행하지 않습니다.
+        if (isGameAbandonRequested)
+            return;
+
+        isGameAbandonRequested = true;
+
+        pendingSessionEndReason = SessionEndReason.GameAbandon;
+
+        // 진행 중인 탈출 채널링을 먼저 취소해 실패 정산 뒤 성공 이벤트가 늦게 발생하지 않게 합니다.
+        foreach (KeyValuePair<int, PlayerStatus> playerEntry in _players)
+        {
+            PlayerStatus player = playerEntry.Value;
+            if (player == null)
+                continue;
+
+            if (player.nowState == PlayerStatus.livingState.escape)
+                GlobalEventBus.OnEscapeFailure?.Invoke(playerEntry.Key);
+
+            // 게임 포기는 사망과 다른 결과 사유지만 플레이 조작 상태는 세션 종료 상태로 전환합니다.
+            player.SetPlayerState(PlayerStatus.livingState.gameover);
+        }
+
+        GlobalEventBus.OnEscapeRequest?.Invoke(false);
+
+        // 종료 이벤트는 동기적으로 정산되어야 하므로, 소비되지 않은 사유가 다음 세션에 남지 않게 정리합니다.
+        if (pendingSessionEndReason != SessionEndReason.None)
+        {
+            pendingSessionEndReason = SessionEndReason.None;
+            isGameAbandonRequested = false;
+            Debug.LogError("[ResultManager] 게임 포기 요청이 결과 정산으로 이어지지 않았습니다.", this);
+        }
+    }
+
     // 플레이어 상태 변경
     private void SetPlayerState(int playerID, PlayerStatus.livingState state)
     {
@@ -204,6 +243,11 @@ public class ResultManager : MonoBehaviour, IResultService
     {
         // 탈출 성공 여부를 가장 먼저 기록
         extractionResult = _extractionResult;
+        LastSessionEndReason = pendingSessionEndReason != SessionEndReason.None
+            ? pendingSessionEndReason
+            : (_extractionResult ? SessionEndReason.EscapeSuccess : SessionEndReason.EscapeFailed);
+        pendingSessionEndReason = SessionEndReason.None;
+
         // 이번 세션에서의 플레이 시간을 계산
         startTime = beginTime;
         playTime = Time.time - startTime;
@@ -379,9 +423,19 @@ public class ResultManager : MonoBehaviour, IResultService
                 RemoveFromInventory(slot.TID);
             }
 
-            foreach (var eSlot in artifactEquipment.equippedArtifacts)
+            if (artifactEquipment != null && artifactEquipment.equippedArtifacts != null)
             {
-                if (eSlot != null) RemoveFromInventory(eSlot.TID);
+                foreach (var eSlot in artifactEquipment.equippedArtifacts)
+                {
+                    if (eSlot != null) RemoveFromInventory(eSlot.TID);
+                }
+            }
+
+            // 실패 후 존재하지 않는 아이템 TID가 퀵슬롯 저장 데이터에 남지 않도록 빈 슬롯으로 초기화합니다.
+            _playerSaveData.quickSlots.Clear();
+            for (int i = 0; i < _inven.quickSlots.Count; i++)
+            {
+                _playerSaveData.quickSlots.Add(0);
             }
         }
         // 모든 처리 완료 후 후 DataManager에서 playerData를 저장
@@ -631,6 +685,9 @@ public class ResultManager : MonoBehaviour, IResultService
         GlobalEventBus.OnStop2DSoundRequested?.Invoke(10304);
         GlobalEventBus.OnStop2DSoundRequested?.Invoke(10305);
         GlobalEventBus.OnStop2DSoundRequested?.Invoke(10306);
+
+        // 결과 창을 닫고 로비로 이동할 때 다음 세션의 게임 포기 요청을 받을 수 있도록 초기화합니다.
+        isGameAbandonRequested = false;
 
         // 결과 창 닫기 시 킬 카운트를 초기화
         enemyKillCount = 0;

@@ -105,6 +105,9 @@ public class InventoryPresenter : MonoBehaviour
         GlobalEventBus.OnTooltipUIOpen += OpenTooltipUI;
         GlobalEventBus.OnTooltipUIClose += CloseTooltipUI;
 
+        // ESC 뒤로가기 요청이 들어오면 인벤토리, 상자, 툴팁을 하나의 UI 묶음으로 닫는다.
+        GlobalEventBus.OnRequestCloseInventoryUI += CloseInventoryUI;
+
         // 사망 또는 탈출 확정 시 열려 있는 인벤토리 계열 UI를 즉시 정리한다.
         GlobalEventBus.OnEscapeRequest += HandleSessionEnded;
     }
@@ -136,6 +139,7 @@ public class InventoryPresenter : MonoBehaviour
 
         GlobalEventBus.OnTooltipUIOpen -= OpenTooltipUI;
         GlobalEventBus.OnTooltipUIClose -= CloseTooltipUI;
+        GlobalEventBus.OnRequestCloseInventoryUI -= CloseInventoryUI;
         GlobalEventBus.OnEscapeRequest -= HandleSessionEnded;
 
         if (playerArtifactEquipment != null)
