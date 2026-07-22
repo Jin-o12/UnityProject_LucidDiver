@@ -31,6 +31,7 @@ public sealed class TutorialManager : MonoBehaviour
     private TutorialGuideData currentGuide;
     private Coroutine durationRoutine;
     private Coroutine restoreInputRoutine;
+    private Coroutine itemBoxOpenedNotificationRoutine;
     private float previousTimeScale = 1f;
     private bool isShowing;
     private bool pausedByTutorial;
@@ -83,6 +84,12 @@ public sealed class TutorialManager : MonoBehaviour
         GlobalEventBus.OnEnemyDead -= HandleEnemyDead;
         GlobalEventBus.OnEscapeRequest -= HandleEscapeRequest;
         GlobalEventBus.OnMainActiveSkillCasted -= HandleMainActiveSkillCasted;
+
+        if (itemBoxOpenedNotificationRoutine != null)
+        {
+            StopCoroutine(itemBoxOpenedNotificationRoutine);
+            itemBoxOpenedNotificationRoutine = null;
+        }
 
         CompletePendingInputRestore();
         highlightController?.Hide();
@@ -161,9 +168,35 @@ public sealed class TutorialManager : MonoBehaviour
     /// </summary>
     public bool NotifyEvent(string eventName)
     {
+        // 상자 UI와 인벤토리 UI가 생성된 다음 안내와 일시정지를 적용하도록 한 프레임 미룹니다.
+        if (string.Equals(eventName, TutorialEventNames.ItemBoxOpened, StringComparison.OrdinalIgnoreCase))
+        {
+            if (itemBoxOpenedNotificationRoutine != null)
+                return true;
+
+            if (!isActiveAndEnabled)
+                return false;
+
+            itemBoxOpenedNotificationRoutine = StartCoroutine(NotifyItemBoxOpenedAfterUiReady());
+            return true;
+        }
+
+        return NotifyEventImmediately(eventName);
+    }
+
+    private bool NotifyEventImmediately(string eventName)
+    {
         bool clearedCurrent = TryClearCurrent(TutorialConditionTypes.Event, eventName);
         bool openedNew = TryOpenByCondition(TutorialConditionTypes.Event, eventName);
         return clearedCurrent || openedNew;
+    }
+
+    private IEnumerator NotifyItemBoxOpenedAfterUiReady()
+    {
+        yield return null;
+
+        itemBoxOpenedNotificationRoutine = null;
+        NotifyEventImmediately(TutorialEventNames.ItemBoxOpened);
     }
 
     /// <summary>
@@ -432,10 +465,12 @@ public sealed class TutorialManager : MonoBehaviour
         if (completedGuide.NextGuideID > 0 && guideById.TryGetValue(completedGuide.NextGuideID, out TutorialGuideData nextGuide))
             RequestGuide(nextGuide);
 
-        // 다음 연쇄 대사가 없어 묶음이 완전히 끝났으면 커서를 다시 잠급니다.
+        // 열린 인벤토리가 없을 때만 커서를 다시 잠급니다.
         if (!isShowing)
         {
-            GlobalEventBus.OnMouseLocked?.Invoke(true);
+            LocalInputReader activeReader = pendingInputReader ?? inputReader ?? FindFirstObjectByType<LocalInputReader>();
+            bool shouldLockMouse = activeReader == null || !activeReader.IsInventoryOpen;
+            GlobalEventBus.OnMouseLocked?.Invoke(shouldLockMouse);
         }
     }
 
@@ -617,7 +652,8 @@ public sealed class TutorialManager : MonoBehaviour
         if (readerToRestore != null)
         {
             readerToRestore.SetGameplayInputBlocked(false, GameplayInputBlockSource.Tutorial);
-            readerToRestore.SwitchToPlayerMap();
+            if (!readerToRestore.IsInventoryOpen)
+                readerToRestore.SwitchToPlayerMap();
         }
 
         if (pendingInputReader == readerToRestore)
@@ -644,7 +680,8 @@ public sealed class TutorialManager : MonoBehaviour
             return;
 
         readerToRestore.SetGameplayInputBlocked(false, GameplayInputBlockSource.Tutorial);
-        readerToRestore.SwitchToPlayerMap();
+        if (!readerToRestore.IsInventoryOpen)
+            readerToRestore.SwitchToPlayerMap();
     }
 
     private void MarkTutorialCompleted()

@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class GameUIPresenter : MonoBehaviour
 {
@@ -180,6 +181,10 @@ public class GameUIPresenter : MonoBehaviour
     /// </summary>
     private void OpenInGameMenu()
     {
+        // 튜토리얼에서는 ESC 안내 확인과 인벤토리 닫기는 유지하고 게임 메뉴 진입만 차단합니다.
+        if (SceneManager.GetSceneByName("TutorialScene").isLoaded)
+            return;
+
         if (!TryCaptureGameplayInput())
             return;
 
