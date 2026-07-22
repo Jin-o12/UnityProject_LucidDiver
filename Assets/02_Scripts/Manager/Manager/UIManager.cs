@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// 게임 내 UI 프리팹을 생성, 캐싱, 열기, 닫기 처리하는 매니저입니다.
@@ -83,7 +84,31 @@ public class UIManager : MonoBehaviour
         ui.gameObject.SetActive(true);
         ui.transform.SetAsLastSibling();
 
-        if (!uiStack.Contains(ui)) uiStack.Push(ui);
+        // 이미 열려 있던 UI를 다시 앞으로 가져온 경우 화면 순서와 스택 순서도 함께 맞춥니다.
+        if (uiStack.Contains(ui))
+            RemoveFromStack(ui);
+
+        uiStack.Push(ui);
+
+        return ui;
+    }
+
+    /// <summary>
+    /// HUD처럼 항상 바닥에 유지할 UI를 팝업 스택에 넣지 않고 엽니다.
+    /// </summary>
+    public UiType OpenRoot<UiType>() where UiType: MonoBehaviour
+    {
+        if(this == null)
+            return null;
+
+        UiType ui = GetOrCreate<UiType>();
+        if (ui == null) return null;
+
+        ui.gameObject.SetActive(true);
+        ui.transform.SetAsFirstSibling();
+
+        if (uiStack.Contains(ui))
+            RemoveFromStack(ui);
 
         return ui;
     }
@@ -119,6 +144,61 @@ public class UIManager : MonoBehaviour
         {
             Debug.LogWarning("현재 닫을 UI가 없습니다.");
         }
+    }
+
+    /// <summary>
+    /// 지정한 UI가 현재 생성되어 있고 활성화된 상태인지 확인합니다.
+    /// </summary>
+    public bool IsOpen<UiType>() where UiType: MonoBehaviour
+    {
+        return uiInstances.TryGetValue(typeof(UiType), out MonoBehaviour ui) &&
+               ui != null &&
+               ui.gameObject.activeInHierarchy;
+    }
+
+    /// <summary>
+    /// 지정한 UI의 렌더링은 유지하면서 마우스 포인터 이벤트만 허용하거나 차단합니다.
+    /// ESC 메뉴 아래에 남아 있는 HUD와 인벤토리가 클릭되는 것을 막는 용도입니다.
+    /// </summary>
+    public void SetRaycastEnabled<UiType>(bool enabled) where UiType: MonoBehaviour
+    {
+        if(!uiInstances.TryGetValue(typeof(UiType), out MonoBehaviour ui) || ui == null)
+            return;
+
+        GraphicRaycaster[] raycasters = ui.GetComponentsInChildren<GraphicRaycaster>(true);
+        for(int i = 0; i < raycasters.Length; i++)
+        {
+            if(raycasters[i] != null)
+                raycasters[i].enabled = enabled;
+        }
+    }
+
+    /// <summary>
+    /// 인게임 세션에서 사용한 UI만 비활성화하고 팝업 스택에서 제거합니다.
+    /// 로비 UI 인스턴스와 캐시는 유지하여 씬 전환 후 그대로 재사용할 수 있습니다.
+    /// </summary>
+    public void CloseGameplaySessionUIs()
+    {
+        foreach(MonoBehaviour ui in uiInstances.Values)
+        {
+            if(ui == null || !IsGameplaySessionUI(ui))
+                continue;
+
+            ui.gameObject.SetActive(false);
+        }
+
+        var remaining = new List<MonoBehaviour>();
+        foreach(MonoBehaviour ui in uiStack)
+        {
+            if(ui == null || !ui.gameObject.activeInHierarchy || IsGameplaySessionUI(ui))
+                continue;
+
+            remaining.Add(ui);
+        }
+
+        uiStack.Clear();
+        for(int i = remaining.Count - 1; i >= 0; i--)
+            uiStack.Push(remaining[i]);
     }
 
     /// <summary>
@@ -184,7 +264,23 @@ public class UIManager : MonoBehaviour
         temp.Remove(ui);
 
         uiStack.Clear();
-        for(int i = 0 ; i < temp.Count ; i++)
+        // Stack 열거 결과는 최상단부터 나오므로 역순으로 넣어 기존 스택 순서를 보존합니다.
+        for(int i = temp.Count - 1 ; i >= 0 ; i--)
             uiStack.Push(temp[i]);
+    }
+
+    /// <summary>
+    /// 로비 전환 시 정리해야 하는 인게임 전용 UI인지 판정합니다.
+    /// </summary>
+    private static bool IsGameplaySessionUI(MonoBehaviour ui)
+    {
+        return ui is GamePlayUI ||
+               ui is InventoryUI ||
+               ui is ChestUI ||
+               ui is ItemTooltipUI ||
+               ui is InGameMenuUI ||
+               ui is NoticeLobbyUI ||
+               ui is SettingUI ||
+               ui is ResultUI;
     }
 }

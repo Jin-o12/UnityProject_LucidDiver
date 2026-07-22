@@ -52,6 +52,30 @@ public class SceneController : MonoBehaviour
 
     public void GoToLobbyScene()
     {
+        // 참조 누락 시 현재 씬의 UI와 입력만 먼저 정리되는 상태를 방지합니다.
+        if(lobbyScene == null)
+        {
+            Debug.Log("목표하는 씬이 존재하지 않습니다");
+            return;
+        }
+
+        string lobbySceneName = lobbyScene.SceneName;
+        if(string.IsNullOrWhiteSpace(lobbySceneName) || !Application.CanStreamedLevelBeLoaded(lobbySceneName))
+        {
+            Debug.LogError($"로비 씬을 불러올 수 없습니다. Build Settings와 씬 참조를 확인해 주세요. ({lobbySceneName})", this);
+            return;
+        }
+        if(LoadScene == null)
+        {
+            Debug.Log("로딩 씬이 존재하지 않습니다");
+            return;
+        }
+
+        // DontDestroyOnLoad로 유지되는 인게임 UI와 입력 상태를 로비 진입 전에 정리합니다.
+        UIManager.Instance?.CloseGameplaySessionUIs();
+        GlobalEventBus.OnSwitchInputMap?.Invoke("Lobby");
+        GlobalEventBus.OnMouseLocked?.Invoke(false);
+
         SceneLoader(lobbyScene, false);
     }
 
