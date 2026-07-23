@@ -11069,7 +11069,7 @@ MonoBehaviour:
   - grade: 5
     itemTid: 1005
     weight: 2
-  openNoiseRange: 30
+  openNoiseRange: 15
   openNoiseDuration: 1.8
   Box_Open_AudioIDPool: 
 --- !u!1001 &730569933
@@ -31555,7 +31555,7 @@ MonoBehaviour:
     type: 3}
   noiseSettings:
   - type: 0
-    defaultRadius: 15
+    defaultRadius: 1
     defaultDuration: 0.5
     priority: 5
     canInterruptChase: 0
@@ -31567,25 +31567,25 @@ MonoBehaviour:
     canInterruptChase: 0
     debugColor: {r: 0.1, g: 0.9, b: 0.9, a: 1}
   - type: 2
-    defaultRadius: 40
+    defaultRadius: 20
     defaultDuration: 1.2
     priority: 30
     canInterruptChase: 0
     debugColor: {r: 1, g: 0.6, b: 0.1, a: 1}
   - type: 3
-    defaultRadius: 30
+    defaultRadius: 15
     defaultDuration: 1.8
     priority: 40
     canInterruptChase: 1
     debugColor: {r: 1, g: 0.9, b: 0.2, a: 1}
   - type: 4
-    defaultRadius: 12
+    defaultRadius: 10
     defaultDuration: 1
     priority: 35
     canInterruptChase: 0
     debugColor: {r: 0.8, g: 0.4, b: 1, a: 1}
   - type: 5
-    defaultRadius: 13
+    defaultRadius: 15
     defaultDuration: 1.2
     priority: 45
     canInterruptChase: 0
@@ -31597,13 +31597,13 @@ MonoBehaviour:
     canInterruptChase: 0
     debugColor: {r: 0.9, g: 0.5, b: 0.5, a: 1}
   - type: 7
-    defaultRadius: 8
+    defaultRadius: 10
     defaultDuration: 0.8
     priority: 20
     canInterruptChase: 0
     debugColor: {r: 0.9, g: 0.35, b: 0.15, a: 1}
   - type: 8
-    defaultRadius: 18
+    defaultRadius: 20
     defaultDuration: 2.5
     priority: 60
     canInterruptChase: 1

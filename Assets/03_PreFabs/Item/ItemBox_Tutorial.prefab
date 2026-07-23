@@ -144,7 +144,7 @@ MonoBehaviour:
   - grade: 5
     itemTid: 1005
     weight: 2
-  openNoiseRange: 20
+  openNoiseRange: 15
   openNoiseDuration: 1.8
   Box_Open_AudioIDPool: 692900006a290000
 --- !u!65 &8379933475469959545

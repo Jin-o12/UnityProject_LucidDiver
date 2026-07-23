@@ -673,7 +673,7 @@ MonoBehaviour:
   movementWallBuffer: 0.05
   evadeCornerProbeRadius: 0.25
   evadeCornerProbeHeight: 0.5
-  walkNoiseRange: 15
+  walkNoiseRange: 1
   runNoiseRange: 20
   walkNoiseInterval: 0.55
   runNoiseInterval: 0.3

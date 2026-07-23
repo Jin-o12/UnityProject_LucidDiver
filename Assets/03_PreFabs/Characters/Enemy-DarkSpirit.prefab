@@ -741,6 +741,7 @@ MonoBehaviour:
     sightLossGraceTime: 1
     aggroDecayPerSecond: 25
     aggroRecoveryPerSecond: 50
+    lostTargetSearchDuration: 3
     chaseLeashDistance: 16
     hardReturnDistance: 24
     enableDistributedApproach: 1
@@ -771,9 +772,9 @@ MonoBehaviour:
     patrolDestination: {x: 0, y: 0, z: 0}
     remainingWanderCount: 0
   perception:
-    sightRange: 8
-    awarenessRange: 12
-    hearingRange: 20
+    sightRange: 10
+    awarenessRange: 15
+    hearingRange: 17.5
     sightAngle: 90
     eyeHeight: 1.4
     requireLineOfHearing: 1
@@ -782,9 +783,9 @@ MonoBehaviour:
       m_Bits: 1024
     soundSampleHeight: 1.2
   noiseListener:
-    maxInvestigateMoveTime: 3
+    maxInvestigateMoveTime: 5
     investigateStopDistance: 1
-    investigateDuration: 2
+    investigateDuration: 3
     investigateNavMeshSampleDistance: 2.5
   locomotion:
     moveSpeed: 4

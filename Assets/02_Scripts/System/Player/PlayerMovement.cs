@@ -53,7 +53,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Noise Settings")]
     // 발소리는 "플레이어 이동 입력"이 아니라 실제 이동 중일 때 일정 간격으로만 발생시킵니다.
-    [SerializeField] private float walkNoiseRange = 15.0f;
+    [SerializeField] private float walkNoiseRange = 1.0f;
     [SerializeField] private float runNoiseRange = 20.0f;
     [SerializeField] private float walkNoiseInterval = 0.55f;
     [SerializeField] private float runNoiseInterval = 0.3f;
