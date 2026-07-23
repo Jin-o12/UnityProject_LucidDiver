@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     // 플레이 타임 기록에 관한 필드
     private bool timeTrack = false;                     //플레이 시간 측정 중
     private float startTime;                            //플레이 시작 시점
-    private readonly string[] playScenes = { "DemoScene", "DemoScene Patrol", "DemoScene Additive" }; //인게임 세션으로 취급할 씬 목록
+    private readonly string[] playScenes = { "DemoScene", "DemoScene Patrol", "DemoScene Additive", "DemoScene Tutorial" }; //인게임 세션으로 취급할 씬 목록
 
     // 저장 데이터 인터페이스
     private ICharDataRepository charRepo;               // 캐릭터 데이터 접근 인터페이스
@@ -44,13 +44,33 @@ public class GameManager : MonoBehaviour
     {
         if(IsPlayScene(scene.name)) //인게임 세션 신에서 실행
         {
+            EnsureRepositories();
+
             startTime = Time.time;  //시작 시점 등록
             timeTrack = true;       //시간 기록 시작
 
             // 캐릭터 데이터 가져오기
-            PlayerSaveData playerData = PlayerSaveDataSO.Instance.currentData;
+            PlayerSaveDataSO saveDataSO = PlayerSaveDataSO.Instance;
+            if (saveDataSO == null)
+            {
+                Debug.LogError("[GameManager] PlayerSaveDataSO를 찾지 못해 세션 초기화를 중단합니다.", this);
+                return;
+            }
+
+            PlayerSaveData playerData = saveDataSO.LoadSaveData();
+            if (playerData == null)
+            {
+                Debug.LogError("[GameManager] 플레이어 세이브 데이터를 불러오지 못해 세션 초기화를 중단합니다.", this);
+                return;
+            }
+
             _playerSaveData = playerData;
             CharacterData charData = charRepo.GetCharacterData(playerData.SelectCharID);
+            if (charData == null)
+            {
+                Debug.LogError($"[GameManager] 선택된 캐릭터 데이터를 찾지 못해 플레이어를 스폰할 수 없습니다. TID={playerData.SelectCharID}", this);
+                return;
+            }
 
             // 플레이어 1회 생성
             if (SpawnManager.Instance != null)
@@ -68,6 +88,8 @@ public class GameManager : MonoBehaviour
             if (artifactEquipment != null)
             {
                 artifactEquipment.RestoreFromSave(playerData, itemRepo);
+                // 장착 중인 아티팩트를 시작 소지량에 합산하여 인벤토리 이동 시 새로 획득한 것으로 처리되는 것을 방지
+                SessionDataSO.Instance.AddStartingArtifacts(artifactEquipment.equippedArtifacts);
             }
 
             // 적 1회 생성
@@ -77,12 +99,22 @@ public class GameManager : MonoBehaviour
                 SpawnManager.Instance.SpawnBoxes();
             }
 
-            UIManager.Instance.Open<GamePlayUI>();
+            // 인게임 진입 시 조작 맵을 Player로 전환
+            GlobalEventBus.OnSwitchInputMap?.Invoke("Player");
+
+            // 게임플레이 HUD는 ESC 팝업 스택에 포함하지 않아 최상단 닫기 대상이 되지 않게 합니다.
+            UIManager.Instance.OpenRoot<GamePlayUI>();
         }
         else
         {
             timeTrack = false;     //인게임 세션 신을 벗어나면 시간 기록 중단
         }
+    }
+
+    private void EnsureRepositories()
+    {
+        charRepo ??= new SOCharacterRepository();
+        itemRepo ??= new LocalJsonItemRepository();
     }
 
     /// <summary>

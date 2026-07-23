@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0072554ed3931b840a922725e9065d87, type: 3}
+  m_Name: TutorialMessageCatalog
+  m_EditorClassIdentifier: 
+  entries:
+  - tutorialId: TUTORIAL_MOVE_001
+    title: "\uC774\uB3D9"
+    message: "WASD \uD0A4\uB97C \uC0AC\uC6A9\uD558\uC5EC \uCE90\uB9AD\uD130\uB97C
+      \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+    confirmText: "\uD655\uC778"
+    pauseGame: 0
+  - tutorialId: TUTORIAL_INTERACT_001
+    title: "\uC0C1\uD638\uC791\uC6A9"
+    message: "\uC0C1\uD638\uC791\uC6A9 \uD0A4\uB97C \uB20C\uB7EC \uC8FC\uBCC0 \uC624\uBE0C\uC81D\uD2B8\uB97C
+      \uC870\uC0AC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+    confirmText: "\uD655\uC778"
+    pauseGame: 1
+  - tutorialId: TUTORIAL_ITEM_001
+    title: "\uC544\uC774\uD15C \uD68D\uB4DD"
+    message: "\uC0C1\uC790 \uC2AC\uB86F\uC758 \uC544\uC774\uD15C\uC744 \uC120\uD0DD\uD558\uC5EC
+      \uC778\uBCA4\uD1A0\uB9AC\uB85C \uC62E\uACA8 \uBCF4\uC138\uC694."
+    confirmText: "\uD655\uC778"
+    pauseGame: 0
+  - tutorialId: TUTORIAL_ATTACK_001
+    title: "\uAE30\uBCF8 \uACF5\uACA9"
+    message: "\uC870\uC900\uD55C \uBC29\uD5A5\uC73C\uB85C \uAE30\uBCF8 \uACF5\uACA9\uC744
+      \uC0AC\uC6A9\uD574 \uD6C8\uB828\uC6A9 \uC5D0\uB108\uBBF8\uB97C \uACF5\uACA9\uD558\uC138\uC694."
+    confirmText: "\uD655\uC778"
+    pauseGame: 1
+  - tutorialId: TUTORIAL_SKILL_001
+    title: "\uD504\uB9AC\uC998 \uC720\uD0C4"
+    message: "\uC2A4\uD0AC \uD0A4\uB97C \uB20C\uB7EC \uD504\uB9AC\uC998 \uC720\uD0C4\uC744
+      \uD22C\uCC99\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+    confirmText: "\uD655\uC778"
+    pauseGame: 1
+  - tutorialId: TUTORIAL_ESCAPE_001
+    title: "\uD0C8\uCD9C"
+    message: "\uD0C8\uCD9C \uC9C0\uC810\uC5D0\uC11C \uC0C1\uD638\uC791\uC6A9\uD558\uACE0
+      \uCC44\uB110\uB9C1\uC774 \uB05D\uB0A0 \uB54C\uAE4C\uC9C0 \uAE30\uB2E4\uB9AC\uC138\uC694."
+    confirmText: "\uD655\uC778"
+    pauseGame: 1

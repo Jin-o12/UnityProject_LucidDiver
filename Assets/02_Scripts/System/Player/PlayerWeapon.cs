@@ -14,9 +14,12 @@ public class PlayerWeapon : MonoBehaviour
     [Header("Shot Trace Visual")]
     [SerializeField] private bool showShotTrace = true;                 // 궤적 보이기 여부
     [SerializeField] private LineRenderer shotTraceRenderer;            // 궤적 렌더러
-    [SerializeField] private float shotTraceDuration = 0.3f;           // 궤적이 보이는 시간
+    [SerializeField] private float shotTraceDuration = 0.3f;            // 궤적이 보이는 시간
     [SerializeField] private Color hitTraceColor = Color.white;         // 적중 했을 시 궤적 색상
     [SerializeField] private Color missTraceColor = Color.red;          // 적중하지 않을 시 궤적 색상
+
+    [Header("Muzzle Light Feedback")]
+    [SerializeField] private MuzzleFlashLight muzzleFlashLight;         // 기존 머즐 VFX와 함께 재생할 짧은 실시간 발사광
 
     public bool isEquipped => weaponData != null;                       // 무기 장착 여부
     public float nowUseMana => weaponData.useMana;                      // 현재 무기의 마나 사용량
@@ -28,9 +31,13 @@ public class PlayerWeapon : MonoBehaviour
     private WaitForSeconds shotTraceWait;                               // 궤적 출력 코루틴 WS
 
     [Header("Aim")]
-    [SerializeField] private float aimOriginHeight = 1.0f;              // 1차 조준 레이를 쏠 높이
+    [SerializeField] private float aimOriginHeight = 1.0f;              // 1차 조준 레이를 쏠 높이 (Handle 높이와 같게 맞춤)
     [SerializeField] private float muzzleBackstepDistance = 0.3f;       // 총구가 벽 안에 들어갔을 때 시작점을 뒤로 물릴 거리
     [SerializeField] private float aimSuccessParallex = 0.1f;           // 1차 조준 레이가 적에게 명중 시 적 body 내부를 조준하기 위한 보정 거리
+
+    [Header("Shot Audio")]
+    public int[] GunshotPistol_AudioIDPool = null;                      // 실외 사격 사운드 ID 리스트
+    public int[] Indoor_GunshotPistol_AudioIDPool = null;               // 실내 사격 사운드 ID 리스트 (실외/실내 구분 가능한 경우 실내에서 사용)
 
     [SerializeField] public apPortrait apPort;
 
@@ -39,6 +46,10 @@ public class PlayerWeapon : MonoBehaviour
         weaponData = null;
         shotTraceWait = new WaitForSeconds(shotTraceDuration);
         HideShotTrace();
+
+        // 프리팹 참조가 빠져도 기존 FirePos 아래의 컴포넌트를 한 번만 찾아 안전하게 복구합니다.
+        if (muzzleFlashLight == null && firePoint != null)
+            muzzleFlashLight = firePoint.GetComponent<MuzzleFlashLight>();
     }
 
     private void OnDisable()
@@ -62,6 +73,10 @@ public class PlayerWeapon : MonoBehaviour
         if (weaponData == null || firePoint == null)
             return;
 
+        // 총구 위치와 방향을 기준으로 발사 VFX를 재생합니다.
+        VFXService.Instance?.Play(GameplayVFXIds.PlayerMuzzle, firePoint.position, firePoint.rotation);
+
+        muzzleFlashLight?.PlayFlash();
         apPort.SetControlParamFloat("Yuan_Recoil", 1.0f);
         apPort.SetControlParamFloat("Yuan_B_Recoil", 1.0f);
         StartCoroutine(PlayRecoilAnimation(0.5f, "Yuan_Recoil"));
@@ -119,6 +134,18 @@ public class PlayerWeapon : MonoBehaviour
             {
                 traceColor = hitTraceColor;
                 target.TakeDamage(weaponData.AtkValue);
+                VFXService.Instance?.Play(
+                    GameplayVFXIds.BulletImpactEnemy,
+                    shotHit.point,
+                    Quaternion.LookRotation(shotHit.normal));
+            }
+            else
+            {
+                // 데미지 대상이 아닌 벽과 장애물은 월드 탄착 VFX로 구분합니다.
+                VFXService.Instance?.Play(
+                    GameplayVFXIds.BulletImpactWorld,
+                    shotHit.point,
+                    Quaternion.LookRotation(shotHit.normal));
             }
 
             // 디버그 출력
@@ -131,19 +158,22 @@ public class PlayerWeapon : MonoBehaviour
 
         // 1차 조준 vs 2차 히트 포인트 판정 디버그 레이
         bool aimHitSuccess = Physics.Raycast(aimOrigin, aimDirection, out aimHit, weaponData.fireRange, hitMask, QueryTriggerInteraction.Ignore);
-        Debug.Log($"[AIM] hit={aimHitSuccess}, point={(aimHitSuccess ? aimHit.point.ToString() : "N/A")}, targetPoint={targetPoint}");
-        Debug.DrawLine(aimOrigin, targetPoint, Color.yellow, 2f);      // 1차 조준 레이
+        //Debug.Log($"[AIM] hit={aimHitSuccess}, point={(aimHitSuccess ? aimHit.point.ToString() : "N/A")}, targetPoint={targetPoint}");
+        //Debug.DrawLine(aimOrigin, targetPoint, Color.yellow, 2f);      // 1차 조준 레이
 
         bool shotHitSuccess = Physics.Raycast(safeShotOrigin, shotDirection, out shotHit, safeShotDistance, hitMask, QueryTriggerInteraction.Ignore);
-        Debug.Log($"[SHOT] hit={shotHitSuccess}, origin={safeShotOrigin}, dir={shotDirection}, dist={safeShotDistance}, targetPoint={targetPoint}");
-        Debug.DrawLine(safeShotOrigin, safeShotOrigin + shotDirection * safeShotDistance, Color.red, 2f); // 2차 발사 레이
+        //Debug.Log($"[SHOT] hit={shotHitSuccess}, origin={safeShotOrigin}, dir={shotDirection}, dist={safeShotDistance}, targetPoint={targetPoint}");
+        //Debug.DrawLine(safeShotOrigin, safeShotOrigin + shotDirection * safeShotDistance, Color.red, 2f); // 2차 발사 레이
 
         // 궤적은 여전히 총구에서 시작해 보이게 한다.
         ShowShotTrace(muzzleOrigin, endPoint, traceColor);
 
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 오디오 재생
+        int ShotAudioID = GunshotPistol_AudioIDPool[Random.Range(0, GunshotPistol_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(ShotAudioID, safeShotOrigin);
+
         // 실제 오디오 재생과 별개로, AI는 이 총소리 이벤트를 통해 위치를 조사합니다.
         NoiseSystem.Emit(NoiseType.Gunshot, muzzleOrigin, gameObject);
-
     }
 
     // 리코일 애니메이션 출력

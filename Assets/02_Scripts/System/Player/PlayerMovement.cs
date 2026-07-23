@@ -1,9 +1,11 @@
-﻿/// <summary>
+﻿using AnyPortrait;
+using System.Collections;
+/// <summary>
 /// 플레이어의 이동과 커서 방향 회전을 처리하는 스크립트
 /// </summary>
 using UnityEngine;
-using AnyPortrait;
-using System.Collections;
+using UnityEngine.InputSystem;
+using static AnyPortrait.apAnimPlayUnit;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -11,9 +13,15 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Camera mainCamera;
 
-    private Vector2 movementInput;                       // 플레이어의 이동 입력
+    public Vector2 movementInput;                       // 플레이어의 이동 입력
     private bool sprintInput;                           // 플레이어의 달리기 입력
     private Vector2 currentMousePos;                    // 현재 마우스 화면 좌표
+
+    [SerializeField] private float handleHeight = 1f;   // 총구 높이 (마우스 조준 기준 평면을 맞춤)
+
+    private InputAction moveAction;                     // 플레이어 이동 이벤트 캐시
+    private InputAction sprintAction;                   // 플레이어 달리기 이벤트 캐시
+    private InputAction aimAction;                      // 마우스 조준 이벤트 캐시
 
     private readonly float isometricYAngle = +45.0f;    // 쿼터뷰 기준 이동 방향 보정
     public float moveSpeed;                             // 이동 속도
@@ -30,14 +38,22 @@ public class PlayerMovement : MonoBehaviour
     public float evadeCooltime;                         // 구르기 쿨타임
 
     [Header("Collision Guard")]
+    [SerializeField] private CapsuleCollider movementCollider; // 실제 몸통 이동 충돌에 사용할 CapsuleCollider
     [SerializeField] private LayerMask movementObstacleMask; // 이동/구르기 중 관통을 막을 벽 레이어
     [SerializeField] private float movementWallBuffer = 0.05f; // 벽 앞에서 멈추도록 남기는 여유 거리
-    [SerializeField] private float evadeCornerProbeRadius = 0.25f; // 벽 모서리 관통을 막기 위한 보조 검사 반지름
-    [SerializeField] private float evadeCornerProbeHeight = 0.5f; // 보조 검사를 시작할 플레이어 높이
+
+    [Header("Movement Audio")]
+    public int[] FootStep_AudioIDPool = null;           // 이동 사운드 ID 리스트
+    public int[] InDoor_FootStep_AudioIDPool = null;    // 실내 이동 사운드 ID 리스트 (실외/실내 구분 가능한 경우 실내에서 사용)
+    public int[] Evade_AudioIDPool = null;              // 구르기 사운드 ID 리스트
+    public int[] Throw_AudioIDPool = null;              // 스킬 동작 사운드 ID 리스트
+
+    private float lastFootstepTime;                     // 최근 이동 사운드 출력 시점
+    public float FootStep_SoundTime = 10.0f;            // 이동 사운드 ID 출력 시간 기준 값
 
     [Header("Noise Settings")]
     // 발소리는 "플레이어 이동 입력"이 아니라 실제 이동 중일 때 일정 간격으로만 발생시킵니다.
-    [SerializeField] private float walkNoiseRange = 15.0f;
+    [SerializeField] private float walkNoiseRange = 1.0f;
     [SerializeField] private float runNoiseRange = 20.0f;
     [SerializeField] private float walkNoiseInterval = 0.55f;
     [SerializeField] private float runNoiseInterval = 0.3f;
@@ -58,21 +74,67 @@ public class PlayerMovement : MonoBehaviour
             mainCamera = Camera.main;
         }
 
-        // 필수 컴포넌트가 없으면 비활성화
-        if (rb == null || animator == null || mainCamera == null)
+        // 이동에 반드시 필요한 컴포넌트가 없으면 비활성화
+        // Additive 씬 로드 타이밍상 Camera.main은 플레이어보다 늦게 잡힐 수 있으므로 카메라 누락만으로 이동을 막지 않습니다.
+        if (rb == null || animator == null)
         {
             enabled = false;
             Debug.LogError("PlayerMovement: 필요한 컴포넌트가 없습니다.");
             return;
         }
+
+        // 실제 이동 충돌에 사용할 Trigger가 아닌 CapsuleCollider를 자동으로 찾습니다.
+        if (movementCollider == null)
+        {
+            movementCollider = FindMovementCollider();
+        }
+
+        // 상호작용용 Trigger Collider가 아니라 실제 몸통 CapsuleCollider가 필요합니다.
+        if (movementCollider == null)
+        {
+            Debug.LogError("PlayerMovement: Movement Collider에 Trigger가 아닌 CapsuleCollider를 연결해야 합니다.");
+        }
+
+        if (apPort != null)
+        {
+            apPort.enabled = true;
+            if (apPort.gameObject != null) apPort.gameObject.SetActive(true);
+        }
+
+        lastFootstepTime = Time.time;
     }
 
     private void OnEnable()
     {
-        GlobalEventBus.OnPlayerMove += PlayerMove;
+        if (GlobalEventBus.OnGetInputAction != null)
+        {
+            moveAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Move");
+            if (moveAction != null)
+            {
+                moveAction.Enable();
+                moveAction.performed += OnMoveInput;
+                moveAction.canceled += OnMoveCanceled;
+            }
+
+            sprintAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Sprint");
+            if (sprintAction != null)
+            {
+                sprintAction.Enable();
+                sprintAction.performed += OnSprintInputPerformed;
+                sprintAction.canceled += OnSprintInputCanceled;
+            }
+
+            aimAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Look");
+            if (aimAction != null)
+            {
+                aimAction.Enable();
+                aimAction.performed += OnAimInput;
+                aimAction.canceled += OnAimInput;
+            }
+        }
+
         GlobalEventBus.SendCanSprint += PlayerSprint;
         GlobalEventBus.SendCannotSprint += PlayerSprint;
-        GlobalEventBus.OnMousePositionInput += UpdateMousePos;
         GlobalEventBus.OnMainActiveSkillCasted += SkillAnimate;
         GlobalEventBus.OnHitAnimate += HitAnimate;
         GlobalEventBus.onPlayerDead += PlayerDie;
@@ -80,14 +142,43 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDisable()
     {
-        GlobalEventBus.OnPlayerMove -= PlayerMove;
+        if (moveAction != null)
+        {
+            moveAction.performed -= OnMoveInput;
+            moveAction.canceled -= OnMoveCanceled;
+            moveAction.Disable();
+        }
+
+        if (sprintAction != null)
+        {
+            sprintAction.performed -= OnSprintInputPerformed;
+            sprintAction.canceled -= OnSprintInputCanceled;
+            sprintAction.Disable();
+        }
+
+        if (aimAction != null)
+        {
+            aimAction.performed -= OnAimInput;
+            aimAction.canceled -= OnAimInput;
+            aimAction.Disable();
+        }
+
         GlobalEventBus.SendCanSprint -= PlayerSprint;
         GlobalEventBus.SendCannotSprint -= PlayerSprint;
-        GlobalEventBus.OnMousePositionInput -= UpdateMousePos;
         GlobalEventBus.OnMainActiveSkillCasted -= SkillAnimate;
         GlobalEventBus.OnHitAnimate -= HitAnimate;
         GlobalEventBus.onPlayerDead -= PlayerDie;
         moveNoiseTimer = 0.0f;
+
+        // 비활성화 시 입력 상태를 초기화하여
+        // 재활성화 시 이전 입력 값이 남아 걷기 모션이 유지되는 것을 방지
+        movementInput = Vector2.zero;
+        sprintInput = false;
+        if (animator != null)
+        {
+            animator.SetBool("IsMoving", false);
+            animator.SetBool("IsSprint", false);
+        }
     }
 
     private void FixedUpdate()
@@ -101,31 +192,29 @@ public class PlayerMovement : MonoBehaviour
         MoveAndRotate();
     }
 
-    public void initialize(float _speed, float _sSpeed, float _sMana, float _eSpeed, float _eTime, float _eMana, float _eCooltime)
+    public void initialize(CharacterData _charData)
     {
         // 기본 이동 속도 초기화
-        moveSpeed = _speed;
+        moveSpeed = _charData.moveSpeed;
 
         // 달리기 속도 초기화
-        sprintSpeed = _sSpeed;
+        sprintSpeed = _charData.sprintSpeed;
 
         // 달리기 중 초당 MP 소비 초기화
-        sprintMP = _sMana;
+        sprintMP = _charData.sprintMana;
 
         // 구르기 이동 거리(속도 × 시간) 초기화
-        evadeSpeed = _eSpeed;
-        evadeTime = _eTime;
+        evadeSpeed = _charData.evadeSpeed;
+        evadeTime = _charData.evadeTime;
 
         // 구르기 MP 소비 초기화
-        evadeMP = _eMana;
+        evadeMP = _charData.evadeMana;
 
         // 구르기 쿨타임 초기화
-        evadeCooltime = _eCooltime;
+        evadeCooltime = _charData.evadeCooltime;
 
         artifactMoveSpeedRate = 0.0f;
         movementWallBuffer = Mathf.Max(0.0f, movementWallBuffer);
-        evadeCornerProbeRadius = Mathf.Max(0.05f, evadeCornerProbeRadius);
-        evadeCornerProbeHeight = Mathf.Max(0.0f, evadeCornerProbeHeight);
     }
 
     /// <summary>
@@ -138,13 +227,22 @@ public class PlayerMovement : MonoBehaviour
     }
 
     /* 플레이어 이동 입력 갱신 */
-    private void PlayerMove(Vector2 input) => movementInput = input;
+    private void OnMoveInput(InputAction.CallbackContext context) => movementInput = context.ReadValue<Vector2>();
 
-    /* 플레이어 달리기 입력 갱신 */
+    /* 플레이어 이동 입력 종료 */
+    private void OnMoveCanceled(InputAction.CallbackContext context) => movementInput = Vector2.zero;
+
+    /* 플레이어 달리기 입력 이벤트 */
+    private void OnSprintInputPerformed(InputAction.CallbackContext context) => GlobalEventBus.OnSprintInput?.Invoke(true);
+    private void OnSprintInputCanceled(InputAction.CallbackContext context) => GlobalEventBus.OnSprintInput?.Invoke(false);
+
+    /* 플레이어 달리기 허용 상태 갱신 (PlayerStatus에서 수신) */
     private void PlayerSprint(bool sprint) => sprintInput = sprint;
 
+    private void OnAimInput(InputAction.CallbackContext context) => UpdateMousePos(context.ReadValue<Vector2>());
+
     /* 마우스 화면 좌표 갱신 */
-    private void UpdateMousePos(Vector2 pos) => currentMousePos = pos;
+    private void UpdateMousePos(Vector2 _mousePos) => currentMousePos = _mousePos;
 
     /* 이동과 회전 처리 */
     private void MoveAndRotate()
@@ -157,11 +255,11 @@ public class PlayerMovement : MonoBehaviour
         float currentMoveSpeed = moveSpeed * moveSpeedMultiplier;
         float currentSprintSpeed = sprintSpeed * moveSpeedMultiplier;
         float finalMoveSpeed = isEvading ? evadeSpeed : (sprintInput ? currentSprintSpeed : currentMoveSpeed);
-        Vector3 targetPosition = rb.position + movement * finalMoveSpeed * Time.fixedDeltaTime;
-        if (isEvading)
-        {
-            targetPosition = GetSafeMovePosition(targetPosition);
-        }
+
+        // 걷기, 달리기, 구르기 모두 실제 몸통 CapsuleCollider로 이동 경로를 검사합니다.
+        Vector3 desiredMoveDelta = movement * finalMoveSpeed * Time.fixedDeltaTime;
+        Vector3 safeMoveDelta = ResolveMovementDelta(desiredMoveDelta);
+        Vector3 targetPosition = rb.position + safeMoveDelta;
 
         // 달리기 중 MP 소비 이벤트 전달
         if (movement.sqrMagnitude > 0.001f && sprintInput)
@@ -184,8 +282,30 @@ public class PlayerMovement : MonoBehaviour
             Body.transform.localScale = new Vector3(1, 1, 1);
         }
 
+        // 위치 이동 중 정해진 시간 간격마다 이동 사운드를 재생
+        if (movement.sqrMagnitude >= 0.1f) FootStepAudio();
+
         AimTowardsMouse();
         ImageTowardsMouse();
+    }
+
+    private void FootStepAudio()
+    {
+        float walkFootStepTime = FootStep_SoundTime / moveSpeed;      // 걷기 사운드 재생 간격(초)
+        float sprintFootStepTime = FootStep_SoundTime / sprintSpeed;  // 달리기 사운드 재생 간격(초)
+
+        // 달리기 중인지에 따라 사운드 재생 간격 선택
+        float footstepPeriod = sprintInput ? sprintFootStepTime : walkFootStepTime;
+
+        // 최근 사운드 재생 시점으로부터 재생 간격만큼 지났는지 확인
+        if (Time.time < lastFootstepTime + footstepPeriod) return;
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 구르기를 실행한 지점에서 3D 오디오 재생
+        int moveAudioID = FootStep_AudioIDPool[Random.Range(0, FootStep_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(moveAudioID, rb.gameObject.transform.position);
+
+        // 최근 사운드 재생 시점 갱신
+        lastFootstepTime = Time.time;
     }
 
     /// <summary>
@@ -202,53 +322,197 @@ public class PlayerMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// 구르기 이동 전에 Rigidbody가 실제로 지나갈 경로를 검사해 벽을 관통하지 않도록 목표 위치를 보정합니다.
-    /// 일반 이동까지 막으면 문/벽 근처 상호작용 거리 진입이 어려워질 수 있으므로 회피 중에만 사용합니다.
+    /// 실제 이동용 CapsuleCollider만 사용해 벽 관통을 막고 벽면 슬라이딩을 계산합니다.
+    /// 상호작용용 Trigger Collider는 이동 검사 형상에 포함하지 않습니다.
     /// </summary>
-    private Vector3 GetSafeMovePosition(Vector3 targetPosition)
+    private Vector3 ResolveMovementDelta(Vector3 desiredDelta)
     {
-        Vector3 moveDelta = targetPosition - rb.position;
-        moveDelta.y = 0.0f;
+        desiredDelta.y = 0.0f;
+
+        if (desiredDelta.sqrMagnitude <= 0.0001f)
+        {
+            return Vector3.zero;
+        }
+
+        if (movementCollider == null || ResolveMovementObstacleMask().value == 0)
+        {
+            return desiredDelta;
+        }
+
+        // 첫 이동 경로에 벽이 없으면 원래 이동량을 그대로 사용합니다.
+        if (!TryCastMovement(desiredDelta, Vector3.zero, out RaycastHit firstHit))
+        {
+            return desiredDelta;
+        }
+
+        float desiredDistance = desiredDelta.magnitude;
+
+        // 벽에 닿기 전까지 이동할 수 있는 거리를 계산합니다.
+        float forwardDistance = Mathf.Clamp(
+            firstHit.distance - movementWallBuffer,
+            0.0f,
+            desiredDistance
+        );
+
+        Vector3 forwardDelta = desiredDelta.normalized * forwardDistance;
+        Vector3 remainingDelta = desiredDelta - forwardDelta;
+
+        // 벽에 비스듬히 닿았을 때 남은 이동량을 벽면 방향으로 투영합니다.
+        Vector3 slideDelta = Vector3.ProjectOnPlane(remainingDelta, firstHit.normal);
+        slideDelta.y = 0.0f;
+
+        if (slideDelta.sqrMagnitude <= 0.0001f)
+        {
+            return forwardDelta;
+        }
+
+        // 벽면을 따라 이동하는 중 다른 벽에 부딪히는지 다시 검사합니다.
+        if (!TryCastMovement(slideDelta, forwardDelta, out RaycastHit slideHit))
+        {
+            return forwardDelta + slideDelta;
+        }
+
+        float slideDistance = Mathf.Clamp(
+            slideHit.distance - movementWallBuffer,
+            0.0f,
+            slideDelta.magnitude
+        );
+
+        return forwardDelta + slideDelta.normalized * slideDistance;
+    }
+
+    /// <summary>
+    /// 실제 몸통 CapsuleCollider 형상만 이동시켜 장애물과의 충돌을 검사합니다.
+    /// 상호작용용 Trigger Collider는 검사 형상에 포함되지 않습니다.
+    /// </summary>
+    private bool TryCastMovement(
+        Vector3 moveDelta,
+        Vector3 startOffset,
+        out RaycastHit hit)
+    {
+        hit = default;
+
+        if (movementCollider == null || !movementCollider.enabled)
+        {
+            return false;
+        }
 
         if (moveDelta.sqrMagnitude <= 0.0001f)
         {
-            return targetPosition;
+            return false;
         }
 
         LayerMask obstacleMask = ResolveMovementObstacleMask();
         if (obstacleMask.value == 0)
         {
-            return targetPosition;
+            return false;
         }
+
+        GetMovementCapsule(
+            out Vector3 point1,
+            out Vector3 point2,
+            out float radius
+        );
+
+        // 첫 충돌 지점까지 이동한 위치에서 두 번째 검사를 수행할 수 있도록 시작점을 보정합니다.
+        point1 += startOffset;
+        point2 += startOffset;
 
         Vector3 direction = moveDelta.normalized;
-        float distance = moveDelta.magnitude;
+        float castDistance = moveDelta.magnitude + movementWallBuffer;
 
-        if (rb.SweepTest(direction, out RaycastHit hit, distance, QueryTriggerInteraction.Ignore) &&
-            ((1 << hit.collider.gameObject.layer) & obstacleMask.value) != 0)
+        return Physics.CapsuleCast(
+            point1,
+            point2,
+            radius,
+            direction,
+            out hit,
+            castDistance,
+            obstacleMask,
+            QueryTriggerInteraction.Ignore
+        );
+    }
+
+    /// <summary>
+    /// CapsuleCollider의 월드 좌표 기준 양 끝점과 반지름을 계산합니다.
+    /// Collider의 Direction과 Transform Scale을 함께 반영합니다.
+    /// </summary>
+    private void GetMovementCapsule(
+        out Vector3 point1,
+        out Vector3 point2,
+        out float radius)
+    {
+        Transform colliderTransform = movementCollider.transform;
+        Vector3 lossyScale = colliderTransform.lossyScale;
+
+        Vector3 axis;
+        float heightScale;
+        float radiusScale;
+
+        switch (movementCollider.direction)
         {
-            float safeDistance = Mathf.Max(0.0f, hit.distance - movementWallBuffer);
-            Vector3 safePosition = rb.position + direction * safeDistance;
-            safePosition.y = rb.position.y;
-            return safePosition;
+            case 0:
+                // CapsuleCollider의 길이 방향이 X축인 경우
+                axis = colliderTransform.right;
+                heightScale = Mathf.Abs(lossyScale.x);
+                radiusScale = Mathf.Max(Mathf.Abs(lossyScale.y), Mathf.Abs(lossyScale.z));
+                break;
+
+            case 2:
+                // CapsuleCollider의 길이 방향이 Z축인 경우
+                axis = colliderTransform.forward;
+                heightScale = Mathf.Abs(lossyScale.z);
+                radiusScale = Mathf.Max(Mathf.Abs(lossyScale.x), Mathf.Abs(lossyScale.y));
+                break;
+
+            default:
+                // CapsuleCollider의 길이 방향이 Y축인 경우
+                axis = colliderTransform.up;
+                heightScale = Mathf.Abs(lossyScale.y);
+                radiusScale = Mathf.Max(Mathf.Abs(lossyScale.x), Mathf.Abs(lossyScale.z));
+                break;
         }
 
-        if (Physics.SphereCast(
-                rb.position + Vector3.up * evadeCornerProbeHeight,
-                evadeCornerProbeRadius,
-                direction,
-                out RaycastHit cornerHit,
-                distance,
-                obstacleMask,
-                QueryTriggerInteraction.Ignore))
+        Vector3 center = colliderTransform.TransformPoint(movementCollider.center);
+        radius = movementCollider.radius * radiusScale;
+
+        float height = Mathf.Max(
+            movementCollider.height * heightScale,
+            radius * 2.0f
+        );
+
+        float halfSegment = Mathf.Max(0.0f, height * 0.5f - radius);
+        Vector3 normalizedAxis = axis.normalized;
+
+        point1 = center + normalizedAxis * halfSegment;
+        point2 = center - normalizedAxis * halfSegment;
+    }
+
+    /// <summary>
+    /// Trigger가 아닌 이동용 CapsuleCollider를 자동으로 찾습니다.
+    /// </summary>
+    private CapsuleCollider FindMovementCollider()
+    {
+        CapsuleCollider[] colliders = GetComponentsInChildren<CapsuleCollider>(true);
+
+        for (int i = 0; i < colliders.Length; i++)
         {
-            float safeDistance = Mathf.Max(0.0f, cornerHit.distance - movementWallBuffer);
-            Vector3 safePosition = rb.position + direction * safeDistance;
-            safePosition.y = rb.position.y;
-            return safePosition;
+            CapsuleCollider candidate = colliders[i];
+
+            // 상호작용용 Trigger Collider는 이동 충돌 대상으로 사용하지 않습니다.
+            if (candidate == null || candidate.isTrigger)
+            {
+                continue;
+            }
+
+            // 현재 플레이어 Rigidbody에 연결된 CapsuleCollider만 선택합니다.
+            if (candidate.attachedRigidbody == rb)
+            {
+                return candidate;
+            }
         }
 
-        return targetPosition;
+        return null;
     }
 
     /// <summary>
@@ -283,11 +547,13 @@ public class PlayerMovement : MonoBehaviour
         if (sprintInput)
         {
             NoiseSystem.Emit(NoiseType.Run, transform.position, gameObject, runNoiseRange);
+            VFXService.Instance?.Play(GameplayVFXIds.PlayerFootstepRun, transform.position, transform.rotation);
             moveNoiseTimer = Mathf.Max(0.05f, runNoiseInterval);
             return;
         }
 
         NoiseSystem.Emit(NoiseType.Walk, transform.position, gameObject, walkNoiseRange);
+        VFXService.Instance?.Play(GameplayVFXIds.PlayerFootstepWalk, transform.position, transform.rotation);
         moveNoiseTimer = Mathf.Max(0.05f, walkNoiseInterval);
     }
 
@@ -296,8 +562,14 @@ public class PlayerMovement : MonoBehaviour
     {
         isEvading = true;
 
+        VFXService.Instance?.Play(GameplayVFXIds.PlayerEvade, transform.position, transform.rotation);
+
         // 구르기 입력을 애니메이터에 전달
         animator.SetTrigger("Evade");
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 구르기를 실행한 지점에서 3D 오디오 재생
+        int EvadeAudioID = Evade_AudioIDPool[Random.Range(0, Evade_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(EvadeAudioID, rb.gameObject.transform.position);
 
         // 구르기 상태 종료는 코루틴으로 처리
         StartCoroutine(EvadeComplete());
@@ -314,6 +586,10 @@ public class PlayerMovement : MonoBehaviour
     public void SkillAnimate()
     {
         animator.SetTrigger("UseSkill");
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 스킬을 사용한 지점에서 3D 오디오 재생
+        int SkillAudioID = Throw_AudioIDPool[Random.Range(0, Throw_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(SkillAudioID, rb.gameObject.transform.position);
     }
 
     /* 피격 애니메이션 코루틴 */
@@ -332,7 +608,19 @@ public class PlayerMovement : MonoBehaviour
     /* 마우스 커서가 가리키는 월드 위치 계산 */
     private bool TryGetMouseWorldPoint(out Vector3 worldPoint)
     {
-        Plane plane = new Plane(Vector3.up, transform.position);
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (mainCamera == null)
+        {
+            worldPoint = Vector3.zero;
+            return false;
+        }
+
+        // 총구 높이만큼 보정하여 커서 위치 평면 설정
+        Plane plane = new Plane(Vector3.up, transform.position + (Vector3.up * handleHeight));
         Ray ray = mainCamera.ScreenPointToRay(currentMousePos);
 
         if (plane.Raycast(ray, out float enter))
@@ -363,7 +651,7 @@ public class PlayerMovement : MonoBehaviour
         Quaternion smoothRot = Quaternion.Slerp(rb.rotation, targetRot, rotationSpeed * Time.fixedDeltaTime);
         rb.MoveRotation(smoothRot);
     }
-    
+
     /* 이미지가 마우스 커서 방향을 바라보도록 조정 */
     private void ImageTowardsMouse()
     {
@@ -394,7 +682,7 @@ public class PlayerMovement : MonoBehaviour
         if (apPort != null)
         {
             // 마우스가 캐릭터 기준 위쪽에 있을 때
-            if(aimVisualDir.z > 0)
+            if (aimVisualDir.z > 0)
             {
                 apPort.SetControlParamFloat("Yuan_B_AimY", -1 * Mathf.Lerp(-1f, 1f, aimVisualDir.z));
             }
@@ -409,7 +697,7 @@ public class PlayerMovement : MonoBehaviour
         bool isMoving = movementInput.sqrMagnitude > 0.01f;
         animator.SetBool("IsMoving", isMoving);
 
-        int lookDir = 0; 
+        int lookDir = 0;
         // Z값이 양수면 위(뒷모습), 음수면 아래(앞모습)
         lookDir = aimVisualDir.z > 0 ? 1 : 0;
 

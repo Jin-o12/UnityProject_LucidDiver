@@ -28,15 +28,15 @@ public class NoiseManager : MonoBehaviour
     [Header("Noise Settings")]
     [SerializeField] private List<NoiseTypeSetting> noiseSettings = new()
     {
-        new NoiseTypeSetting { type = NoiseType.Walk, defaultRadius = 15.0f, defaultDuration = 0.5f, priority = 5, canInterruptChase = false, debugColor = new Color(0.25f, 0.7f, 1.0f, 1.0f) },
+        new NoiseTypeSetting { type = NoiseType.Walk, defaultRadius = 1.0f, defaultDuration = 0.5f, priority = 5, canInterruptChase = false, debugColor = new Color(0.25f, 0.7f, 1.0f, 1.0f) },
         new NoiseTypeSetting { type = NoiseType.Run, defaultRadius = 20.0f, defaultDuration = 0.7f, priority = 10, canInterruptChase = false, debugColor = new Color(0.1f, 0.9f, 0.9f, 1.0f) },
-        new NoiseTypeSetting { type = NoiseType.Gunshot, defaultRadius = 40.0f, defaultDuration = 1.2f, priority = 30, canInterruptChase = false, debugColor = new Color(1.0f, 0.6f, 0.1f, 1.0f) },
-        new NoiseTypeSetting { type = NoiseType.ChestOpen, defaultRadius = 30.0f, defaultDuration = 1.8f, priority = 40, canInterruptChase = true, debugColor = new Color(1.0f, 0.9f, 0.2f, 1.0f) },
-        new NoiseTypeSetting { type = NoiseType.Skill, defaultRadius = 12.0f, defaultDuration = 1.0f, priority = 35, canInterruptChase = false, debugColor = new Color(0.8f, 0.4f, 1.0f, 1.0f) },
-        new NoiseTypeSetting { type = NoiseType.EnemyAlertCry, defaultRadius = 13.0f, defaultDuration = 1.2f, priority = 45, canInterruptChase = false, debugColor = new Color(1.0f, 0.2f, 0.2f, 1.0f) },
+        new NoiseTypeSetting { type = NoiseType.Gunshot, defaultRadius = 20.0f, defaultDuration = 1.2f, priority = 30, canInterruptChase = false, debugColor = new Color(1.0f, 0.6f, 0.1f, 1.0f) },
+        new NoiseTypeSetting { type = NoiseType.ChestOpen, defaultRadius = 15.0f, defaultDuration = 1.8f, priority = 40, canInterruptChase = true, debugColor = new Color(1.0f, 0.9f, 0.2f, 1.0f) },
+        new NoiseTypeSetting { type = NoiseType.Skill, defaultRadius = 10.0f, defaultDuration = 1.0f, priority = 35, canInterruptChase = false, debugColor = new Color(0.8f, 0.4f, 1.0f, 1.0f) },
+        new NoiseTypeSetting { type = NoiseType.EnemyAlertCry, defaultRadius = 15.0f, defaultDuration = 1.2f, priority = 45, canInterruptChase = false, debugColor = new Color(1.0f, 0.2f, 0.2f, 1.0f) },
         new NoiseTypeSetting { type = NoiseType.HitReaction, defaultRadius = 5.0f, defaultDuration = 0.6f, priority = 15, canInterruptChase = false, debugColor = new Color(0.9f, 0.5f, 0.5f, 1.0f) },
-        new NoiseTypeSetting { type = NoiseType.CombatImpact, defaultRadius = 8.0f, defaultDuration = 0.8f, priority = 20, canInterruptChase = false, debugColor = new Color(0.9f, 0.35f, 0.15f, 1.0f) },
-        new NoiseTypeSetting { type = NoiseType.Decoy, defaultRadius = 18.0f, defaultDuration = 2.5f, priority = 60, canInterruptChase = true, debugColor = new Color(0.4f, 1.0f, 0.35f, 1.0f) },
+        new NoiseTypeSetting { type = NoiseType.CombatImpact, defaultRadius = 10.0f, defaultDuration = 0.8f, priority = 20, canInterruptChase = false, debugColor = new Color(0.9f, 0.35f, 0.15f, 1.0f) },
+        new NoiseTypeSetting { type = NoiseType.Decoy, defaultRadius = 20.0f, defaultDuration = 2.5f, priority = 60, canInterruptChase = true, debugColor = new Color(0.4f, 1.0f, 0.35f, 1.0f) },
         new NoiseTypeSetting { type = NoiseType.LucidLeak, defaultRadius = 45.0f, defaultDuration = 3.0f, priority = 50, canInterruptChase = false, debugColor = new Color(0.85f, 0.15f, 0.2f, 1.0f) },
     };
 
@@ -60,7 +60,8 @@ public class NoiseManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject);
+            // 같은 Manager 오브젝트에 다른 매니저 컴포넌트가 함께 붙어 있으므로 오브젝트 전체가 아니라 NoiseManager 컴포넌트만 제거합니다.
+            Destroy(this);
             return;
         }
 

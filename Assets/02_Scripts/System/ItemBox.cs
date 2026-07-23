@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -8,9 +8,22 @@ using UnityEngine;
 /// </summary>
 public class ItemBox : MonoBehaviour, IInteractable
 {
+    /// <summary>
+    /// 랜덤 생성을 사용하지 않는 상자에 넣을 확정 아이템 TID와 수량입니다.
+    /// </summary>
+    [System.Serializable]
+    private class FixedLootOption
+    {
+        [Min(1)] public int itemTid;
+        [Min(1)] public int amount = 1;
+    }
+
     [Header("Container Settings")]
     [SerializeField] private int slotCapacity = 8;                 // 상자가 가질 수 있는 최대 슬롯 수
     [SerializeField] private List<BoxItemEntry> items = new();     // 실제 슬롯 데이터 목록
+
+    [Header("Fixed Loot Settings")]
+    [SerializeField] private List<FixedLootOption> fixedLootOptions = new(); // 랜덤을 사용하지 않는 상자의 확정 아이템 목록
 
     [Header("Random Loot Settings")]
     [SerializeField] private bool useRandomLoot = true;               // 시작 시 랜덤 아이템을 생성할지 여부
@@ -63,8 +76,13 @@ public class ItemBox : MonoBehaviour, IInteractable
     [SerializeField] private float openNoiseRange = 30.0f;
     [SerializeField] private float openNoiseDuration = 1.8f;
 
-    private bool isOpened = false;                                    // 현재 다른 플레이어가 열어 둔 상태인지 여부
-    private IItemDataRepository itemRepo;                              // TID 기반 랜덤 루트 생성을 위한 아이템 데이터 저장소
+    [Header("Audio Settings")]
+    // 상자를 열었을 때 사운드 이펙트를 출력합니다.
+    [SerializeField] private int[] Box_Open_AudioIDPool;
+
+    private bool isOpened = false;                                  // 현재 다른 플레이어가 열어 둔 상태인지 여부
+    private IItemDataRepository itemRepo;                           // TID 기반 랜덤 루트 생성을 위한 아이템 데이터 저장소
+    private PlayerSight playerSight;                                // 플레이어 시야 스크립트
 
     /// <summary>
     /// 체스트 UI에서 읽어갈 슬롯 데이터 목록입니다.
@@ -83,16 +101,39 @@ public class ItemBox : MonoBehaviour, IInteractable
 
         EnsureSlotCapacity();
 
-        // 랜덤 루트 사용이 켜져 있고, 아직 상자가 비어 있다면 시작 시 아이템을 생성합니다.
-        if (useRandomLoot && IsEmpty())
-            GenerateRandomItems();
+        // 플레이어 시야 스크립트를 찾는다
+        playerSight = FindObjectOfType<PlayerSight>();
+
+        if (useRandomLoot)
+        {
+            // 랜덤 상자는 비어 있는 경우에만 확률표를 사용해 아이템을 생성합니다.
+            if (IsEmpty())
+                GenerateRandomItems();
+        }
+        else if (fixedLootOptions != null && fixedLootOptions.Count > 0)
+        {
+            // 확정 목록이 있는 상자는 프리팹의 기존 슬롯 대신 JSON TID 목록으로 초기화합니다.
+            GenerateFixedItems();
+        }
     }
 
-    /// <summary>
-    /// 인스펙터 우클릭 메뉴에서 랜덤 아이템 생성을 수동 실행합니다.
-    /// 테스트용 기능이며 현재 슬롯 구조에 맞게 다시 생성합니다.
-    /// </summary>
-    [ContextMenu("Generate Random Items")]
+    // 플레이어 시야 스크립트에 따라 렌더러 출력 상태 업데이트
+    private void FixedUpdate()
+    {
+        if (playerSight == null) return;
+        bool visible = playerSight.IsTargetInSight(playerSight.transform, transform);
+        Renderer[] _rend = GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in _rend)
+        {
+            renderer.enabled = visible;
+        }
+    }
+
+/// <summary>
+/// 인스펙터 우클릭 메뉴에서 랜덤 아이템 생성을 수동 실행합니다.
+/// 테스트용 기능이며 현재 슬롯 구조에 맞게 다시 생성합니다.
+/// </summary>
+[ContextMenu("Generate Random Items")]
     private void GenerateRandomItemsFromContextMenu()
     {
         GenerateRandomItems();
@@ -109,12 +150,17 @@ public class ItemBox : MonoBehaviour, IInteractable
             return false;
 
         isOpened = true;
+        VFXService.Instance?.Play(GameplayVFXIds.ChestOpen, transform.position, transform.rotation);
 
         // Presenter가 이 이벤트를 받아 체스트 UI를 열고 데이터를 바인딩합니다.
         GlobalEventBus.OnItemBoxOpened?.Invoke(this, playerID);
 
         // 상자 오픈 소리는 일반 발소리보다 우선순위가 높고, 추적 중인 적도 끊어낼 수 있게 설정합니다.
         NoiseSystem.Emit(NoiseType.ChestOpen, transform.position, gameObject, openNoiseRange, openNoiseDuration, true, 40);
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 박스 위치에서 3D 오디오를 재생합니다.
+        int openAudioID = Box_Open_AudioIDPool[UnityEngine.Random.Range(0, Box_Open_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(openAudioID, gameObject.transform.position);
 
         // 현재 프로젝트 구조에서는 상호작용 후 별도 기본 동작을 막기 위해 false를 유지합니다.
         return false;
@@ -289,6 +335,35 @@ public class ItemBox : MonoBehaviour, IInteractable
         slot.amount += realAdd;
 
         return count - realAdd;
+    }
+
+    /// <summary>
+    /// 확정 아이템 목록의 TID를 JSON 저장소에서 찾아 상자 슬롯에 채웁니다.
+    /// </summary>
+    private void GenerateFixedItems()
+    {
+        EnsureSlotCapacity();
+        ClearAllSlots();
+
+        for (int i = 0; i < fixedLootOptions.Count; i++)
+        {
+            FixedLootOption option = fixedLootOptions[i];
+
+            if (option == null || option.itemTid <= 0 || option.amount <= 0)
+                continue;
+
+            ItemData fixedItem = itemRepo.GetItemDataByID(option.itemTid);
+
+            if (fixedItem == null)
+                continue;
+
+            int remainingAmount = TryAddItem(fixedItem, option.amount);
+
+            if (remainingAmount > 0)
+            {
+                Debug.LogWarning($"[ItemBox] 확정 아이템을 모두 넣지 못했습니다. TID: {option.itemTid}, 남은 수량: {remainingAmount}", this);
+            }
+        }
     }
 
     /// <summary>

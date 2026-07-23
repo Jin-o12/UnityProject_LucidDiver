@@ -4405,6 +4405,11 @@ MonoBehaviour:
   playerSpawnPool: {fileID: 22377260}
   enemySpawnPool: {fileID: 864556063}
   levelBoxSpawner: {fileID: 0}
+  enableEnemyBoxDrop: 1
+  enemyBoxPrefab: {fileID: 864261442559763118, guid: a297d633fad14944da8c9131e19770dd,
+    type: 3}
+  enemyBoxDropChance: 0.25
+  enemyBoxNavMeshSampleDistance: 2
 --- !u!114 &331859828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4481,6 +4486,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da05d0bf87097d540ade1ab289363ec6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  healthItemAudioID: 10701
+  mpGainItemAudioID: 10704
 --- !u!1 &335469027
 GameObject:
   m_ObjectHideFlags: 0
@@ -11023,6 +11030,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   slotCapacity: 8
   items: []
+  fixedLootOptions: []
   useRandomLoot: 1
   minCreateCount: 1
   maxCreateCount: 2
@@ -11030,17 +11038,17 @@ MonoBehaviour:
   lootOptions: []
   useCategoryLoot: 1
   categoryLootOptions:
-  - category: 3
+  - category: 4
     weight: 60
     minAmount: 1
     maxAmount: 1
     itemTids: 2d0100002e010000
-  - category: 4
+  - category: 5
     weight: 30
     minAmount: 1
     maxAmount: 1
     itemTids: 91010000
-  - category: 5
+  - category: 6
     weight: 10
     minAmount: 1
     maxAmount: 1
@@ -11061,8 +11069,9 @@ MonoBehaviour:
   - grade: 5
     itemTid: 1005
     weight: 2
-  openNoiseRange: 30
+  openNoiseRange: 15
   openNoiseDuration: 1.8
+  Box_Open_AudioIDPool: 
 --- !u!1001 &730569933
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28438,6 +28447,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timerCanvas: {fileID: 490515740}
   escapeTime: 3
+  Escape_Interact_AudioIDPool: 
+  Escape_Channeling_AudioIDPool: 
+  Escape_Success_AudioIDPool: 
+  Escape_Faild_AudioIDPool: 
+  failAudioTime: 1.5
 --- !u!1001 &1935843507
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31181,6 +31195,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df754175ecc50b5469c1ff24f8982967, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyKillCount: 0
   linkRateLevel: 0
   linkRatePoint: 1
   slotTID1: 0
@@ -31215,6 +31230,7 @@ MonoBehaviour:
   - {fileID: 6617218257314298997, guid: cb5d7151e5247ba46b2058892439fc6b, type: 3}
   - {fileID: 5112121294421879094, guid: c5bf2558b448f314b93deec6475703cf, type: 3}
   - {fileID: 1625286815563743019, guid: a49f6e1a3a95bb14f9c1e452bbdc1252, type: 3}
+  - {fileID: 304085410330346154, guid: 3504b6c206946784d9274301299c9a4f, type: 3}
 --- !u!1001 &6224010907873196067
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31492,9 +31508,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9085d86c646f8e74c8a839fde94049da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  saveFilePath: 
-  playerRuntimeDataSO: {fileID: 11400000, guid: fa24d9c9857070545bf4a1ecd531daa4,
-    type: 2}
 --- !u!114 &8254926602438052759
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31510,6 +31523,12 @@ MonoBehaviour:
   lobbyScene:
     sceneAsset: {fileID: 102900000, guid: c67beebbfb6b5ad47b3fa2ef3f658b3d, type: 3}
     sceneName: LobbyScene
+  tutorialScene:
+    sceneAsset: {fileID: 102900000, guid: 6d0743ae57c0d9340a94c5a0cdfa9468, type: 3}
+    sceneName: TutorialScene
+  tutorialAdditiveScene:
+    sceneAsset: {fileID: 102900000, guid: d14e096a1e2b0ce4ab54cb4c3fa5902a, type: 3}
+    sceneName: DemoScene Tutorial
   levelScene:
     sceneAsset: {fileID: 0}
     sceneName: 
@@ -31536,7 +31555,7 @@ MonoBehaviour:
     type: 3}
   noiseSettings:
   - type: 0
-    defaultRadius: 15
+    defaultRadius: 1
     defaultDuration: 0.5
     priority: 5
     canInterruptChase: 0
@@ -31548,25 +31567,25 @@ MonoBehaviour:
     canInterruptChase: 0
     debugColor: {r: 0.1, g: 0.9, b: 0.9, a: 1}
   - type: 2
-    defaultRadius: 40
+    defaultRadius: 20
     defaultDuration: 1.2
     priority: 30
     canInterruptChase: 0
     debugColor: {r: 1, g: 0.6, b: 0.1, a: 1}
   - type: 3
-    defaultRadius: 30
+    defaultRadius: 15
     defaultDuration: 1.8
     priority: 40
     canInterruptChase: 1
     debugColor: {r: 1, g: 0.9, b: 0.2, a: 1}
   - type: 4
-    defaultRadius: 12
+    defaultRadius: 10
     defaultDuration: 1
     priority: 35
     canInterruptChase: 0
     debugColor: {r: 0.8, g: 0.4, b: 1, a: 1}
   - type: 5
-    defaultRadius: 13
+    defaultRadius: 15
     defaultDuration: 1.2
     priority: 45
     canInterruptChase: 0
@@ -31578,13 +31597,13 @@ MonoBehaviour:
     canInterruptChase: 0
     debugColor: {r: 0.9, g: 0.5, b: 0.5, a: 1}
   - type: 7
-    defaultRadius: 8
+    defaultRadius: 10
     defaultDuration: 0.8
     priority: 20
     canInterruptChase: 0
     debugColor: {r: 0.9, g: 0.35, b: 0.15, a: 1}
   - type: 8
-    defaultRadius: 18
+    defaultRadius: 20
     defaultDuration: 2.5
     priority: 60
     canInterruptChase: 1

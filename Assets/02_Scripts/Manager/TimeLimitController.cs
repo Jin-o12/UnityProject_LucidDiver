@@ -38,6 +38,7 @@ public class TimeLimitController : MonoBehaviour
 
         BroadcastCurrentTime();
         TryFinishByTimeout();
+        TryTimeLoopSFX();
     }
 
     /// <summary>
@@ -90,5 +91,10 @@ public class TimeLimitController : MonoBehaviour
 
         timeFlow = false;
         GlobalEventBus.OnTimeOver?.Invoke();
+    }
+    private void TryTimeLoopSFX()
+    {
+        // 남은 시간 경과에 따른 시간 제한 Ambient 사운드 재생 이벤트를 전송
+        GlobalEventBus.OnTimerRatioChanged?.Invoke(currentTimeLimit / timeLimit);
     }
 }

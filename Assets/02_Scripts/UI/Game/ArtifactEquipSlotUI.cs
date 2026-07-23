@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
@@ -34,7 +34,14 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
 
     private void Awake()
     {
-        mainCanvas = GetComponentInParent<Canvas>();
+        EnsureReferences();
+        UpdateSlot(null);
+    }
+
+    private void EnsureReferences()
+    {
+        if (mainCanvas == null)
+            mainCanvas = GetComponentInParent<Canvas>();
 
         // 인스펙터 연결이 빠져도 프리팹 자식 이름이 유지되면 자동으로 복구합니다.
         // 단, 아이콘/등급 프레임처럼 역할이 분리된 이미지 이름만 찾습니다.
@@ -44,6 +51,9 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
         if (rarityFrameImage == null)
             rarityFrameImage = FindChildImage("Image-RarityFrame");
 
+        if (rarityFrameImage == null)
+            rarityFrameImage = CreateRarityFrameImage();
+
         if (itemImage == null)
             itemImage = FindChildImage("Image-EquipItemImage");
 
@@ -52,7 +62,11 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
         if (slotFrameImage != null)
             slotFrameImage.raycastTarget = true;
 
-        UpdateSlot(null);
+        if (rarityFrameImage != null)
+        {
+            rarityFrameImage.raycastTarget = false;
+            AlignRarityFrameToSlot();
+        }
     }
 
     /// <summary>
@@ -60,6 +74,8 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
     /// </summary>
     public void UpdateSlot(ArtifactItemData artifact)
     {
+        EnsureReferences();
+
         currentArtifact = artifact;
 
         if (artifact == null)
@@ -68,6 +84,7 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
             {
                 itemImage.enabled = false;
                 itemImage.sprite = null;
+                itemImage.color = Color.white;
             }
 
             if (itemStack != null)
@@ -81,6 +98,7 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
         {
             itemImage.enabled = true;
             itemImage.sprite = null;
+            itemImage.color = Color.white;
         }
 
         if (itemStack != null)
@@ -109,9 +127,51 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
             return;
         }
 
+        Sprite frameSprite = GetSlotFrameSprite(grade);
+
+        if (frameSprite == null)
+        {
+            rarityFrameImage.enabled = false;
+            rarityFrameImage.sprite = null;
+            if (itemImage != null)
+                itemImage.color = GetRarityTint(grade);
+            return;
+        }
+
         rarityFrameImage.enabled = true;
         rarityFrameImage.color = Color.white;
-        rarityFrameImage.sprite = GetSlotFrameSprite(grade);
+        rarityFrameImage.sprite = frameSprite;
+        AlignRarityFrameToSlot();
+
+        // 아티팩트 슬롯은 Background / RarityFrame / ItemImage가 모두 자식 오브젝트입니다.
+        // 프레임을 첫 번째로 보내면 Background 뒤에 숨어버리므로, 배경 바로 위이자 아이콘 아래에 둡니다.
+        if (slotFrameImage != null)
+            rarityFrameImage.transform.SetSiblingIndex(slotFrameImage.transform.GetSiblingIndex() + 1);
+
+        if (itemImage != null)
+            itemImage.transform.SetAsLastSibling();
+
+        if (itemStack != null)
+            itemStack.transform.SetAsLastSibling();
+    }
+
+    private void AlignRarityFrameToSlot()
+    {
+        if (rarityFrameImage == null)
+            return;
+
+        RectTransform rarityRect = rarityFrameImage.rectTransform;
+        if (rarityRect == null)
+            return;
+
+        // 창고 아티팩트 슬롯 프리팹에서 RarityFrame의 위치/크기 값이 슬롯 밖으로 틀어져 있는 경우가 있어,
+        // 표시 시점마다 슬롯 전체를 덮는 프레임 레이어로 정렬합니다.
+        rarityRect.anchorMin = Vector2.zero;
+        rarityRect.anchorMax = Vector2.one;
+        rarityRect.anchoredPosition = Vector2.zero;
+        rarityRect.sizeDelta = Vector2.zero;
+        rarityRect.localScale = Vector3.one;
+        rarityRect.pivot = new Vector2(0.5f, 0.5f);
     }
 
     /// <summary>
@@ -122,12 +182,25 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
     {
         return grade switch
         {
-            ItemGrade.normal => normalSlotSprite != null ? normalSlotSprite : emptySlotSprite,
+            ItemGrade.normal => normalSlotSprite,
             ItemGrade.uncommon => uncommonSlotSprite != null ? uncommonSlotSprite : normalSlotSprite,
             ItemGrade.rare => rareSlotSprite != null ? rareSlotSprite : normalSlotSprite,
             ItemGrade.epic => epicSlotSprite != null ? epicSlotSprite : rareSlotSprite,
             ItemGrade.legend => legendSlotSprite != null ? legendSlotSprite : epicSlotSprite,
-            _ => emptySlotSprite
+            _ => null
+        };
+    }
+
+    private Color GetRarityTint(ItemGrade grade)
+    {
+        return grade switch
+        {
+            ItemGrade.normal => Color.white,
+            ItemGrade.uncommon => new Color(0.45f, 1f, 0.55f, 1f),
+            ItemGrade.rare => new Color(0.45f, 0.7f, 1f, 1f),
+            ItemGrade.epic => new Color(0.78f, 0.45f, 1f, 1f),
+            ItemGrade.legend => new Color(1f, 0.72f, 0.24f, 1f),
+            _ => Color.white
         };
     }
 
@@ -161,6 +234,27 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
 
         Debug.LogWarning($"{name}: {childName}를 찾을 수 없습니다. ArtifactEquipSlotUI의 UI 참조를 인스펙터에서 연결해주세요.");
         return null;
+    }
+
+    private Image CreateRarityFrameImage()
+    {
+        GameObject frameObject = new GameObject("Image-RarityFrame", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        frameObject.transform.SetParent(transform, false);
+
+        Image frameImage = frameObject.GetComponent<Image>();
+        frameImage.enabled = false;
+        frameImage.raycastTarget = false;
+        frameImage.color = Color.white;
+
+        RectTransform frameRect = frameImage.rectTransform;
+        frameRect.anchorMin = Vector2.zero;
+        frameRect.anchorMax = Vector2.one;
+        frameRect.anchoredPosition = Vector2.zero;
+        frameRect.sizeDelta = Vector2.zero;
+        frameRect.localScale = Vector3.one;
+        frameRect.pivot = new Vector2(0.5f, 0.5f);
+
+        return frameImage;
     }
 
     /// <summary>
@@ -225,6 +319,11 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
 
         if (eventData.pointerDrag.TryGetComponent<InventorySlotUI>(out InventorySlotUI inventorySlot))
         {
+            if (!InventoryItemPlacementPolicy.CanPlace(
+                    inventorySlot.CurrentItemData,
+                    InventoryDropTargetType.ArtifactSlot))
+                return;
+
             GlobalEventBus.OnArtifactEquipRequested?.Invoke(equipSlotIndex, inventorySlot.slotIndex);
         }
     }
@@ -235,6 +334,12 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
     /// </summary>
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (eventData.button == PointerEventData.InputButton.Left)
+        {
+            // 클릭 시 사운드 재생
+            GlobalEventBus.OnClickAudio?.Invoke(true);
+        }
+
         if (eventData.button != PointerEventData.InputButton.Left || eventData.clickCount < 2)
             return;
 
@@ -243,6 +348,10 @@ public class ArtifactEquipSlotUI : MonoBehaviour, IDropHandler, IPointerClickHan
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        // 드래그 중에는 툴팁을 표시하지 않습니다.
+        if (InventorySlotUI.AnySlotDragging)
+            return;
+
         //포인터가 슬롯 UI에 들어오면 아이템 데이터를 읽는다
         GlobalEventBus.OnTooltipUIOpen?.Invoke(SlotType.artifact, equipSlotIndex);
     }

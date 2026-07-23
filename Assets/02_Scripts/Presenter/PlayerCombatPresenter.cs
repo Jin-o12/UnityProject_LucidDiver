@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// 플레이어의 전투 입력을 실제 전투 시스템에 연결하는 Presenter입니다.
@@ -8,6 +9,7 @@ public class PlayerCombatPresenter : MonoBehaviour
 {
     private PlayerWeapon playerWeapon;          // 플레이어가 장착한 무기 정보
     private PlayerStatus playerStatus;          // 플레이어 HP/MP/상태 정보
+    private LocalInputReader localInputReader;  // 튜토리얼 및 인벤토리 입력 차단 상태
 
     private float skillTimer;                   // 스킬 사용 시 딜레이 타이머
 
@@ -18,12 +20,17 @@ public class PlayerCombatPresenter : MonoBehaviour
     private float artifactFireMpDownRate;       // 아티팩트 공격 MP 소모 감소율
     private float nextAttackAvailableTime;      // 다음 기본 공격 가능 시각
 
+    private InputAction evadeAction;            // 구르기 이벤트 캐시
+    private InputAction skillAction;            // 스킬 이벤트 캐시
+    private InputAction attackAction;           // 기본 공격 이벤트 캐시
+
     private void Awake()
     {
         playerWeapon = GetComponent<PlayerWeapon>();
         playerStatus = GetComponent<PlayerStatus>();
+        localInputReader = GetComponent<LocalInputReader>();
 
-        if (playerWeapon == null || playerStatus == null)
+        if (playerWeapon == null || playerStatus == null || localInputReader == null)
         {
             enabled = false;
             Debug.LogError("PlayerCombatPresenter: 필요한 컴포넌트가 없습니다.");
@@ -39,20 +46,63 @@ public class PlayerCombatPresenter : MonoBehaviour
 
     private void OnEnable()
     {
-        GlobalEventBus.OnAttackInput += TryAttack;
-        GlobalEventBus.OnEvadeRequested += TryEvade;
-        GlobalEventBus.OnMainActiveSkillRequested += TrySkill;
+        if (GlobalEventBus.OnGetInputAction != null)
+        {
+            attackAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Fire");
+            if (attackAction != null)
+            {
+                attackAction.Enable();
+                attackAction.performed += OnAttackInput;
+            }
+            evadeAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Evade");
+            if (evadeAction != null)
+            {
+                evadeAction.Enable();
+                evadeAction.performed += OnEvadeInput;
+            }
+
+            skillAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "ActiveSkill");
+            if (skillAction != null)
+            {
+                skillAction.Enable();
+                skillAction.performed += OnSkillInput;
+            }
+        }
     }
 
     private void OnDisable()
     {
-        GlobalEventBus.OnAttackInput -= TryAttack;
-        GlobalEventBus.OnEvadeRequested -= TryEvade;
-        GlobalEventBus.OnMainActiveSkillRequested -= TrySkill;
+        if (attackAction != null)
+        {
+            attackAction.performed -= OnAttackInput;
+            attackAction.Disable();
+        }
+
+        if (evadeAction != null)
+        {
+            evadeAction.performed -= OnEvadeInput;
+            evadeAction.Disable();
+        }
+
+        if (skillAction != null)
+        {
+            skillAction.performed -= OnSkillInput;
+            skillAction.Disable();
+        }
     }
+
+    private void OnAttackInput(InputAction.CallbackContext context) => TryAttack();
 
     private void TryAttack()
     {
+        // 마우스가 UI 위에 있다면 공격을 실행하지 않음
+        if (UnityEngine.EventSystems.EventSystem.current != null &&
+            UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        if (localInputReader.IsGameplayInputBlocked || localInputReader.IsInventoryOpen)
+            return;
+
         if (playerStatus.nowState != PlayerStatus.livingState.idle)
             return;
 
@@ -97,8 +147,13 @@ public class PlayerCombatPresenter : MonoBehaviour
         return speedMultiplier > 0.0f ? baseFireRate / speedMultiplier : baseFireRate;
     }
 
+    private void OnEvadeInput(InputAction.CallbackContext context) => TryEvade();
+
     private void TryEvade()
     {
+        if (localInputReader.IsGameplayInputBlocked)
+            return;
+
         if (playerStatus.nowState != PlayerStatus.livingState.idle)
             return;
 
@@ -111,9 +166,14 @@ public class PlayerCombatPresenter : MonoBehaviour
         playerStatus.UseEvadeMana(playerStatus.evadeMP);
     }
 
+    private void OnSkillInput(InputAction.CallbackContext context) => TrySkill();
+
     private void TrySkill()
     {
         /// 스킬 시전을 위한 조건들 확인 (플레이어 상태, 스킬 쿨타임, 마나량) ///
+
+        if (localInputReader.IsGameplayInputBlocked || localInputReader.IsInventoryOpen)
+            return;
 
         // 플레이어 상태가 idle이 아니면 스킬을 사용할 수 없음
         if (playerStatus.nowState != PlayerStatus.livingState.idle) return;
@@ -147,6 +207,9 @@ public class PlayerCombatPresenter : MonoBehaviour
             GlobalEventBus.OnMainActiveSkillCasted?.Invoke();
             SkillEffectProcessor.Instance.UseSkillEffect(skill, this.gameObject, payload, mousePos);
         }
+
+        //쿨타임 시작 시점 이벤트를 게임플레이 UI에 전달하는 이벤트
+        GlobalEventBus.OnPrintSkillCooltime?.Invoke(skill.skillCooltime);
     }
 
     /* 현재 마우스의 평면상의 위치*/

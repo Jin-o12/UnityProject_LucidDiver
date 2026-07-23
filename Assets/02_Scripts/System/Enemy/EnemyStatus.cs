@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 public class EnemyStatus : MonoBehaviour, IEffectReceiver
@@ -24,10 +24,12 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
     public float atkValue { get; private set; }         // 공격력
     public float defValue { get; private set; }         // 방어력
 
-    public event Action OnLocalDeath;                   // 이 적 자신이 죽었을 때만 호출되는 로컬 사망 이벤트
+    public int[] Hit_AudioIDPool = null;                    // 적 피격 사운드 ID 리스트
+    public event Action OnLocalDamaged;                     // 이 적이 비치명 피해를 실제로 받았을 때만 호출되는 로컬 피격 이벤트
+    public event Action OnLocalDeath;                       // 이 적 자신이 죽었을 때만 호출되는 로컬 사망 이벤트
     public event Action<float, float> OnLocalHealthChanged; // 이 적 자신에게 연결된 HP UI만 갱신하기 위한 로컬 체력 이벤트
 
-    private EntityIdentity entityIdentity;              // 런타임 식별 번호를 함께 맞춰 줄 식별 컴포넌트
+    private EntityIdentity entityIdentity;                  // 런타임 식별 번호를 함께 맞춰 줄 식별 컴포넌트
 
     public void SetIsAttacking(bool attacking)
     {
@@ -36,7 +38,27 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
 
     public void SetNowState(EnemyState state)
     {
+        if (nowState == state)
+            return;
+
+        EnemyState previousState = nowState;
         nowState = state;
+
+        // AI Tick마다 반복하지 않고 실제 상태 전환 순간에만 인식 계열 VFX를 재생합니다.
+        switch (state)
+        {
+            case EnemyState.Chase:
+                // 공격 직후 Chase 복귀는 새로운 발견이 아니므로 경고 VFX를 반복하지 않습니다.
+                if (previousState != EnemyState.Attack)
+                    VFXService.Instance?.Play(GameplayVFXIds.EnemyDetected, transform.position, transform.rotation);
+                break;
+            case EnemyState.Investigate:
+                VFXService.Instance?.Play(GameplayVFXIds.EnemyInvestigate, transform.position, transform.rotation);
+                break;
+            case EnemyState.Attack:
+                VFXService.Instance?.Play(GameplayVFXIds.EnemyAttackTelegraph, transform.position, transform.rotation);
+                break;
+        }
     }
 
     private void Awake()
@@ -47,7 +69,7 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
         nowState = EnemyState.Idle;
 
         // 현재 프로젝트에서는 기본 스탯을 여기서 초기화합니다.
-        hpMax = 100.0f;
+        hpMax = 50.0f;
         hpCurrent = hpMax;
         atkValue = 10.0f;
         defValue = 0.0f;
@@ -63,16 +85,37 @@ public class EnemyStatus : MonoBehaviour, IEffectReceiver
 
     public void TakeDamage(float damage)
     {
+        if (nowState == EnemyState.Dead || damage <= 0.0f)
+            return;
+
         SyncRuntimeIdentity();
 
+        float previousHp = hpCurrent;
         hpCurrent = Mathf.Clamp(hpCurrent - damage, 0.0f, hpMax);
         BroadcastHealthChanged();
 
         if (hpCurrent <= 0.0f)
         {
             nowState = EnemyState.Dead;
+            VFXService.Instance?.Play(GameplayVFXIds.EnemyDeath, transform.position, transform.rotation);
             OnLocalDeath?.Invoke();
             GlobalEventBus.OnEnemyDead?.Invoke(objID);
+            return;
+        }
+
+        if (hpCurrent < previousHp)
+        {
+            VFXService.Instance?.Play(GameplayVFXIds.EnemyHit, transform.position, transform.rotation);
+
+            // 피해 입을 시 사운드 재생 이벤트
+            if (Hit_AudioIDPool != null && Hit_AudioIDPool.Length > 0)
+            {
+                int hitID = Hit_AudioIDPool[UnityEngine.Random.Range(0, Hit_AudioIDPool.Length)];
+                GlobalEventBus.OnPlay3DSoundRequested?.Invoke(hitID, transform.position);
+            }
+
+            // 피해가 확정된 뒤 해당 적에게만 피격 플래시와 미세 경직을 요청합니다.
+            OnLocalDamaged?.Invoke();
         }
     }
 

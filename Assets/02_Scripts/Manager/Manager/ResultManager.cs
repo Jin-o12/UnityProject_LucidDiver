@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 인게임 세션 종료 시 데이터 변동을 관리하는 클래스
 /// (탈출 성공 여부, 플레이 타임, 인벤토리 및 퀵슬롯, 동조율 단계)
 /// </summary>
@@ -14,10 +14,18 @@ public class ResultManager : MonoBehaviour, IResultService
     // 플레이 타임 기록 필드
     private float playTime;                             //이번 세션 플레이 시간
     private float startTime;                            //플레이 시작 시점
+
     // 탈출 여부 및 결과 창 필드
     private bool extractionResult;                      //탈출 성공 여부 판정
+    private SessionEndReason pendingSessionEndReason;   //기존 성공 여부 이벤트에 함께 전달할 대기 중 종료 사유
+    private bool isGameAbandonRequested;                //게임 포기 결과 처리 중 중복 요청 방지
+    public SessionEndReason LastSessionEndReason { get; private set; } = SessionEndReason.None;
     private ResultUI resultPanel;                       //결과 창 UI 
     private Coroutine resultCoroutine;                  //결과 창 출력 코루틴
+    private readonly int successBGMAudioID = 10007;     //탈출 성공 BGM ID
+    private readonly int failedBGMAudioID = 10002;      //탈출 실패 BGM ID
+    public int enemyKillCount = 0;                      //이번 세션에서 플레이어가 처치한 적 개체의 누적 수.
+
     // 동조율 저장 필드
     private int prevLinkRateLevel;                      //동조율 상승 전 다이버와의 동조율 단계 값을 저장
     public int linkRateLevel;                           //동조율 상승 후 다이버와의 동조율 단계
@@ -26,16 +34,14 @@ public class ResultManager : MonoBehaviour, IResultService
     private bool linkRateUp = false;                    //동조율 단계 상승 여부 전달
     private bool MemoryLogUnlocked = false;             //세션 탈출 시 개인 심상 기록 해금 여부 저장
     private bool hasNewMemoryLog = true;                //개인 심상 기록 확인 여부 저장
+
     // 인벤토리 기록에 관한 필드
     private PlayerSaveData _playerSaveData;             //인벤토리 기록이 저장된 플레이어 세이브 데이터
     private PlayerInventory _inven;                     //현재 인게임 세션의 플레이어 인벤토리 데이터
     private PlayerArtifactEquipment artifactEquipment;  //플레이어가 장착한 아티팩트 데이터
-    private ItemData potionData;                        //변질된 붕대 아이템 데이터
-    private ItemData manaStoneData;                     //기묘한 사탕 아이템 데이터
     private ItemData memoryFragmentData;                //기억 파편 아이템 데이터
-    private int potionCount;                            //변질된 붕대 개수
-    private int mpStoneCount;                           //기묘한 사탕 개수
     private int memoryFragmentCount;                    //기억 파편 개수
+
     // 퀵슬롯 저장 필드
     public int slotTID1;                                //1번 슬롯 아이템의 ID값 데이터를 받아옴
     public Sprite slotSprite1;                          //1번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
@@ -50,22 +56,28 @@ public class ResultManager : MonoBehaviour, IResultService
     // 저장 데이터 인터페이스
     private IItemDataRepository itemRepo;               // 아이템 데이터 접근 인터페이스
     private ICharDataRepository charRepo;               // 캐릭터 데이터 접근 인터페이스
-    
+    private IDialogueRepository dialogueRepo;           // 대사 데이터 접근 인터페이스
+
     private void Awake()
     {
         // 싱글톤 인스턴스 중복 방지 설정
         if (Instance != null)
-            Destroy(gameObject);
+        {
+            // 같은 Manager 오브젝트에 다른 매니저 컴포넌트가 함께 붙어 있으므로 오브젝트 전체가 아니라 ResultManager 컴포넌트만 제거합니다.
+            Destroy(this);
+            return;
+        }
         else
             Instance = this;
         DontDestroyOnLoad(gameObject);
         
         // ResultServiceLocator에 자신을 등록
         ResultServiceLocator.Instance = this;
+
         // 인터페이스 등록
-        
-        itemRepo = new LocalJsonItemRepository();
-        charRepo = new SOCharacterRepository();
+        itemRepo = new LocalJsonItemRepository();           //아이템 인터페이스
+        charRepo = new SOCharacterRepository();             //캐릭터 인터페이스
+        dialogueRepo = new LocalJsonDialogueRepository();   //대사 인터페이스
 
         // 씬에 이미 존재하는 PlayerStatus를 찾아 등록 (타이밍 안전성 보장)
         foreach (var p in FindObjectsOfType<PlayerStatus>())
@@ -81,7 +93,9 @@ public class ResultManager : MonoBehaviour, IResultService
             Register(idComp.entityID, p);
             Debug.Log($"ResultManager Awake: Registered existing playerID={idComp.entityID} (gameObject={p.gameObject.name})");
         }
-        
+
+        //적 사망 이벤트를 연결해 킬 수 누적
+        GlobalEventBus.OnEnemyDead += KillPlus;
         //로비로 돌아가기 버튼에 결과 창 닫기 연결
         GlobalEventBus.OnReturnToLobby += CloseResultPanel;
         //출격 준비 UI의 퀵슬롯 캐시 재전송 요청 이벤트 연결
@@ -96,8 +110,7 @@ public class ResultManager : MonoBehaviour, IResultService
 
     private void OnDestroy()  //IResultService 구현체 (로케이터에 등록)
     {
-        //if (ResultServiceLocator.Instance == (IResultService)this) ResultServiceLocator.Instance = null;
-        //if (Instance == this) Instance = null;
+        GlobalEventBus.OnEnemyDead -= KillPlus;
         GlobalEventBus.OnReturnToLobby -= CloseResultPanel;
         GlobalEventBus.OnRequestQuickSlotCache -= SendQuickSlotCacheEvent;
         GlobalEventBus.PrepareUIOpen -= SendQuickSlotCacheEvent;
@@ -142,7 +155,6 @@ public class ResultManager : MonoBehaviour, IResultService
         if (idComp == null) return;
         // EntityIdentity에서 ID 값을 불러옴
         _players[playerID] = (PlayerStatus)ps;
-        //Debug.Log($"ResultManager.Register: playerID={playerID} registered (obj={ps.gameObject.name})");
     }
 
     // 플레이어 등록 해제
@@ -180,21 +192,68 @@ public class ResultManager : MonoBehaviour, IResultService
     //탈출 취소로 기본 상태로 돌아가는 처리
     public void HandleEscapeIdle(int playerID) => SetPlayerState(playerID, PlayerStatus.livingState.idle);
 
+    // 메뉴에서 관제실 복귀를 확정하면 게임 포기 사유를 기록하고 기존 실패 정산을 실행합니다.
+    public void HandleGameAbandon()
+    {
+        // 확인 버튼이 중복 입력되어도 같은 종료 요청을 여러 번 발행하지 않습니다.
+        if (isGameAbandonRequested)
+            return;
+
+        isGameAbandonRequested = true;
+
+        pendingSessionEndReason = SessionEndReason.GameAbandon;
+
+        // 진행 중인 탈출 채널링을 먼저 취소해 실패 정산 뒤 성공 이벤트가 늦게 발생하지 않게 합니다.
+        foreach (KeyValuePair<int, PlayerStatus> playerEntry in _players)
+        {
+            PlayerStatus player = playerEntry.Value;
+            if (player == null)
+                continue;
+
+            if (player.nowState == PlayerStatus.livingState.escape)
+                GlobalEventBus.OnEscapeFailure?.Invoke(playerEntry.Key);
+
+            // 게임 포기는 사망과 다른 결과 사유지만 플레이 조작 상태는 세션 종료 상태로 전환합니다.
+            player.SetPlayerState(PlayerStatus.livingState.gameover);
+        }
+
+        GlobalEventBus.OnEscapeRequest?.Invoke(false);
+
+        // 종료 이벤트는 동기적으로 정산되어야 하므로, 소비되지 않은 사유가 다음 세션에 남지 않게 정리합니다.
+        if (pendingSessionEndReason != SessionEndReason.None)
+        {
+            pendingSessionEndReason = SessionEndReason.None;
+            isGameAbandonRequested = false;
+            Debug.LogError("[ResultManager] 게임 포기 요청이 결과 정산으로 이어지지 않았습니다.", this);
+        }
+    }
+
     // 플레이어 상태 변경
     private void SetPlayerState(int playerID, PlayerStatus.livingState state)
     {
         if (_players.TryGetValue(playerID, out var ps)) ps.SetPlayerState(state);
     }
 
+    private void KillPlus(int _id)
+    {
+        enemyKillCount++;
+    }
+
     public void GameResult(bool _extractionResult, float beginTime)
     {
         // 탈출 성공 여부를 가장 먼저 기록
         extractionResult = _extractionResult;
+        LastSessionEndReason = pendingSessionEndReason != SessionEndReason.None
+            ? pendingSessionEndReason
+            : (_extractionResult ? SessionEndReason.EscapeSuccess : SessionEndReason.EscapeFailed);
+        pendingSessionEndReason = SessionEndReason.None;
+
         // 이번 세션에서의 플레이 시간을 계산
         startTime = beginTime;
         playTime = Time.time - startTime;
+
         // {StorageInventoryUI가 저장한 최신 창고 데이터를 파일에서 다시 불러온다}
-        DataManager.Instance.LoadGame();
+        PlayerSaveDataSO.Instance.LoadSaveData();
         // 플레이어 세이브 데이터를 가져옴
         _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         // {저장 리스트가 null이면 보정한다}
@@ -209,10 +268,151 @@ public class ResultManager : MonoBehaviour, IResultService
         // 인벤토리 및 퀵슬롯 데이터를 불러와 동기화 갱신
         InventorySync();
         CacheQuickSlotData(_extractionResult);
-        // 아이템 ID에 따라 개수 및 데이터 값 추출
-        FindItemCountAndData(301, out potionCount, out potionData);
-        FindItemCountAndData(302, out mpStoneCount, out manaStoneData);
-        FindItemCountAndData(401, out memoryFragmentCount, out memoryFragmentData);
+
+        // 스냅샷 방식: (최종 인벤토리 상태) - (게임 시작 시점 상태) = 이번 세션 순수 획득량
+        SessionDataSO.Instance.AcquiredItems.Clear();
+
+        // 1. 현재 인벤토리의 모든 아이템을 TID 기준으로 합산
+        Dictionary<int, int> finalItems = new Dictionary<int, int>();
+        foreach (InventorySlotData slot in _inven.anySlots)
+        {
+            if (slot == null || slot.TID == 0 || slot.amount <= 0) continue;
+            
+            if (finalItems.ContainsKey(slot.TID))
+                finalItems[slot.TID] += slot.amount;
+            else
+                finalItems[slot.TID] = slot.amount;
+        }
+
+        // 1.5. 장착 중인 아티팩트도 최종 소지량에 합산
+        if (artifactEquipment != null && artifactEquipment.equippedArtifacts != null)
+        {
+            foreach (var artifact in artifactEquipment.equippedArtifacts)
+            {
+                if (artifact == null || artifact.TID == 0) continue;
+
+                if (finalItems.ContainsKey(artifact.TID))
+                    finalItems[artifact.TID] += 1;
+                else
+                    finalItems[artifact.TID] = 1;
+            }
+        }
+
+        // 1.6. 안전 금고(safeSlot) 아이템을 별도로 합산 (탈출 실패 시 분실물에서 제외하기 위함)
+        Dictionary<int, int> safeItems = new Dictionary<int, int>();
+        foreach (InventorySlotData slot in _inven.safeSlots)
+        {
+            if (slot == null || slot.TID == 0 || slot.amount <= 0) continue;
+
+            if (safeItems.ContainsKey(slot.TID))
+                safeItems[slot.TID] += slot.amount;
+            else
+                safeItems[slot.TID] = slot.amount;
+        }
+
+        if (_extractionResult)
+        {
+            // 탈출 성공: 합산된 최종 수량에서 시작 수량을 뺀 순수 변화량을 기록 (양수: 획득, 음수: 손실)
+            foreach (var kvp in finalItems)
+            {
+                int tid = kvp.Key;
+                int finalAmount = kvp.Value;
+                int startingAmount = 0;
+
+                if (SessionDataSO.Instance.StartingItems.TryGetValue(tid, out int amount))
+                {
+                    startingAmount = amount;
+                }
+
+                int acquiredAmount = finalAmount - startingAmount;
+                if (acquiredAmount != 0)
+                {
+                    SessionDataSO.Instance.AddAcquiredItem(tid, acquiredAmount);
+                }
+            }
+
+            // 시작 시점에는 있었지만 최종 인벤토리에는 없는 아이템 = 전량 손실
+            foreach (var kvp in SessionDataSO.Instance.StartingItems)
+            {
+                int tid = kvp.Key;
+                if (!finalItems.ContainsKey(tid))
+                {
+                    SessionDataSO.Instance.AddAcquiredItem(tid, -kvp.Value);
+                }
+            }
+        }
+        else
+        {
+            // 탈출 실패: 안전 금고(safeSlot) 아이템은 분실로 처리하지 않는다.
+            // 1. 인벤토리(slots)의 아이템만 손실로 기록
+            Dictionary<int, int> lostItems = new Dictionary<int, int>();
+            foreach (InventorySlotData slot in _inven.slots)
+            {
+                if (slot == null || slot.TID == 0 || slot.amount <= 0) continue;
+
+                if (lostItems.ContainsKey(slot.TID))
+                    lostItems[slot.TID] += slot.amount;
+                else
+                    lostItems[slot.TID] = slot.amount;
+            }
+
+            // 1.5. 장착 중인 아티팩트도 손실에 포함
+            if (artifactEquipment != null && artifactEquipment.equippedArtifacts != null)
+            {
+                foreach (var artifact in artifactEquipment.equippedArtifacts)
+                {
+                    if (artifact == null || artifact.TID == 0) continue;
+
+                    if (lostItems.ContainsKey(artifact.TID))
+                        lostItems[artifact.TID] += 1;
+                    else
+                        lostItems[artifact.TID] = 1;
+                }
+            }
+
+            // 2. 인벤토리 + 아티팩트 아이템을 전량 손실로 기록
+            foreach (var kvp in lostItems)
+            {
+                SessionDataSO.Instance.AddAcquiredItem(kvp.Key, -kvp.Value);
+            }
+
+            // 3. 시작 시점에는 있었지만 최종 인벤토리/아티팩트에도 없는 아이템도 손실로 기록
+            foreach (var kvp in SessionDataSO.Instance.StartingItems)
+            {
+                int tid = kvp.Key;
+                if (!lostItems.ContainsKey(tid) && !safeItems.ContainsKey(tid))
+                {
+                    SessionDataSO.Instance.AddAcquiredItem(tid, -kvp.Value);
+                }
+            }
+
+            // 4. 안전 금고 아이템 중 이번 세션에서 순수하게 획득한 수량만 기록
+            foreach (var kvp in safeItems)
+            {
+                int tid = kvp.Key;
+                int safeAmount = kvp.Value;
+                int startingAmount = 0;
+
+                if (SessionDataSO.Instance.StartingItems.TryGetValue(tid, out int amount))
+                {
+                    startingAmount = amount;
+                }
+
+                int acquiredAmount = safeAmount - startingAmount;
+                if (acquiredAmount > 0)
+                {
+                    SessionDataSO.Instance.AddAcquiredItem(tid, acquiredAmount);
+                }
+            }
+        }
+
+        // SessionDataSO에서 기억 파편(401) 개수 추출 및 데이터 설정
+        memoryFragmentCount = 0;
+        if (SessionDataSO.Instance.AcquiredItems.TryGetValue(401, out int count))
+        {
+            memoryFragmentCount = count;
+        }
+        memoryFragmentData = itemRepo.GetItemDataByID(401);
         // 기억 파편을 사용해 동조율 상승 → 심상 기록 해금 처리를 실행
         LinkRateUp(_extractionResult);
         // 탈출 실패 시 인벤토리 및 아티팩트 슬롯의 아이템을 인벤토리에서 제거
@@ -223,13 +423,23 @@ public class ResultManager : MonoBehaviour, IResultService
                 RemoveFromInventory(slot.TID);
             }
 
-            foreach (var eSlot in artifactEquipment.equippedArtifacts)
+            if (artifactEquipment != null && artifactEquipment.equippedArtifacts != null)
             {
-                if (eSlot != null) RemoveFromInventory(eSlot.TID);
+                foreach (var eSlot in artifactEquipment.equippedArtifacts)
+                {
+                    if (eSlot != null) RemoveFromInventory(eSlot.TID);
+                }
+            }
+
+            // 실패 후 존재하지 않는 아이템 TID가 퀵슬롯 저장 데이터에 남지 않도록 빈 슬롯으로 초기화합니다.
+            _playerSaveData.quickSlots.Clear();
+            for (int i = 0; i < _inven.quickSlots.Count; i++)
+            {
+                _playerSaveData.quickSlots.Add(0);
             }
         }
         // 모든 처리 완료 후 후 DataManager에서 playerData를 저장
-        DataManager.Instance.SaveGame();
+        PlayerSaveDataSO.Instance.SaveGameData();
 
         // 저장 처리 후 기존 코루틴을 중단
         if (resultCoroutine != null)
@@ -338,7 +548,6 @@ public class ResultManager : MonoBehaviour, IResultService
 
             if (currentExp >= requiredExp)
             {
-                currentExp -= requiredExp;
                 currentLevel++;
             }
             else
@@ -395,17 +604,25 @@ public class ResultManager : MonoBehaviour, IResultService
     {
         // 플레이어 Die 애니메이션 재생 시간만큼 대기 후 UI 오픈
         yield return new WaitForSeconds(1.25f);
+
+        // 탈출 성공 여부에 따라 BGM 변경
+        int resultBGMID = extractionResult ? successBGMAudioID : failedBGMAudioID;
+        GlobalEventBus.OnPlayBGMRequested(resultBGMID);
+
+        // 게임오버 시 환경음 이펙트는 중단
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10305);
+
         // UIManager에서 Canvas-ResultPanel을 받아와 UI 오픈
         resultPanel = UIManager.Instance.Open<ResultUI>();
         if (resultPanel == null) yield break;
-        // 인게임 세션에서 저장된 데이터를 resultPanel에 전달해 UI 갱신
+
+        // 결과 화면이 나왔으므로 커서 잠금을 해제합니다.
+        GlobalEventBus.OnMouseLocked?.Invoke(false);
+
+        // 인게임 세션에서 저장된 데이터를 resultPanel에 전달
         _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         resultPanel.extractionResult = extractionResult;
         resultPanel.playTime = playTime;
-        resultPanel.potionCount = potionCount;
-        resultPanel.potionData = potionData;
-        resultPanel.manaStoneCount = mpStoneCount;
-        resultPanel.manaStoneData = manaStoneData;
         resultPanel.memoryFragmentCount = memoryFragmentCount;
         resultPanel.memoryFragmentData = memoryFragmentData;
         resultPanel.prevLinkRateLevel = prevLinkRateLevel;
@@ -413,6 +630,14 @@ public class ResultManager : MonoBehaviour, IResultService
         resultPanel.linkRateLevel = linkRateLevel;
         resultPanel.linkRateGain = linkRateGain;
         resultPanel.linkRateUp = linkRateUp;
+        resultPanel.enemyKillCount = enemyKillCount;
+
+        // 성공 여부에 따른 결과 대사를 resultPanel에 전달
+        string log = extractionResult?
+            dialogueRepo.GetRandomDialogue((int)CharacterTID.Yuan, DialogueType.escapeSuccess, linkRateLevel):
+            dialogueRepo.GetRandomDialogue((int)CharacterTID.Yuan, DialogueType.escapeFailed, linkRateLevel);
+        resultPanel.returnDialogueID = log;
+
         // 결과 창 UI에 각성 보존 슬롯 출력
         resultPanel.CreateSafeSlots(_inven.safeSlotNum);
         for (int k = 0; k < _inven.safeSlotNum; k++)
@@ -454,6 +679,19 @@ public class ResultManager : MonoBehaviour, IResultService
             resultCoroutine = null;
         }
 
+        // 결과 창 닫기 시 환경음 및 게임오버 사운드 이펙트를 중단
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10301);
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10302);
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10304);
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10305);
+        GlobalEventBus.OnStop2DSoundRequested?.Invoke(10306);
+
+        // 결과 창을 닫고 로비로 이동할 때 다음 세션의 게임 포기 요청을 받을 수 있도록 초기화합니다.
+        isGameAbandonRequested = false;
+
+        // 결과 창 닫기 시 킬 카운트를 초기화
+        enemyKillCount = 0;
+
         UIManager.Instance.Close<ResultUI>();
     }
 
@@ -479,7 +717,7 @@ public class ResultManager : MonoBehaviour, IResultService
         hasNewMemoryLog = false;
         _playerSaveData = PlayerSaveDataSO.Instance.currentData;
         //_playerSaveData.hasNewMemoryLog = false;
-        DataManager.Instance.SaveGame();
+        PlayerSaveDataSO.Instance.SaveGameData();
     }
     private void EnsureSaveLists()
     {

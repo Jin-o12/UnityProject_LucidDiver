@@ -20,12 +20,14 @@ public enum Faction
 // 아이템 카테고리
 public enum itemCategory
 {
-    idle,           // 기타 아이템
-    weapon,         // 무장
-    armor,          // 방어구
-    consume,        // 소모품
-    memory,         // 기억 파편
-    artifact        // 장비형 아이템
+    // 프리팹과 씬에 저장되는 enum 값이 항목 추가로 밀리지 않도록 번호를 명시적으로 고정합니다.
+    empty = 0,      // 빈 칸
+    idle = 1,       // 기타 아이템
+    weapon = 2,     // 무장
+    armor = 3,      // 방어구
+    consume = 4,    // 소모품
+    memory = 5,     // 기억 파편
+    artifact = 6    // 장비형 아이템
 }
 
 // 아이템 사용 방법 종류
@@ -87,6 +89,15 @@ public enum DialogueType
     escapeFailed        // 탈출 실패 시
 }
 
+// 인게임 세션이 종료된 원인
+public enum SessionEndReason
+{
+    None = 0,
+    EscapeSuccess = 1,  // 정상 탈출
+    EscapeFailed = 2,   // 사망 또는 제한 시간 종료
+    GameAbandon = 3     // 메뉴에서 관제실 복귀를 선택한 게임 포기
+}
+
 /* 캐릭터 고유 번호 */
 public enum CharacterTID
 {
@@ -131,4 +142,12 @@ public enum SlotType
     chest,      //상자 아이템 슬롯
     artifact,   //장비 장착 슬롯
     safe        //각성 보존 슬롯
+}
+
+public enum AudioType
+{
+    BGM,        //배경 사운드
+    SFX,        //효과음
+    UI,         //UI 사운드
+    AMBIENT     //환경 사운드
 }

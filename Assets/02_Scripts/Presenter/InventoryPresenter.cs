@@ -1,8 +1,9 @@
-/// <summary>
+﻿/// <summary>
 /// 아이템과 인벤토리에 관한 상호작용을 중재하는 Presenter.
 /// 아이템 습득, 인벤토리 UI 열기/닫기, 체스트 UI 연결, 월드 드랍을 담당한다.
 /// </summary>
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class InventoryPresenter : MonoBehaviour
 {
@@ -30,6 +31,12 @@ public class InventoryPresenter : MonoBehaviour
 
     // 아티팩트 장착 상태 관리
     private PlayerArtifactEquipment playerArtifactEquipment;       // 플레이어 아티팩트 장착 상태
+
+    private InputAction inventoryAction;                // 인벤토리 이벤트 캐시
+    private InputAction uiInventoryAction;              // UI 액션맵의 인벤토리 닫기 이벤트 캐시
+
+    // 인벤토리 열기 SFX ID
+    [SerializeField] private int inventoryOpenAudioID = 10703;
 
     private void Awake()
     {
@@ -64,9 +71,23 @@ public class InventoryPresenter : MonoBehaviour
         // 상자와 상호작용했을 때 상자 UI를 여는 이벤트를 구독한다.
         GlobalEventBus.OnItemBoxOpened += HandleItemBoxOpened;
 
-        // 입력으로 인벤토리 열기/닫기 요청이 들어오면 Presenter가 처리한다.
-        localInputReader.OnInventoryOpenRequested += OpenInventoryUI;
-        localInputReader.OnInventoryCloseRequested += CloseInventoryUI;
+        // 인벤토리 액션을 구독하여 직접 토글을 처리한다.
+        if (GlobalEventBus.OnGetInputAction != null)
+        {
+            inventoryAction = GlobalEventBus.OnGetInputAction.Invoke("Player", "Inventory");
+            if (inventoryAction != null)
+            {
+                inventoryAction.Enable();
+                inventoryAction.performed += OnInventoryInput;
+            }
+
+            // 상자를 열어 UI 액션맵으로 전환된 뒤에도 같은 입력으로 컨테이너를 닫을 수 있게 구독합니다.
+            uiInventoryAction = GlobalEventBus.OnGetInputAction.Invoke("UI", "Inventory");
+            if (uiInventoryAction != null)
+            {
+                uiInventoryAction.performed += OnUIInventoryInput;
+            }
+        }
 
         // 인벤토리 및 각성 보존 슬롯 데이터가 바뀌면 해당 슬롯 UI를 갱신한다.
         playerInventory.OnSlotChanged += HandleSlotChanged;
@@ -84,6 +105,9 @@ public class InventoryPresenter : MonoBehaviour
         GlobalEventBus.OnTooltipUIOpen += OpenTooltipUI;
         GlobalEventBus.OnTooltipUIClose += CloseTooltipUI;
 
+        // ESC 뒤로가기 요청이 들어오면 인벤토리, 상자, 툴팁을 하나의 UI 묶음으로 닫는다.
+        GlobalEventBus.OnRequestCloseInventoryUI += CloseInventoryUI;
+
         // 사망 또는 탈출 확정 시 열려 있는 인벤토리 계열 UI를 즉시 정리한다.
         GlobalEventBus.OnEscapeRequest += HandleSessionEnded;
     }
@@ -94,8 +118,16 @@ public class InventoryPresenter : MonoBehaviour
         GlobalEventBus.OnItemPickedUp -= HandleItemPickUp;
         GlobalEventBus.OnItemBoxOpened -= HandleItemBoxOpened;
 
-        localInputReader.OnInventoryOpenRequested -= OpenInventoryUI;
-        localInputReader.OnInventoryCloseRequested -= CloseInventoryUI;
+        if (inventoryAction != null)
+        {
+            inventoryAction.performed -= OnInventoryInput;
+            inventoryAction.Disable();
+        }
+
+        if (uiInventoryAction != null)
+        {
+            uiInventoryAction.performed -= OnUIInventoryInput;
+        }
 
         playerInventory.OnSlotChanged -= HandleSlotChanged;
         playerInventory.OnSafeSlotChanged -= HandleSafeSlotChanged;
@@ -107,6 +139,7 @@ public class InventoryPresenter : MonoBehaviour
 
         GlobalEventBus.OnTooltipUIOpen -= OpenTooltipUI;
         GlobalEventBus.OnTooltipUIClose -= CloseTooltipUI;
+        GlobalEventBus.OnRequestCloseInventoryUI -= CloseInventoryUI;
         GlobalEventBus.OnEscapeRequest -= HandleSessionEnded;
 
         if (playerArtifactEquipment != null)
@@ -215,6 +248,8 @@ public class InventoryPresenter : MonoBehaviour
 
         // 상자 UI를 여는 동안 입력 맵을 UI 모드로 전환한다.
         localInputReader.SwitchToUIMap();
+        // 마우스 잠금을 해제
+        GlobalEventBus.OnMouseLocked?.Invoke(false);
 
         // 인벤토리 UI를 먼저 연다.
         OpenInventoryUI();
@@ -248,17 +283,60 @@ public class InventoryPresenter : MonoBehaviour
         inventoryUI.UpdateSafeSlot(index, playerInventory.safeSlots[index]);
     }
 
+    private void OnInventoryInput(InputAction.CallbackContext context)
+    {
+        if (localInputReader.IsGameplayInputBlocked || IsGameplayMenuModalOpen())
+            return;
+        if (inventoryUI != null && inventoryUI.gameObject.activeInHierarchy)
+            CloseInventoryUI();
+        else
+            OpenInventoryUI();
+    }
+
+    // UI 액션맵은 이미 열린 인벤토리 또는 상자를 닫는 용도로만 사용합니다.
+    // 튜토리얼 팝업처럼 다른 이유로 UI 맵이 활성화됐을 때 인벤토리가 새로 열리는 것을 방지합니다.
+    private void OnUIInventoryInput(InputAction.CallbackContext context)
+    {
+        if (localInputReader.IsGameplayInputBlocked || IsGameplayMenuModalOpen())
+            return;
+        if (isChestOpen || (inventoryUI != null && inventoryUI.gameObject.activeInHierarchy))
+            CloseInventoryUI();
+    }
+
+    /// <summary>
+    /// ESC 메뉴와 그 하위 팝업이 열려 있으면 Tab/F 입력이 인벤토리 상태를 바꾸지 못하게 합니다.
+    /// </summary>
+    private bool IsGameplayMenuModalOpen()
+    {
+        UIManager manager = UIManager.Instance;
+        return manager != null &&
+               (manager.IsOpen<InGameMenuUI>() ||
+                manager.IsOpen<SettingUI>() ||
+                manager.IsOpen<NoticeLobbyUI>());
+    }
+
     /// <summary>
     /// 인벤토리 UI를 연다.
     /// 일반 인벤토리일 때만 드랍존을 사용 가능하게 둔다.
     /// </summary>
     public void OpenInventoryUI()
     {
+        if (localInputReader.IsGameplayInputBlocked || IsGameplayMenuModalOpen())
+            return;
+        GlobalEventBus.OnMouseLocked?.Invoke(false);
+
         // 플레이어 상태가 idle이 아니면 인벤토리 조작을 막는다.
         if (playerStatus.nowState != PlayerStatus.livingState.idle || playerStatus.IsSessionEnded)
             return;
 
-        inventoryUI = UIManager.Instance.Open<InventoryUI>();
+        UIManager uiManager = UIManager.Instance;
+        if (uiManager == null)
+        {
+            Debug.LogError("InventoryPresenter: UIManager가 준비되지 않아 인벤토리 UI를 열 수 없습니다.");
+            return;
+        }
+
+        inventoryUI = uiManager.Open<InventoryUI>();
         if (inventoryUI == null)
             return;
 
@@ -277,7 +355,11 @@ public class InventoryPresenter : MonoBehaviour
         for (int k = 0; k < playerInventory.safeSlotNum; k++)
             inventoryUI.UpdateSafeSlot(k, playerInventory.safeSlots[k]);
 
+        inventoryUI.quickSlot.SyncFromInventory(playerInventory);
         inventoryUI.UpdateArtifactSlots(playerArtifactEquipment);
+
+        // 인벤토리 열기 SFX를 출력한다.
+        GlobalEventBus.OnPlay2DSoundRequested?.Invoke(inventoryOpenAudioID);
 
         // 일반 인벤토리는 Player 액션맵을 유지한다.
     }
@@ -298,13 +380,22 @@ public class InventoryPresenter : MonoBehaviour
         // 툴팁 UI가 열려 있으면 닫아준다.
         UIManager.Instance.Close<ItemTooltipUI>();
 
+        // InventoryUI가 비활성화(OnDisable) 되기 직전에 안전하게 자식들을 원래 위치로 되돌림
+        if (inventoryUI != null)
+        {
+            inventoryUI.ResetAllSlotsDragState();
+        }
+
         UIManager.Instance.Close<InventoryUI>();
         inventoryUI = null;
         localInputReader.SetInventoryOpenState(false);
 
-        // 일반 플레이 중에 닫은 경우에만 플레이어 입력으로 복귀한다.
-        if (!playerStatus.IsSessionEnded)
+        // 다른 UI가 입력 차단을 유지하지 않는 일반 플레이 중에만 Player 맵과 커서를 복구합니다.
+        if (!playerStatus.IsSessionEnded && !localInputReader.IsGameplayInputBlocked)
+        {
             localInputReader.SwitchToPlayerMap();
+            GlobalEventBus.OnMouseLocked?.Invoke(true);
+        }
     }
 
     /// <summary>
@@ -396,6 +487,12 @@ public class InventoryPresenter : MonoBehaviour
         if (currentBox != null)
             currentBox.CloseBox();
 
+        // 비활성화 되기 전 드래그 중인 슬롯 안전하게 복구
+        if (inventoryUI != null)
+        {
+            inventoryUI.ResetAllSlotsDragState();
+        }
+
         UIManager.Instance.Close<ChestUI>();
         UIManager.Instance.Close<InventoryUI>();
         UIManager.Instance.Close<ItemTooltipUI>();
@@ -407,9 +504,12 @@ public class InventoryPresenter : MonoBehaviour
         isChestOpen = false;
         localInputReader.SetInventoryOpenState(false);
 
-        // 일반적인 닫기 요청에서만 입력 맵을 다시 플레이어 모드로 전환한다.
-        if (restorePlayerInput)
+        // 일반적인 닫기 요청에서만 입력 맵을 다시 플레이어 모드로 전환하고 마우스를 가둔다.
+        if (restorePlayerInput && !localInputReader.IsGameplayInputBlocked)
+        {
             localInputReader.SwitchToPlayerMap();
+            GlobalEventBus.OnMouseLocked?.Invoke(true);
+        }
     }
 
     /// <summary>
@@ -462,13 +562,16 @@ public class InventoryPresenter : MonoBehaviour
     {
         // UI는 슬롯 번호만 전달하고, Presenter가 실제 아이템 타입과 장착 가능 여부를 검증한다.
         ItemData itemData = playerInventory.GetSlotItemData(inventorySlotIndex);
-        ArtifactItemData artifactData = itemData as ArtifactItemData;
 
-        if (artifactData == null)
+        if (!InventoryItemPlacementPolicy.CanPlace(itemData, InventoryDropTargetType.ArtifactSlot))
         {
             Debug.LogWarning("아티팩트 아이템만 장착할 수 있습니다.");
             return;
         }
+
+        ArtifactItemData artifactData = itemData as ArtifactItemData;
+        if (artifactData == null)
+            return;
 
         if (!playerArtifactEquipment.EquipArtifact(equipSlotIndex, artifactData, out ArtifactItemData previousArtifact))
             return;

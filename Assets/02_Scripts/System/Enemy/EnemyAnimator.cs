@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class EnemyAnimator : MonoBehaviour
@@ -16,6 +17,9 @@ public class EnemyAnimator : MonoBehaviour
     // 지역 이벤트
     public event Action<int> OnAttackSwing;
 
+    private Coroutine hitStopRoutine;              // 공격을 취소하지 않고 애니메이션만 잠시 멈추는 코루틴
+    private float animatorSpeedBeforeHitStop = 1f; // 히트 스톱 종료 후 복원할 기존 재생 속도
+
     private void Awake()
     {
         animator = GetComponent<Animator>();
@@ -25,6 +29,58 @@ public class EnemyAnimator : MonoBehaviour
             enabled = false;
             Debug.LogError("EnemyAnimator: 필수 컴포넌트가 존재하지 않습니다");
             return;
+        }
+    }
+
+    /// <summary>
+    /// 피격 순간 애니메이터만 잠시 멈춘 뒤 기존 속도로 복구합니다.
+    /// 공격 트리거와 콤보 코루틴은 건드리지 않아 공격 자체는 취소되지 않습니다.
+    /// </summary>
+    public void PlayHitStop(float duration)
+    {
+        if (animator == null || duration <= 0.0f)
+        {
+            return;
+        }
+
+        if (hitStopRoutine != null)
+        {
+            StopCoroutine(hitStopRoutine);
+            animator.speed = animatorSpeedBeforeHitStop;
+        }
+
+        hitStopRoutine = StartCoroutine(HitStopRoutine(duration));
+    }
+
+    private IEnumerator HitStopRoutine(float duration)
+    {
+        animatorSpeedBeforeHitStop = animator.speed;
+        animator.speed = 0.0f;
+
+        float elapsed = 0.0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        animator.speed = animatorSpeedBeforeHitStop;
+        hitStopRoutine = null;
+    }
+
+    private void OnDisable()
+    {
+        if (hitStopRoutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(hitStopRoutine);
+        hitStopRoutine = null;
+
+        if (animator != null)
+        {
+            animator.speed = animatorSpeedBeforeHitStop;
         }
     }
 

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +8,8 @@ public class PlayerSaveData
     // 캐릭터 데이터
     public List<SaveCharacterData> myCharacters = new();    // 보유 캐릭터 리스트
     public int SelectCharID;                                // 선택한 캐릭터 ID
+    public bool isFirstPlay = true;                         // 최초 실행 여부 플래그
+    public bool isTutorialCompleted = false;                // 튜토리얼 완료 여부 플래그
     
     // 아이템 데이터
     public List<SaveSlotData> storageSlots = new();         // 창고
@@ -56,4 +58,5 @@ public class SaveCharacterData
     public int TID;                     // 캐릭터 고유 번호
     public int linkRateLevel;           // 각 플레이어 캐릭터 동조율 단계 값
     public float TotallinkRateValue;    // 동조율 단계 값을 달성하기 위해 누적해야 하는 총 동조율 값
+    public List<int> viewedRecordLevels = new(); // 이미 열람한 기록의 해금 레벨(reqLevel) 리스트
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
@@ -21,11 +21,29 @@ public class EnemyMovement : MonoBehaviour
     [Header("Attack Anchor")]
     [SerializeField] private Transform attackOrigin;                                      // 실제 근접 판정 거리 계산 기준 위치
 
+    [Header("Hit Feedback")]
+    [SerializeField] private bool enableHitStagger = false;                               // 이 프리팹에서 피격 미세 경직을 사용할지 여부
+    [SerializeField, Min(0.01f)] private float hitStaggerDuration = 0.08f;                 // 일반 행동 중 피격 경직 시간
+    [SerializeField, Min(0.01f)] private float attackHitStopDuration = 0.04f;              // 공격을 끊지 않고 애니메이션만 잠그는 시간
+    [SerializeField, Min(0.0f)] private float hitStaggerCooldown = 0.25f;                  // 연속 피격으로 무한 경직되는 것을 막는 재적용 간격
+    [SerializeField] private bool recognizePlayerOnHit = false;                           // 피격 시 가장 가까운 유효 플레이어를 전투 타겟으로 즉시 등록할지 여부
+
+    [Header("Crowd Avoidance")]
+    [SerializeField] private bool varyAvoidancePriority = false;                          // 스폰 개체마다 회피 우선순위를 분산할지 여부
+    [SerializeField, Range(0, 99)] private int avoidancePriorityMin = 40;                  // 런타임 회피 우선순위 최솟값
+    [SerializeField, Range(0, 99)] private int avoidancePriorityMax = 60;                  // 런타임 회피 우선순위 최댓값
+
     [Header("Required Components")]
     private EnemyStatus myStatus;                                                         // 상태/스탯 컴포넌트
     private NavMeshAgent navAgent;                                                        // 이동용 NavMeshAgent
     private Coroutine aiRoutine;                                                          // AI 판단 루프 코루틴 핸들
-    private BoxCollider collider;                                                         // 충돌 판정 콜라이더
+    private BoxCollider boxCollider;                                                      // 충돌 판정 콜라이더
+    private Coroutine hitStaggerRoutine;                                                  // 이동 경직 코루틴 핸들
+    private bool isMovementHitStaggered;                                                  // 현재 이동과 AI 목적지 갱신을 보류 중인지 여부
+    private bool wasAgentStoppedBeforeHitStagger;                                         // 경직 전 NavMeshAgent 정지 상태
+    private float nextHitStaggerAllowedTime;                                              // 다음 경직을 허용할 비스케일 시간
+
+    [SerializeField] private int[] dissolve_AudioIDPool;                                  // 사망 사운드 ID 풀
 
     public float SightLength => perception.SightRange;
     public float AwarenessRange => perception.AwarenessRange;
@@ -38,6 +56,7 @@ public class EnemyMovement : MonoBehaviour
     public event Action OnAttackEvent;                                                    // 공격 애니메이션 시작 이벤트
     public event Action OnDeathEvent;                                                     // 사망 애니메이션 시작 이벤트
     public event Action<int, int> OnLookDirEvent;                                         // 방향 애니메이션 갱신 이벤트
+    public event Action<float> OnHitStopEvent;                                            // 애니메이터에 전달할 피격 정지 시간
 
     private void Awake()
     {
@@ -45,9 +64,9 @@ public class EnemyMovement : MonoBehaviour
 
         navAgent = GetComponent<NavMeshAgent>();
         myStatus = GetComponent<EnemyStatus>();
-        collider = GetComponentInChildren<BoxCollider>();
+        boxCollider = GetComponentInChildren<BoxCollider>();
 
-        if (navAgent == null || myStatus == null || collider == null)
+        if (navAgent == null || myStatus == null || boxCollider == null)
         {
             enabled = false;
             Debug.LogError("EnemyMovement: required components are missing.");
@@ -64,6 +83,7 @@ public class EnemyMovement : MonoBehaviour
         locomotion.Initialize(navAgent);
         combat.OnValidate();
         interceptPlanner.OnValidate();
+        memory.SetOwner(transform);
     }
 
     private void OnValidate()
@@ -76,6 +96,11 @@ public class EnemyMovement : MonoBehaviour
         locomotion.OnValidate();
         combat.OnValidate();
         interceptPlanner.OnValidate();
+        hitStaggerDuration = Mathf.Max(0.01f, hitStaggerDuration);
+        attackHitStopDuration = Mathf.Clamp(attackHitStopDuration, 0.01f, hitStaggerDuration);
+        hitStaggerCooldown = Mathf.Max(0.0f, hitStaggerCooldown);
+        avoidancePriorityMin = Mathf.Clamp(avoidancePriorityMin, 0, 99);
+        avoidancePriorityMax = Mathf.Clamp(avoidancePriorityMax, avoidancePriorityMin, 99);
 
         if (attackOrigin == null)
         {
@@ -91,8 +116,10 @@ public class EnemyMovement : MonoBehaviour
         }
 
         myStatus.OnLocalDeath += Die;
+        myStatus.OnLocalDamaged += HandleLocalDamaged;
         myStatus.OnAggroApplied += HandleAggroApplied;
         GlobalEventBus.OnNoiseEmitted += HandleNoiseEmitted;
+        nextHitStaggerAllowedTime = 0.0f;
     }
 
     private void Start()
@@ -101,6 +128,8 @@ public class EnemyMovement : MonoBehaviour
         {
             return;
         }
+
+        ApplyAvoidancePriorityVariation();
 
         aiRoutine = StartCoroutine(CheckRoutine());
     }
@@ -125,12 +154,15 @@ public class EnemyMovement : MonoBehaviour
 
     private void OnDisable()
     {
+        CancelHitStagger();
+
         if (myStatus == null)
         {
             return;
         }
 
         myStatus.OnLocalDeath -= Die;
+        myStatus.OnLocalDamaged -= HandleLocalDamaged;
         myStatus.OnAggroApplied -= HandleAggroApplied;
         GlobalEventBus.OnNoiseEmitted -= HandleNoiseEmitted;
 
@@ -147,6 +179,172 @@ public class EnemyMovement : MonoBehaviour
     }
 
     /// <summary>
+    /// 피해가 확정되면 짧은 애니메이션 히트 스톱을 요청합니다.
+    /// 일반 행동 중에는 이동도 잠시 멈추지만, 공격 중에는 공격 상태와 콤보 코루틴을 유지합니다.
+    /// </summary>
+    private void HandleLocalDamaged()
+    {
+        TryRecognizePlayerOnHit();
+
+        if (!enableHitStagger ||
+            myStatus == null ||
+            myStatus.nowState == EnemyStatus.EnemyState.Dead ||
+            Time.unscaledTime < nextHitStaggerAllowedTime)
+        {
+            return;
+        }
+
+        nextHitStaggerAllowedTime = Time.unscaledTime + hitStaggerCooldown;
+
+        bool isAttacking = myStatus.isAttacking;
+        OnHitStopEvent?.Invoke(isAttacking ? attackHitStopDuration : hitStaggerDuration);
+
+        // 공격 중에는 애니메이션만 0.04초 멈추고 공격 판정과 돌진 흐름은 그대로 이어갑니다.
+        if (isAttacking || navAgent == null || !navAgent.enabled || !navAgent.isOnNavMesh)
+        {
+            return;
+        }
+
+        if (hitStaggerRoutine != null)
+        {
+            StopCoroutine(hitStaggerRoutine);
+            RestoreHitStaggerState();
+        }
+
+        hitStaggerRoutine = StartCoroutine(PlayHitStagger());
+    }
+
+    /// <summary>
+    /// 경직 시간 동안 NavMeshAgent 이동과 AI 목적지 갱신만 보류합니다.
+    /// 추적 타겟, 어그로, 순찰/복귀 상태는 변경하지 않아 종료 후 기존 행동을 그대로 이어갑니다.
+    /// </summary>
+    private IEnumerator PlayHitStagger()
+    {
+        wasAgentStoppedBeforeHitStagger = navAgent.isStopped;
+        isMovementHitStaggered = true;
+        navAgent.isStopped = true;
+        RaiseWalkEvent(false);
+
+        float elapsed = 0.0f;
+        while (elapsed < hitStaggerDuration &&
+               myStatus != null &&
+               myStatus.nowState != EnemyStatus.EnemyState.Dead)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        RestoreHitStaggerState();
+        hitStaggerRoutine = null;
+    }
+
+    /// <summary>
+    /// 오브젝트 비활성화나 재사용 전에 남아 있는 이동 경직 상태를 안전하게 정리합니다.
+    /// </summary>
+    private void CancelHitStagger()
+    {
+        if (hitStaggerRoutine != null)
+        {
+            StopCoroutine(hitStaggerRoutine);
+            hitStaggerRoutine = null;
+        }
+
+        RestoreHitStaggerState();
+    }
+
+    private void RestoreHitStaggerState()
+    {
+        if (!isMovementHitStaggered)
+        {
+            return;
+        }
+
+        isMovementHitStaggered = false;
+
+        if (navAgent != null && navAgent.enabled && navAgent.isOnNavMesh)
+        {
+            navAgent.isStopped = wasAgentStoppedBeforeHitStagger;
+        }
+    }
+
+    /// <summary>
+    /// 피해 이벤트에는 공격자 정보가 없으므로 현재 유효한 플레이어 중 가장 가까운 대상을 찾습니다.
+    /// 디코이 이동 타겟은 건드리지 않고 전투 타겟만 등록해 디코이 종료 후 플레이어 추적이 이어지게 합니다.
+    /// </summary>
+    private void TryRecognizePlayerOnHit()
+    {
+        if (!recognizePlayerOnHit || brain == null || myStatus == null ||
+            myStatus.nowState == EnemyStatus.EnemyState.Dead)
+        {
+            return;
+        }
+
+        var players = GlobalRuntimeData.GetPlayerList();
+        if (players == null || players.Count == 0)
+        {
+            return;
+        }
+
+        Transform nearestPlayer = null;
+        float nearestSqrDistance = float.PositiveInfinity;
+
+        foreach (GameObject player in players.Values)
+        {
+            if (player == null || !EnemyPerception.IsTargetAvailable(player.transform))
+            {
+                continue;
+            }
+
+            float sqrDistance = EnemyMathUtility.GetPlanarSqrDistance(transform.position, player.transform.position);
+            if (sqrDistance >= nearestSqrDistance)
+            {
+                continue;
+            }
+
+            nearestSqrDistance = sqrDistance;
+            nearestPlayer = player.transform;
+        }
+
+        if (nearestPlayer == null)
+        {
+            return;
+        }
+
+        bool acquiredTarget = brain.TryAcquireCombatTargetFromDamage(
+            transform,
+            nearestPlayer,
+            memory,
+            noiseListener);
+
+        // 공격 코루틴은 유지하고, 비공격 상태에서만 추적 상태 표시를 즉시 갱신합니다.
+        if (acquiredTarget && !myStatus.isAttacking)
+        {
+            myStatus.SetNowState(EnemyStatus.EnemyState.Chase);
+        }
+    }
+
+    /// <summary>
+    /// 런타임 고유 번호를 기준으로 회피 우선순위를 분산합니다.
+    /// 전역 랜덤값을 사용하지 않아 재생 순서와 무관하게 각 개체가 안정적인 값을 유지합니다.
+    /// </summary>
+    private void ApplyAvoidancePriorityVariation()
+    {
+        if (!varyAvoidancePriority || navAgent == null)
+        {
+            return;
+        }
+
+        int minPriority = Mathf.Clamp(avoidancePriorityMin, 0, 99);
+        int maxPriority = Mathf.Clamp(avoidancePriorityMax, minPriority, 99);
+        int priorityCount = maxPriority - minPriority + 1;
+        int identitySeed = myStatus != null ? myStatus.objID : GetInstanceID();
+        int positiveSeed = identitySeed & int.MaxValue;
+        int priorityOffset = (int)(((long)positiveSeed * 11L) % priorityCount);
+
+        navAgent.avoidancePriority = minPriority + priorityOffset;
+    }
+
+    /// <summary>
     /// 일정 주기마다 브레인에게 지금 어떤 행동을 해야 하는지 판단을 맡깁니다.
     /// 실제 상태 전환 로직은 EnemyBrain이 담당하고, 이 스크립트는 루프 진입점 역할만 합니다.
     /// </summary>
@@ -154,6 +352,13 @@ public class EnemyMovement : MonoBehaviour
     {
         while (myStatus.nowState != EnemyStatus.EnemyState.Dead)
         {
+            // 경직 중 목적지가 다시 갱신되면 NavMeshAgent가 즉시 재출발하므로 다음 판단 주기까지 기다립니다.
+            if (isMovementHitStaggered)
+            {
+                yield return brain.GetCheckDelay();
+                continue;
+            }
+
             brain.Tick(
                 this,
                 transform,
@@ -230,9 +435,13 @@ public class EnemyMovement : MonoBehaviour
         OnDeathEvent?.Invoke();
 
         navAgent.enabled = false;
-        collider.enabled = false;
+        boxCollider.enabled = false;
 
-        Destroy(gameObject, 3.0f);
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 사망 지점에서 3D 오디오 재생
+        int dieAudioID = dissolve_AudioIDPool[UnityEngine.Random.Range(0, dissolve_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(dieAudioID, gameObject.transform.position);
+
+        Destroy(gameObject, 0.0f);
     }
 
     /// <summary>
@@ -242,6 +451,7 @@ public class EnemyMovement : MonoBehaviour
     public void InitializeSpawnContext(Vector3 spawnPosition, EnemyPatrolRoute patrolRoute, int startPatrolIndex)
     {
         memory.InitializePatrol(spawnPosition, patrolRoute, startPatrolIndex);
+        ApplyAvoidancePriorityVariation();
     }
 
     /// <summary>
@@ -261,10 +471,16 @@ public class EnemyMovement : MonoBehaviour
             return;
         }
 
+        Transform swingOrigin = attackOrigin != null ? attackOrigin : transform;
+        string slashVfxId = swingIndex == 0
+            ? GameplayVFXIds.EnemySlash01
+            : GameplayVFXIds.EnemySlash02;
+        VFXService.Instance?.Play(slashVfxId, swingOrigin.position, transform.rotation);
+
         StartCoroutine(combat.ExecuteSwing(
             transform,
             brain.CurrentTarget,
-            attackOrigin != null ? attackOrigin : transform,
+            swingOrigin,
             navAgent,
             locomotion,
             RaiseLookDirEvent,

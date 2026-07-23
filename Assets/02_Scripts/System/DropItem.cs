@@ -47,6 +47,7 @@ public class DropItem : MonoBehaviour, IInteractable
             return false;
         }
 
+        int previousCount = stackCount;
         int remain = InvokePickupHandler(pickupHandler);
         if (remain >= stackCount)
         {
@@ -55,6 +56,8 @@ public class DropItem : MonoBehaviour, IInteractable
         }
 
         stackCount = remain;
+        if (stackCount < previousCount)
+            VFXService.Instance?.Play(GameplayVFXIds.ItemPickup, transform.position, transform.rotation);
 
         // 전부 주웠으면 월드 아이템을 제거한다.
         if (stackCount <= 0)
@@ -97,7 +100,7 @@ public class DropItem : MonoBehaviour, IInteractable
         }
         else
         {
-            Debug.Log($"Sprite size: {loadedIcon.bounds.size.x} × {loadedIcon.bounds.size.y}");
+            //Debug.Log($"Sprite size: {loadedIcon.bounds.size.x} × {loadedIcon.bounds.size.y}");
         }
 
         // 이미지의 실제 크기에 비례한 비율로 유니티 유닛 단위에 맞게 축소해 출력되는 이미지의 크기를 일정하게 유지

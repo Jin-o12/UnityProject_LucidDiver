@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -40,6 +40,21 @@ public class SortiePrepareUI : MonoBehaviour
     public int slotTID3;        //2번 슬롯 아이템의 ID값 데이터를 받아옴
     public Sprite slotSprite3;  //2번 슬롯 아이템의 아이콘 스프라이트 데이터를 받아옴
     public int slotCount3;      //2번 슬롯 아이템의 개수 데이터를 받아옴
+
+    [Header("Artifact Slot 1")]
+    [SerializeField] private Image imageArtifactIcon1;
+    [SerializeField] private TextMeshProUGUI textArtifactName1;
+    [SerializeField] private TextMeshProUGUI textArtifactCount1;
+
+    [Header("Artifact Slot 2")]
+    [SerializeField] private Image imageArtifactIcon2;
+    [SerializeField] private TextMeshProUGUI textArtifactName2;
+    [SerializeField] private TextMeshProUGUI textArtifactCount2;
+
+    [Header("Artifact Slot 3")]
+    [SerializeField] private Image imageArtifactIcon3;
+    [SerializeField] private TextMeshProUGUI textArtifactName3;
+    [SerializeField] private TextMeshProUGUI textArtifactCount3;
 
     // 캐릭터 정보 인터페이스
     private ICharDataRepository charRepo;
@@ -116,16 +131,34 @@ public class SortiePrepareUI : MonoBehaviour
         }
     }
 
+    private void UpdateArtifactSlot(int index, int tid, Sprite icon)
+    {
+        if (!gameObject.activeInHierarchy) return;
+
+        if (index == 0)
+        {
+            SetSlotUI(tid, icon, tid != 0 ? 1 : 0, imageArtifactIcon1, textArtifactName1, textArtifactCount1, "아티팩트 1", true);
+        }
+        else if (index == 1)
+        {
+            SetSlotUI(tid, icon, tid != 0 ? 1 : 0, imageArtifactIcon2, textArtifactName2, textArtifactCount2, "아티팩트 2", true);
+        }
+        else if (index == 2)
+        {
+            SetSlotUI(tid, icon, tid != 0 ? 1 : 0, imageArtifactIcon3, textArtifactName3, textArtifactCount3, "아티팩트 3", true);
+        }
+    }
+
     private void OnDisable()
     {
     }
 
     public async Task Refresh()
     {
-        // 플레이어 저장 데이터 SO
-        PlayerSaveData saveData = PlayerSaveDataSO.Instance.currentData;
         // 플레이어가 선택 한 캐릭터의 세이브 데이터 추출
         SaveCharacterData charSaveData = PlayerSaveDataSO.Instance.GetNowCharacterData();
+        // 플레이어 저장 데이터 SO
+        PlayerSaveData saveData = PlayerSaveDataSO.Instance.currentData;
         // 저장 데이터로부터 현재 선택 캐릭터 기획 데이터 추출
         CharacterData charData = charRepo.GetCharacterData(saveData.SelectCharID);
 
@@ -135,6 +168,9 @@ public class SortiePrepareUI : MonoBehaviour
 
         // 세이브 데이터에서 퀵슬롯 정보를 직접 로드하여 갱신
         await LoadQuickSlotsFromSave(saveData);
+
+        // 세이브 데이터에서 아티팩트 정보를 로드하여 갱신
+        await LoadArtifactSlotsFromSave(saveData);
 
         int currentLevel = PlayerSaveDataSO.Instance.GetLinkRateLevel();
         int maxLevel = charData.requireLinkRatePerLevel.Length - 1;
@@ -155,7 +191,7 @@ public class SortiePrepareUI : MonoBehaviour
         }
     }
 
-    private void SetSlotUI(int tid, Sprite icon, int count, Image slotIcon, TextMeshProUGUI slotName, TextMeshProUGUI slotCount, string emptySlotName)
+    private void SetSlotUI(int tid, Sprite icon, int count, Image slotIcon, TextMeshProUGUI slotName, TextMeshProUGUI slotCount, string emptySlotName, bool isArtifact = false)
     {
         if (tid == 0 || count <= 0)
         {
@@ -173,7 +209,7 @@ public class SortiePrepareUI : MonoBehaviour
 
         ItemData itemData = GetItemDataByTID(tid);
         if (slotName != null) slotName.text = itemData != null ? itemData.itemName : $"TID {tid}";
-        if (slotCount != null) slotCount.text = $"x{count}";
+        if (slotCount != null) slotCount.text = isArtifact ? "" : $"x{count}";
     }
 
     private ItemData GetItemDataByTID(int tid)
@@ -184,15 +220,22 @@ public class SortiePrepareUI : MonoBehaviour
 
     private void OnClickStartSortie()
     {
+        // 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke(true);
+
         // {현재 Canvas 비활성화}
         gameObject.SetActive(false);
 
-        // {출격 확정 시 GameScene으로 이동}
+        // {출격 확정 시 로비 BGM을 중단하고 GameScene으로 이동}
+        GlobalEventBus.OnStopBGMRequested?.Invoke();
         GlobalEventBus.OnGoToGameScene?.Invoke();
     }
 
     private void OnClickBack()
     {
+        // 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke(true);
+
         // {로비 Canvas를 다시 활성화}
         GlobalEventBus.OnOpenLobbyUI?.Invoke();
 
@@ -202,6 +245,9 @@ public class SortiePrepareUI : MonoBehaviour
 
     private void OnClickChangeFromStorage()
     {
+        // 버튼 클릭 사운드 출력 이벤트를 호출
+        GlobalEventBus.OnClickAudio?.Invoke(true);
+
         // {창고 인벤토리 UI 열기 이벤트를 호출한다}
         GlobalEventBus.OnOpenStorageUI?.Invoke();
     }
@@ -234,6 +280,29 @@ public class SortiePrepareUI : MonoBehaviour
             Sprite icon = data != null ? await AddressableLoader.LoadAssetAsync<Sprite>(data.iconAddress) : null;
             
             UpdateQuickSlot(i, tid, icon, count);
+        }
+    }
+
+    private async Task LoadArtifactSlotsFromSave(PlayerSaveData saveData)
+    {
+        if (saveData == null || saveData.artifactSlots == null) return;
+
+        // Initialize slots with empty state first
+        for (int i = 0; i < 3; i++)
+        {
+            UpdateArtifactSlot(i, 0, null);
+        }
+
+        // Load based on save data
+        foreach (var slot in saveData.artifactSlots)
+        {
+            if (slot == null || slot.index < 0 || slot.index >= 3) continue;
+
+            int tid = slot.TID;
+            ItemData data = GetItemDataByTID(tid);
+            Sprite icon = data != null ? await AddressableLoader.LoadAssetAsync<Sprite>(data.iconAddress) : null;
+            
+            UpdateArtifactSlot(slot.index, tid, icon);
         }
     }
 }

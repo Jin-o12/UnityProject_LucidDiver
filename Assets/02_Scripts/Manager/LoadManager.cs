@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -38,6 +38,24 @@ public class LoadManager : MonoBehaviour
         // 덮어쓸 씬 이름 가져오기
         SceneField addScene = SceneController.Instance.TargetSceneName_additive;
 
+        /// 이전 씬 비동기 언로드 (로딩 바 0% ~ 20%) ///
+        string previousScene = SceneController.Instance.PreviousSceneName;
+        if (!string.IsNullOrEmpty(previousScene))
+        {
+            AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(previousScene);
+            if (unloadOp != null)
+            {
+                while (!unloadOp.isDone)
+                {
+                    // 이전 씬 정리 진행도를 0~0.2 구간에 매핑
+                    loadUI.SetProgress(unloadOp.progress * 0.2f);
+                    yield return null;
+                }
+            }
+        }
+        loadUI.SetProgress(0.2f);
+
+        /// 목적지 씬 비동기 로드 (로딩 바 20% ~ 100%) ///
         // 목적지 씬을 비동기로 로드
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(targetScene, LoadSceneMode.Additive);
         // 덮어쓸 씬이 있다면 비동기로 로드
@@ -47,13 +65,13 @@ public class LoadManager : MonoBehaviour
             asyncAdd = SceneManager.LoadSceneAsync(addScene, LoadSceneMode.Additive);
         }
 
-        // 로딩 진척도에 따라 UI 업데이트
+        // 로딩 진척도에 따라 UI 업데이트 (0.2 ~ 1.0 구간)
         while (!asyncLoad.isDone || (asyncAdd != null && !asyncAdd.isDone))
         {
-            float Progress = (asyncAdd != null)
-                ? Mathf.Min (asyncLoad.progress , asyncAdd.progress)
+            float sceneProgress = (asyncAdd != null)
+                ? Mathf.Min(asyncLoad.progress, asyncAdd.progress)
                 : asyncLoad.progress;
-            loadUI.SetProgress(Progress);
+            loadUI.SetProgress(0.2f + sceneProgress * 0.8f);
             yield return null;
         }
 

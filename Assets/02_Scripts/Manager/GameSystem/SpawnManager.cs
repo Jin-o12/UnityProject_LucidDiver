@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 
 public class SpawnManager : MonoBehaviour
@@ -13,6 +14,12 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private GameObject playerSpawnPool;
     [SerializeField] private GameObject enemySpawnPool;
     [SerializeField] private LevelBoxSpawner levelBoxSpawner;
+
+    [Header("에너미 처치 상자 드롭")]
+    [SerializeField] private bool enableEnemyBoxDrop = true;                          // 현재 씬에서 에너미 처치 상자를 사용할지 여부
+    [SerializeField] private GameObject enemyBoxPrefab;                               // 에너미가 처치됐을 때 생성할 전용 상자 프리팹
+    [SerializeField, Range(0.0f, 1.0f)] private float enemyBoxDropChance = 0.2f;       // 에너미 한 마리당 상자 생성 확률
+    [SerializeField, Min(0.0f)] private float enemyBoxNavMeshSampleDistance = 2.0f;    // 사망 위치를 이동 가능한 지면으로 보정할 탐색 거리
 
     private readonly List<Transform> playerSpawnPoint = new();
     private readonly List<EnemySpawnZone> enemySpawnZones = new();
@@ -44,13 +51,18 @@ public class SpawnManager : MonoBehaviour
     /// 플레이어 스폰 포인트 캐시를 초기화합니다.
     /// 플레이어는 기존 구조를 유지하므로 단순히 자식 Transform만 읽어 옵니다.
     /// </summary>
-    private void CollectPlayerSpawnPoints()
+    private void CollectPlayerSpawnPoints(bool forceRefresh = false)
     {
         playerSpawnPoint.Clear();
-        if (playerSpawnPool == null)
+        if (forceRefresh)
+        {
+            playerSpawnPool = null;
+        }
+
+        if (playerSpawnPool == null || !playerSpawnPool.activeInHierarchy)
         {
             // LevelDesignTable에 추가한 풀을 태그로 찾아옴
-            playerSpawnPool = GameObject.FindGameObjectWithTag("PlayerSpawnPool");
+            playerSpawnPool = FindSpawnPoolWithChildren("PlayerSpawnPool");
             if (playerSpawnPool == null)  return;
         }
 
@@ -61,6 +73,25 @@ public class SpawnManager : MonoBehaviour
                 playerSpawnPoint.Add(point);
             }
         }
+    }
+
+    /// <summary>
+    /// 같은 태그의 스폰 풀이 여러 씬에 동시에 존재할 수 있으므로,
+    /// 실제 자식 스폰 포인트를 가진 활성 풀을 우선 선택합니다.
+    /// </summary>
+    private static GameObject FindSpawnPoolWithChildren(string tag)
+    {
+        GameObject[] candidates = GameObject.FindGameObjectsWithTag(tag);
+        for (int i = 0; i < candidates.Length; i++)
+        {
+            GameObject candidate = candidates[i];
+            if (candidate != null && candidate.activeInHierarchy && candidate.transform.childCount > 0)
+            {
+                return candidate;
+            }
+        }
+
+        return candidates.Length > 0 ? candidates[0] : null;
     }
 
     /// <summary>
@@ -101,6 +132,10 @@ public class SpawnManager : MonoBehaviour
 
     public void SpawnPlayer(CharacterData charData)
     {
+        // Additive 씬을 동시에 로드하면 SpawnManager.Awake()가 레벨 씬의 PlayerSpawnPointPool보다 먼저 실행될 수 있습니다.
+        // 실제 플레이어 생성 직전에 기존 캐시를 버리고 다시 수집해서 튜토리얼/인게임 레벨 씬의 스폰 포인트를 안정적으로 참조합니다.
+        CollectPlayerSpawnPoints(true);
+
         if (playerSpawnPoint.Count == 0)
         {
             Debug.LogError("Player spawn point list is empty");
@@ -119,27 +154,39 @@ public class SpawnManager : MonoBehaviour
 
         // 플레이어 오브젝트 생성
         Transform spawnPoint = playerSpawnPoint[spawnNum].transform;
-        GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
+        Vector3 spawnPosition = spawnPoint.position;
+        Quaternion spawnRotation = spawnPoint.rotation;
+        GameObject spawnedPlayer = Instantiate(playerPrefab, spawnPosition, spawnRotation);
 
         // 스폰된 오브젝트를 게임 신에 배치 (LoadScene 언로드 방어)
         SceneManager.MoveGameObjectToScene(spawnedPlayer, gameObject.scene);
 
+        // 씬 이동/리지드바디 초기화 과정에서 위치가 원점으로 되돌아가는 상황을 방지하기 위해 생성 좌표를 한 번 더 확정합니다.
+        spawnedPlayer.transform.SetPositionAndRotation(spawnPosition, spawnRotation);
+        if (spawnedPlayer.TryGetComponent(out Rigidbody spawnedRigidbody))
+        {
+            spawnedRigidbody.position = spawnPosition;
+            spawnedRigidbody.rotation = spawnRotation;
+            spawnedRigidbody.velocity = Vector3.zero;
+            spawnedRigidbody.angularVelocity = Vector3.zero;
+        }
+
         // 플레이어 오브젝트 세션 데이터에 등록
         GlobalRuntimeData.CountingPlayerData(spawnedPlayer);
 
-        Debug.Log($"Player spawned at {spawnPoint.position} with ID: {spawnedPlayer.GetComponent<EntityIdentity>().entityID}");
+        Debug.Log($"Player spawned at {spawnPosition} from {spawnPoint.name} / actual: {spawnedPlayer.transform.position} with ID: {spawnedPlayer.GetComponent<EntityIdentity>().entityID}");
 
         // 플레이어에게 세이브 데이터 넘겨주기
         if (charData != null)
         {
             if (spawnedPlayer.TryGetComponent<PlayerStatus>(out var status))
             {
-                status.initialize(charData.hpMax, charData.manaMax, charData.manaRegen, charData.sprintMana, charData.sprintRecoverTime, charData.evadeMana, charData.evadeCooltime);
+                status.initialize(charData);
             }
 
             if (spawnedPlayer.TryGetComponent<PlayerMovement>(out var movement))
             {
-                movement.initialize(charData.moveSpeed, charData.sprintSpeed, charData.sprintMana, charData.evadeSpeed, charData.evadeTime, charData.evadeMana, charData.evadeCooltime);
+                movement.initialize(charData);
             }
 
             if (spawnedPlayer.TryGetComponent<PlayerWeapon>(out var weapon))
@@ -287,6 +334,9 @@ public class SpawnManager : MonoBehaviour
         // 스폰 직후 런타임 고유 번호를 다시 배정해서 적 개체별 UI/이벤트 식별이 섞이지 않게 만듭니다.
         AssignEnemyRuntimeIdentity(spawnedEnemy);
 
+        // 이 씬에서 에너미 상자 드롭을 사용하는 경우 해당 개체의 로컬 사망 이벤트에 1회 처리기를 연결합니다.
+        RegisterEnemyBoxDrop(spawnedEnemy);
+
         EnemyPatrolRoute patrolRoute = spawnPointSettings != null
             ? spawnPointSettings.ResolvePatrolRoute(zone)
             : ResolvePatrolRouteByName(pointTransform, zone);
@@ -300,8 +350,67 @@ public class SpawnManager : MonoBehaviour
             movement.InitializeSpawnContext(pointTransform.position, patrolRoute, startPatrolIndex);
         }
 
+        VFXService.Instance?.Play(GameplayVFXIds.EnemySpawn, spawnedEnemy.transform.position, spawnedEnemy.transform.rotation);
+
         // 생성된 적 오브젝트를 런타임 데이터에 등록
         return true;
+    }
+
+    /// <summary>
+    /// 스폰된 적의 로컬 사망 이벤트에 현재 씬 전용 상자 드롭 처리를 연결합니다.
+    /// 전역 사망 이벤트를 사용하지 않아 다른 적의 위치나 중복 구독과 섞이지 않게 합니다.
+    /// </summary>
+    private void RegisterEnemyBoxDrop(GameObject spawnedEnemy)
+    {
+        if (!enableEnemyBoxDrop || enemyBoxPrefab == null || spawnedEnemy == null)
+            return;
+
+        if (!spawnedEnemy.TryGetComponent(out EnemyStatus enemyStatus))
+            return;
+
+        bool dropResolved = false;
+        Transform enemyTransform = spawnedEnemy.transform;
+        Scene enemyScene = spawnedEnemy.scene;
+
+        enemyStatus.OnLocalDeath += () =>
+        {
+            if (dropResolved)
+                return;
+
+            dropResolved = true;
+            float dropChance = Mathf.Clamp01(enemyBoxDropChance);
+
+            if (dropChance <= 0.0f || UnityEngine.Random.value >= dropChance)
+                return;
+
+            // Destroy는 프레임 종료 시 적용되므로 로컬 사망 이벤트 안에서 마지막 위치를 안전하게 읽을 수 있습니다.
+            if (enemyTransform == null)
+                return;
+
+            SpawnEnemyBox(enemyTransform.position, enemyScene);
+        };
+    }
+
+    /// <summary>
+    /// 에너미 사망 위치를 NavMesh 지면에 보정한 뒤 전용 상자를 같은 씬에 생성합니다.
+    /// </summary>
+    private void SpawnEnemyBox(Vector3 deathPosition, Scene enemyScene)
+    {
+        Vector3 spawnPosition = deathPosition;
+        float sampleDistance = Mathf.Max(0.0f, enemyBoxNavMeshSampleDistance);
+
+        if (sampleDistance > 0.0f &&
+            NavMesh.SamplePosition(deathPosition, out NavMeshHit navHit, sampleDistance, NavMesh.AllAreas))
+        {
+            spawnPosition = navHit.position;
+        }
+
+        GameObject spawnedBox = Instantiate(enemyBoxPrefab, spawnPosition, Quaternion.identity);
+
+        if (enemyScene.IsValid() && enemyScene.isLoaded)
+        {
+            SceneManager.MoveGameObjectToScene(spawnedBox, enemyScene);
+        }
     }
 
     /// <summary>

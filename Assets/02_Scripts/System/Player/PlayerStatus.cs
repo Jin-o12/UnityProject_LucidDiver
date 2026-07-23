@@ -1,4 +1,4 @@
-
+﻿
 /// <summary>
 /// 플레이어의 상태를 관리하는 스크립트
 /// [26.06.16_강다영] 플레이어의 기본적인 스텟의 변화가 서로 다른 씬에서 일어날 상황에 대비해 기본값 초기화를 Awake에서 수행함. 추후 변동 가능
@@ -7,6 +7,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem.HID;
+using UnityEngine.SceneManagement;
 
 public class PlayerStatus : MonoBehaviour, IEffectReceiver
 {
@@ -38,6 +40,21 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
 
     private float artifactHpRegenBonus;                     // 아티팩트로 추가되는 초당 체력 회복량
     private float artifactMpRegenBonus;                     // 아티팩트로 추가되는 초당 마나 회복량
+    private const float TutorialMinimumHp = 1.0f;            // 튜토리얼에서는 사망 대신 유지할 최소 체력
+
+    // 사운드 연출
+    public int[] Hit_AudioIDPool = null;                    // 플레이어 피격 사운드 ID 리스트
+
+    // 환경음 ID
+    private int defaultTimeAudioID = 10306;     //기본 사운드
+    private int lowTimeAudioID_1 = 10301;       //1차 사운드: 제한 시간 50% 이상 경과
+    private int lowTimeAudioID_2 = 10302;       //2차 사운드: 제한 시간 80% 이상 경과
+    private int lowHPAudio_ID = 10304;          //체력 낮음 사운드
+
+    //제한 시간 루프 사운드 재생 시점
+    private float lowTimeTirggerRatio_1 = 0.5f;  //1차 사운드: 50% 이상 경과
+    private float lowTimeTirggerRatio_2 = 0.2f;  //2차 사운드: 80% 이상 경과
+
 
     [Header("Lucid Mark")]
     [SerializeField] private PlayerLucidMarkController lucidMark = new PlayerLucidMarkController();
@@ -70,6 +87,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnRequestManaConsume += RequestUseMana;
         GlobalEventBus.OnTimeOver += TimeOver;
         GlobalEventBus.OnEscapeRequest += HandleSessionEnded;
+        GlobalEventBus.OnTimerRatioChanged += PlayAmbientSound;
     }
 
     private void OnDisable()
@@ -82,6 +100,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         GlobalEventBus.OnRequestManaConsume -= RequestUseMana;
         GlobalEventBus.OnTimeOver -= TimeOver;
         GlobalEventBus.OnEscapeRequest -= HandleSessionEnded;
+        GlobalEventBus.OnTimerRatioChanged -= PlayAmbientSound;
 
         // 플레이어가 비활성화되면 새 흔적 생성만 멈추고,
         // 이미 바닥에 떨어진 의식누출 흔적은 각자 수명만큼 남아 적을 유도합니다.
@@ -102,8 +121,8 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
 
     void FixedUpdate()  //현재 상태를 확인하여 입력 동작 여부를 체크
     {
-        // 플레이어 상태가 idle인 경우에 입력 동작을 처리함
-        bool canInput = (nowState == livingState.idle);
+        // 세션 종료가 확정된 뒤에는 상태 갱신 순서와 관계없이 입력과 이동을 다시 켜지 않습니다.
+        bool canInput = !IsSessionEnded && nowState == livingState.idle;
         if (_input != null) _input.enabled = canInput;
         if (_movement != null) _movement.enabled = canInput;
 
@@ -113,23 +132,23 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
 
     #region Status Management
     /* 플레이어 상태 및 스텟 초기화 */
-    public void initialize(float _hp, float _mp, float _regen, float _sMP, float _sTime, float _eMana, float _eCooltime)
+    public void initialize(CharacterData _charData)
     {
         nowState = livingState.idle;
         IsSessionEnded = false;
 
-        hpMax = _hp;
+        hpMax = _charData.hpMax;
         hpCurrent = hpMax;
-        mpMax = _mp;
+        mpMax = _charData.manaMax;
         mpCurrent = mpMax;
-        manaRegen = _regen;
+        manaRegen = _charData.manaRegen;
         artifactHpRegenBonus = 0.0f;
         artifactMpRegenBonus = 0.0f;
-        sprintMP = _sMP;
+        sprintMP = _charData.sprintMana;
         cannotSprint = false;
-        sprintRecoverTime = _sTime;
-        evadeMP = _eMana;
-        evadeCooltime = _eCooltime;
+        sprintRecoverTime = _charData.sprintRecoverTime;
+        evadeMP = _charData.evadeMana;
+        evadeCooltime = _charData.evadeCooltime;
         lastEvadeTime = Time.time;
 
         // 새 스폰마다 낙인 상태를 초기화해 이전 런타임 정보가 남지 않게 합니다.
@@ -157,11 +176,32 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     {
         hpCurrent = Mathf.Clamp(hpCurrent + _val, 0, hpMax);
         UpdateHp();
+
         // 플레이어 체력이 0이 되었을 때 idle 상태이면 사망 처리 이벤트 및 게임오버 메소드를 발동
         if (hpCurrent <= 0 && nowState == livingState.idle)
         {
             GlobalEventBus.onPlayerDead?.Invoke(playerID);
+
+            // 게임오버 사운드 이펙트를 출력
+            GlobalEventBus.OnPlay2DSoundRequested?.Invoke(10305);
             GameOver(playerID);
+        }
+    }
+
+    /* 플레이어 체력과 남은 제한 시간에 따라 Ambient 사운드 재생 */
+    private void PlayAmbientSound(float timerRatio)
+    {
+        // 플레이어 체력이 50% 이상이고 idle 상태이면 남은 시간에 따른 사운드 루프를 출력
+        if (hpCurrent >= 0.5 * hpMax)
+        {
+            if (timerRatio < lowTimeTirggerRatio_2)  GlobalEventBus.OnPlay2DSoundRequested?.Invoke(lowTimeAudioID_2);
+            else if (timerRatio < lowTimeTirggerRatio_1) GlobalEventBus.OnPlay2DSoundRequested?.Invoke(lowTimeAudioID_1);
+            else GlobalEventBus.OnPlay2DSoundRequested?.Invoke(defaultTimeAudioID);
+        }
+        // 플레이어 체력이 50% 이하이고 idle 상태이면 ambient 사운드 루프 출력
+        else if (hpCurrent < 0.5 * hpMax && nowState == livingState.idle)
+        {
+            GlobalEventBus.OnPlay2DSoundRequested?.Invoke(lowHPAudio_ID);
         }
     }
 
@@ -259,7 +299,19 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         // 구르기 도중에는 플레이어가 피해를 받아 HP가 감소하지 않음
         if (_movement != null && _movement.isEvading) return;
 
+        if (ShouldPreventTutorialDeath(dmg))
+        {
+            PreventTutorialDeath();
+            return;
+        }
+
         GetHp(-dmg);
+
+        // 치명타에서는 일반 피격 VFX 대신 사망 VFX만 재생해 두 연출이 겹치지 않게 합니다.
+        string damageVfxId = hpCurrent <= 0.0f
+            ? GameplayVFXIds.PlayerDeath
+            : GameplayVFXIds.PlayerHit;
+        VFXService.Instance?.Play(damageVfxId, transform.position, transform.rotation);
 
         // 루시드 낙인은 "실제 피해를 입은 피격"에만 반응합니다.
         // 생존해 있다면 중첩, 시간 감소, 의식누출 시작/갱신을 여기서 처리합니다.
@@ -267,10 +319,50 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         {
             lucidMark?.ApplyHit(transform, gameObject);
         }
+        // 피해 입을 시 DOTween 이벤트
+        GlobalEventBus.OnHitDOTween.Invoke(0.5f, dmg);
         // 피해 입을 시 애니메이션 재생 이벤트
         GlobalEventBus.OnHitAnimate?.Invoke();
+        // 피해 입을 시 사운드 재생 이벤트
+        int hitID = Hit_AudioIDPool[UnityEngine.Random.Range(0, Hit_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(hitID,transform.position);
         // 피해 입을 시 탈출 실패 처리
         GlobalEventBus.OnEscapeFailure?.Invoke(playerID);
+    }
+
+    /// <summary>
+    /// 튜토리얼 씬에서는 전투 실습 중 사망으로 로비에 돌아가지 않도록 치명 피해만 차단합니다.
+    /// 일반 인게임 씬에서는 기존 사망/결과 처리 흐름을 그대로 사용합니다.
+    /// </summary>
+    private bool ShouldPreventTutorialDeath(float damage)
+    {
+        return IsTutorialSceneActive() && hpCurrent - damage <= 0.0f;
+    }
+
+    /// <summary>
+    /// 튜토리얼 사망 방지 처리입니다.
+    /// HP를 1로 고정하고 피격 피드백과 튜토리얼 안내 이벤트만 발생시킵니다.
+    /// </summary>
+    private void PreventTutorialDeath()
+    {
+        hpCurrent = Mathf.Clamp(TutorialMinimumHp, 0.0f, hpMax);
+        UpdateHp();
+
+        VFXService.Instance?.Play(GameplayVFXIds.PlayerHit, transform.position, transform.rotation);
+        GlobalEventBus.OnHitAnimate?.Invoke();
+
+        int hitID = Hit_AudioIDPool[UnityEngine.Random.Range(0, Hit_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(hitID, transform.position);
+
+        TutorialManager.Instance?.ShowTutorialDeathPreventedRadio();
+    }
+
+    /// <summary>
+    /// 튜토리얼은 기본 씬과 Additive 씬이 함께 로드되므로 TutorialScene 로드 여부로 판정합니다.
+    /// </summary>
+    private static bool IsTutorialSceneActive()
+    {
+        return SceneManager.GetSceneByName("TutorialScene").isLoaded;
     }
 
     /* 공격 시 마나 사용 */
@@ -299,6 +391,7 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         {
             cannotSprint = true;
             GlobalEventBus.SendCannotSprint?.Invoke(cannotSprint);
+            GlobalEventBus.OnPrintSprintCooltime?.Invoke(sprintRecoverTime);  //쿨타임 시작 시점 이벤트를 게임플레이 UI에 전달하는 이벤트
             StartCoroutine(SprintRecover());
             return;
         }
@@ -316,9 +409,13 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     /* 마나 사용 후 구르기 실행 */
     public void UseEvadeMana(float _useMana)
     {
+        // 방향 키 입력이 전달되지 않는 동안에는 구르기를 처리하지 않음
+        if (_movement.movementInput.sqrMagnitude <= 0.001f) return;
+
         GetMp(-_useMana);
         _movement.PlayerEvade();
         lastEvadeTime = Time.time;
+        GlobalEventBus.OnPrintEvadeCooltime?.Invoke(evadeCooltime);  //쿨타임 시작 시점 이벤트를 게임플레이 UI에 전달하는 이벤트
     }
 
     /* 초당 마나 회복 코루틴 */
@@ -338,14 +435,20 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     {
         // 대상이 내가 아니라면 리턴
         if (_target != this.gameObject) return;
+        float previousHp = hpCurrent;
         GetHp(_effectValue);
+        if (hpCurrent > previousHp)
+            VFXService.Instance?.Play(GameplayVFXIds.PlayerHeal, transform.position, transform.rotation);
     }
 
     private void GainMana(GameObject _target, float _effectValue)
     {
         // 대상이 내가 아니라면 리턴
         if (_target != this.gameObject) return;
+        float previousMp = mpCurrent;
         GetMp(_effectValue);
+        if (mpCurrent > previousMp)
+            VFXService.Instance?.Play(GameplayVFXIds.PlayerManaGain, transform.position, transform.rotation);
     }
 
     /* 초상화 UI 업데이트 */
@@ -357,13 +460,19 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
     /* 아이템을 사용해 체력 회복 */
     public void HealthRecoverInst(float _amount)
     {
+        float previousHp = hpCurrent;
         GetHp(_amount);
+        if (hpCurrent > previousHp)
+            VFXService.Instance?.Play(GameplayVFXIds.PlayerHeal, transform.position, transform.rotation);
     }
 
     /* 아이템을 사용해 마나 회복 */
     public void ManaRecoverInst(float _amount)
     {
+        float previousMp = mpCurrent;
         GetMp(_amount);
+        if (mpCurrent > previousMp)
+            VFXService.Instance?.Play(GameplayVFXIds.PlayerManaGain, transform.position, transform.rotation);
     }
 
     public bool RequestUseMana(float _useMana)
@@ -506,6 +615,11 @@ public class PlayerLucidMarkController
         currentStack = Mathf.Min(currentStack + 1, maxStack);
         markExpireTime = Time.time + markDuration;
 
+        string markVfxId = currentStack >= leakRequiredStack
+            ? GameplayVFXIds.LucidMark02
+            : GameplayVFXIds.LucidMark01;
+        VFXService.Instance?.Play(markVfxId, owner.position, owner.rotation);
+
         if (currentStack < leakRequiredStack)
         {
             return;
@@ -588,6 +702,8 @@ public class PlayerLucidMarkController
             traceVisualLocalOffset,
             traceVisualLocalScale,
             traceDebugColor);
+
+        VFXService.Instance?.Play(GameplayVFXIds.LucidLeak, spawnPosition);
     }
 
     private static float GetPlanarSqrDistance(Vector3 a, Vector3 b)
@@ -693,6 +809,13 @@ public class LucidLeakTraceRuntime : MonoBehaviour
 
     private void AttachVisualIfNeeded()
     {
+        // 공통 VFX 서비스가 활성화된 경우 Catalog의 VFX_LucidLeak을 사용합니다.
+        // 기존 직렬화 프리팹은 서비스가 없는 테스트 환경의 폴백으로만 유지합니다.
+        if (VFXService.Instance != null)
+        {
+            return;
+        }
+
         if (traceVisualPrefab == null)
         {
             return;

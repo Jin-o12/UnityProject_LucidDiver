@@ -1,0 +1,478 @@
+[
+  {
+    "AudioID": 10001,
+    "AudioClip": "Divers",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10002,
+    "AudioClip": "Extraction_Failed",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10003,
+    "AudioClip": "Inventory",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10004,
+    "AudioClip": "Lobby_1",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10005,
+    "AudioClip": "Pre-Extraction Sequence_1",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10006,
+    "AudioClip": "Title_1",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10007,
+    "AudioClip": "Victroy_1",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10008,
+    "AudioClip": "Yuan_Memory",
+    "AudioType": "BGM",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10101,
+    "AudioClip": "Body_Hit",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10102,
+    "AudioClip": "Body_Hit_2",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10103,
+    "AudioClip": "Booldy_Hit",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10104,
+    "AudioClip": "Cloth_Hit",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10105,
+    "AudioClip": "Cloth_Hit_2",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10106,
+    "AudioClip": "Flesh_Hit_1",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10107,
+    "AudioClip": "Flesh_Hit_2",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10108,
+    "AudioClip": "Flesh_Hit_3",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10201,
+    "AudioClip": "Claw_Slash_1",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10202,
+    "AudioClip": "Claw_Slash_2",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10203,
+    "AudioClip": "Monster_Attack_Cue",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10204,
+    "AudioClip": "Monster_Dissolve_01",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10205,
+    "AudioClip": "Monster_Roar_1",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10206,
+    "AudioClip": "Monster_Roar_2",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10301,
+    "AudioClip": "Clock_Ticking_Dry_Loop",
+    "AudioType": "AMBIENT",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10302,
+    "AudioClip": "Clock_Ticking_Wet_Loop",
+    "AudioType": "AMBIENT",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10303,
+    "AudioClip": "Door_Open",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10304,
+    "AudioClip": "HeartBeat_Loop",
+    "AudioType": "AMBIENT",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10305,
+    "AudioClip": "Water_Fall",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10306,
+    "AudioClip": "InGame_Embient_2",
+    "AudioType": "AMBIENT",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10307,
+    "AudioClip": "PayPhoneRing_Loop",
+    "AudioType": "AMBIENT",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10401,
+    "AudioClip": "Escape_Channeling_Loop",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10402,
+    "AudioClip": "Escape_Faild_Loop",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10403,
+    "AudioClip": "Escape_Interact_01",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10404,
+    "AudioClip": "Escape_Succes",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10501,
+    "AudioClip": "InDoor_FootStep_1",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10502,
+    "AudioClip": "InDoor_FootStep_2",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10503,
+    "AudioClip": "InDoor_FootStep_3",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10504,
+    "AudioClip": "InDoor_FootStep_4",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10505,
+    "AudioClip": "InDoor_FootStep_5",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10506,
+    "AudioClip": "FootStep_1",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10507,
+    "AudioClip": "FootStep_2",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10508,
+    "AudioClip": "FootStep_3",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10509,
+    "AudioClip": "FootStep_4",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10510,
+    "AudioClip": "FootStep_5",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10601,
+    "AudioClip": "Box_Open_Carboard",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10602,
+    "AudioClip": "Box_Open_Metal",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10603,
+    "AudioClip": "box_rummag_Loop",
+    "AudioType": "SFX",
+    "Volume": 0.3,
+    "Loop": true
+  },
+  {
+    "AudioID": 10701,
+    "AudioClip": "BandageTapeRip",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10702,
+    "AudioClip": "Dodge",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10703,
+    "AudioClip": "Open_Inventory",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10704,
+    "AudioClip": "Player_Eating",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10705,
+    "AudioClip": "Throw",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10706,
+    "AudioClip": "Using_Complete_Item",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10801,
+    "AudioClip": "Decoy_Acttive_Loop",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": true
+  },
+  {
+    "AudioID": 10901,
+    "AudioClip": "Item_Root_Legend",
+    "AudioType": "UI",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10902,
+    "AudioClip": "Item_Root_Normal",
+    "AudioType": "UI",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10903,
+    "AudioClip": "Item_Root_Rare",
+    "AudioType": "UI",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10904,
+    "AudioClip": "UI_Click_1",
+    "AudioType": "UI",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10905,
+    "AudioClip": "UI_Click_2",
+    "AudioType": "UI",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10906,
+    "AudioClip": "UI_Click_3",
+    "AudioType": "UI",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10907,
+    "AudioClip": "UI_Click_4",
+    "AudioType": "UI",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10908,
+    "AudioClip": "UI_Click_5",
+    "AudioType": "UI",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 10909,
+    "AudioClip": "UI_Click_6",
+    "AudioType": "UI",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 11001,
+    "AudioClip": "GunshotPistol_1",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 11002,
+    "AudioClip": "GunshotPistol_2",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 11003,
+    "AudioClip": "GunshotPistol_3",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 11004,
+    "AudioClip": "Indoor_GunshotPistol_1",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 11005,
+    "AudioClip": "Indoor_GunshotPistol_2",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  },
+  {
+    "AudioID": 11006,
+    "AudioClip": "Indoor_GunshotPistol_3",
+    "AudioType": "SFX",
+    "Volume": 1,
+    "Loop": false
+  }
+]

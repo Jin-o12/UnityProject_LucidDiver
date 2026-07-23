@@ -10,6 +10,7 @@ public class PlayerArtifactEquipment : MonoBehaviour
     [SerializeField] private int artifactSlotCount = 3; // 플레이어가 사용할 아티팩트 장착 슬롯 수
 
     public ArtifactItemData[] equippedArtifacts;       // 현재 장착 중인 아티팩트 목록
+    [SerializeField] private int equipAudioID = 10706; // 아티팩트 장착 시 SFX ID
 
     public event Action<int, ArtifactItemData> OnArtifactSlotChanged; // 장착 슬롯 변경 알림
 
@@ -111,6 +112,11 @@ public class PlayerArtifactEquipment : MonoBehaviour
         equippedArtifacts[slotIndex] = newArtifact;
 
         OnArtifactSlotChanged?.Invoke(slotIndex, newArtifact);
+        VFXService.Instance?.Play(GameplayVFXIds.ArtifactEquip, transform.position, transform.rotation);
+
+        // 장착 판정이 발생한 시점에 AudioManager에 사운드 출력 이벤트를 발송합니다.
+        GlobalEventBus.OnPlay2DSoundRequested?.Invoke(equipAudioID);
+
         return true;
     }
 
@@ -131,6 +137,7 @@ public class PlayerArtifactEquipment : MonoBehaviour
 
         equippedArtifacts[slotIndex] = null;
         OnArtifactSlotChanged?.Invoke(slotIndex, null);
+        VFXService.Instance?.Play(GameplayVFXIds.ArtifactUnequip, transform.position, transform.rotation);
         return true;
     }
 

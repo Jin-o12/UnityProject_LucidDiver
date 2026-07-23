@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
@@ -9,6 +9,7 @@ public class FlatDialogueData
     public int CharacterTID;
     public string CharacterName;
     public string Situation;
+    public int RequiredLevel;
     public int DialogID;
     public string Text;
 }
@@ -59,7 +60,8 @@ public class LocalJsonDialogueRepository : IDialogueRepository
                     dialogueDataDictionary[data.CharacterTID].Dialogues[dialogueType].Add(new DialogueLine 
                     { 
                         ID = data.DialogID, 
-                        Text = data.Text 
+                        Text = data.Text,
+                        RequiredLevel = data.RequiredLevel
                     });
                 }
                 else
@@ -160,7 +162,7 @@ public class LocalJsonDialogueRepository : IDialogueRepository
     }
 
     /* 특정 상황의 캐릭터 대사 데이터 랜덤하게 가져오기 */
-    public string GetRandomDialogue(int _charTID, DialogueType _type)
+    public string GetRandomDialogue(int _charTID, DialogueType _type, int currentLevel = 0)
     {
         // 해당 TID에 맞는 캐릭터 데이터가 있는지 확인
         if(dialogueDataDictionary.TryGetValue(_charTID, out CharacterDialogueData data))
@@ -168,9 +170,23 @@ public class LocalJsonDialogueRepository : IDialogueRepository
             // 해당 캐릭터 데이터 내에 지정한 상황의 대사 리스트가 있는지 확인
             if(data.Dialogues.TryGetValue(_type, out List<DialogueLine> lines) && lines.Count > 0)
             {
-                // 리스트에서 무작위로 하나 뽑아서 텍스트 반환
-                int randomIndex = Random.Range(0, lines.Count);
-                return lines[randomIndex].Text;
+                // 현재 레벨 이하의 대사 중 가장 높은 RequiredLevel의 대사만 출력 가능 리스트에 추가
+                int bestLevel = lines.Where(line => line.RequiredLevel <= currentLevel)
+                                     .Select(line => line.RequiredLevel)
+                                     .DefaultIfEmpty(-1)
+                                     .Max();
+                var availableLines = lines.Where(line => line.RequiredLevel == bestLevel).ToList();
+
+                if(availableLines.Count > 0)
+                {
+                    // 출력 가능 리스트에서 무작위로 하나 뽑아서 텍스트 반환
+                    int randomIndex = Random.Range(0, availableLines.Count);
+                    return availableLines[randomIndex].Text;
+                }
+                else
+                {
+                    Debug.LogWarning($"[TID: {_charTID}] 캐릭터가 레벨 {currentLevel}에 출력 가능한 대사가 없습니다");
+                }
             }
             else
             {

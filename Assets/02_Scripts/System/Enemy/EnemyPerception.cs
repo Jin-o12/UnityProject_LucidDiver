@@ -10,8 +10,8 @@ using UnityEngine;
 public class EnemyPerception
 {
     [SerializeField] private float sightRange = 10.0f;       // 시야로 플레이어를 새로 발견할 수 있는 거리
-    [SerializeField] private float awarenessRange = 20.0f;   // 이미 본 대상을 놓치지 않고 유지하는 거리
-    [SerializeField] private float hearingRange = 40.0f;     // 소리를 들을 수 있는 최대 거리
+    [SerializeField] private float awarenessRange = 15.0f;   // 이미 본 대상을 놓치지 않고 유지하는 거리
+    [SerializeField] private float hearingRange = 17.5f;     // 소리를 들을 수 있는 최대 거리
     [SerializeField] private float sightAngle = 120.0f;      // 시야각
     [SerializeField] private float eyeHeight = 1.4f;         // 시야/청각 판정 시작 높이
 
@@ -140,18 +140,52 @@ public class EnemyPerception
             return true;
         }
 
-        if (!Physics.Raycast(
-                eyePosition,
-                directionToTarget.normalized,
-                out RaycastHit hit,
-                targetDistance,
-                ~0,
-                QueryTriggerInteraction.Ignore))
+        RaycastHit[] hits = Physics.RaycastAll(
+            eyePosition,
+            directionToTarget.normalized,
+            targetDistance,
+            ~0,
+            QueryTriggerInteraction.Ignore);
+
+        if (hits == null || hits.Length == 0)
         {
             return true;
         }
 
-        return hit.transform == target || hit.transform.IsChildOf(target);
+        RaycastHit nearestValidHit = default;
+        bool hasValidHit = false;
+        float nearestDistance = float.MaxValue;
+
+        foreach (RaycastHit hit in hits)
+        {
+            Transform hitTransform = hit.transform;
+            if (hitTransform == null)
+            {
+                continue;
+            }
+
+            // 시야 레이캐스트가 자기 자신의 콜라이더를 먼저 맞으면 근접 교전 중에도
+            // 플레이어가 벽 뒤에 있는 것처럼 판단될 수 있으므로 자기 자신 계층은 무시합니다.
+            if (hitTransform == self || hitTransform.IsChildOf(self))
+            {
+                continue;
+            }
+
+            if (hit.distance < nearestDistance)
+            {
+                nearestDistance = hit.distance;
+                nearestValidHit = hit;
+                hasValidHit = true;
+            }
+        }
+
+        if (!hasValidHit)
+        {
+            return true;
+        }
+
+        Transform nearestTransform = nearestValidHit.transform;
+        return nearestTransform == target || nearestTransform.IsChildOf(target);
     }
 
     /// <summary>
@@ -183,14 +217,15 @@ public class EnemyPerception
             return false;
         }
 
-        float effectiveRadius = Mathf.Min(hearingRange, Mathf.Max(0.0f, stimulus.Radius));
+        // Hear the noise when the enemy hearing radius overlaps the noise propagation radius.
+        float effectiveRadius = hearingRange + Mathf.Max(0.0f, stimulus.Radius);
         if (effectiveRadius <= 0.0f)
         {
             return false;
         }
 
         float sqrDistance = EnemyMathUtility.GetPlanarSqrDistance(self.position, stimulus.Position);
-        if (sqrDistance > hearingRangeSqr || sqrDistance > effectiveRadius * effectiveRadius)
+        if (sqrDistance > effectiveRadius * effectiveRadius)
         {
             return false;
         }

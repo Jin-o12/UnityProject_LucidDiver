@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
@@ -16,6 +16,7 @@ public class EnemyCombat
     [SerializeField] private float attackHitRange = 1.2f;              // 실제 데미지가 들어가는 근접 판정 거리
     [SerializeField] private float closeCombatAwarenessRange = 6.0f;   // 교전 후 시야각 없이 타겟을 유지할 근접 거리
     [SerializeField] private float attackCooldown = 2.0f;              // 한 번의 콤보 후 다시 공격 가능한 시간
+    [SerializeField] private bool startCooldownAfterCombo = false;     // 기존 프리팹 호환을 유지하면서 콤보 종료 후부터 쿨다운을 셀지 여부
 
     [SerializeField] private float firstSlashTelegraphTime = 0.35f;    // 공격 애니메이션을 시작하기 전 선딜 시간
     [SerializeField] private float telegraphTurnSpeed = 360.0f;        // 선딜 중 플레이어를 따라 회전할 초당 최대 각도
@@ -31,12 +32,17 @@ public class EnemyCombat
     [SerializeField] private float secondSlashDamage = 12.0f;          // 2타 피해량
     [SerializeField] private float secondSlashTurnLimit = 25.0f;       // 2타 직전 보정 가능한 최대 회전 각도
 
+    [SerializeField] private int[] AttackCue_AudioIDPool;              // 공격 시작 사운드 ID 풀
+    [SerializeField] private int[] firstSlash_AudioIDPool;             // 1타 사운드 ID 풀
+    [SerializeField] private int[] secondSlash_AudioIDPool;            // 2타 사운드 ID 풀
+
     [NonSerialized] private float attackStartRangeSqr;                 // 공격 시작 거리 제곱값 캐시
     [NonSerialized] private float attackHitRangeSqr;                   // 실제 타격 거리 제곱값 캐시
     [NonSerialized] private float closeCombatAwarenessRangeSqr;        // 근접 타겟 유지 거리 제곱값 캐시
     [NonSerialized] private float nextAttackAvailableTime;             // 다음 공격 가능 시각
     [NonSerialized] private float currentSlashDamage;                  // 현재 공격 단계에서 적용할 피해량
     [NonSerialized] private bool hasAppliedCurrentSlashDamage;         // 현재 타격 단계 피해 적용 여부
+    [NonSerialized] private float lastAttackFinishedTime = float.NegativeInfinity; // 마지막 공격 종료 시각
 
     public void OnValidate()
     {
@@ -70,12 +76,30 @@ public class EnemyCombat
     }
 
     /// <summary>
+    /// 공격 쿨다운과 무관하게 대상이 공격 시작 거리 안에 있는지만 확인합니다.
+    /// 추격 중인 적이 쿨다운 동안 플레이어 중심까지 파고들지 않도록 정지 판정에 사용합니다.
+    /// </summary>
+    public bool IsWithinAttackStartRange(float sqrDistToTarget)
+    {
+        return sqrDistToTarget <= attackStartRangeSqr;
+    }
+
+    /// <summary>
     /// 이미 교전 중인 타겟을 시야각과 무관하게 유지할 수 있는 근접 거리인지 확인합니다.
     /// 최초 감지에는 사용하지 않으며, 플레이어가 에너미 주위를 돌 때 전투가 끊기는 현상만 방지합니다.
     /// </summary>
     public bool IsWithinCloseCombatAwareness(float sqrDistToTarget)
     {
         return sqrDistToTarget <= closeCombatAwarenessRangeSqr;
+    }
+
+    /// <summary>
+    /// 공격이 끝난 직후 짧은 재정렬 시간 안에 있는지 확인합니다.
+    /// EnemyBrain이 이 시간 동안 복귀/차단 이동보다 플레이어 재추적을 우선하도록 사용합니다.
+    /// </summary>
+    public bool IsInPostAttackRepositionGrace(float graceDuration)
+    {
+        return graceDuration > 0.0f && Time.time - lastAttackFinishedTime <= graceDuration;
     }
 
     /// <summary>
@@ -96,7 +120,10 @@ public class EnemyCombat
             yield break;
         }
 
-        nextAttackAvailableTime = Time.time + attackCooldown;
+        if (!startCooldownAfterCombo)
+        {
+            nextAttackAvailableTime = Time.time + attackCooldown;
+        }
         status.SetNowState(EnemyStatus.EnemyState.Attack);
         status.SetIsAttacking(true);
 
@@ -124,6 +151,10 @@ public class EnemyCombat
                 yield return null;
             }
         }
+
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 예고 지점에서 3D 오디오 재생
+        int cueAudioID = AttackCue_AudioIDPool[UnityEngine.Random.Range(0, AttackCue_AudioIDPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(cueAudioID, self.transform.position);
 
         // 예고 동작 도중 타겟이 사망했을 수 있으므로 공격 애니메이션을 시작하기 직전에 다시 검사합니다.
         if (!EnemyPerception.IsTargetAvailable(target))
@@ -182,6 +213,16 @@ public class EnemyCombat
             locomotion.FacePositionLimited(self, target.position, secondSlashTurnLimit, onLookDirEvent);
         }
 
+        // 사운드 재생 이벤트를 AudioManager에 전달하여 공격 이벤트 시작 지점에서 3D 오디오 재생
+        int[] atkAudioPool = swingIndex switch
+        {
+            0 => firstSlash_AudioIDPool,
+            1 => secondSlash_AudioIDPool,
+            _ => firstSlash_AudioIDPool
+        };
+        int atkAudioID = atkAudioPool[UnityEngine.Random.Range(0, atkAudioPool.Length)];
+        GlobalEventBus.OnPlay3DSoundRequested?.Invoke(atkAudioID, self.position);
+
         currentSlashDamage = swingDamage;
         hasAppliedCurrentSlashDamage = false;
 
@@ -210,12 +251,20 @@ public class EnemyCombat
         }
 
         Vector3 origin = attackOrigin != null ? attackOrigin.position : self.position;
-        if (EnemyMathUtility.GetPlanarSqrDistance(origin, target.position) > attackHitRangeSqr)
+        Vector3 bodyOrigin = self != null ? self.position : origin;
+
+        // HitRange가 몸 앞쪽에 배치된 적은 플레이어가 너무 가까이 붙었을 때
+        // 몸 기준으로는 근접 상태지만 HitRange 기준으로는 오히려 범위 밖이 될 수 있습니다.
+        // 기존 전방 판정은 유지하되, 초근접 상황에서는 몸 중심 기준 거리도 함께 허용합니다.
+        bool isInsideHitOriginRange = EnemyMathUtility.GetPlanarSqrDistance(origin, target.position) <= attackHitRangeSqr;
+        bool isInsideBodyRange = EnemyMathUtility.GetPlanarSqrDistance(bodyOrigin, target.position) <= attackHitRangeSqr;
+        if (!isInsideHitOriginRange && !isInsideBodyRange)
         {
             return;
         }
 
-        if (IsAttackBlockedByObstacle(origin, target.position))
+        Vector3 damageCheckOrigin = isInsideHitOriginRange ? origin : bodyOrigin;
+        if (IsAttackBlockedByObstacle(damageCheckOrigin, target.position))
         {
             return;
         }
@@ -245,6 +294,12 @@ public class EnemyCombat
     private void FinishAttack(NavMeshAgent agent, EnemyStatus status)
     {
         ClearRuntimeState();
+        lastAttackFinishedTime = Time.time;
+
+        if (startCooldownAfterCombo)
+        {
+            nextAttackAvailableTime = Time.time + attackCooldown;
+        }
 
         if (status != null)
         {
