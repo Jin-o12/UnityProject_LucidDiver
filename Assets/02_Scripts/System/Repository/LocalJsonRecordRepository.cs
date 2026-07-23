@@ -10,6 +10,8 @@ public class FlatRecordData
     public string CharacterName;
     public int RequiredLevel;
     public string RecordName;
+    public string MainImage;
+    public string BackgroundImage;
     public int DialogID;
     public string Speaker;
     public string Text;
@@ -39,6 +41,8 @@ public class LocalJsonRecordRepository : IRecordRepository
                         CharacterTID = data.CharacterTID,
                         CharacterName = data.CharacterName,
                         RecordNames = new Dictionary<int, string>(),
+                        MainImages = new Dictionary<int, string>(),
+                        BackgroundImages = new Dictionary<int, string>(),
                         Records = new Dictionary<int, List<RecordLine>>()
                     };
                 }
@@ -47,6 +51,16 @@ public class LocalJsonRecordRepository : IRecordRepository
                 if (!recordDataDictionary[data.CharacterTID].RecordNames.ContainsKey(data.RequiredLevel))
                 {
                     recordDataDictionary[data.CharacterTID].RecordNames[data.RequiredLevel] = data.RecordName;
+                }
+
+                if (!recordDataDictionary[data.CharacterTID].MainImages.ContainsKey(data.RequiredLevel))
+                {
+                    recordDataDictionary[data.CharacterTID].MainImages[data.RequiredLevel] = data.MainImage;
+                }
+
+                if (!recordDataDictionary[data.CharacterTID].BackgroundImages.ContainsKey(data.RequiredLevel))
+                {
+                    recordDataDictionary[data.CharacterTID].BackgroundImages[data.RequiredLevel] = data.BackgroundImage;
                 }
 
                 // 해당 캐릭터의 Records 안에 현재 해금 레벨(RequiredLevel) 리스트가 없으면 생성
@@ -181,5 +195,31 @@ public class LocalJsonRecordRepository : IRecordRepository
             }
         }
         return $"심상 기록 {requiredLevel:D2}";
+    }
+
+    /* 특정 레벨에 맞는 기록의 메인 이미지 주소를 뽑아오는 함수 */
+    public string GetRecordMainImage(int charTID, int requiredLevel)
+    {
+        if (recordDataDictionary.TryGetValue(charTID, out CharacterRecordData data))
+        {
+            if (data.MainImages.TryGetValue(requiredLevel, out string mainImage))
+            {
+                return mainImage;
+            }
+        }
+        return string.Empty;
+    }
+
+    /* 특정 레벨에 맞는 기록의 배경 이미지 주소를 뽑아오는 함수 */
+    public string GetRecordBackgroundImage(int charTID, int requiredLevel)
+    {
+        if (recordDataDictionary.TryGetValue(charTID, out CharacterRecordData data))
+        {
+            if (data.BackgroundImages.TryGetValue(requiredLevel, out string bgImage))
+            {
+                return bgImage;
+            }
+        }
+        return string.Empty;
     }
 }

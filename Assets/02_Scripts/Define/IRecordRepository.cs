@@ -19,4 +19,10 @@ public interface IRecordRepository
 
     /* 특정 레벨에 맞는 기록의 제목(RecordName)을 뽑아오는 함수 */
     string GetRecordName(int charTID, int requiredLevel);
+
+    /* 특정 레벨에 맞는 기록의 메인 이미지 주소를 뽑아오는 함수 */
+    string GetRecordMainImage(int charTID, int requiredLevel);
+
+    /* 특정 레벨에 맞는 기록의 배경 이미지 주소를 뽑아오는 함수 */
+    string GetRecordBackgroundImage(int charTID, int requiredLevel);
 }

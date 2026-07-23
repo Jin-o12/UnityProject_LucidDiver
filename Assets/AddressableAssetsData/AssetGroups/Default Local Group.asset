@@ -17,6 +17,11 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: c50e6a64479f53b419454afd384ff002
   m_SerializeEntries:
+  - m_GUID: 01417ad3311455f42a87523089ee4870
+    m_Address: Record_Background_Yuan_02
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0777bc22e9e6ace47a89e97740ea56e9
     m_Address: HCFX_Hit_08
     m_ReadOnly: 0
@@ -54,6 +59,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1fe93c7a2ac68014b9a8dc97c90a56c5
     m_Address: UI_Icon_Rare_CartWheel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 22e52e9160a8cba479b2c0a0ee86c343
+    m_Address: Record_Yuan_04
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -137,6 +147,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f0ccf00ca0d91b41919c35c0186cd43
+    m_Address: Record_Background_Yuan_01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8612b29c6b4e23c4a9a6f4053f9a155b
     m_Address: HCFX_Buff_Up
     m_ReadOnly: 0
@@ -182,6 +197,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a0fd012b42ea66544828a6979410e3a7
+    m_Address: Record_Background_Yuan_04
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a9af36137c0e6d34f80adddb7d955da7
     m_Address: HCFX_Poison_01
     m_ReadOnly: 0
@@ -199,6 +219,21 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b28cb3f6c6e0a9546ace9b3e059b7390
     m_Address: Prefab_1_PrismGrenade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b334cc83de56cea44a0e9cb327bba5e4
+    m_Address: Record_Yuan_02
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b6588f6cb99ee89438a89a41be6f0997
+    m_Address: Record_Yuan_01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b77e4d01f795cdd43a15d66a7ba85f41
+    m_Address: Record_Background_Yuan_03
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -242,6 +277,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e8527e1d81e4461daf9ec956a314cc6f
+    m_Address: VFX_Player_Muzzle_HDR
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ebb8aafa1f5669b4dbae1bd94495215a
     m_Address: HCFX_Explosion_01
     m_ReadOnly: 0
@@ -249,11 +289,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ed0da22508f7f5c449639019342ed67e
     m_Address: HCFX_Flash_01
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e8527e1d81e4461daf9ec956a314cc6f
-    m_Address: VFX_Player_Muzzle_HDR
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -274,6 +309,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fb902b28974cf4a4fab2e16114c9c1cf
     m_Address: Image_101_testGun
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: feb94914d0114594bbb98eb44a5723aa
+    m_Address: Record_Yuan_03
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

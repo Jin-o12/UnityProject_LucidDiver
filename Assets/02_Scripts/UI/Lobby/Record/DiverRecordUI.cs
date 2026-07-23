@@ -231,7 +231,9 @@ public class DiverRecordUI : MonoBehaviour
                     bool isViewed = charSaveData.viewedRecordLevels != null && charSaveData.viewedRecordLevels.Contains(reqLevel);
                     bool showNewMark = isUnlocked && !isViewed;
                     
-                    cardItem.Setup(isUnlocked, cardTitle, cardDesc, index, showNewMark, () => OnClickRecord(cardTitle, charTID, reqLevel));
+                    string mainImageAddress = recordRepo.GetRecordMainImage(charTID, reqLevel);
+                    
+                    cardItem.Setup(isUnlocked, cardTitle, cardDesc, index, showNewMark, mainImageAddress, () => OnClickRecord(cardTitle, charTID, reqLevel));
                 }
             }
         }

@@ -63,7 +63,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -335,6 +335,7 @@ MonoBehaviour:
   textMemoryLogBody: {fileID: 1072949847010738341}
   textMemoryLogIndex: {fileID: 7238179973765292818}
   imageMemoryLog: {fileID: 1713665715897170057}
+  imageRecordBackground: {fileID: 3215307455553487949}
   buttonClose: {fileID: 6598520344948412414}
   buttonNext: {fileID: 6857435435541918517}
   buttonLog: {fileID: 1117540750283653330}

@@ -11,6 +11,7 @@ public class RecordCardPopUpUI : MonoBehaviour
 
     [Header("Image")]
     [SerializeField] private Image imageMemoryLog;                  // {기록 이미지}
+    [SerializeField] private Image imageRecordBackground;           // 기록 배경 이미지
 
     [Header("Buttons")]
     [SerializeField] private Button buttonClose;                    // 닫기 버튼
@@ -92,6 +93,9 @@ public class RecordCardPopUpUI : MonoBehaviour
 
         // {기록 제목 및 본문 텍스트, 이미지를 출력한다}
         PrintDialogue(charData.charName, 0);
+
+        string bgImageAddress = recordRepo.GetRecordBackgroundImage(nowCharacterID, currentReqLevel);
+        LoadBackgroundImageAsync(bgImageAddress);
     }
 
     // 다음 텍스트 보기 버튼 터치 시 ID를 1칸 뒤로
@@ -238,6 +242,16 @@ public class RecordCardPopUpUI : MonoBehaviour
         else
         {
             Debug.LogWarning("RecordLogUI를 찾을 수 없습니다. 자식 오브젝트로 존재하는지 확인하세요.");
+        }
+    }
+
+    private async void LoadBackgroundImageAsync(string address)
+    {
+        if (string.IsNullOrEmpty(address)) return;
+        Sprite sprite = await AddressableLoader.LoadAssetAsync<Sprite>(address);
+        if (sprite != null && imageRecordBackground != null)
+        {
+            imageRecordBackground.sprite = sprite;
         }
     }
 }
