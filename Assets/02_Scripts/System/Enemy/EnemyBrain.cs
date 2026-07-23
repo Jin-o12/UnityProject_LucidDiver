@@ -21,6 +21,7 @@ public class EnemyBrain
     [SerializeField, Min(0f)] private float sightLossGraceTime = 1f;         // 시야가 끊겨도 어그로 감소를 유예하는 시간
     [SerializeField, Min(0f)] private float aggroDecayPerSecond = 25f;       // 일반 추적 구간에서 초당 감소하는 어그로
     [SerializeField, Min(0f)] private float aggroRecoveryPerSecond = 50f;    // 추적 허용 구간에서 타겟을 볼 때 초당 회복하는 어그로
+    [SerializeField, Min(0f)] private float lostTargetSearchDuration = 3.0f;  // Time spent searching after losing the player
     [SerializeField, Min(0f)] private float chaseLeashDistance = 16f;        // 루트에서 이 거리까지 새 추적과 어그로 회복을 허용
     [SerializeField, Min(0f)] private float hardReturnDistance = 24f;        // 루트에서 이 거리를 넘으면 시야와 무관하게 즉시 복귀
 
@@ -40,6 +41,8 @@ public class EnemyBrain
     [NonSerialized] private float currentAggro;                    // 현재 추적 유지에 남아 있는 어그로
     [NonSerialized] private float sightLostStartTime = -1f;        // 시야가 최초로 끊긴 시각
     [NonSerialized] private float lastTickTime;                     // 프레임 변화와 무관한 어그로 계산용 이전 판단 시각
+    [NonSerialized] private bool isSearchingLastKnownTarget;
+    [NonSerialized] private float lostTargetSearchEndTime;
     [NonSerialized] private NavMeshPath distributedApproachPath;    // 접근 슬롯의 경로 유효성 검사에 재사용할 NavMesh 경로
 
     /// <summary>
@@ -62,6 +65,7 @@ public class EnemyBrain
         sightLossGraceTime = Mathf.Max(0f, sightLossGraceTime);
         aggroDecayPerSecond = Mathf.Max(0f, aggroDecayPerSecond);
         aggroRecoveryPerSecond = Mathf.Max(0f, aggroRecoveryPerSecond);
+        lostTargetSearchDuration = Mathf.Max(0f, lostTargetSearchDuration);
         chaseLeashDistance = Mathf.Max(0f, chaseLeashDistance);
         hardReturnDistance = Mathf.Max(chaseLeashDistance, hardReturnDistance);
         distributedApproachRadius = Mathf.Max(0.1f, distributedApproachRadius);
@@ -97,6 +101,8 @@ public class EnemyBrain
         currentTarget = null;
         currentAggro = 0f;
         sightLostStartTime = -1f;
+        isSearchingLastKnownTarget = false;
+        lostTargetSearchEndTime = 0f;
     }
 
     /// <summary>
@@ -250,6 +256,8 @@ public class EnemyBrain
         {
             memory.UpdateTargetTracking(currentTarget);
             sightLostStartTime = -1f;
+            isSearchingLastKnownTarget = false;
+            lostTargetSearchEndTime = 0f;
             currentAggro = Mathf.Min(maxAggro, currentAggro + aggroRecoveryPerSecond * tickDelta);
 
             // 근접 교전에서는 이동 속도가 거의 0이어도 플레이어를 향해 회전해
@@ -281,6 +289,21 @@ public class EnemyBrain
 
         if (currentAggro <= 0f)
         {
+            if (!isSearchingLastKnownTarget)
+            {
+                isSearchingLastKnownTarget = true;
+                lostTargetSearchEndTime = now + lostTargetSearchDuration;
+                memory.ClearChasePlan();
+            }
+
+            if (now < lostTargetSearchEndTime)
+            {
+                locomotion.Stop(agent, onWalkEvent);
+                locomotion.FacePosition(self, memory.LastKnownTargetPosition, onLookDirEvent);
+                status.SetNowState(EnemyStatus.EnemyState.Investigate);
+                return;
+            }
+
             StopChaseAndReturn(self.position, agent, status, memory, locomotion, onWalkEvent);
             return;
         }
@@ -535,6 +558,8 @@ public class EnemyBrain
         currentTarget = null;
         currentAggro = 0f;
         sightLostStartTime = -1f;
+        isSearchingLastKnownTarget = false;
+        lostTargetSearchEndTime = 0f;
         memory.ClearTargetTracking();
         memory.ClearChasePlan();
         memory.MarkNeedsReturnToPatrol(currentPosition);
@@ -559,6 +584,8 @@ public class EnemyBrain
             currentTarget = null;
             currentAggro = 0.0f;
             sightLostStartTime = -1.0f;
+            isSearchingLastKnownTarget = false;
+            lostTargetSearchEndTime = 0.0f;
             memory.ClearTargetTracking();
             memory.ClearChasePlan();
         }

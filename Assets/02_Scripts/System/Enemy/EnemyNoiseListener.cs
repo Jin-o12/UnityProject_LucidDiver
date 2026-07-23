@@ -9,9 +9,9 @@ using UnityEngine.AI;
 [Serializable]
 public class EnemyNoiseListener
 {
-    [SerializeField] private float maxInvestigateMoveTime = 3.0f;            // 조사 지점에 도착하지 못해도 복귀로 넘기는 최대 이동 시간
+    [SerializeField] private float maxInvestigateMoveTime = 5.0f;            // 조사 지점에 도착하지 못해도 복귀로 넘기는 최대 이동 시간
     [SerializeField] private float investigateStopDistance = 1.0f;           // 조사 지점에 도착했다고 보는 거리
-    [SerializeField] private float investigateDuration = 2.0f;               // 도착 후 주변을 살피는 시간
+    [SerializeField] private float investigateDuration = 3.0f;               // 도착 후 주변을 살피는 시간
     [SerializeField] private float investigateNavMeshSampleDistance = 2.5f;  // 조사 위치를 NavMesh 위로 보정하는 반경
 
     [NonSerialized] private float investigateStopDistanceSqr;                // 도착 판정 거리 제곱 캐시
