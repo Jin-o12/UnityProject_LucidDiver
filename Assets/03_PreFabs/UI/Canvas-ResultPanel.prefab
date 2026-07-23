@@ -2108,6 +2108,7 @@ GameObject:
   - component: {fileID: 6224067265433910972}
   - component: {fileID: 8859081846624320067}
   - component: {fileID: -3431454728824534225}
+  - component: {fileID: 1416786775474959133}
   m_Layer: 0
   m_Name: Canvas-ResultPanel
   m_TagString: Untagged
@@ -2237,8 +2238,26 @@ MonoBehaviour:
     type: 3}
   safeSlotContainer: {fileID: 2878784456998104266}
   safeSlotsObj: []
+  panel: {fileID: 4559443705035027757}
+  standing: {fileID: 3608742794750034403}
+  lobbyButton: {fileID: 898874431428710601}
   slotPrefab: {fileID: 1011526392357912481, guid: b338405f1c6f0044aa1e6255d1aa0fab,
     type: 3}
+  initTime: 0.25
+  initScale: 0.75
+  initFade: 0.5
+--- !u!225 &1416786775474959133
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7265668968344406401}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &8040929695618051130
 GameObject:
   m_ObjectHideFlags: 0

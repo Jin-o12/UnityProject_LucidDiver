@@ -5981,6 +5981,7 @@ GameObject:
   - component: {fileID: 8859081846624320067}
   - component: {fileID: 3762894972883477436}
   - component: {fileID: 5393701096450416546}
+  - component: {fileID: 5408865725147969908}
   m_Layer: 0
   m_Name: Canvas-InventoryUI
   m_TagString: Untagged
@@ -6084,6 +6085,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0060f6fb8c72b74439933b440e5a5046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  inventoryPanel: {fileID: 4559443705035027757}
+  dropPanel: {fileID: 112312518999857383}
+  initScale: 0.75
+  initTime: 0.25
   slotContainer: {fileID: 5163332189541423551}
   safeSlotContainer: {fileID: 3110337139917838428}
   slotsObj: []
@@ -6117,6 +6122,18 @@ MonoBehaviour:
   - {fileID: 4557007515610909590}
   - {fileID: 6304253178301531246}
   - {fileID: 265944843795236561}
+--- !u!225 &5408865725147969908
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7265668968344406401}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &7293407977567942889
 GameObject:
   m_ObjectHideFlags: 0

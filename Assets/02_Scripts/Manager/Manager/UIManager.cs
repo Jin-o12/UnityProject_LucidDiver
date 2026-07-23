@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -115,6 +116,7 @@ public class UIManager : MonoBehaviour
 
     /// <summary>
     /// 지정한 타입의 UI를 닫습니다.
+    /// 애니메이션을 지원하는 경우 PlayCloseAnimation을 호출하고 완료 콜백에서 실제 비활성화를 수행합니다.
     /// </summary>
     public void Close<UiType>() where UiType: MonoBehaviour
     {
@@ -122,9 +124,27 @@ public class UIManager : MonoBehaviour
             return;
 
         if(!uiInstances.TryGetValue(typeof(UiType), out var ui) || ui == null) return;
+        // PlayCloseAnimation(Action) 메서드가 있으면 호출하여 완료 콜백에서 비활성화 및 스택 제거를 수행합니다.
+        MethodInfo mi = ui.GetType().GetMethod("PlayCloseAnimation", new Type[] { typeof(Action) });
+        if (mi != null)
+        {
+            // 스택/포커스는 즉시 반영: 애니메이션은 비동기로 재생하되 스택에서 먼저 제거
+            if (uiStack.Contains(ui)) RemoveFromStack(ui);
 
-        ui.gameObject.SetActive(false);
-        if(uiStack.Contains(ui)) RemoveFromStack(ui);
+            mi.Invoke(ui, new object[] {
+                (Action)(() =>
+                {
+                    // 애니메이션 완료 시에는 안전하게 비활성화만 수행
+                    if (ui != null) ui.gameObject.SetActive(false);
+                })
+            });
+        }
+        else
+        {
+            // 애니메이션 미지원 UI는 즉시 비활성화
+            ui.gameObject.SetActive(false);
+            if (uiStack.Contains(ui)) RemoveFromStack(ui);
+        }
     }
 
     /// <summary>
@@ -135,14 +155,34 @@ public class UIManager : MonoBehaviour
         if(this == null)
             return;
 
-        if (uiStack.TryPop(out MonoBehaviour topUI))
+        if (!uiStack.TryPeek(out MonoBehaviour topUI) || topUI == null)
         {
-            if(topUI != null)
-                topUI.gameObject.SetActive(false);
+            Debug.LogWarning("현재 닫을 UI가 없습니다.");
+            return;
+        }
+
+        // PlayCloseAnimation(Action) 메서드를 가진 UI라면 즉시 스택에서 팝하고 애니메이션만 재생하도록 변경
+        MethodInfo mi = topUI.GetType().GetMethod("PlayCloseAnimation", new Type[] { typeof(Action) });
+        if (mi != null)
+        {
+            // 최상단이면 즉시 팝하여 다른 닫기 요청/열기에서 반영되도록 함
+            if (uiStack.TryPeek(out MonoBehaviour currentTop) && currentTop == topUI)
+                uiStack.TryPop(out _);
+
+            mi.Invoke(topUI, new object[] {
+                (Action)(() =>
+                {
+                    // 애니메이션 완료 시 안전하게 비활성화
+                    if (topUI != null)
+                        topUI.gameObject.SetActive(false);
+                })
+            });
         }
         else
         {
-            Debug.LogWarning("현재 닫을 UI가 없습니다.");
+            // 애니메이션 미지원 UI는 즉시 팝하고 비활성화
+            if (uiStack.TryPop(out MonoBehaviour popped) && popped != null)
+                popped.gameObject.SetActive(false);
         }
     }
 

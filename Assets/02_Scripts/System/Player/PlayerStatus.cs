@@ -319,6 +319,8 @@ public class PlayerStatus : MonoBehaviour, IEffectReceiver
         {
             lucidMark?.ApplyHit(transform, gameObject);
         }
+        // 피해 입을 시 DOTween 이벤트
+        GlobalEventBus.OnHitDOTween.Invoke(0.5f, dmg);
         // 피해 입을 시 애니메이션 재생 이벤트
         GlobalEventBus.OnHitAnimate?.Invoke();
         // 피해 입을 시 사운드 재생 이벤트

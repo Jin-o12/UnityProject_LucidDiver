@@ -122,8 +122,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   statusUI: {fileID: 0}
   quickSlotGroupUI: {fileID: 0}
-  hudCanvasGroup: {fileID: 0}
   skillUI: {fileID: 0}
+  statusRect: {fileID: 107980683258443544}
+  quickslotRect: {fileID: 5096088999163364644}
+  skillRect: {fileID: 6564480947249931385}
+  hudCanvasGroup: {fileID: 0}
 --- !u!114 &935967920800905343
 MonoBehaviour:
   m_ObjectHideFlags: 0

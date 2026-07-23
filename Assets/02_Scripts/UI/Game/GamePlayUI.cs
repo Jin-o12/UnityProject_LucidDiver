@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DG.Tweening;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,10 +8,13 @@ public class GamePlayUI : MonoBehaviour
     [Header("하위 UI 판넬 컴포넌트")]
     [SerializeField] PlayerStatusUI statusUI;
     [SerializeField] QuickSlotGroupUI quickSlotGroupUI;
+    [SerializeField] SkillPlayUI skillUI;
+    [SerializeField] RectTransform statusRect;
+    [SerializeField] RectTransform quickslotRect;
+    [SerializeField] RectTransform skillRect;
     [SerializeField] private CanvasGroup hudCanvasGroup;
 
     private const float DefaultHUDAlpha = 1.0f;
-    [SerializeField] SkillPlayUI skillUI;
 
     private void Awake()
     {
@@ -37,11 +41,13 @@ public class GamePlayUI : MonoBehaviour
     private void OnEnable()
     {
         GlobalEventBus.OnGameplayHUDAlphaRequested += SetHUDAlpha;
+        GlobalEventBus.OnHitDOTween += ShakeHUD;
     }
 
     private void OnDisable()
     {
         GlobalEventBus.OnGameplayHUDAlphaRequested -= SetHUDAlpha;
+        GlobalEventBus.OnHitDOTween -= ShakeHUD;
         SetHUDAlpha(DefaultHUDAlpha);
     }
 
@@ -75,5 +81,13 @@ public class GamePlayUI : MonoBehaviour
         // PlayerInventory.RestoreFromSave가 GamePlayUI 생성보다 먼저 실행되면
         // 퀵슬롯 갱신 이벤트를 놓칠 수 있으므로 UI 생성 후 현재 상태를 한 번 직접 반영한다.
         quickSlotGroupUI.SyncFromInventory(playerInventory);
+    }
+
+    private void ShakeHUD(float duratoin, float power)
+    {
+        DOTween.Sequence()
+        .Append(statusRect.DOShakeAnchorPos(duratoin, power))
+        .Join(quickslotRect.DOShakeAnchorPos(duratoin, power))
+        .Join(skillRect.DOShakeAnchorPos(duratoin, power));
     }
 }

@@ -1005,6 +1005,7 @@ GameObject:
   - component: {fileID: 7386172078509379620}
   - component: {fileID: 9162471870771422116}
   - component: {fileID: 328318661470897316}
+  - component: {fileID: 1361480554848356897}
   m_Layer: 5
   m_Name: Canvas-SettingPopupPanel
   m_TagString: Untagged
@@ -1108,12 +1109,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   closeButton: {fileID: 7585126747673513984}
+  panel: {fileID: 79865997443905015}
+  initTime: 0.5
+  initScale: 0.5
+  initColor: {r: 0.08, g: 0.1, b: 0.15, a: 0.5}
+  originColor: {r: 0.08, g: 0.1, b: 0.15, a: 1}
   masterSlider: {fileID: 4983004637368405033}
   bgmSlider: {fileID: 5484357035216416867}
   sfxSlider: {fileID: 6427679792200246956}
   uiSlider: {fileID: 7513416444431888891}
   ambSlider: {fileID: 4615379821516747933}
   fullscreenToggle: {fileID: 6334808401278592002}
+--- !u!225 &1361480554848356897
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2267654377530830183}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &2431187324214703297
 GameObject:
   m_ObjectHideFlags: 0

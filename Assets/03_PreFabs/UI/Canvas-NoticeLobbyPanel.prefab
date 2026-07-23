@@ -65,8 +65,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uAD00\uC81C\uC2E4\uB85C \uB3CC\uC544\uAC08 \uC2DC \uD604\uC7AC \uC18C\uC9C0 \uC911\uC778
-    \uC544\uC774\uD15C\uC744 \uBAA8\uB450 \uC783\uC2B5\uB2C8\uB2E4.\n\uADF8\uB798\uB3C4 \uB3CC\uC544\uAC00\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?"
+  m_text: "\uAD00\uC81C\uC2E4\uB85C \uB3CC\uC544\uAC08 \uC2DC \uD604\uC7AC \uC18C\uC9C0
+    \uC911\uC778 \uC544\uC774\uD15C\uC744 \uBAA8\uB450 \uC783\uC2B5\uB2C8\uB2E4.\n\uADF8\uB798\uB3C4
+    \uB3CC\uC544\uAC00\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8a4fc9544deedae4297de14e65d92bac, type: 2}
   m_sharedMaterial: {fileID: -899377085168562102, guid: 8a4fc9544deedae4297de14e65d92bac,
@@ -391,6 +392,7 @@ GameObject:
   - component: {fileID: 7386172078509379620}
   - component: {fileID: 9162471870771422116}
   - component: {fileID: 7443858396265720651}
+  - component: {fileID: -1670545241700420261}
   m_Layer: 5
   m_Name: Canvas-NoticeLobbyPanel
   m_TagString: Untagged
@@ -493,8 +495,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20f49a35a9ee7cf44894e74be9d5d8fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  panel: {fileID: 79865997443905015}
+  initTime: 0.5
+  initScale: 0.75
+  initFade: 0.5
   closeButton: {fileID: 263351199549280023}
   lobbyButton: {fileID: 6462332958943941034}
+--- !u!225 &-1670545241700420261
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2267654377530830183}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &3191097599386578165
 GameObject:
   m_ObjectHideFlags: 0
@@ -513,7 +531,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &389809436990473014
 RectTransform:
   m_ObjectHideFlags: 0
@@ -840,7 +858,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 0}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.5
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
