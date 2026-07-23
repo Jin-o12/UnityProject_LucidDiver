@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Security.Cryptography;
+﻿using DG.Tweening;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -40,15 +40,48 @@ public class ResultUI : MonoBehaviour
     public List<GameObject> safeSlotsObj = new();   //각성 보존 슬롯 리스트
 
     [Header("UI 리소스")]
+    public RectTransform panel;     //패널
+    public GameObject standing;     //스탠딩 이미지
+    public GameObject lobbyButton;  //로비로 돌아가기 버튼
     public GameObject slotPrefab;   //각성 보존 슬롯 칸 프리팹
+    CanvasGroup panelGroup;                 //연출 적용 캔버스 그룹
+    public float initTime = 0.5f;           //연출 적용 시간
+    public float initScale = 0.75f;         //연출용 사이즈
+    public float initFade = 0.5f;           //연출용 투명도
 
     // JSON 데이터 저장소 접근용 리포지토리 인스턴스
     private IItemDataRepository itemRepo;
 
+    private void Awake()
+    {
+        panelGroup = GetComponent<CanvasGroup>();
+        DOTween.Init();
+    }
+
     private void OnEnable()
     {
+        panel.localScale = Vector3.one * initScale;
+        standing.SetActive(false);
+        lobbyButton.SetActive(false);
         itemRepo = new LocalJsonItemRepository();
+
         RefreshResult();
+
+        // Vignette 조절 이벤트를 호출
+        GlobalEventBus.OnVignetteChange?.Invoke(0.5f, 0.2f, true);
+
+        /* 정보 갱신 후 DOTween 애니메이션 재생 */
+        panel.DOKill();
+        panelGroup.alpha = initFade;
+        DOTween.Sequence().Append(panel.DOScale(1f, initTime)).
+            Join(lobbyButton.GetComponent<Image>().DOFade(1f, initTime)).
+            Join(standing.GetComponent<Image>().DOFade(1f, initTime)).
+            Join(panelGroup.DOFade(1f, initTime))
+            .OnComplete(()=>
+            {
+                standing.SetActive(true);
+                lobbyButton.SetActive(true);
+            });
     }
 
     public void UpdateResultUI(bool _result)
@@ -255,9 +288,21 @@ public class ResultUI : MonoBehaviour
     {
         // 버튼 클릭 사운드 출력 이벤트를 호출
         GlobalEventBus.OnClickAudio?.Invoke(true);
-        // 로비로 돌아가기 이벤트를 호출
-        GlobalEventBus.OnReturnToLobby?.Invoke();
-        // LobbyScene으로 이동하기
-        GlobalEventBus.OnGoToLobbyScene?.Invoke();
+
+        // Vignette 조절 이벤트를 호출
+        GlobalEventBus.OnVignetteChange?.Invoke(0.25f, 0.2f, true);
+
+        // DOTween 애니메이션
+        DOTween.Sequence().Append(panel.DOScale(initScale, initTime)).
+            Join(lobbyButton.GetComponent<Image>().DOFade(0, initTime)).
+            Join(standing.GetComponent<Image>().DOFade(0, initTime)).
+            Join(panelGroup.DOFade(initFade, initTime)).
+            OnComplete(() =>
+            {
+                // 로비로 돌아가기 이벤트를 호출
+                GlobalEventBus.OnReturnToLobby?.Invoke();
+                // LobbyScene으로 이동하기
+                GlobalEventBus.OnGoToLobbyScene?.Invoke();
+            });
     }
 }

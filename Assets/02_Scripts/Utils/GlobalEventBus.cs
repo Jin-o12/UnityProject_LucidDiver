@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// 글로벌 이벤트 버스 클래스
 /// 게임 내에서 발생하는 다양한 이벤트를 중앙에서 관리하고 전달하는 역할을 합니다.
 /// </summary>
@@ -92,7 +92,7 @@ public class GlobalEventBus
     public static Action OnTooltipUIClose;                                  // 아이템 툴팁 UI를 닫음
     public static Action<bool> OnClickAudio;                                // UI 버튼 클릭 시 오디오 출력 요청: Action<유효한 클릭인지>
     public static Action OnInteractAudio;                                   // 캐릭터 상호작용 클릭 시 오디오 출력 요청
-    public static Action<float> OnGameplayHUDAlphaRequested;                 // 튜토리얼/연출 중 인게임 HUD 투명도 조절 요청: Action<alpha>
+    public static Action<float> OnGameplayHUDAlphaRequested;                // 튜토리얼/연출 중 인게임 HUD 투명도 조절 요청: Action<alpha>
     public static Action<float> OnPrintSprintCooltime;                      // 달리기 불가 상태 회복 시간 시작: Action<sprintRecoverTime>
     public static Action<float> OnPrintSkillCooltime;                       // 스킬 쿨타임 시작: Action<skillCooltime>
     public static Action<float> OnPrintEvadeCooltime;                       // 구르기 시작: Action<evadeCooltime>
@@ -102,6 +102,8 @@ public class GlobalEventBus
     public static Action OnCloseInGameMenuUI;                               // 인게임 ESC 메뉴 닫기 요청
     public static Action OnRequestCloseInventoryUI;                         // ESC 뒤로가기로 인벤토리 계열 UI 닫기 요청
     public static Action OnCloseTopUI;                                      // 가장 최상단의 UI를 종료하는 이벤트
+    public static Action<float, float> OnHitDOTween;                        // 피격 시 DOTween 효과를 발동: Action<이펙트 시간, 이펙트 강도>
+    public static Action<float, float, bool> OnVignetteChange;              // UI 오픈 시 Vignette 강도 변경: Action<intencity, Duration, ensureActive>
 
     /// <summary>
     /// 설정 관리 이벤트

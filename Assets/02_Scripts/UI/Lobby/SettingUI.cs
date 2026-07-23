@@ -1,10 +1,19 @@
-﻿using UnityEngine;
+﻿using DG.Tweening;
+using System;
+using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
 
-public class SettingUI : MonoBehaviour
+public class SettingUI : MonoBehaviour, ICloseAnimatable
 {
     [SerializeField] Button closeButton;    //팝업 닫기 버튼
+
+    [Header("DOTween 연출")]
+    [SerializeField] RectTransform panel;   //연출 적용 패널
+    CanvasGroup panelGroup;                 //연출 적용 캔버스 그룹
+    public float initTime = 0.5f;           //연출 적용 시간
+    public float initScale = 0.75f;         //연출용 사이즈
+    public float initFade = 0.5f;           //연출용 투명도
 
     [Header("볼륨 조절 UI")]
     [SerializeField] Slider masterSlider;   //전체 음량 조절
@@ -16,6 +25,12 @@ public class SettingUI : MonoBehaviour
     [Header("그래픽 설정 UI")]
     [SerializeField] Toggle fullscreenToggle;   //전체화면 토글
 
+    private void Awake()
+    {
+        panelGroup = GetComponent<CanvasGroup>();
+        DOTween.Init(true);
+    }
+
     private void Start()
     {
         // 첫 실행 시 볼륨 값을 불러와 UI 슬라이더에 반영 (이벤트 발생 방지)
@@ -24,7 +39,7 @@ public class SettingUI : MonoBehaviour
         if (sfxSlider != null) sfxSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat("SFXVolume", 0.5f));
         if (uiSlider != null) uiSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat("UIVolume", 0.5f));
         if (ambSlider != null) ambSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat("AmbVolume", 0.5f));
-        
+
         // 풀스크린 토글의 초기 값을 읽어 표기
         if (fullscreenToggle != null) fullscreenToggle.SetIsOnWithoutNotify(Screen.fullScreen);
 
@@ -40,6 +55,16 @@ public class SettingUI : MonoBehaviour
 
         // 팝업 닫기 버튼 이벤트 연결
         if (closeButton != null) closeButton.onClick.AddListener(ClosePopup);
+    }
+
+    void OnEnable()
+    {
+        /* DOTween 시퀀스로 스케일 애니메이션 재생 */
+        panel.localScale = Vector3.one * initScale;
+        panelGroup.alpha = initFade;
+        DOTween.Sequence().SetAutoKill(false).
+        Append(panelGroup.DOFade(1f, initTime)).
+        Join(panel.DOScale(1f, initTime));
     }
 
     private void OnDestroy()
@@ -101,6 +126,26 @@ public class SettingUI : MonoBehaviour
         // UI 터치 사운드 출력
         GlobalEventBus.OnClickAudio?.Invoke(true);
 
+        // 창 닫기 요청 이벤트
         GlobalEventBus.OnOpenSettingUI?.Invoke();
+    }
+
+    /* DOTween 시퀀스로 UI 닫기 애니메이션 재생 */
+    public void PlayCloseAnimation(Action onComplete)
+    {
+        if (panel == null)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        panel.localScale = Vector3.one;
+        DOTween.Sequence().SetAutoKill(false).
+            Append(panel.DOScale(initScale, initTime)).
+            Join(panelGroup.DOFade(initFade,initTime)).
+            OnComplete(() =>
+            {
+                onComplete?.Invoke();
+            });
     }
 }

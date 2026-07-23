@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1758906433279374308}
   - component: {fileID: 4917921550295287767}
   - component: {fileID: 6818993471665691721}
+  - component: {fileID: 130051258503644145}
   m_Layer: 0
   m_Name: Canvas-ChestUI
   m_TagString: Untagged
@@ -98,12 +99,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eaed61bbf184a0a4895ffa6b66a306bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  panel: {fileID: 2360994420225721997}
   slotContainer: {fileID: 7045797258690536838}
   slotPrefab: {fileID: 3843247715784475004, guid: 1e4fd0f82813cc344bab352669f913fe,
     type: 3}
   slotsObj: []
   closeButton: {fileID: 1532172716666132719}
   box_rummag_AudioIdPool: 6b290000
+  initScale: 0.75
+  initTime: 0.25
 --- !u!114 &6818993471665691721
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121,6 +125,18 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!225 &130051258503644145
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1625286815563743019}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &4729119894478524261
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,9 +1,8 @@
-﻿using System;
+﻿using DG.Tweening;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -11,9 +10,10 @@ using System.Threading.Tasks;
 /// ���� ������ ���� ������ �� ���� �����ϰ�,
 /// ���Ŀ��� ���� ������ �����ϴ� ������� �����Ѵ�.
 /// </summary>
-public class ChestUI : MonoBehaviour
+public class ChestUI : MonoBehaviour, ICloseAnimatable
 {
     [Header("Chest UI")]
+    [SerializeField] private RectTransform panel;               // 상자 UI 패널
     [SerializeField] private Transform slotContainer;           // 상자 슬롯 컨테이너
     [SerializeField] private GameObject slotPrefab;             // 슬롯 프리팹
     [SerializeField] private List<GameObject> slotsObj = new(); // 슬롯 인스턴스 리스트
@@ -28,6 +28,12 @@ public class ChestUI : MonoBehaviour
     // 저장 데이터 인터페이스
     private IItemDataRepository itemRepo;                       // 아이템 데이터 접근 인터페이스
 
+    // DOTween 연출용 변수
+    CanvasGroup panelGroup;                 //연출 적용 캔버스 그룹
+    public float initTime = 0.5f;           //연출 적용 시간
+    public float initScale = 0.75f;         //연출용 사이즈
+    public float initFade = 0.5f;           //연출용 투명도
+
     // 사운드 리스트
     private int RootSoundID_Legend = 10901;                     // 전설 아이템 획득 사운드
     private int RootSoundID_Rare = 10903;                       // 레어 아이템 획득 사운드
@@ -41,6 +47,9 @@ public class ChestUI : MonoBehaviour
 
         if (closeButton != null)
             closeButton.onClick.AddListener(CloseUI);
+
+        panelGroup = GetComponent<CanvasGroup>();
+        DOTween.Init();
     }
 
     private void OnEnable()
@@ -48,6 +57,14 @@ public class ChestUI : MonoBehaviour
         // 사운드 재생 이벤트를 AudioManager에 전달하여 2D 오디오 중지
         int boxRummagAudioID = box_rummag_AudioIdPool[UnityEngine.Random.Range(0, box_rummag_AudioIdPool.Length)];
         GlobalEventBus.OnPlay2DSoundRequested?.Invoke(boxRummagAudioID);
+
+        /* DOTween 애니메이션 재생 */
+        panel.DOKill();
+        panel.localScale = Vector3.one * initScale;
+        panelGroup.alpha = initFade;
+        DOTween.Sequence().
+            Append(panel.DOScale(1f, initTime)).
+            Join(panelGroup.DOFade(1f, initTime));
     }
 
     private void OnDisable()
@@ -72,6 +89,26 @@ public class ChestUI : MonoBehaviour
     /// ü��Ʈ UI�� ���� �����͸� �����Ѵ�.
     /// ���� ���� ������ŭ ������ �����, ������ �����Ѵ�.
     /// </summary>
+
+    /* DOTween 시퀀스로 UI 닫기 애니메이션 재생 */
+    public void PlayCloseAnimation(Action onComplete)
+    {
+        if (panel == null)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        panel.localScale = Vector3.one;
+        DOTween.Sequence().
+            Append(panel.DOScale(initScale, initTime)).
+            Join(panelGroup.DOFade(initFade, initTime)).
+            OnComplete(() =>
+            {
+                onComplete?.Invoke();
+            });
+    }
+
     public void Bind(ItemBox box, PlayerInventory inventory, Action closeRequested = null)
     {
         itemBox = box;
