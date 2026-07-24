@@ -36,7 +36,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private List<GameObject> uiPrefabs = new();
 
     private readonly Dictionary<Type, MonoBehaviour> uiInstances = new();
-    private readonly Stack<MonoBehaviour> uiStack = new();
+    public readonly Stack<MonoBehaviour> uiStack = new();
 
     private void Awake()
     {

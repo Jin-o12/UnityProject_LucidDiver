@@ -104,6 +104,7 @@ public class GlobalEventBus
     public static Action OnCloseTopUI;                                      // 가장 최상단의 UI를 종료하는 이벤트
     public static Action<float, float> OnHitDOTween;                        // 피격 시 DOTween 효과를 발동: Action<이펙트 시간, 이펙트 강도>
     public static Action<float, float, bool> OnVignetteChange;              // UI 오픈 시 Vignette 강도 변경: Action<intencity, Duration, ensureActive>
+    public static Action<bool> OnHideMenuUI;                                // 설정 메뉴 On/Off 시 연출 종료 후 게임 메뉴 UI를 숨김: Action<숨김OR해제>
 
     /// <summary>
     /// 설정 관리 이벤트

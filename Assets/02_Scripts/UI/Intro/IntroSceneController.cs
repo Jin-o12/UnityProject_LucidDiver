@@ -34,8 +34,6 @@ public class IntroSceneController : MonoBehaviour
     [Header("Title UI Elements")]
     [SerializeField] private TMP_Text tapToStartText;
     [SerializeField] private Button settingButton;          // SETTING 단일 버튼
-    [SerializeField] private GameObject settingPopupPanel;  // 설정 더미 팝업 패널
-    [SerializeField] private Button settingCloseButton;     // 설정 팝업 닫기 버튼
 
     private enum IntroState
     {
@@ -96,16 +94,6 @@ public class IntroSceneController : MonoBehaviour
         if (settingButton != null)
         {
             settingButton.onClick.AddListener(() => OpenSettingPopup());
-        }
-        if (settingCloseButton != null)
-        {
-            settingCloseButton.onClick.AddListener(() => CloseSettingPopup());
-        }
-
-        // 설정 팝업 초기화
-        if (settingPopupPanel != null)
-        {
-            settingPopupPanel.SetActive(false);
         }
 
         // 대기 및 비디오 로딩 가동 코루틴 실행
@@ -261,9 +249,6 @@ public class IntroSceneController : MonoBehaviour
         // 로딩 오버레이 작동 중에는 화면 입력 무시
         if (loadingOverlay != null && loadingOverlay.gameObject.activeSelf && loadingOverlay.alpha > 0.1f) return;
 
-        // 설정 창이 열려 있는 경우 탭 입력 및 씬 이동 무시
-        if (settingPopupPanel != null && settingPopupPanel.activeSelf) return;
-
         // 버튼 영역 클릭 시 화면 터치 처리 무시
         if (UnityEngine.EventSystems.EventSystem.current != null && 
             UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
@@ -357,25 +342,10 @@ public class IntroSceneController : MonoBehaviour
     // 설정 팝업 열기
     private void OpenSettingPopup()
     {
-        // 버튼 클릭 사운드를 출력 (디버그: 설정 팝업이 null이면 false 사운드 vs 정상 연결되었으면 true 사운드)
-        GlobalEventBus.OnClickAudio?.Invoke(settingPopupPanel != null);
-
-        if (settingPopupPanel != null)
-        {
-            settingPopupPanel.SetActive(true);
-        }
-    }
-
-    // 설정 팝업 닫기
-    private void CloseSettingPopup()
-    {
         // 버튼 클릭 사운드를 출력
         GlobalEventBus.OnClickAudio?.Invoke(true);
 
-        if (settingPopupPanel != null)
-        {
-            settingPopupPanel.SetActive(false);
-        }
+        GlobalEventBus.OnOpenSettingUI?.Invoke();
     }
 
     // 로비 씬 전환 시작

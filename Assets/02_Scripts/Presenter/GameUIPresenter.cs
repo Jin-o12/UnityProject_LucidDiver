@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -35,6 +35,7 @@ public class GameUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenNoticeLobbyUI += OpenNoticeLobbyUI;
         GlobalEventBus.OnCloseInGameMenuUI += CloseInGameMenuUI;
         GlobalEventBus.OnEscapeRequest += HandleSessionEnded;
+        GlobalEventBus.OnHideMenuUI += HideGameMenu;
 
         BindGameMenuActions();
     }
@@ -45,6 +46,7 @@ public class GameUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenNoticeLobbyUI -= OpenNoticeLobbyUI;
         GlobalEventBus.OnCloseInGameMenuUI -= CloseInGameMenuUI;
         GlobalEventBus.OnEscapeRequest -= HandleSessionEnded;
+        GlobalEventBus.OnHideMenuUI -= HideGameMenu;
 
         if (playerGameMenuAction != null)
         {
@@ -369,5 +371,14 @@ public class GameUIPresenter : MonoBehaviour
         uiManager.Close<SettingUI>();
         uiManager.Close<NoticeLobbyUI>();
         uiManager.Close<InGameMenuUI>();
+    }
+
+    // 설정 메뉴 On/Off에 따라 게임 메뉴 UI를 숨김
+    private void HideGameMenu(bool hiding)
+    {
+        if (inGameMenuUI.gameObject.activeSelf == true)
+        {
+            inGameMenuUI.panelGroup.alpha = hiding ? 0f : 1f;
+        }
     }
 }

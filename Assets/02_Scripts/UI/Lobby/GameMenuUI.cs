@@ -9,7 +9,7 @@ public class GameMenuUI : MonoBehaviour, ICloseAnimatable
 {
     [Header("DOTween 연출")]
     [SerializeField] RectTransform panel;
-    CanvasGroup panelGroup;                 //연출 적용 캔버스 그룹
+    public CanvasGroup panelGroup;          //연출 적용 캔버스 그룹
     public float initTime = 0.5f;           //연출 적용 시간
     public float initScale = 0.75f;         //연출용 사이즈
     public float initFade = 0.5f;           //연출용 투명도

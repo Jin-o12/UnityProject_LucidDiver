@@ -29,6 +29,9 @@ public class NoticeLobbyUI : MonoBehaviour, ICloseAnimatable
         if(closeButton != null) closeButton.onClick.AddListener(CloseNoticeUI);
         if(lobbyButton != null) lobbyButton.onClick.AddListener(GoToLobby);
 
+        // 팝업을 열 때 게임 메뉴 UI를 숨김
+        GlobalEventBus.OnHideMenuUI.Invoke(true);
+
         /* DOTween 시퀀스로 스케일 애니메이션 재생 */
         panel.localScale = Vector3.one * initScale;
         panelGroup.alpha = initFade;
@@ -77,6 +80,7 @@ public class NoticeLobbyUI : MonoBehaviour, ICloseAnimatable
             OnComplete(() =>
             {
                 onComplete?.Invoke();
+                GlobalEventBus.OnHideMenuUI?.Invoke(false);  // 팝업을 닫을 때 게임 메뉴 UI를 숨김 해제
             });
     }
 }
