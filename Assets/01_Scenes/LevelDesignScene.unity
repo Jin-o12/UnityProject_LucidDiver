@@ -31619,6 +31619,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timerCanvas: {fileID: 1133180676}
   escapeTime: 3
+  Escape_Enter_AudioIDPool: 43280000
   Escape_Interact_AudioIDPool: a3280000
   Escape_Channeling_AudioIDPool: a1280000
   Escape_Success_AudioIDPool: a4280000
@@ -134752,6 +134753,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timerCanvas: {fileID: 1291275180}
   escapeTime: 3
+  Escape_Enter_AudioIDPool: 43280000
   Escape_Interact_AudioIDPool: a3280000
   Escape_Channeling_AudioIDPool: a1280000
   Escape_Success_AudioIDPool: a4280000
@@ -207704,6 +207706,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timerCanvas: {fileID: 1160705298}
   escapeTime: 3
+  Escape_Enter_AudioIDPool: 43280000
   Escape_Interact_AudioIDPool: a3280000
   Escape_Channeling_AudioIDPool: a1280000
   Escape_Success_AudioIDPool: a4280000
