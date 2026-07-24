@@ -26,6 +26,7 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenStorageUI += OpenStorageInventory;
         GlobalEventBus.OnOpenRecordCardPopUpUI += OpenRecordCardPopUp;
         GlobalEventBus.OnOpenSettingUI += OpenSettingPopup;
+        GlobalEventBus.OnHideMenuUI += HideGameMenu;
 
         openSettingAction = InputManager.Instance.GetAction("Lobby", "GameMenu");
         if (openSettingAction != null)
@@ -44,6 +45,7 @@ public class LobbyUIPresenter : MonoBehaviour
         GlobalEventBus.OnOpenStorageUI -= OpenStorageInventory;
         GlobalEventBus.OnOpenRecordCardPopUpUI -= OpenRecordCardPopUp;
         GlobalEventBus.OnOpenSettingUI -= OpenSettingPopup;
+        GlobalEventBus.OnHideMenuUI -= HideGameMenu;
 
         if (openSettingAction != null)
         {
@@ -132,12 +134,14 @@ public class LobbyUIPresenter : MonoBehaviour
         if(gameMenuUI==null)
         {
             gameMenuUI = uiManager.Open<GameMenuUI>();
+            Debug.Log("OpenMenu → OpenPauseUI → New Open");
             return;
         }
 
         if (gameMenuUI.gameObject.activeInHierarchy == false)
         {
             uiManager.Open<GameMenuUI>();
+            Debug.Log("OpenMenu → OpenPauseUI → Open");
 
             // 메뉴 UI 열기 전 이미 열려 있던 설정 UI를 닫기
             if (settingUI != null && settingUI.gameObject.activeInHierarchy == true)
@@ -147,14 +151,19 @@ public class LobbyUIPresenter : MonoBehaviour
         }
         else
         {
-            if (uiManager.GetTopUI() != gameMenuUI)
-            {
-                uiManager.CloseNowUI();
-            }
-            else
+            if (uiManager.GetTopUI() == gameMenuUI)
             {
                 uiManager.Close<GameMenuUI>();
+                Debug.Log("OpenMenu → OpenPauseUI → Close");
             }
+            else
+            //스택된 UI가 1개뿐인 경우에는 해당 UI를 닫지 않도록 방어 처리
+            if (uiManager.uiStack.Count > 1)
+            {
+                uiManager.CloseNowUI();
+                Debug.Log("OpenMenu → OpenPauseUI → CloseNow");
+            }
+            else return; 
         }
     }
 
@@ -174,6 +183,15 @@ public class LobbyUIPresenter : MonoBehaviour
         else
         {
             uiManager.Close<SettingUI>();
+        }
+    }
+
+    // 설정 메뉴 On/Off에 따라 게임 메뉴 UI를 숨김
+    private void HideGameMenu(bool hiding)
+    {
+        if (gameMenuUI.gameObject.activeSelf == true)
+        {
+            gameMenuUI.panelGroup.alpha = hiding ? 0f: 1f;
         }
     }
 }

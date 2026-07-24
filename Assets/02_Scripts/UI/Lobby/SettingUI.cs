@@ -62,6 +62,7 @@ public class SettingUI : MonoBehaviour, ICloseAnimatable
         /* DOTween 시퀀스로 스케일 애니메이션 재생 */
         panel.localScale = Vector3.one * initScale;
         panelGroup.alpha = initFade;
+        GlobalEventBus.OnHideMenuUI.Invoke(true);  // 설정 메뉴를 열 때 게임 메뉴 UI를 숨김
         DOTween.Sequence().SetAutoKill(false).
         Append(panelGroup.DOFade(1f, initTime)).
         Join(panel.DOScale(1f, initTime));
@@ -146,6 +147,7 @@ public class SettingUI : MonoBehaviour, ICloseAnimatable
             OnComplete(() =>
             {
                 onComplete?.Invoke();
+                GlobalEventBus.OnHideMenuUI?.Invoke(false);  // 설정 메뉴를 닫을 때 게임 메뉴 UI를 숨김 해제
             });
     }
 }
