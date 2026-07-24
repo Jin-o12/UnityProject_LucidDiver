@@ -328,6 +328,7 @@ public class AudioManager : MonoBehaviour
     // 3D 사운드 재생 중단 처리
     private void Stop3DSound(AudioSource source)
     {
+        if (source == null) return;
         Destroy(source.gameObject);
     }
 

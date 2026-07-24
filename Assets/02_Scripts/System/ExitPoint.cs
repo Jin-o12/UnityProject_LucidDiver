@@ -6,7 +6,7 @@ using UnityEngine;
 public class ExitPoint : MonoBehaviour, IInteractable
 {
     private bool isEscaping = false;                    //탈출 코루틴 실행 중인지 판정
-    [SerializeField] private GameObject timerCanvas;    //탈출 타이머 캔버스 (P0에서는 사용 안함)
+    [SerializeField] private GameObject timerCanvas;    //탈출 타이머 캔버스
     [SerializeField] private float escapeTime = 3.0f;   //탈출 채널링 시간 (즉시 탈출하려면 0초)
     private Coroutine escapeCoroutine;                  //탈출 채털링 코루틴
     private PooledVFX activeEscapeVfx;                  //탈출 성공/취소까지 유지할 채널링 VFX
@@ -14,11 +14,13 @@ public class ExitPoint : MonoBehaviour, IInteractable
     public event Action<float> timerOn;                 //타이머 출력 이벤트 
 
     [Header("Shot Audio")]
+    public int[] Escape_Enter_AudioIDPool = null;       // 탈출 포인트 접근 사운드 ID 리스트
     public int[] Escape_Interact_AudioIDPool = null;    // 탈출 상호작용 사운드 ID 리스트
     public int[] Escape_Channeling_AudioIDPool = null;  // 탈출 시작 사운드 ID 리스트
     public int[] Escape_Success_AudioIDPool = null;     // 탈출 성공 사운드 ID 리스트
     public int[] Escape_Faild_AudioIDPool = null;       // 탈출 취소 사운드 ID 리스트
     public float failAudioTime = 1.5f;                  // 탈출 취소 사운드 재생 시간
+    GameObject escapeEnterSound = null;                 // 탈출 포인트 접근 사운드 오브젝트 캐시
 
     private void Awake()
     {
@@ -46,8 +48,30 @@ public class ExitPoint : MonoBehaviour, IInteractable
         if (other.CompareTag("Player"))
         {
             // 사운드 재생 이벤트를 AudioManager에 전달하여 탈출 포인트 지점에서 3D 오디오 재생
-            if (TryGetRandomAudioId(Escape_Interact_AudioIDPool, out int escapeInteractAudioID))
-                GlobalEventBus.OnPlay3DSoundRequested?.Invoke(escapeInteractAudioID, gameObject.transform.position);
+            if (TryGetRandomAudioId(Escape_Enter_AudioIDPool, out int escapeInteractAudioID))
+            {
+                GameObject handle = GlobalEventBus.OnPlay3DSoundRequestedWithHandle?.Invoke(escapeInteractAudioID, gameObject.transform.position);
+                if (handle != null)
+                {
+                    escapeEnterSound = handle;
+                }
+            }
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            // 사운드 중지 이벤트를 AudioManager에 전달하여 탈출 포인트 지점의 3D 오디오 소거
+            if (escapeEnterSound != null)
+            {
+                if (escapeEnterSound.TryGetComponent<AudioSource>(out var source))
+                {
+                    GlobalEventBus.OnStop3DSoundRequested?.Invoke(source);
+                }
+                escapeEnterSound = null;
+            }
         }
     }
 

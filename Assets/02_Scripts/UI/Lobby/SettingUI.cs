@@ -28,6 +28,13 @@ public class SettingUI : MonoBehaviour, ICloseAnimatable
     private void Awake()
     {
         panelGroup = GetComponent<CanvasGroup>();
+
+        // CanvasGroup가 없으면 런타임에 추가하거나 가져오기
+        if (panelGroup == null) panelGroup = gameObject.AddComponent<CanvasGroup>();
+
+        // panel이 할당되지 않았으면 자신(또는 부모)에서 RectTransform 시도
+        if (panel == null) panel = GetComponent<RectTransform>() ?? (transform as RectTransform);
+
         DOTween.Init(true);
     }
 
@@ -60,9 +67,11 @@ public class SettingUI : MonoBehaviour, ICloseAnimatable
     void OnEnable()
     {
         /* DOTween 시퀀스로 스케일 애니메이션 재생 */
-        panel.localScale = Vector3.one * initScale;
-        panelGroup.alpha = initFade;
-        GlobalEventBus.OnHideMenuUI.Invoke(true);  // 설정 메뉴를 열 때 게임 메뉴 UI를 숨김
+        if (panel != null) panel.localScale = Vector3.one * initScale;
+        if (panelGroup != null) panelGroup.alpha = initFade;
+        if (panel == null || panelGroup == null) return;
+        
+        GlobalEventBus.OnHideMenuUI?.Invoke(true);  // 설정 메뉴를 열 때 게임 메뉴 UI를 숨김
         DOTween.Sequence().SetAutoKill(false).
         Append(panelGroup.DOFade(1f, initTime)).
         Join(panel.DOScale(1f, initTime));
