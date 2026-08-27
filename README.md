@@ -1,2 +1,17 @@
-# Project_LucidDiver
-2.5D 라이트 PvE 익스트랙션 액션 RPG
+# 침몽도시: 루시드 다이버
+## "다이버는 잃는다. 관제사는 기록한다. 그리고 다시, 구하러 들어간다."
+
+---
+
+2.5D 라이트 PvE 익스트랙션 액션 RPG, '침몽도시: 루시드 다이버'의 프로젝트 파일 레포지토리 입니다.
+
+[![게임 소개 및 플레이 영상](https://img.youtube.com/vi/https://youtu.be/H5T2-JR77X0?si=iEEIMoYTCInKD-8F/maxresdefault.jpg)](https://www.youtube.com/watch?v=https://youtu.be/H5T2-JR77X0?si=iEEIMoYTCInKD-8F)
+
+---
+
+- 빌드 파일은 레포지토리에 포함되어있지 않습니다. 아래의 링크를 통해 빌드 파일을 다운 받으실 수 있습니다.
+  - [침몽도시:루시드 다이버 v4.1 다운로드 링크](https://drive.google.com/file/d/1eJK4JiPHLMWhpV2mNpth4BEen5bnw9zV/view?usp=sharing)
+
+- 해당 프로젝트는 일부 AI를 사용하여 제작된 바 있습니다. 
+
+- 해당 프로젝트는 '엘리스 트랙'사에서 운영하는 학습 프로그램 과정에서 개발 되었습니다.
