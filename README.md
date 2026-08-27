@@ -7,7 +7,7 @@
 
 2.5D 라이트 PvE 익스트랙션 액션 RPG, '침몽도시: 루시드 다이버'의 프로젝트 파일 레포지토리 입니다.
 
-  - [게임 소개 및 플레이 영상(유튜브 링크)](https://img.youtube.com/vi/https://youtu.be/H5T2-JR77X0?si=iEEIMoYTCInKD-8F/maxresdefault.jpg)
+  - [게임 소개 및 플레이 영상(유튜브 링크)](https://youtu.be/H5T2-JR77X0?si=l6rD2-1U889x1M8S)
 
 ---
 
